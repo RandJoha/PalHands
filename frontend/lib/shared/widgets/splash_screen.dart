@@ -102,17 +102,17 @@ class _SplashScreenState extends State<SplashScreen> {
                       ),
                     ),
                     SizedBox(height: screenHeight * 0.05),
-                    Text(
-                      AppStrings.appName,
-                      style: GoogleFonts.cairo(
-                        fontSize: titleSize.clamp(32.0, 64.0),
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.white,
-                      ),
+                                      Text(
+                    AppStrings.getString('appName', 'en'), // Default to English for splash
+                    style: GoogleFonts.cairo(
+                      fontSize: titleSize.clamp(32.0, 64.0),
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.white,
                     ),
+                  ),
                     SizedBox(height: screenHeight * 0.02),
                     Text(
-                      AppStrings.appTagline,
+                      AppStrings.getString('appTagline', 'en'), // Default to English for splash
                       style: GoogleFonts.cairo(
                         fontSize: taglineSize.clamp(16.0, 24.0),
                         color: AppColors.white.withValues(alpha: 0.9),
@@ -199,28 +199,28 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
             SizedBox(height: screenHeight * 0.04),
             // App name - larger and more prominent
-            Text(
-              AppStrings.appName,
-              style: GoogleFonts.cairo(
-                fontSize: titleSize.clamp(24.0, 48.0),
-                fontWeight: FontWeight.bold,
-                color: AppColors.white,
-                letterSpacing: 1.2,
-              ),
-            ),
+                              Text(
+                    AppStrings.getString('appName', 'en'), // Default to English for splash
+                    style: GoogleFonts.cairo(
+                      fontSize: titleSize.clamp(24.0, 48.0),
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.white,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
             SizedBox(height: screenHeight * 0.015),
             // Tagline - better sized for mobile
             Padding(
               padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
-              child: Text(
-                AppStrings.appTagline,
-                style: GoogleFonts.cairo(
-                  fontSize: taglineSize.clamp(14.0, 20.0),
-                  color: AppColors.white.withValues(alpha: 0.9),
-                  height: 1.3,
-                ),
-                textAlign: TextAlign.center,
-              ),
+              child:                   Text(
+                    AppStrings.getString('appTagline', 'en'), // Default to English for splash
+                    style: GoogleFonts.cairo(
+                      fontSize: taglineSize.clamp(14.0, 20.0),
+                      color: AppColors.white.withValues(alpha: 0.9),
+                      height: 1.3,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
             ),
             SizedBox(height: screenHeight * 0.06),
             // Loading indicator - larger and more visible

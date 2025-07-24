@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:provider/provider.dart';
 
 // Core imports
 import 'core/constants/app_colors.dart';
@@ -9,6 +10,9 @@ import 'core/constants/app_strings.dart';
 
 // Widget imports
 import 'shared/widgets/splash_screen.dart';
+
+// Services
+import 'shared/services/language_service.dart';
 
 // Feature imports (to be implemented)
 // import 'features/auth/presentation/bloc/auth_bloc.dart';
@@ -37,9 +41,13 @@ class PalHandsApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return MaterialApp(
-          title: AppStrings.appName,
-          debugShowCheckedModeBanner: false,
+        return ChangeNotifierProvider(
+          create: (context) => LanguageService()..initializeLanguage(),
+          child: Consumer<LanguageService>(
+            builder: (context, languageService, child) {
+              return MaterialApp(
+                title: AppStrings.getString('appName', languageService.currentLanguage),
+                debugShowCheckedModeBanner: false,
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
               seedColor: AppColors.primary,
@@ -75,7 +83,10 @@ class PalHandsApp extends StatelessWidget {
               ),
             ),
           ),
-          home: const SplashScreen(),
+                home: const SplashScreen(),
+              );
+            },
+          ),
         );
       },
     );
