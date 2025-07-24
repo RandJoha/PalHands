@@ -13,6 +13,7 @@ import 'shared/widgets/splash_screen.dart';
 
 // Services
 import 'shared/services/language_service.dart';
+import 'shared/services/health_service.dart';
 
 // Feature imports (to be implemented)
 // import 'features/auth/presentation/bloc/auth_bloc.dart';
@@ -41,8 +42,11 @@ class PalHandsApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return ChangeNotifierProvider(
-          create: (context) => LanguageService()..initializeLanguage(),
+        return MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (context) => LanguageService()..initializeLanguage()),
+            ChangeNotifierProvider(create: (context) => HealthService()),
+          ],
           child: Consumer<LanguageService>(
             builder: (context, languageService, child) {
               return MaterialApp(
