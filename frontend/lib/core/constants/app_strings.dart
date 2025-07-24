@@ -33,8 +33,8 @@ class AppStrings {
   };
 
   static const Map<String, String> register = {
-    'en': 'Register',
-    'ar': 'تسجيل',
+    'en': 'Join Us',
+    'ar': 'انضم لنا',
   };
 
   static const Map<String, String> email = {
@@ -58,8 +58,8 @@ class AppStrings {
   };
 
   static const Map<String, String> dontHaveAccount = {
-    'en': "Don't have an account? Register",
-    'ar': 'ليس لديك حساب؟ سجل الآن',
+    'en': "Don't have an account? Join Us",
+    'ar': 'ليس لديك حساب؟ انضم لنا',
   };
 
   static const Map<String, String> alreadyHaveAccount = {

@@ -10,9 +10,32 @@ import '../../core/constants/app_strings.dart';
 // Services
 import '../services/language_service.dart';
 
+// Widget imports
+import 'tatreez_pattern.dart';
+import 'animated_handshake.dart';
+import 'signup_screen.dart';
+
 // Responsive login screen
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isLoading = false;
+  bool _obscurePassword = true;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,8 +45,147 @@ class LoginScreen extends StatelessWidget {
     final isWeb = screenWidth > 600;
     
     return Scaffold(
-      backgroundColor: isWeb ? AppColors.background : AppColors.primary,
-      body: isWeb ? _buildWebLayout(screenWidth, screenHeight) : _buildMobileLayout(screenWidth, screenHeight),
+      backgroundColor: AppColors.loginBackground, // Warm beige background
+      body: Stack(
+        children: [
+          // Background tatreez patterns - random placement (away from form)
+          if (isWeb) ...[
+            // Web layout - more patterns, darker, positioned away from center
+            Positioned(
+              top: screenHeight * 0.05,
+              left: screenWidth * 0.02,
+              child: TatreezPattern(
+                size: 80,
+                opacity: 0.15,
+              ),
+            ),
+            Positioned(
+              top: screenHeight * 0.12,
+              right: screenWidth * 0.03,
+              child: TatreezPattern(
+                size: 65,
+                opacity: 0.12,
+              ),
+            ),
+            Positioned(
+              top: screenHeight * 0.25,
+              left: screenWidth * 0.08,
+              child: TatreezPattern(
+                size: 95,
+                opacity: 0.18,
+              ),
+            ),
+            Positioned(
+              top: screenHeight * 0.35,
+              right: screenWidth * 0.06,
+              child: TatreezPattern(
+                size: 70,
+                opacity: 0.14,
+              ),
+            ),
+            Positioned(
+              top: screenHeight * 0.55,
+              left: screenWidth * 0.15,
+              child: TatreezPattern(
+                size: 85,
+                opacity: 0.16,
+              ),
+            ),
+            Positioned(
+              top: screenHeight * 0.65,
+              right: screenWidth * 0.12,
+              child: TatreezPattern(
+                size: 75,
+                opacity: 0.13,
+              ),
+            ),
+            Positioned(
+              top: screenHeight * 0.75,
+              left: screenWidth * 0.05,
+              child: TatreezPattern(
+                size: 90,
+                opacity: 0.17,
+              ),
+            ),
+            Positioned(
+              top: screenHeight * 0.85,
+              right: screenWidth * 0.08,
+              child: TatreezPattern(
+                size: 60,
+                opacity: 0.11,
+              ),
+            ),
+            Positioned(
+              top: screenHeight * 0.18,
+              left: screenWidth * 0.85,
+              child: TatreezPattern(
+                size: 70,
+                opacity: 0.15,
+              ),
+            ),
+            Positioned(
+              top: screenHeight * 0.45,
+              right: screenWidth * 0.85,
+              child: TatreezPattern(
+                size: 80,
+                opacity: 0.14,
+              ),
+            ),
+            Positioned(
+              top: screenHeight * 0.72,
+              left: screenWidth * 0.9,
+              child: TatreezPattern(
+                size: 65,
+                opacity: 0.12,
+              ),
+            ),
+          ] else ...[
+            // Mobile layout - fewer patterns, positioned away from form
+            Positioned(
+              top: screenHeight * 0.08,
+              left: screenWidth * 0.05,
+              child: TatreezPattern(
+                size: 70,
+                opacity: 0.12,
+              ),
+            ),
+            Positioned(
+              top: screenHeight * 0.25,
+              right: screenWidth * 0.08,
+              child: TatreezPattern(
+                size: 85,
+                opacity: 0.15,
+              ),
+            ),
+            Positioned(
+              top: screenHeight * 0.45,
+              left: screenWidth * 0.12,
+              child: TatreezPattern(
+                size: 60,
+                opacity: 0.13,
+              ),
+            ),
+            Positioned(
+              top: screenHeight * 0.65,
+              right: screenWidth * 0.15,
+              child: TatreezPattern(
+                size: 75,
+                opacity: 0.14,
+              ),
+            ),
+            Positioned(
+              top: screenHeight * 0.8,
+              left: screenWidth * 0.03,
+              child: TatreezPattern(
+                size: 80,
+                opacity: 0.11,
+              ),
+            ),
+          ],
+          // Main content
+          isWeb ? _buildWebLayout(screenWidth, screenHeight) : _buildMobileLayout(screenWidth, screenHeight),
+        ],
+      ),
     );
   }
 
@@ -61,6 +223,10 @@ class LoginScreen extends StatelessWidget {
                               decoration: BoxDecoration(
                                 color: AppColors.white,
                                 borderRadius: BorderRadius.circular(40.0),
+                                border: Border.all(
+                                  color: AppColors.white.withValues(alpha: 0.3),
+                                  width: 2.0,
+                                ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: AppColors.black.withValues(alpha: 0.2),
@@ -69,10 +235,18 @@ class LoginScreen extends StatelessWidget {
                                   ),
                                 ],
                               ),
-                              child: const Icon(
-                                Icons.handshake,
-                                size: 100.0, // Fixed size
-                                color: AppColors.primary,
+                              child: Stack(
+                                children: [
+
+                                  // Main animated icon
+                                  Center(
+                                    child: AnimatedHandshake(
+                                      size: 100.0, // Fixed size
+                                      color: AppColors.primary,
+                                      animationDuration: const Duration(milliseconds: 2500),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                             SizedBox(height: screenHeight * 0.05),
@@ -117,7 +291,7 @@ class LoginScreen extends StatelessWidget {
                             style: GoogleFonts.cairo(
                               fontSize: 32.sp,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
+                              color: AppColors.primary, // Palestinian red
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -207,7 +381,7 @@ class LoginScreen extends StatelessWidget {
                         style: GoogleFonts.cairo(
                           fontSize: titleSize.clamp(20.0, 36.0),
                           fontWeight: FontWeight.bold,
-                          color: AppColors.white,
+                          color: AppColors.primary, // Palestinian red
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -219,19 +393,23 @@ class LoginScreen extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: AppColors.white,
                           borderRadius: BorderRadius.circular(logoSize * 0.16),
+                          border: Border.all(
+                            color: AppColors.primary,
+                            width: 2.0,
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.black.withValues(alpha: 0.2),
+                              color: AppColors.primary.withValues(alpha: 0.3),
                               blurRadius: 15,
                               offset: const Offset(0, 8),
                             ),
                           ],
                         ),
-                        child: Icon(
-                          Icons.handshake,
-                          size: logoSize * 0.5,
-                          color: AppColors.primary,
-                        ),
+                                      child: AnimatedHandshake(
+                size: logoSize * 0.5,
+                color: AppColors.primary,
+                animationDuration: const Duration(milliseconds: 2500),
+              ),
                       ),
                       SizedBox(height: screenHeight * 0.02),
                       // Tagline
@@ -241,7 +419,7 @@ class LoginScreen extends StatelessWidget {
                           AppStrings.getString('loginToContinue', languageService.currentLanguage),
                           style: GoogleFonts.cairo(
                             fontSize: subtitleSize.clamp(14.0, 20.0),
-                            color: AppColors.white.withValues(alpha: 0.9),
+                            color: AppColors.textSecondary,
                             height: 1.3,
                           ),
                           textAlign: TextAlign.center,
@@ -328,31 +506,54 @@ class LoginScreen extends StatelessWidget {
             Container(
               height: fieldHeight,
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: AppColors.inputFieldBackground, // Cream fill
                 borderRadius: BorderRadius.circular(borderRadius),
-                border: Border.all(color: isMobile ? AppColors.white.withValues(alpha: 0.3) : AppColors.border),
                 boxShadow: [
                   BoxShadow(
-                    color: isMobile ? AppColors.black.withValues(alpha: 0.1) : AppColors.shadow,
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
                 ],
               ),
               child: TextField(
-                style: GoogleFonts.cairo(fontSize: fontSize),
+                controller: _emailController,
+                style: GoogleFonts.cairo(
+                  fontSize: fontSize,
+                  color: AppColors.textPrimary,
+                ),
                 decoration: InputDecoration(
                   hintText: AppStrings.getString('email', languageService.currentLanguage),
                   hintStyle: GoogleFonts.cairo(
                     fontSize: fontSize * 0.9,
-                    color: isMobile ? AppColors.textSecondary.withValues(alpha: 0.7) : AppColors.textSecondary,
+                    color: AppColors.placeholderText, // Medium gray
                   ),
                   prefixIcon: Icon(
                     Icons.email, 
-                    color: isMobile ? AppColors.primary : AppColors.textSecondary,
+                    color: AppColors.primary,
                     size: fontSize * 1.2,
                   ),
-                  border: InputBorder.none,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(borderRadius),
+                    borderSide: BorderSide(
+                      color: AppColors.inputBorder, // Normal red border
+                      width: 1.0,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(borderRadius),
+                    borderSide: BorderSide(
+                      color: AppColors.inputBorderFocused, // Focused red border
+                      width: 2.0,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(borderRadius),
+                    borderSide: BorderSide(
+                      color: AppColors.inputBorder, // Normal red border
+                      width: 1.0,
+                    ),
+                  ),
                   contentPadding: EdgeInsets.symmetric(
                     horizontal: screenWidth != null ? (screenWidth * 0.015).clamp(8.0, 16.0) : 12.0,
                     vertical: fieldHeight * 0.3,
@@ -365,32 +566,67 @@ class LoginScreen extends StatelessWidget {
             Container(
               height: fieldHeight,
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: AppColors.inputFieldBackground, // Cream fill
                 borderRadius: BorderRadius.circular(borderRadius),
-                border: Border.all(color: isMobile ? AppColors.white.withValues(alpha: 0.3) : AppColors.border),
                 boxShadow: [
                   BoxShadow(
-                    color: isMobile ? AppColors.black.withValues(alpha: 0.1) : AppColors.shadow,
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
                 ],
               ),
               child: TextField(
-                obscureText: true,
-                style: GoogleFonts.cairo(fontSize: fontSize),
+                controller: _passwordController,
+                obscureText: _obscurePassword,
+                style: GoogleFonts.cairo(
+                  fontSize: fontSize,
+                  color: AppColors.textPrimary,
+                ),
                 decoration: InputDecoration(
                   hintText: AppStrings.getString('password', languageService.currentLanguage),
                   hintStyle: GoogleFonts.cairo(
                     fontSize: fontSize * 0.9,
-                    color: isMobile ? AppColors.textSecondary.withValues(alpha: 0.7) : AppColors.textSecondary,
+                    color: AppColors.placeholderText, // Medium gray
                   ),
                   prefixIcon: Icon(
                     Icons.lock, 
-                    color: isMobile ? AppColors.primary : AppColors.textSecondary,
+                    color: AppColors.primary,
                     size: fontSize * 1.2,
                   ),
-                  border: InputBorder.none,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                      color: AppColors.primary,
+                      size: fontSize * 1.2,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(borderRadius),
+                    borderSide: BorderSide(
+                      color: AppColors.inputBorder, // Normal red border
+                      width: 1.0,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(borderRadius),
+                    borderSide: BorderSide(
+                      color: AppColors.inputBorderFocused, // Focused red border
+                      width: 2.0,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(borderRadius),
+                    borderSide: BorderSide(
+                      color: AppColors.inputBorder, // Normal red border
+                      width: 1.0,
+                    ),
+                  ),
                   contentPadding: EdgeInsets.symmetric(
                     horizontal: screenWidth != null ? (screenWidth * 0.015).clamp(8.0, 16.0) : 12.0,
                     vertical: fieldHeight * 0.3,
@@ -408,19 +644,20 @@ class LoginScreen extends StatelessWidget {
                   // TODO: Implement login logic
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isMobile ? AppColors.white : AppColors.primary,
-                  foregroundColor: isMobile ? AppColors.primary : AppColors.white,
+                  backgroundColor: AppColors.primary, // Palestinian red
+                  foregroundColor: AppColors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(borderRadius),
                   ),
-                  elevation: isMobile ? 4 : 2,
+                  elevation: 4,
+                  shadowColor: AppColors.primary.withValues(alpha: 0.3),
                 ),
                 child: Text(
                   AppStrings.getString('login', languageService.currentLanguage),
                   style: GoogleFonts.cairo(
                     fontSize: buttonFontSize,
                     fontWeight: FontWeight.bold,
-                    color: isMobile ? AppColors.primary : AppColors.white,
+                    color: AppColors.white,
                   ),
                 ),
               ),
@@ -429,13 +666,16 @@ class LoginScreen extends StatelessWidget {
             // Register link
             TextButton(
               onPressed: () {
-                // TODO: Navigate to register screen
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const SignupScreen()),
+                );
               },
               child: Text(
                 AppStrings.getString('dontHaveAccount', languageService.currentLanguage),
                 style: GoogleFonts.cairo(
                   fontSize: fontSize,
-                  color: isMobile ? AppColors.white : AppColors.primary,
+                  color: AppColors.primary, // Palestinian red
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),

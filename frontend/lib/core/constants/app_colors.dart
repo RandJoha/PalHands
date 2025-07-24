@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Primary colors - Palestinian inspired
-  static const Color primary = Color(0xFF2E8B57); // Sea Green
-  static const Color primaryLight = Color(0xFF52B788);
-  static const Color primaryDark = Color(0xFF1F5F3F);
+  static const Color primary = Color(0xFFC43F20); // Palestinian Red
+  static const Color primaryLight = Color(0xFFD45A3A); // Brighter Red
+  static const Color primaryDark = Color(0xFFA3321A); // Darker Red
   
   // Secondary colors
   static const Color secondary = Color(0xFFD4AC0D); // Golden
@@ -15,13 +15,21 @@ class AppColors {
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF000000);
   static const Color grey = Color(0xFF6B7280);
+  static const Color gray = Color(0xFF6B7280); // Alias for grey
   static const Color greyLight = Color(0xFFF3F4F6);
   static const Color greyDark = Color(0xFF374151);
   
-  // Background colors
-  static const Color background = Color(0xFFFAFAFA);
+  // Background colors - Palestinian inspired
+  static const Color background = Color(0xFFFDF5EC); // Warm Beige
   static const Color surface = Color(0xFFFFFFFF);
   static const Color cardBackground = Color(0xFFFFFFFF);
+  
+  // Login specific colors
+  static const Color loginBackground = Color(0xFFFDF5EC); // Warm Beige
+  static const Color inputFieldBackground = Color(0xFFFBEEDC); // Cream Fill
+  static const Color inputBorder = Color(0xFFC43F20); // Red Border
+  static const Color inputBorderFocused = Color(0xFFD45A3A); // Focused Red Border
+  static const Color placeholderText = Color(0xFF999999); // Medium Gray
   
   // Status colors
   static const Color success = Color(0xFF10B981);

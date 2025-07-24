@@ -11,6 +11,7 @@ import '../services/health_service.dart';
 
 // Widget imports
 import 'login_screen.dart';
+import 'animated_handshake.dart';
 
 // Splash screen with navigation logic
 class SplashScreen extends StatefulWidget {
@@ -43,32 +44,32 @@ class _SplashScreenState extends State<SplashScreen> {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
               Future.delayed(const Duration(seconds: 1), () {
-                if (mounted) {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (context) => const LoginScreen(),
-                    ),
-                  );
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const LoginScreen(),
+          ),
+        );
                 }
               });
-            }
-          });
-        }
-        
-        // Get screen dimensions
-        final screenWidth = MediaQuery.of(context).size.width;
-        final screenHeight = MediaQuery.of(context).size.height;
-        
-        // Check if we're on web or mobile
-        final isWeb = screenWidth > 600;
-        final isMobile = screenWidth < 600;
-        
-        return Scaffold(
-          backgroundColor: AppColors.primary,
-          body: SafeArea(
+      }
+    });
+  }
+
+    // Get screen dimensions
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    
+    // Check if we're on web or mobile
+    final isWeb = screenWidth > 600;
+    final isMobile = screenWidth < 600;
+    
+    return Scaffold(
+      backgroundColor: AppColors.primary,
+      body: SafeArea(
             child: isWeb ? _buildWebLayout(screenWidth, screenHeight, healthService) : 
                    _buildMobileLayout(screenWidth, screenHeight, isMobile, healthService),
-          ),
+      ),
         );
       },
     );
@@ -118,10 +119,10 @@ class _SplashScreenState extends State<SplashScreen> {
                           ),
                         ],
                       ),
-                      child: Icon(
-                        Icons.handshake,
+                      child: AnimatedHandshake(
                         size: logoSize * 0.5,
                         color: AppColors.primary,
+                        animationDuration: const Duration(milliseconds: 2500),
                       ),
                     ),
                     SizedBox(height: screenHeight * 0.05),
@@ -158,34 +159,34 @@ class _SplashScreenState extends State<SplashScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (healthService.isLoading) ...[
-                    SizedBox(
-                      width: loadingSize.clamp(40.0, 80.0),
-                      height: loadingSize.clamp(40.0, 80.0),
-                      child: const CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                        strokeWidth: 4.0,
-                      ),
+                  SizedBox(
+                    width: loadingSize.clamp(40.0, 80.0),
+                    height: loadingSize.clamp(40.0, 80.0),
+                    child: const CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      strokeWidth: 4.0,
                     ),
-                    SizedBox(height: screenHeight * 0.03),
-                    Text(
+                  ),
+                  SizedBox(height: screenHeight * 0.03),
+                  Text(
                       'Checking server...',
-                      style: GoogleFonts.cairo(
-                        fontSize: taglineSize.clamp(16.0, 22.0),
-                        color: AppColors.textSecondary,
-                      ),
+                    style: GoogleFonts.cairo(
+                      fontSize: taglineSize.clamp(16.0, 22.0),
+                      color: AppColors.textSecondary,
                     ),
+                  ),
                   ] else if (healthService.isConnected) ...[
                     Icon(
                       Icons.check_circle,
                       size: loadingSize.clamp(40.0, 80.0),
-                      color: Colors.green,
+                      color: AppColors.primary, // Palestinian red
                     ),
                     SizedBox(height: screenHeight * 0.03),
                     Text(
                       'Server connected!',
                       style: GoogleFonts.cairo(
                         fontSize: taglineSize.clamp(16.0, 22.0),
-                        color: Colors.green,
+                        color: AppColors.primary, // Palestinian red
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -193,14 +194,14 @@ class _SplashScreenState extends State<SplashScreen> {
                     Icon(
                       Icons.error_outline,
                       size: loadingSize.clamp(40.0, 80.0),
-                      color: Colors.red,
+                      color: AppColors.primary, // Palestinian red
                     ),
                     SizedBox(height: screenHeight * 0.03),
                     Text(
                       'Server Error',
                       style: GoogleFonts.cairo(
                         fontSize: taglineSize.clamp(16.0, 22.0),
-                        color: Colors.red,
+                        color: AppColors.primary, // Palestinian red
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -311,34 +312,34 @@ class _SplashScreenState extends State<SplashScreen> {
             SizedBox(height: screenHeight * 0.06),
             // Loading/Error indicator
             if (healthService.isLoading) ...[
-              SizedBox(
-                width: loadingSize.clamp(32.0, 60.0),
-                height: loadingSize.clamp(32.0, 60.0),
-                child: const CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
-                  strokeWidth: 4.0,
-                ),
+            SizedBox(
+              width: loadingSize.clamp(32.0, 60.0),
+              height: loadingSize.clamp(32.0, 60.0),
+              child: const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
+                strokeWidth: 4.0,
               ),
-              SizedBox(height: screenHeight * 0.02),
-              Text(
+            ),
+            SizedBox(height: screenHeight * 0.02),
+            Text(
                 'Checking server...',
-                style: GoogleFonts.cairo(
-                  fontSize: (taglineSize * 0.8).clamp(12.0, 16.0),
-                  color: AppColors.white.withValues(alpha: 0.8),
-                ),
+              style: GoogleFonts.cairo(
+                fontSize: (taglineSize * 0.8).clamp(12.0, 16.0),
+                color: AppColors.white.withValues(alpha: 0.8),
               ),
+            ),
             ] else if (healthService.isConnected) ...[
               Icon(
                 Icons.check_circle,
                 size: loadingSize.clamp(32.0, 60.0),
-                color: Colors.green,
+                color: AppColors.primary, // Palestinian red
               ),
               SizedBox(height: screenHeight * 0.02),
               Text(
                 'Server connected!',
                 style: GoogleFonts.cairo(
                   fontSize: (taglineSize * 0.8).clamp(12.0, 16.0),
-                  color: Colors.green,
+                  color: AppColors.primary, // Palestinian red
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -346,14 +347,14 @@ class _SplashScreenState extends State<SplashScreen> {
               Icon(
                 Icons.error_outline,
                 size: loadingSize.clamp(32.0, 60.0),
-                color: Colors.red,
+                color: AppColors.primary, // Palestinian red
               ),
               SizedBox(height: screenHeight * 0.02),
               Text(
                 'Server Error',
                 style: GoogleFonts.cairo(
                   fontSize: (taglineSize * 0.8).clamp(12.0, 16.0),
-                  color: Colors.red,
+                  color: AppColors.primary, // Palestinian red
                   fontWeight: FontWeight.w600,
                 ),
               ),
