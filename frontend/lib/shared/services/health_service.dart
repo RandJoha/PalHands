@@ -1,10 +1,10 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
-class HealthService extends ChangeNotifier {
-  static const String _baseUrl = 'http://localhost:3000'; // Backend URL
-  static const String _healthEndpoint = '/api/health';
+// Core imports
+import '../../core/constants/api_config.dart';
+import 'base_api_service.dart';
+
+class HealthService extends ChangeNotifier with BaseApiService {
   
   bool _isConnected = false;
   bool _isLoading = true;
@@ -24,28 +24,19 @@ class HealthService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await http
-          .get(Uri.parse('$_baseUrl$_healthEndpoint'))
-          .timeout(const Duration(seconds: 10));
-
+      final data = await get(ApiConfig.healthEndpoint);
+      
       _lastCheckTime = DateTime.now();
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        
-        if (data['status'] == 'success') {
-          _isConnected = true;
-          _errorMessage = '';
-          if (kDebugMode) {
-            print('✅ Backend health check successful: ${data['message']}');
-          }
-        } else {
-          _isConnected = false;
-          _errorMessage = 'Backend returned error status';
+      if (data['status'] == 'success') {
+        _isConnected = true;
+        _errorMessage = '';
+        if (kDebugMode) {
+          print('✅ Backend health check successful: ${data['message']}');
         }
       } else {
         _isConnected = false;
-        _errorMessage = 'Backend responded with status: ${response.statusCode}';
+        _errorMessage = 'Backend returned error status';
       }
     } catch (e) {
       _isConnected = false;
@@ -62,15 +53,10 @@ class HealthService extends ChangeNotifier {
 
   // Get user-friendly error message
   String _getErrorMessage(dynamic error) {
-    if (error.toString().contains('SocketException')) {
-      return 'Unable to connect to server. Please check your internet connection.';
-    } else if (error.toString().contains('TimeoutException')) {
-      return 'Connection timeout. Server might be down or slow to respond.';
-    } else if (error.toString().contains('Connection refused')) {
-      return 'Server is not running. Please try again later.';
-    } else {
-      return 'Connection error: ${error.toString()}';
+    if (error is ApiException) {
+      return error.message;
     }
+    return 'Connection error: ${error.toString()}';
   }
 
   // Reset connection status
