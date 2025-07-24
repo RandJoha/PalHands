@@ -52,13 +52,7 @@ dependencies:
   permission_handler: ^11.1.0
   url_launcher: ^6.2.2
 
-  # Authentication
-  google_sign_in: ^6.2.1
-  firebase_auth: ^4.15.3
-  firebase_core: ^2.24.2
-
   # Notifications
-  firebase_messaging: ^14.7.10
   flutter_local_notifications: ^16.3.0
 
   # Animation
