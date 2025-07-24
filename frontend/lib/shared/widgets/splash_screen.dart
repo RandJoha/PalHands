@@ -31,31 +31,30 @@ class _SplashScreenState extends State<SplashScreen> {
     final healthService = Provider.of<HealthService>(context, listen: false);
     
     // Check backend health
-    final isConnected = await healthService.checkHealth();
-    
-    if (mounted) {
-      if (isConnected) {
-        // Backend is healthy, navigate to login after a short delay
-        Future.delayed(const Duration(seconds: 1), () {
-          if (mounted) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (context) => const LoginScreen(),
-              ),
-            );
-          }
-        });
-      } else {
-        // Backend is down, stay on splash screen with error message
-        // The UI will automatically update to show the error state
-      }
-    }
+    await healthService.checkHealth();
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<HealthService>(
       builder: (context, healthService, child) {
+        // Navigate to login when health check is successful
+        if (healthService.isConnected && !healthService.isLoading) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              Future.delayed(const Duration(seconds: 1), () {
+                if (mounted) {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => const LoginScreen(),
+                    ),
+                  );
+                }
+              });
+            }
+          });
+        }
+        
         // Get screen dimensions
         final screenWidth = MediaQuery.of(context).size.width;
         final screenHeight = MediaQuery.of(context).size.height;
