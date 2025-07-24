@@ -52,46 +52,61 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
   // Service categories
   final Map<String, Map<String, dynamic>> _serviceCategories = {
     'cleaning': {
-      'name': 'Cleaning Services',
       'icon': '🧼',
-      'subCategories': ['House Cleaning', 'Deep Cleaning', 'Window Cleaning', 'Carpet Cleaning']
+      'subCategories': ['houseCleaning', 'deepCleaning', 'windowCleaning', 'carpetCleaning']
     },
     'organizing': {
-      'name': 'Organizing Services',
       'icon': '🧺',
-      'subCategories': ['Home Organization', 'Closet Organization', 'Office Organization', 'Event Planning']
+      'subCategories': ['homeOrganization', 'closetOrganization', 'officeOrganization', 'eventPlanning']
     },
     'cooking': {
-      'name': 'Home Cooking Services',
       'icon': '🍲',
-      'subCategories': ['Main Dishes', 'Desserts', 'Special Requests', 'Meal Prep']
+      'subCategories': ['mainDishes', 'desserts', 'specialRequests', 'mealPrep']
     },
     'childcare': {
-      'name': 'Child Care Services',
       'icon': '🧒',
-      'subCategories': ['Babysitting', 'Tutoring', 'Play Activities', 'Special Needs Care']
+      'subCategories': ['babysitting', 'tutoring', 'playActivities', 'specialNeedsCare']
     },
     'elderly': {
-      'name': 'Personal & Elderly Care',
       'icon': '🧕',
-      'subCategories': ['Elderly Care', 'Personal Assistance', 'Medical Support', 'Companionship']
+      'subCategories': ['elderlyCare', 'personalAssistance', 'medicalSupport', 'companionship']
     },
     'maintenance': {
-      'name': 'Maintenance & Repair',
       'icon': '🔧',
-      'subCategories': ['Plumbing', 'Electrical', 'Carpentry', 'General Repairs']
+      'subCategories': ['plumbing', 'electrical', 'carpentry', 'generalRepairs']
     },
     'newhome': {
-      'name': 'New Home Services',
       'icon': '🏠',
-      'subCategories': ['Moving Assistance', 'Furniture Assembly', 'Home Setup', 'Decoration']
+      'subCategories': ['movingAssistance', 'furnitureAssembly', 'homeSetup', 'decoration']
     },
     'miscellaneous': {
-      'name': 'Miscellaneous & Errands',
       'icon': '🚗',
-      'subCategories': ['Shopping', 'Delivery', 'Pet Care', 'Garden Maintenance']
+      'subCategories': ['shopping', 'delivery', 'petCare', 'gardenMaintenance']
     },
   };
+
+  String _getCategoryName(String categoryKey, LanguageService languageService) {
+    switch (categoryKey) {
+      case 'cleaning':
+        return AppStrings.getString('cleaningServices', languageService.currentLanguage);
+      case 'organizing':
+        return AppStrings.getString('organizingServices', languageService.currentLanguage);
+      case 'cooking':
+        return AppStrings.getString('homeCookingServices', languageService.currentLanguage);
+      case 'childcare':
+        return AppStrings.getString('childCareServices', languageService.currentLanguage);
+      case 'elderly':
+        return AppStrings.getString('personalElderlyCare', languageService.currentLanguage);
+      case 'maintenance':
+        return AppStrings.getString('maintenanceRepair', languageService.currentLanguage);
+      case 'newhome':
+        return AppStrings.getString('newHomeServices', languageService.currentLanguage);
+      case 'miscellaneous':
+        return AppStrings.getString('miscellaneousErrands', languageService.currentLanguage);
+      default:
+        return categoryKey;
+    }
+  }
 
   @override
   void dispose() {
@@ -176,95 +191,99 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        // Left side - Branding
-        Expanded(
-          flex: 1,
-          child: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppColors.primary,
-                  AppColors.primaryDark,
-                ],
-              ),
-            ),
-            child: Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: widget.screenWidth * 0.05),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Large logo
-                    Container(
-                      width: 200,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.circular(40),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.black.withValues(alpha: 0.2),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
+    return Consumer<LanguageService>(
+      builder: (context, languageService, child) {
+        return Row(
+          children: [
+            // Left side - Branding
+            Expanded(
+              flex: 1,
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.primary,
+                      AppColors.primaryDark,
+                    ],
+                  ),
+                ),
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: widget.screenWidth * 0.05),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Large logo
+                        Container(
+                          width: 200,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            color: AppColors.white,
+                            borderRadius: BorderRadius.circular(40),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.black.withValues(alpha: 0.2),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      child: AnimatedHandshake(
-                        size: 100,
-                        color: AppColors.primary,
-                        animationDuration: const Duration(milliseconds: 2500),
-                      ),
+                          child: AnimatedHandshake(
+                            size: 100,
+                            color: AppColors.primary,
+                            animationDuration: const Duration(milliseconds: 2500),
+                          ),
+                        ),
+                        SizedBox(height: widget.screenHeight * 0.05),
+                        Text(
+                          AppStrings.getString('appName', languageService.currentLanguage),
+                          style: GoogleFonts.cairo(
+                            fontSize: 48,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.white,
+                          ),
+                        ),
+                        SizedBox(height: widget.screenHeight * 0.02),
+                        Text(
+                          AppStrings.getString('appTagline', languageService.currentLanguage),
+                          style: GoogleFonts.cairo(
+                            fontSize: 18,
+                            color: AppColors.white.withValues(alpha: 0.9),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ),
-                    SizedBox(height: widget.screenHeight * 0.05),
-                    Text(
-                      'Join PalHands',
-                      style: GoogleFonts.cairo(
-                        fontSize: 48,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.white,
-                      ),
-                    ),
-                    SizedBox(height: widget.screenHeight * 0.02),
-                    Text(
-                      'Connect with trusted service providers in Palestine',
-                      style: GoogleFonts.cairo(
-                        fontSize: 18,
-                        color: AppColors.white.withValues(alpha: 0.9),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ),
-        // Right side - Form
-        Expanded(
-          flex: 1,
-          child: Container(
-            color: AppColors.background,
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(widget.screenWidth * 0.04),
-              child: _buildFormContent(),
+            // Right side - Form
+            Expanded(
+              flex: 1,
+              child: Container(
+                color: AppColors.background,
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.all(widget.screenWidth * 0.04),
+                  child: _buildFormContent(languageService),
+                ),
+              ),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildFormContent() {
+  Widget _buildFormContent(LanguageService languageService) {
     if (_currentStep == 0 && _selectedUserType == null) {
-      return _buildUserTypeSelection();
+      return _buildUserTypeSelection(languageService);
     }
 
     if (_currentStep == _getMaxSteps()) {
-      return _buildSuccessMessage();
+      return _buildSuccessMessage(languageService);
     }
 
     return Form(
@@ -280,35 +299,35 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
           
           // Step content
           if (_currentStep == 0) ...[
-            _buildBasicInfoForm(),
+            _buildBasicInfoForm(languageService),
           ] else if (_currentStep == 1 && _selectedUserType == 'provider') ...[
-            _buildMainCategorySelection(),
+            _buildMainCategorySelection(languageService),
           ] else if (_currentStep == 2 && _selectedUserType == 'provider') ...[
-            _buildSubCategorySelection(),
+            _buildSubCategorySelection(languageService),
           ] else if (_currentStep == 3 && _selectedUserType == 'provider') ...[
-            _buildAdditionalDetails(),
+            _buildAdditionalDetails(languageService),
           ],
           
           SizedBox(height: widget.screenHeight * 0.04),
           
           // Navigation buttons
-          _buildNavigationButtons(),
+          _buildNavigationButtons(languageService),
           
           // Support reminder for service providers
           if (_selectedUserType == 'provider' && _currentStep < _getMaxSteps()) ...[
             SizedBox(height: widget.screenHeight * 0.03),
-            _buildSupportReminder(),
+            _buildSupportReminder(languageService),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildUserTypeSelection() {
+  Widget _buildUserTypeSelection(LanguageService languageService) {
     return Column(
       children: [
         Text(
-          'Do you want to sign up as a client or as a service provider?',
+          AppStrings.getString('signUpAsClient', languageService.currentLanguage) + ' / ' + AppStrings.getString('signUpAsServiceProvider', languageService.currentLanguage),
           style: GoogleFonts.cairo(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -340,7 +359,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
                 Text('👤', style: TextStyle(fontSize: 24)),
                 SizedBox(width: 12),
                 Text(
-                  'Sign up as Client',
+                  AppStrings.getString('signUpAsClient', languageService.currentLanguage),
                   style: GoogleFonts.cairo(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -374,7 +393,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
                 Text('🛠', style: TextStyle(fontSize: 24)),
                 SizedBox(width: 12),
                 Text(
-                  'Sign up as Service Provider',
+                  AppStrings.getString('signUpAsServiceProvider', languageService.currentLanguage),
                   style: GoogleFonts.cairo(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -395,244 +414,143 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
         bool isCompleted = index < _currentStep;
         
         return Expanded(
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: isCompleted ? AppColors.primary : 
-                         isActive ? AppColors.primary.withValues(alpha: 0.3) : AppColors.gray,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  isCompleted ? Icons.check : Icons.circle,
-                  color: isCompleted ? AppColors.white : AppColors.primary,
-                  size: 20,
-                ),
-              ),
-              if (index < 2)
-                Expanded(
-                  child: Container(
-                    height: 2,
-                    color: isCompleted ? AppColors.primary : AppColors.gray,
-                  ),
-                ),
-            ],
+          child: Container(
+            height: 4,
+            margin: EdgeInsets.only(right: index < 2 ? 8 : 0),
+            decoration: BoxDecoration(
+              color: isCompleted 
+                ? AppColors.primary 
+                : isActive 
+                  ? AppColors.primary.withValues(alpha: 0.5)
+                  : AppColors.grey.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
         );
       }),
     );
   }
 
-  Widget _buildBasicInfoForm() {
+  Widget _buildBasicInfoForm(LanguageService languageService) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Basic Information',
+          AppStrings.getString('fullName', languageService.currentLanguage),
           style: GoogleFonts.cairo(
-            fontSize: 28,
+            fontSize: 18,
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
           ),
         ),
         SizedBox(height: widget.screenHeight * 0.03),
-        
-        // Two column layout for web
-        Row(
-          children: [
-            Expanded(
-              child: Column(
-                children: [
-                  // Full Name
-                  _buildTextField(
-                    controller: _fullNameController,
-                    label: 'Full Name',
-                    icon: Icons.person,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your full name';
-                      }
-                      return null;
-                    },
-                  ),
-                  
-                  SizedBox(height: widget.screenHeight * 0.02),
-                  
-                  // Email
-                  _buildTextField(
-                    controller: _emailController,
-                    label: 'Email',
-                    icon: Icons.email,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                        return 'Please enter a valid email';
-                      }
-                      return null;
-                    },
-                  ),
-                  
-                  SizedBox(height: widget.screenHeight * 0.02),
-                  
-                  // Password
-                  _buildPasswordField(
-                    controller: _passwordController,
-                    label: 'Password',
-                    icon: Icons.lock,
-                    obscureText: _obscurePassword,
-                    onToggleVisibility: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a password';
-                      }
-                      if (value.length < 6) {
-                        return 'Password must be at least 6 characters';
-                      }
-                      return null;
-                    },
-                  ),
-                ],
-              ),
-            ),
-            
-            SizedBox(width: widget.screenWidth * 0.02),
-            
-            Expanded(
-              child: Column(
-                children: [
-                  // Confirm Password
-                  _buildPasswordField(
-                    controller: _confirmPasswordController,
-                    label: 'Confirm Password',
-                    icon: Icons.lock_outline,
-                    obscureText: _obscureConfirmPassword,
-                    onToggleVisibility: () {
-                      setState(() {
-                        _obscureConfirmPassword = !_obscureConfirmPassword;
-                      });
-                    },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please confirm your password';
-                      }
-                      if (value != _passwordController.text) {
-                        return 'Passwords do not match';
-                      }
-                      return null;
-                    },
-                  ),
-                  
-                  SizedBox(height: widget.screenHeight * 0.02),
-                  
-                  // Phone Number
-                  _buildTextField(
-                    controller: _phoneController,
-                    label: 'Phone Number',
-                    icon: Icons.phone,
-                    keyboardType: TextInputType.phone,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your phone number';
-                      }
-                      return null;
-                    },
-                  ),
-                  
-                  SizedBox(height: widget.screenHeight * 0.02),
-                  
-                  // Google Sign Up
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        // TODO: Implement Google sign up
-                      },
-                      icon: Text('🔍', style: TextStyle(fontSize: 20)),
-                      label: Text(
-                        'Sign up with Google',
-                        style: GoogleFonts.cairo(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: AppColors.primary),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+        _buildTextField(
+          controller: _fullNameController,
+          label: AppStrings.getString('fullName', languageService.currentLanguage),
+          icon: Icons.person,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return AppStrings.getString('pleaseEnterFullName', languageService.currentLanguage);
+            }
+            return null;
+          },
         ),
-        
-        SizedBox(height: widget.screenHeight * 0.03),
-        
-        // OR divider
-        Row(
-          children: [
-            Expanded(child: Divider(color: AppColors.gray)),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                'OR',
-                style: GoogleFonts.cairo(
-                  color: AppColors.gray,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Expanded(child: Divider(color: AppColors.gray)),
-          ],
+        SizedBox(height: widget.screenHeight * 0.02),
+        _buildTextField(
+          controller: _emailController,
+          label: AppStrings.getString('email', languageService.currentLanguage),
+          icon: Icons.email,
+          keyboardType: TextInputType.emailAddress,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return AppStrings.getString('pleaseEnterEmail', languageService.currentLanguage);
+            }
+            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+              return AppStrings.getString('pleaseEnterValidEmail', languageService.currentLanguage);
+            }
+            return null;
+          },
+        ),
+        SizedBox(height: widget.screenHeight * 0.02),
+        _buildPasswordField(
+          controller: _passwordController,
+          label: AppStrings.getString('password', languageService.currentLanguage),
+          icon: Icons.lock,
+          obscureText: _obscurePassword,
+          onToggleVisibility: () {
+            setState(() {
+              _obscurePassword = !_obscurePassword;
+            });
+          },
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return AppStrings.getString('pleaseEnterPassword', languageService.currentLanguage);
+            }
+            if (value.length < 6) {
+              return AppStrings.getString('passwordTooShort', languageService.currentLanguage);
+            }
+            return null;
+          },
+        ),
+        SizedBox(width: widget.screenWidth * 0.02),
+        _buildPasswordField(
+          controller: _confirmPasswordController,
+          label: AppStrings.getString('confirmPassword', languageService.currentLanguage),
+          icon: Icons.lock_outline,
+          obscureText: _obscureConfirmPassword,
+          onToggleVisibility: () {
+            setState(() {
+              _obscureConfirmPassword = !_obscureConfirmPassword;
+            });
+          },
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return AppStrings.getString('pleaseConfirmPassword', languageService.currentLanguage);
+            }
+            if (value != _passwordController.text) {
+              return AppStrings.getString('passwordsDoNotMatch', languageService.currentLanguage);
+            }
+            return null;
+          },
+        ),
+        SizedBox(height: widget.screenHeight * 0.02),
+        _buildTextField(
+          controller: _phoneController,
+          label: AppStrings.getString('phoneNumber', languageService.currentLanguage),
+          icon: Icons.phone,
+          keyboardType: TextInputType.phone,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return AppStrings.getString('pleaseEnterPhoneNumber', languageService.currentLanguage);
+            }
+            return null;
+          },
         ),
       ],
     );
   }
 
-  Widget _buildMainCategorySelection() {
+  Widget _buildMainCategorySelection(LanguageService languageService) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Choose your main service category',
+          AppStrings.getString('selectMainCategory', languageService.currentLanguage),
           style: GoogleFonts.cairo(
-            fontSize: 28,
+            fontSize: 24,
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
           ),
         ),
-        SizedBox(height: widget.screenHeight * 0.02),
-        Text(
-          'Select the category that best describes your primary service:',
-          style: GoogleFonts.cairo(
-            fontSize: 16,
-            color: AppColors.textSecondary,
-          ),
-        ),
         SizedBox(height: widget.screenHeight * 0.03),
-        
-        // Service category grid - 4 columns for web
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
-            crossAxisSpacing: 20,
-            mainAxisSpacing: 20,
-            childAspectRatio: 1.1,
+            crossAxisCount: 2,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+            childAspectRatio: 1.2,
           ),
           itemCount: _serviceCategories.length,
           itemBuilder: (context, index) {
@@ -647,7 +565,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
                   color: isSelected ? AppColors.primary : AppColors.white,
                   borderRadius: BorderRadius.circular(15),
                   border: Border.all(
-                    color: isSelected ? AppColors.primary : AppColors.gray.withValues(alpha: 0.3),
+                    color: isSelected ? AppColors.primary : AppColors.grey.withValues(alpha: 0.3),
                     width: 2,
                   ),
                   boxShadow: [
@@ -663,11 +581,11 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
                   children: [
                     Text(
                       category['icon'],
-                      style: TextStyle(fontSize: 36),
+                      style: TextStyle(fontSize: 32),
                     ),
                     SizedBox(height: 8),
                     Text(
-                      category['name'],
+                      _getCategoryName(categoryKey, languageService),
                       style: GoogleFonts.cairo(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -685,7 +603,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
     );
   }
 
-  Widget _buildSubCategorySelection() {
+  Widget _buildSubCategorySelection(LanguageService languageService) {
     if (_selectedMainCategory == null) return Container();
     
     List<String> subCategories = _serviceCategories[_selectedMainCategory!]!['subCategories'] as List<String>;
@@ -694,228 +612,179 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Choose your sub-service',
+          AppStrings.getString('chooseSubServices', languageService.currentLanguage),
           style: GoogleFonts.cairo(
-            fontSize: 28,
+            fontSize: 24,
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
           ),
         ),
         SizedBox(height: widget.screenHeight * 0.02),
         Text(
-          'Select the specific service you want to provide:',
+          AppStrings.getString('selectSpecificServices', languageService.currentLanguage),
           style: GoogleFonts.cairo(
             fontSize: 16,
             color: AppColors.textSecondary,
           ),
         ),
         SizedBox(height: widget.screenHeight * 0.03),
-        
-        // Sub-category grid for web
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 20,
-            mainAxisSpacing: 16,
-            childAspectRatio: 3,
-          ),
-          itemCount: subCategories.length,
-          itemBuilder: (context, index) {
-            String subCategory = subCategories[index];
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: subCategories.map((subCategory) {
             bool isSelected = _selectedSubCategory == subCategory;
             
             return GestureDetector(
               onTap: () => _selectSubCategory(subCategory),
               child: Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: isSelected ? AppColors.primary : AppColors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(25),
                   border: Border.all(
-                    color: isSelected ? AppColors.primary : AppColors.gray.withValues(alpha: 0.3),
+                    color: isSelected ? AppColors.primary : AppColors.grey.withValues(alpha: 0.3),
                     width: 2,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.black.withValues(alpha: 0.1),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
                 ),
-                child: Row(
-                  children: [
-                    Icon(
-                      isSelected ? Icons.check_circle : Icons.circle_outlined,
-                      color: isSelected ? AppColors.white : AppColors.primary,
-                      size: 24,
-                    ),
-                    SizedBox(width: 16),
-                    Expanded(
-                      child: Text(
-                        subCategory,
-                        style: GoogleFonts.cairo(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: isSelected ? AppColors.white : AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  AppStrings.getString(subCategory, languageService.currentLanguage),
+                  style: GoogleFonts.cairo(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: isSelected ? AppColors.white : AppColors.textPrimary,
+                  ),
                 ),
               ),
             );
-          },
+          }).toList(),
         ),
       ],
     );
   }
 
-  Widget _buildAdditionalDetails() {
+  Widget _buildAdditionalDetails(LanguageService languageService) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Additional Details',
+          AppStrings.getString('additionalDetails', languageService.currentLanguage),
           style: GoogleFonts.cairo(
-            fontSize: 28,
+            fontSize: 24,
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
           ),
         ),
         SizedBox(height: widget.screenHeight * 0.03),
         
-        // Two column layout
+        Text(
+          AppStrings.getString('howManyPeople', languageService.currentLanguage),
+          style: GoogleFonts.cairo(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        SizedBox(height: widget.screenHeight * 0.01),
         Row(
           children: [
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'How many people will be providing this service?',
-                    style: GoogleFonts.cairo(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  SizedBox(height: widget.screenHeight * 0.01),
-                  
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: AppColors.inputFieldBackground,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.inputBorder),
-                    ),
-                    child: DropdownButtonFormField<int>(
-                      value: _serviceProvidersCount,
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        prefixIcon: Icon(Icons.people, color: AppColors.primary),
-                      ),
-                      items: List.generate(10, (index) => index + 1).map((number) {
-                        return DropdownMenuItem(
-                          value: number,
-                          child: Text(
-                            number == 1 ? '1 person' : '$number people',
-                            style: GoogleFonts.cairo(fontSize: 16),
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _serviceProvidersCount = value!;
-                        });
-                      },
-                    ),
-                  ),
-                ],
+              child: Slider(
+                value: _serviceProvidersCount.toDouble(),
+                min: 1,
+                max: 10,
+                divisions: 9,
+                activeColor: AppColors.primary,
+                onChanged: (value) {
+                  setState(() {
+                    _serviceProvidersCount = value.toInt();
+                  });
+                },
               ),
             ),
-            
             SizedBox(width: widget.screenWidth * 0.04),
-            
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Add any additional notes or preferences:',
-                    style: GoogleFonts.cairo(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  SizedBox(height: widget.screenHeight * 0.01),
-                  
-                  Container(
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: AppColors.inputFieldBackground,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.inputBorder),
-                    ),
-                    child: TextField(
-                      controller: _notesController,
-                      maxLines: null,
-                      expands: true,
-                      style: GoogleFonts.cairo(
-                        fontSize: 16,
-                        color: AppColors.textPrimary,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'Tell us about your experience, availability, or any special requirements...',
-                        hintStyle: GoogleFonts.cairo(
-                          fontSize: 14,
-                          color: AppColors.placeholderText,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.all(16),
-                      ),
-                    ),
-                  ),
-                ],
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '$_serviceProvidersCount',
+                style: GoogleFonts.cairo(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.white,
+                ),
               ),
             ),
           ],
+        ),
+        SizedBox(height: widget.screenHeight * 0.01),
+        Text(
+          AppStrings.getString('additionalNotes', languageService.currentLanguage),
+          style: GoogleFonts.cairo(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        SizedBox(height: widget.screenHeight * 0.01),
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.inputFieldBackground,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.inputBorder),
+          ),
+          child: TextFormField(
+            controller: _notesController,
+            maxLines: 4,
+            style: GoogleFonts.cairo(
+              fontSize: 16,
+              color: AppColors.textPrimary,
+            ),
+            decoration: InputDecoration(
+              hintText: AppStrings.getString('addAdditionalNotes', languageService.currentLanguage),
+              hintStyle: GoogleFonts.cairo(
+                fontSize: 16,
+                color: AppColors.placeholderText,
+              ),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.all(16),
+            ),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildNavigationButtons() {
+  Widget _buildNavigationButtons(LanguageService languageService) {
     return Row(
       children: [
         if (_currentStep > 0) ...[
           Expanded(
-            child: OutlinedButton(
+            child: ElevatedButton(
               onPressed: _previousStep,
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: AppColors.primary),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.grey.withValues(alpha: 0.2),
+                foregroundColor: AppColors.textPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
               child: Text(
-                'Previous',
+                AppStrings.getString('back', languageService.currentLanguage),
                 style: GoogleFonts.cairo(
                   fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
           ),
-          SizedBox(width: 20),
+          SizedBox(width: 16),
         ],
-        
         Expanded(
+          flex: 2,
           child: ElevatedButton(
             onPressed: _isLoading ? null : () {
               if (_currentStep == _getMaxSteps() - 1) {
@@ -931,34 +800,32 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
                 borderRadius: BorderRadius.circular(10),
               ),
               padding: const EdgeInsets.symmetric(vertical: 16),
-              elevation: 4,
-              shadowColor: AppColors.primary.withValues(alpha: 0.3),
             ),
             child: _isLoading
-                ? SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
-                    ),
-                  )
-                : Text(
-                    _currentStep == _getMaxSteps() - 1 ? 'Create Account' : 'Next',
-                    style: GoogleFonts.cairo(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
                   ),
+                )
+              : Text(
+                  _currentStep == _getMaxSteps() - 1 ? AppStrings.getString('submitApplication', languageService.currentLanguage) : AppStrings.getString('next', languageService.currentLanguage),
+                  style: GoogleFonts.cairo(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSupportReminder() {
+  Widget _buildSupportReminder(LanguageService languageService) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
@@ -970,7 +837,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
           SizedBox(width: 16),
           Expanded(
             child: Text(
-              'Want to offer a new service that\'s not listed? Contact us at: +970 59 123 4567',
+              AppStrings.getString('wantToOfferNewService', languageService.currentLanguage),
               style: GoogleFonts.cairo(
                 fontSize: 16,
                 color: AppColors.textSecondary,
@@ -982,7 +849,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
     );
   }
 
-  Widget _buildSuccessMessage() {
+  Widget _buildSuccessMessage(LanguageService languageService) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -1002,7 +869,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
         SizedBox(height: widget.screenHeight * 0.04),
         
         Text(
-          'Thank you! We\'re excited to welcome you onboard.',
+          AppStrings.getString('thankYouForSigningUp', languageService.currentLanguage),
           style: GoogleFonts.cairo(
             fontSize: 32,
             fontWeight: FontWeight.bold,
@@ -1014,7 +881,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
         SizedBox(height: widget.screenHeight * 0.02),
         
         Text(
-          'Your request has been successfully sent to our admin team. We\'ll review and contact you shortly.',
+          AppStrings.getString('weWillReviewYourApplication', languageService.currentLanguage),
           style: GoogleFonts.cairo(
             fontSize: 18,
             color: AppColors.textSecondary,
@@ -1035,7 +902,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
           ),
           child: Text(
-            'Back to Login',
+            AppStrings.getString('login', languageService.currentLanguage),
             style: GoogleFonts.cairo(
               fontSize: 18,
               fontWeight: FontWeight.bold,

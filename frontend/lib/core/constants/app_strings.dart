@@ -7,12 +7,12 @@ class AppStrings {
   // App information
   static const Map<String, String> appName = {
     'en': 'PalHands',
-    'ar': 'بالهاندز',
+    'ar': 'بال هاندز',
   };
 
   static const Map<String, String> appTagline = {
-    'en': 'Connecting Palestine through services',
-    'ar': 'ربط فلسطين من خلال الخدمات',
+    'en': 'From the people of Palestine... for the people of Palestine',
+    'ar': 'من أهل البلد... لأهل البلد',
   };
 
   // General
@@ -37,6 +37,26 @@ class AppStrings {
     'ar': 'انضم لنا',
   };
 
+  static const Map<String, String> signUp = {
+    'en': 'Sign Up',
+    'ar': 'إنشاء حساب',
+  };
+
+  static const Map<String, String> signUpAsClient = {
+    'en': 'Sign up as Client',
+    'ar': 'إنشاء حساب كعميل',
+  };
+
+  static const Map<String, String> signUpAsServiceProvider = {
+    'en': 'Sign up as Service Provider',
+    'ar': 'إنشاء حساب كمقدم خدمة',
+  };
+
+  static const Map<String, String> fullName = {
+    'en': 'Full Name',
+    'ar': 'الاسم الكامل',
+  };
+
   static const Map<String, String> email = {
     'en': 'Email',
     'ar': 'البريد الإلكتروني',
@@ -50,6 +70,278 @@ class AppStrings {
   static const Map<String, String> confirmPassword = {
     'en': 'Confirm Password',
     'ar': 'تأكيد كلمة المرور',
+  };
+
+  static const Map<String, String> signUpWithGoogle = {
+    'en': 'Sign up with Google',
+    'ar': 'إنشاء حساب بجوجل',
+  };
+
+  static const Map<String, String> signUpWithPhone = {
+    'en': 'Sign up with Phone',
+    'ar': 'إنشاء حساب بالهاتف',
+  };
+
+  static const Map<String, String> chooseServiceCategory = {
+    'en': 'Choose Service Category',
+    'ar': 'اختر فئة الخدمة',
+  };
+
+  static const Map<String, String> selectMainCategory = {
+    'en': 'Select your main service category',
+    'ar': 'اختر فئة الخدمة الرئيسية',
+  };
+
+  static const Map<String, String> selectSubServices = {
+    'en': 'Select Sub-Services',
+    'ar': 'اختر الخدمات الفرعية',
+  };
+
+  static const Map<String, String> chooseSubServices = {
+    'en': 'Choose the specific services you provide',
+    'ar': 'اختر الخدمات المحددة التي تقدمها',
+  };
+
+  static const Map<String, String> additionalDetails = {
+    'en': 'Additional Details',
+    'ar': 'تفاصيل إضافية',
+  };
+
+  static const Map<String, String> howManyPeople = {
+    'en': 'How many people will be providing this service?',
+    'ar': 'كم شخص سيقوم بتقديم هذه الخدمة؟',
+  };
+
+  static const Map<String, String> additionalNotes = {
+    'en': 'Add any additional notes or preferences',
+    'ar': 'أضف أي ملاحظات أو تفضيلات إضافية',
+  };
+
+  static const Map<String, String> submitApplication = {
+    'en': 'Submit Application',
+    'ar': 'إرسال الطلب',
+  };
+
+  static const Map<String, String> applicationSubmitted = {
+    'en': 'Application Submitted!',
+    'ar': 'تم إرسال الطلب!',
+  };
+
+  static const Map<String, String> thankYouForSigningUp = {
+    'en': 'Thank you for signing up!',
+    'ar': 'شكراً لك على التسجيل!',
+  };
+
+  static const Map<String, String> weWillReviewYourApplication = {
+    'en': 'We will review your application and get back to you soon.',
+    'ar': 'سنراجع طلبك ونعود إليك قريباً.',
+  };
+
+  static const Map<String, String> supportReminder = {
+    'en': 'For service providers: Our support team will contact you within 24 hours to verify your services.',
+    'ar': 'لمقدمي الخدمات: سيتصل بك فريق الدعم خلال 24 ساعة للتحقق من خدماتك.',
+  };
+
+  static const Map<String, String> next = {
+    'en': 'Next',
+    'ar': 'التالي',
+  };
+
+  static const Map<String, String> back = {
+    'en': 'Back',
+    'ar': 'رجوع',
+  };
+
+  static const Map<String, String> skip = {
+    'en': 'Skip',
+    'ar': 'تخطي',
+  };
+
+  static const Map<String, String> continueText = {
+    'en': 'Continue',
+    'ar': 'متابعة',
+  };
+
+  static const Map<String, String> step = {
+    'en': 'Step',
+    'ar': 'خطوة',
+  };
+
+  static const Map<String, String> of = {
+    'en': 'of',
+    'ar': 'من',
+  };
+
+  // Service Categories
+  static const Map<String, String> homeServices = {
+    'en': 'Home Services',
+    'ar': 'خدمات المنزل',
+  };
+
+  static const Map<String, String> professionalServices = {
+    'en': 'Professional Services',
+    'ar': 'الخدمات المهنية',
+  };
+
+  static const Map<String, String> healthServices = {
+    'en': 'Health Services',
+    'ar': 'الخدمات الصحية',
+  };
+
+  static const Map<String, String> educationServices = {
+    'en': 'Education Services',
+    'ar': 'خدمات التعليم',
+  };
+
+  static const Map<String, String> transportationServices = {
+    'en': 'Transportation Services',
+    'ar': 'خدمات النقل',
+  };
+
+  static const Map<String, String> entertainmentServices = {
+    'en': 'Entertainment Services',
+    'ar': 'خدمات الترفيه',
+  };
+
+  static const Map<String, String> beautyServices = {
+    'en': 'Beauty Services',
+    'ar': 'خدمات التجميل',
+  };
+
+  static const Map<String, String> technicalServices = {
+    'en': 'Technical Services',
+    'ar': 'الخدمات التقنية',
+  };
+
+  // Sub-services examples
+  static const Map<String, String> cleaning = {
+    'en': 'Cleaning',
+    'ar': 'تنظيف',
+  };
+
+  static const Map<String, String> plumbing = {
+    'en': 'Plumbing',
+    'ar': 'سباكة',
+  };
+
+  static const Map<String, String> electrical = {
+    'en': 'Electrical',
+    'ar': 'كهرباء',
+  };
+
+  static const Map<String, String> carpentry = {
+    'en': 'Carpentry',
+    'ar': 'نجارة',
+  };
+
+  static const Map<String, String> painting = {
+    'en': 'Painting',
+    'ar': 'دهان',
+  };
+
+  static const Map<String, String> gardening = {
+    'en': 'Gardening',
+    'ar': 'بستنة',
+  };
+
+  static const Map<String, String> legalServices = {
+    'en': 'Legal Services',
+    'ar': 'خدمات قانونية',
+  };
+
+  static const Map<String, String> accounting = {
+    'en': 'Accounting',
+    'ar': 'محاسبة',
+  };
+
+  static const Map<String, String> consulting = {
+    'en': 'Consulting',
+    'ar': 'استشارات',
+  };
+
+  static const Map<String, String> medicalServices = {
+    'en': 'Medical Services',
+    'ar': 'خدمات طبية',
+  };
+
+  static const Map<String, String> dentalServices = {
+    'en': 'Dental Services',
+    'ar': 'خدمات أسنان',
+  };
+
+  static const Map<String, String> physiotherapy = {
+    'en': 'Physiotherapy',
+    'ar': 'علاج طبيعي',
+  };
+
+  static const Map<String, String> tutoring = {
+    'en': 'Tutoring',
+    'ar': 'دروس خصوصية',
+  };
+
+  static const Map<String, String> languageTeaching = {
+    'en': 'Language Teaching',
+    'ar': 'تدريس اللغات',
+  };
+
+  static const Map<String, String> musicLessons = {
+    'en': 'Music Lessons',
+    'ar': 'دروس موسيقى',
+  };
+
+  static const Map<String, String> taxiService = {
+    'en': 'Taxi Service',
+    'ar': 'خدمة تاكسي',
+  };
+
+  static const Map<String, String> deliveryService = {
+    'en': 'Delivery Service',
+    'ar': 'خدمة توصيل',
+  };
+
+  static const Map<String, String> eventPlanning = {
+    'en': 'Event Planning',
+    'ar': 'تخطيط الفعاليات',
+  };
+
+  static const Map<String, String> photography = {
+    'en': 'Photography',
+    'ar': 'تصوير',
+  };
+
+  static const Map<String, String> hairStyling = {
+    'en': 'Hair Styling',
+    'ar': 'تصفيف الشعر',
+  };
+
+  static const Map<String, String> makeup = {
+    'en': 'Makeup',
+    'ar': 'مكياج',
+  };
+
+  static const Map<String, String> nailArt = {
+    'en': 'Nail Art',
+    'ar': 'فن الأظافر',
+  };
+
+  static const Map<String, String> webDevelopment = {
+    'en': 'Web Development',
+    'ar': 'تطوير الويب',
+  };
+
+  static const Map<String, String> mobileDevelopment = {
+    'en': 'Mobile Development',
+    'ar': 'تطوير الموبايل',
+  };
+
+  static const Map<String, String> graphicDesign = {
+    'en': 'Graphic Design',
+    'ar': 'تصميم جرافيك',
+  };
+
+  static const Map<String, String> itSupport = {
+    'en': 'IT Support',
+    'ar': 'دعم تقني',
   };
 
   static const Map<String, String> forgotPassword = {
@@ -151,9 +443,242 @@ class AppStrings {
     'ar': 'الهاتف',
   };
 
-  static const Map<String, String> address = {
-    'en': 'Address',
-    'ar': 'العنوان',
+  static const Map<String, String> phoneNumber = {
+    'en': 'Phone Number',
+    'ar': 'رقم الهاتف',
+  };
+
+  static const Map<String, String> wantToOfferNewService = {
+    'en': 'Want to offer a new service that\'s not listed? Contact us at: +970 59 123 4567',
+    'ar': 'تريد تقديم خدمة جديدة غير مدرجة؟ اتصل بنا على: +970 59 123 4567',
+  };
+
+  // Validation messages
+  static const Map<String, String> pleaseEnterFullName = {
+    'en': 'Please enter your full name',
+    'ar': 'يرجى إدخال اسمك الكامل',
+  };
+
+  static const Map<String, String> pleaseEnterEmail = {
+    'en': 'Please enter your email',
+    'ar': 'يرجى إدخال بريدك الإلكتروني',
+  };
+
+  static const Map<String, String> pleaseEnterValidEmail = {
+    'en': 'Please enter a valid email',
+    'ar': 'يرجى إدخال بريد إلكتروني صحيح',
+  };
+
+  static const Map<String, String> pleaseEnterPassword = {
+    'en': 'Please enter a password',
+    'ar': 'يرجى إدخال كلمة مرور',
+  };
+
+  static const Map<String, String> passwordTooShort = {
+    'en': 'Password must be at least 6 characters',
+    'ar': 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
+  };
+
+  static const Map<String, String> pleaseConfirmPassword = {
+    'en': 'Please confirm your password',
+    'ar': 'يرجى تأكيد كلمة المرور',
+  };
+
+  static const Map<String, String> passwordsDoNotMatch = {
+    'en': 'Passwords do not match',
+    'ar': 'كلمات المرور غير متطابقة',
+  };
+
+  static const Map<String, String> pleaseEnterPhoneNumber = {
+    'en': 'Please enter your phone number',
+    'ar': 'يرجى إدخال رقم هاتفك',
+  };
+
+  // Service Categories
+  static const Map<String, String> cleaningServices = {
+    'en': 'Cleaning Services',
+    'ar': 'خدمات التنظيف',
+  };
+
+  static const Map<String, String> organizingServices = {
+    'en': 'Organizing Services',
+    'ar': 'خدمات التنظيم',
+  };
+
+  static const Map<String, String> homeCookingServices = {
+    'en': 'Home Cooking Services',
+    'ar': 'خدمات الطبخ المنزلي',
+  };
+
+  static const Map<String, String> childCareServices = {
+    'en': 'Child Care Services',
+    'ar': 'خدمات رعاية الأطفال',
+  };
+
+  static const Map<String, String> personalElderlyCare = {
+    'en': 'Personal & Elderly Care',
+    'ar': 'الرعاية الشخصية وكبار السن',
+  };
+
+  static const Map<String, String> maintenanceRepair = {
+    'en': 'Maintenance & Repair',
+    'ar': 'الصيانة والإصلاح',
+  };
+
+  static const Map<String, String> newHomeServices = {
+    'en': 'New Home Services',
+    'ar': 'خدمات المنزل الجديد',
+  };
+
+  static const Map<String, String> miscellaneousErrands = {
+    'en': 'Miscellaneous & Errands',
+    'ar': 'متنوعات ومهام',
+  };
+
+  // Sub-services
+  static const Map<String, String> houseCleaning = {
+    'en': 'House Cleaning',
+    'ar': 'تنظيف المنزل',
+  };
+
+  static const Map<String, String> deepCleaning = {
+    'en': 'Deep Cleaning',
+    'ar': 'تنظيف عميق',
+  };
+
+  static const Map<String, String> windowCleaning = {
+    'en': 'Window Cleaning',
+    'ar': 'تنظيف النوافذ',
+  };
+
+  static const Map<String, String> carpetCleaning = {
+    'en': 'Carpet Cleaning',
+    'ar': 'تنظيف السجاد',
+  };
+
+  static const Map<String, String> homeOrganization = {
+    'en': 'Home Organization',
+    'ar': 'تنظيم المنزل',
+  };
+
+  static const Map<String, String> closetOrganization = {
+    'en': 'Closet Organization',
+    'ar': 'تنظيم الخزائن',
+  };
+
+  static const Map<String, String> officeOrganization = {
+    'en': 'Office Organization',
+    'ar': 'تنظيم المكتب',
+  };
+
+  static const Map<String, String> mainDishes = {
+    'en': 'Main Dishes',
+    'ar': 'الأطباق الرئيسية',
+  };
+
+  static const Map<String, String> desserts = {
+    'en': 'Desserts',
+    'ar': 'الحلويات',
+  };
+
+  static const Map<String, String> specialRequests = {
+    'en': 'Special Requests',
+    'ar': 'طلبات خاصة',
+  };
+
+  static const Map<String, String> mealPrep = {
+    'en': 'Meal Prep',
+    'ar': 'تحضير الوجبات',
+  };
+
+  static const Map<String, String> babysitting = {
+    'en': 'Babysitting',
+    'ar': 'جليسة أطفال',
+  };
+
+  static const Map<String, String> playActivities = {
+    'en': 'Play Activities',
+    'ar': 'أنشطة اللعب',
+  };
+
+  static const Map<String, String> specialNeedsCare = {
+    'en': 'Special Needs Care',
+    'ar': 'رعاية ذوي الاحتياجات الخاصة',
+  };
+
+  static const Map<String, String> elderlyCare = {
+    'en': 'Elderly Care',
+    'ar': 'رعاية كبار السن',
+  };
+
+  static const Map<String, String> personalAssistance = {
+    'en': 'Personal Assistance',
+    'ar': 'المساعدة الشخصية',
+  };
+
+  static const Map<String, String> medicalSupport = {
+    'en': 'Medical Support',
+    'ar': 'الدعم الطبي',
+  };
+
+  static const Map<String, String> companionship = {
+    'en': 'Companionship',
+    'ar': 'الرفقة',
+  };
+
+  static const Map<String, String> generalRepairs = {
+    'en': 'General Repairs',
+    'ar': 'إصلاحات عامة',
+  };
+
+  static const Map<String, String> movingAssistance = {
+    'en': 'Moving Assistance',
+    'ar': 'مساعدة في النقل',
+  };
+
+  static const Map<String, String> furnitureAssembly = {
+    'en': 'Furniture Assembly',
+    'ar': 'تجميع الأثاث',
+  };
+
+  static const Map<String, String> homeSetup = {
+    'en': 'Home Setup',
+    'ar': 'إعداد المنزل',
+  };
+
+  static const Map<String, String> decoration = {
+    'en': 'Decoration',
+    'ar': 'التزيين',
+  };
+
+  static const Map<String, String> shopping = {
+    'en': 'Shopping',
+    'ar': 'التسوق',
+  };
+
+  static const Map<String, String> delivery = {
+    'en': 'Delivery',
+    'ar': 'التوصيل',
+  };
+
+  static const Map<String, String> petCare = {
+    'en': 'Pet Care',
+    'ar': 'رعاية الحيوانات الأليفة',
+  };
+
+  static const Map<String, String> gardenMaintenance = {
+    'en': 'Garden Maintenance',
+    'ar': 'صيانة الحديقة',
+  };
+
+  static const Map<String, String> selectSpecificServices = {
+    'en': 'Select the specific services you provide:',
+    'ar': 'اختر الخدمات المحددة التي تقدمها:',
+  };
+
+  static const Map<String, String> addAdditionalNotes = {
+    'en': 'Add any additional notes or preferences...',
+    'ar': 'أضف أي ملاحظات أو تفضيلات إضافية...',
   };
 
   // Reviews
@@ -276,9 +801,67 @@ class AppStrings {
       'loginToContinue': loginToContinue,
       'login': login,
       'register': register,
+      'signUp': signUp,
+      'signUpAsClient': signUpAsClient,
+      'signUpAsServiceProvider': signUpAsServiceProvider,
+      'fullName': fullName,
       'email': email,
       'password': password,
       'confirmPassword': confirmPassword,
+      'signUpWithGoogle': signUpWithGoogle,
+      'signUpWithPhone': signUpWithPhone,
+      'chooseServiceCategory': chooseServiceCategory,
+      'selectMainCategory': selectMainCategory,
+      'selectSubServices': selectSubServices,
+      'chooseSubServices': chooseSubServices,
+      'additionalDetails': additionalDetails,
+      'howManyPeople': howManyPeople,
+      'additionalNotes': additionalNotes,
+      'submitApplication': submitApplication,
+      'applicationSubmitted': applicationSubmitted,
+      'thankYouForSigningUp': thankYouForSigningUp,
+      'weWillReviewYourApplication': weWillReviewYourApplication,
+      'supportReminder': supportReminder,
+      'next': next,
+      'back': back,
+      'skip': skip,
+      'continueText': continueText,
+      'step': step,
+      'of': of,
+      'homeServices': homeServices,
+      'professionalServices': professionalServices,
+      'healthServices': healthServices,
+      'educationServices': educationServices,
+      'transportationServices': transportationServices,
+      'entertainmentServices': entertainmentServices,
+      'beautyServices': beautyServices,
+      'technicalServices': technicalServices,
+      'cleaning': cleaning,
+      'plumbing': plumbing,
+      'electrical': electrical,
+      'carpentry': carpentry,
+      'painting': painting,
+      'gardening': gardening,
+      'legalServices': legalServices,
+      'accounting': accounting,
+      'consulting': consulting,
+      'medicalServices': medicalServices,
+      'dentalServices': dentalServices,
+      'physiotherapy': physiotherapy,
+      'tutoring': tutoring,
+      'languageTeaching': languageTeaching,
+      'musicLessons': musicLessons,
+      'taxiService': taxiService,
+      'deliveryService': deliveryService,
+      'eventPlanning': eventPlanning,
+      'photography': photography,
+      'hairStyling': hairStyling,
+      'makeup': makeup,
+      'nailArt': nailArt,
+      'webDevelopment': webDevelopment,
+      'mobileDevelopment': mobileDevelopment,
+      'graphicDesign': graphicDesign,
+      'itSupport': itSupport,
       'forgotPassword': forgotPassword,
       'dontHaveAccount': dontHaveAccount,
       'alreadyHaveAccount': alreadyHaveAccount,
@@ -298,7 +881,58 @@ class AppStrings {
       'firstName': firstName,
       'lastName': lastName,
       'phone': phone,
-      'address': address,
+      'phoneNumber': phoneNumber,
+      'wantToOfferNewService': wantToOfferNewService,
+      'pleaseEnterFullName': pleaseEnterFullName,
+      'pleaseEnterEmail': pleaseEnterEmail,
+      'pleaseEnterValidEmail': pleaseEnterValidEmail,
+      'pleaseEnterPassword': pleaseEnterPassword,
+      'passwordTooShort': passwordTooShort,
+      'pleaseConfirmPassword': pleaseConfirmPassword,
+      'passwordsDoNotMatch': passwordsDoNotMatch,
+      'pleaseEnterPhoneNumber': pleaseEnterPhoneNumber,
+      'cleaningServices': cleaningServices,
+      'organizingServices': organizingServices,
+      'homeCookingServices': homeCookingServices,
+      'childCareServices': childCareServices,
+      'personalElderlyCare': personalElderlyCare,
+      'maintenanceRepair': maintenanceRepair,
+      'newHomeServices': newHomeServices,
+      'miscellaneousErrands': miscellaneousErrands,
+      'houseCleaning': houseCleaning,
+      'deepCleaning': deepCleaning,
+      'windowCleaning': windowCleaning,
+      'carpetCleaning': carpetCleaning,
+      'homeOrganization': homeOrganization,
+      'closetOrganization': closetOrganization,
+      'officeOrganization': officeOrganization,
+      'eventPlanning': eventPlanning,
+      'mainDishes': mainDishes,
+      'desserts': desserts,
+      'specialRequests': specialRequests,
+      'mealPrep': mealPrep,
+      'babysitting': babysitting,
+      'tutoring': tutoring,
+      'playActivities': playActivities,
+      'specialNeedsCare': specialNeedsCare,
+      'elderlyCare': elderlyCare,
+      'personalAssistance': personalAssistance,
+      'medicalSupport': medicalSupport,
+      'companionship': companionship,
+      'plumbing': plumbing,
+      'electrical': electrical,
+      'carpentry': carpentry,
+      'generalRepairs': generalRepairs,
+      'movingAssistance': movingAssistance,
+      'furnitureAssembly': furnitureAssembly,
+      'homeSetup': homeSetup,
+      'decoration': decoration,
+      'shopping': shopping,
+      'delivery': delivery,
+      'petCare': petCare,
+      'gardenMaintenance': gardenMaintenance,
+      'selectSpecificServices': selectSpecificServices,
+      'addAdditionalNotes': addAdditionalNotes,
       'reviews': reviews,
       'writeReview': writeReview,
       'rating': rating,

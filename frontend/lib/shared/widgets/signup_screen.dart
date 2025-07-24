@@ -16,6 +16,9 @@ import 'animated_handshake.dart';
 import 'mobile_signup_widget.dart';
 import 'web_signup_widget.dart';
 
+// Services
+import '../services/language_service.dart';
+
 // Sign-up screen with separate mobile and web widgets
 class SignupScreen extends StatelessWidget {
   const SignupScreen({super.key});
@@ -35,14 +38,21 @@ class SignupScreen extends StatelessWidget {
           icon: Icon(Icons.arrow_back, color: AppColors.primary),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(
-          'Join Us',
-          style: GoogleFonts.cairo(
-            color: AppColors.primary,
-            fontWeight: FontWeight.bold,
-          ),
+        title: Consumer<LanguageService>(
+          builder: (context, languageService, child) {
+            return Text(
+              AppStrings.getString('signUp', languageService.currentLanguage),
+              style: GoogleFonts.cairo(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            );
+          },
         ),
         centerTitle: true,
+        actions: [
+          _buildLanguageButton(),
+        ],
       ),
       body: Stack(
         children: [
@@ -187,6 +197,58 @@ class SignupScreen extends StatelessWidget {
             : MobileSignupWidget(screenWidth: screenWidth, screenHeight: screenHeight),
         ],
       ),
+    );
+  }
+
+  Widget _buildLanguageButton() {
+    return Consumer<LanguageService>(
+      builder: (context, languageService, child) {
+        return Container(
+          margin: const EdgeInsets.only(right: 16),
+          decoration: BoxDecoration(
+            color: AppColors.white.withValues(alpha: 0.9),
+            borderRadius: BorderRadius.circular(25),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.black.withValues(alpha: 0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(25),
+              onTap: () {
+                languageService.toggleLanguage();
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.language,
+                      size: 20,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      languageService.currentLanguage == 'ar' ? 'EN' : 'عربي',
+                      style: GoogleFonts.cairo(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 } 

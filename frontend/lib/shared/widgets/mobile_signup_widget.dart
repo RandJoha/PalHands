@@ -52,46 +52,61 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
   // Service categories
   final Map<String, Map<String, dynamic>> _serviceCategories = {
     'cleaning': {
-      'name': 'Cleaning Services',
       'icon': '🧼',
-      'subCategories': ['House Cleaning', 'Deep Cleaning', 'Window Cleaning', 'Carpet Cleaning']
+      'subCategories': ['houseCleaning', 'deepCleaning', 'windowCleaning', 'carpetCleaning']
     },
     'organizing': {
-      'name': 'Organizing Services',
       'icon': '🧺',
-      'subCategories': ['Home Organization', 'Closet Organization', 'Office Organization', 'Event Planning']
+      'subCategories': ['homeOrganization', 'closetOrganization', 'officeOrganization', 'eventPlanning']
     },
     'cooking': {
-      'name': 'Home Cooking Services',
       'icon': '🍲',
-      'subCategories': ['Main Dishes', 'Desserts', 'Special Requests', 'Meal Prep']
+      'subCategories': ['mainDishes', 'desserts', 'specialRequests', 'mealPrep']
     },
     'childcare': {
-      'name': 'Child Care Services',
       'icon': '🧒',
-      'subCategories': ['Babysitting', 'Tutoring', 'Play Activities', 'Special Needs Care']
+      'subCategories': ['babysitting', 'tutoring', 'playActivities', 'specialNeedsCare']
     },
     'elderly': {
-      'name': 'Personal & Elderly Care',
       'icon': '🧕',
-      'subCategories': ['Elderly Care', 'Personal Assistance', 'Medical Support', 'Companionship']
+      'subCategories': ['elderlyCare', 'personalAssistance', 'medicalSupport', 'companionship']
     },
     'maintenance': {
-      'name': 'Maintenance & Repair',
       'icon': '🔧',
-      'subCategories': ['Plumbing', 'Electrical', 'Carpentry', 'General Repairs']
+      'subCategories': ['plumbing', 'electrical', 'carpentry', 'generalRepairs']
     },
     'newhome': {
-      'name': 'New Home Services',
       'icon': '🏠',
-      'subCategories': ['Moving Assistance', 'Furniture Assembly', 'Home Setup', 'Decoration']
+      'subCategories': ['movingAssistance', 'furnitureAssembly', 'homeSetup', 'decoration']
     },
     'miscellaneous': {
-      'name': 'Miscellaneous & Errands',
       'icon': '🚗',
-      'subCategories': ['Shopping', 'Delivery', 'Pet Care', 'Garden Maintenance']
+      'subCategories': ['shopping', 'delivery', 'petCare', 'gardenMaintenance']
     },
   };
+
+  String _getCategoryName(String categoryKey, LanguageService languageService) {
+    switch (categoryKey) {
+      case 'cleaning':
+        return AppStrings.getString('cleaningServices', languageService.currentLanguage);
+      case 'organizing':
+        return AppStrings.getString('organizingServices', languageService.currentLanguage);
+      case 'cooking':
+        return AppStrings.getString('homeCookingServices', languageService.currentLanguage);
+      case 'childcare':
+        return AppStrings.getString('childCareServices', languageService.currentLanguage);
+      case 'elderly':
+        return AppStrings.getString('personalElderlyCare', languageService.currentLanguage);
+      case 'maintenance':
+        return AppStrings.getString('maintenanceRepair', languageService.currentLanguage);
+      case 'newhome':
+        return AppStrings.getString('newHomeServices', languageService.currentLanguage);
+      case 'miscellaneous':
+        return AppStrings.getString('miscellaneousErrands', languageService.currentLanguage);
+      default:
+        return categoryKey;
+    }
+  }
 
   @override
   void dispose() {
@@ -176,7 +191,9 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
+    return Consumer<LanguageService>(
+      builder: (context, languageService, child) {
+        return SingleChildScrollView(
       padding: EdgeInsets.all(widget.screenWidth * 0.05),
       child: Column(
         children: [
@@ -222,19 +239,21 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
           SizedBox(height: widget.screenHeight * 0.04),
           
           // Form content
-          _buildFormContent(),
+          _buildFormContent(languageService),
         ],
       ),
+        );
+      },
     );
   }
 
-  Widget _buildFormContent() {
+  Widget _buildFormContent(LanguageService languageService) {
     if (_currentStep == 0 && _selectedUserType == null) {
-      return _buildUserTypeSelection();
+      return _buildUserTypeSelection(languageService);
     }
 
     if (_currentStep == _getMaxSteps()) {
-      return _buildSuccessMessage();
+      return _buildSuccessMessage(languageService);
     }
 
     return Form(
@@ -250,19 +269,19 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
           
           // Step content
           if (_currentStep == 0) ...[
-            _buildBasicInfoForm(),
+            _buildBasicInfoForm(languageService),
           ] else if (_currentStep == 1 && _selectedUserType == 'provider') ...[
-            _buildMainCategorySelection(),
+            _buildMainCategorySelection(languageService),
           ] else if (_currentStep == 2 && _selectedUserType == 'provider') ...[
-            _buildSubCategorySelection(),
+            _buildSubCategorySelection(languageService),
           ] else if (_currentStep == 3 && _selectedUserType == 'provider') ...[
-            _buildAdditionalDetails(),
+            _buildAdditionalDetails(languageService),
           ],
           
           SizedBox(height: widget.screenHeight * 0.04),
           
           // Navigation buttons
-          _buildNavigationButtons(),
+          _buildNavigationButtons(languageService),
           
           // Support reminder for service providers
           if (_selectedUserType == 'provider' && _currentStep < _getMaxSteps()) ...[
@@ -274,7 +293,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
     );
   }
 
-  Widget _buildUserTypeSelection() {
+  Widget _buildUserTypeSelection(LanguageService languageService) {
     return Column(
       children: [
         Text(
@@ -310,7 +329,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
                 Text('👤', style: TextStyle(fontSize: 24)),
                 SizedBox(width: 12),
                 Text(
-                  'Sign up as Client',
+                  AppStrings.getString('signUpAsClient', languageService.currentLanguage),
                   style: GoogleFonts.cairo(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -344,7 +363,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
                 Text('🛠', style: TextStyle(fontSize: 24)),
                 SizedBox(width: 12),
                 Text(
-                  'Sign up as Service Provider',
+                  AppStrings.getString('signUpAsServiceProvider', languageService.currentLanguage),
                   style: GoogleFonts.cairo(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -395,7 +414,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
     );
   }
 
-  Widget _buildBasicInfoForm() {
+  Widget _buildBasicInfoForm(LanguageService languageService) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -412,11 +431,11 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
         // Full Name
         _buildTextField(
           controller: _fullNameController,
-          label: 'Full Name',
+                      label: AppStrings.getString('fullName', languageService.currentLanguage),
           icon: Icons.person,
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Please enter your full name';
+              return AppStrings.getString('pleaseEnterFullName', languageService.currentLanguage);
             }
             return null;
           },
@@ -427,15 +446,15 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
         // Email
         _buildTextField(
           controller: _emailController,
-          label: 'Email',
+                      label: AppStrings.getString('email', languageService.currentLanguage),
           icon: Icons.email,
           keyboardType: TextInputType.emailAddress,
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Please enter your email';
+              return AppStrings.getString('pleaseEnterEmail', languageService.currentLanguage);
             }
             if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-              return 'Please enter a valid email';
+              return AppStrings.getString('pleaseEnterValidEmail', languageService.currentLanguage);
             }
             return null;
           },
@@ -446,7 +465,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
         // Password
         _buildPasswordField(
           controller: _passwordController,
-          label: 'Password',
+                      label: AppStrings.getString('password', languageService.currentLanguage),
           icon: Icons.lock,
           obscureText: _obscurePassword,
           onToggleVisibility: () {
@@ -456,10 +475,10 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
           },
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Please enter a password';
+              return AppStrings.getString('pleaseEnterPassword', languageService.currentLanguage);
             }
             if (value.length < 6) {
-              return 'Password must be at least 6 characters';
+              return AppStrings.getString('passwordTooShort', languageService.currentLanguage);
             }
             return null;
           },
@@ -470,7 +489,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
         // Confirm Password
         _buildPasswordField(
           controller: _confirmPasswordController,
-          label: 'Confirm Password',
+                      label: AppStrings.getString('confirmPassword', languageService.currentLanguage),
           icon: Icons.lock_outline,
           obscureText: _obscureConfirmPassword,
           onToggleVisibility: () {
@@ -480,10 +499,10 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
           },
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Please confirm your password';
+              return AppStrings.getString('pleaseConfirmPassword', languageService.currentLanguage);
             }
             if (value != _passwordController.text) {
-              return 'Passwords do not match';
+              return AppStrings.getString('passwordsDoNotMatch', languageService.currentLanguage);
             }
             return null;
           },
@@ -541,12 +560,12 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
         // Phone Number
         _buildTextField(
           controller: _phoneController,
-          label: 'Phone Number',
+                      label: AppStrings.getString('phoneNumber', languageService.currentLanguage),
           icon: Icons.phone,
           keyboardType: TextInputType.phone,
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Please enter your phone number';
+              return AppStrings.getString('pleaseEnterPhoneNumber', languageService.currentLanguage);
             }
             return null;
           },
@@ -555,7 +574,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
     );
   }
 
-  Widget _buildMainCategorySelection() {
+  Widget _buildMainCategorySelection(LanguageService languageService) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -620,7 +639,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
                     ),
                     SizedBox(height: 8),
                     Text(
-                      category['name'],
+                      _getCategoryName(categoryKey, languageService),
                       style: GoogleFonts.cairo(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -638,7 +657,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
     );
   }
 
-  Widget _buildSubCategorySelection() {
+  Widget _buildSubCategorySelection(LanguageService languageService) {
     if (_selectedMainCategory == null) return Container();
     
     List<String> subCategories = _serviceCategories[_selectedMainCategory!]!['subCategories'] as List<String>;
@@ -647,7 +666,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Choose your sub-service',
+          AppStrings.getString('chooseSubServices', languageService.currentLanguage),
           style: GoogleFonts.cairo(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -656,7 +675,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
         ),
         SizedBox(height: widget.screenHeight * 0.02),
         Text(
-          'Select the specific service you want to provide:',
+          AppStrings.getString('selectSpecificServices', languageService.currentLanguage),
           style: GoogleFonts.cairo(
             fontSize: 16,
             color: AppColors.textSecondary,
@@ -695,7 +714,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
                   SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      subCategory,
+                      AppStrings.getString(subCategory, languageService.currentLanguage),
                       style: GoogleFonts.cairo(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -712,12 +731,12 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
     );
   }
 
-  Widget _buildAdditionalDetails() {
+  Widget _buildAdditionalDetails(LanguageService languageService) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Additional Details',
+          AppStrings.getString('additionalDetails', languageService.currentLanguage),
           style: GoogleFonts.cairo(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -728,7 +747,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
         
         // Number of service providers
         Text(
-          'How many people will be providing this service?',
+          AppStrings.getString('howManyPeople', languageService.currentLanguage),
           style: GoogleFonts.cairo(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -771,7 +790,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
         
         // Additional notes
         Text(
-          'Add any additional notes or preferences:',
+          AppStrings.getString('additionalNotes', languageService.currentLanguage),
           style: GoogleFonts.cairo(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -794,7 +813,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
               color: AppColors.textPrimary,
             ),
             decoration: InputDecoration(
-              hintText: 'Tell us about your experience, availability, or any special requirements...',
+              hintText: AppStrings.getString('addAdditionalNotes', languageService.currentLanguage),
               hintStyle: GoogleFonts.cairo(
                 fontSize: 14,
                 color: AppColors.placeholderText,
@@ -808,7 +827,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
     );
   }
 
-  Widget _buildNavigationButtons() {
+  Widget _buildNavigationButtons(LanguageService languageService) {
     return Row(
       children: [
         if (_currentStep > 0) ...[
@@ -864,7 +883,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
                     ),
                   )
                 : Text(
-                    _currentStep == _getMaxSteps() - 1 ? 'Create Account' : 'Next',
+                    _currentStep == _getMaxSteps() - 1 ? AppStrings.getString('submitApplication', languageService.currentLanguage) : AppStrings.getString('next', languageService.currentLanguage),
                     style: GoogleFonts.cairo(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -902,7 +921,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
     );
   }
 
-  Widget _buildSuccessMessage() {
+  Widget _buildSuccessMessage(LanguageService languageService) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -955,7 +974,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
           ),
           child: Text(
-            'Back to Login',
+            AppStrings.getString('login', languageService.currentLanguage),
             style: GoogleFonts.cairo(
               fontSize: 16,
               fontWeight: FontWeight.bold,
