@@ -14,6 +14,7 @@ import '../services/language_service.dart';
 import 'tatreez_pattern.dart';
 import 'animated_handshake.dart';
 import 'signup_screen.dart';
+import '../../features/home/presentation/pages/home_screen.dart';
 
 // Responsive login screen
 class LoginScreen extends StatefulWidget {
@@ -35,6 +36,46 @@ class _LoginScreenState extends State<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void _handleLogin() {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      // Test account credentials
+      final testEmail = 'test@palhands.com';
+      final testPassword = 'password123';
+
+      // Simulate API call delay
+      Future.delayed(const Duration(seconds: 1), () {
+        if (_emailController.text == testEmail && _passwordController.text == testPassword) {
+          // Login successful - navigate to home screen
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const HomeScreen(),
+            ),
+          );
+        } else {
+          // Login failed - show error message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Invalid email or password. Use test@palhands.com / password123',
+                style: GoogleFonts.cairo(),
+              ),
+              backgroundColor: AppColors.primary,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        
+        setState(() {
+          _isLoading = false;
+        });
+      });
+    }
   }
 
   @override
@@ -241,8 +282,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   // Main animated icon
                                   Center(
                                     child: AnimatedHandshake(
-                                      size: 100.0, // Fixed size
-                                      color: AppColors.primary,
+                                size: 100.0, // Fixed size
+                                color: AppColors.primary,
                                       animationDuration: const Duration(milliseconds: 2500),
                                     ),
                                   ),
@@ -406,10 +447,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           ],
                         ),
                                       child: AnimatedHandshake(
-                size: logoSize * 0.5,
-                color: AppColors.primary,
+                          size: logoSize * 0.5,
+                          color: AppColors.primary,
                 animationDuration: const Duration(milliseconds: 2500),
-              ),
+                        ),
                       ),
                       SizedBox(height: screenHeight * 0.02),
                       // Tagline
@@ -500,7 +541,9 @@ class _LoginScreenState extends State<LoginScreen> {
         // Check if we're on mobile (green background)
         final isMobile = screenWidth != null && screenWidth < 600;
         
-        return Column(
+        return Form(
+          key: _formKey,
+          child: Column(
           children: [
             // Email field
             Container(
@@ -516,8 +559,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ],
               ),
-              child: TextField(
+              child: TextFormField(
                 controller: _emailController,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your email';
+                  }
+                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                    return 'Please enter a valid email';
+                  }
+                  return null;
+                },
                 style: GoogleFonts.cairo(
                   fontSize: fontSize,
                   color: AppColors.textPrimary,
@@ -576,8 +628,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ],
               ),
-              child: TextField(
+              child: TextFormField(
                 controller: _passwordController,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your password';
+                  }
+                  if (value.length < 6) {
+                    return 'Password must be at least 6 characters';
+                  }
+                  return null;
+                },
                 obscureText: _obscurePassword,
                 style: GoogleFonts.cairo(
                   fontSize: fontSize,
@@ -640,9 +701,7 @@ class _LoginScreenState extends State<LoginScreen> {
               width: double.infinity,
               height: buttonHeight,
               child: ElevatedButton(
-                onPressed: () {
-                  // TODO: Implement login logic
-                },
+                onPressed: _isLoading ? null : _handleLogin,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary, // Palestinian red
                   foregroundColor: AppColors.white,
@@ -652,12 +711,21 @@ class _LoginScreenState extends State<LoginScreen> {
                   elevation: 4,
                   shadowColor: AppColors.primary.withValues(alpha: 0.3),
                 ),
-                child: Text(
+                child: _isLoading
+                    ? SizedBox(
+                        width: buttonFontSize,
+                        height: buttonFontSize,
+                        child: const CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
+                          strokeWidth: 2.0,
+                        ),
+                      )
+                    : Text(
                   AppStrings.getString('login', languageService.currentLanguage),
                   style: GoogleFonts.cairo(
                     fontSize: buttonFontSize,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.white,
+                          color: AppColors.white,
                   ),
                 ),
               ),
@@ -680,6 +748,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ],
+        ),
         );
       },
     );

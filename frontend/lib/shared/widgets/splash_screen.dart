@@ -85,106 +85,107 @@ class _SplashScreenState extends State<SplashScreen> {
     
     return Stack(
       children: [
-        // Language button - top right
+        // Language button - positioned based on language direction
         Positioned(
           top: 20,
-          right: 20,
+          right: languageService.isRTL ? null : 20,
+          left: languageService.isRTL ? 20 : null,
           child: _buildLanguageButton(),
         ),
         // Main content
         Row(
-          children: [
-            // Left side - Branding
-            Expanded(
-              flex: 1,
-              child: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      AppColors.primary,
-                      AppColors.primaryDark,
-                    ],
-                  ),
-                ),
-                child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Large logo
-                        Container(
-                          width: logoSize.clamp(150.0, 300.0),
-                          height: logoSize.clamp(150.0, 300.0),
-                          decoration: BoxDecoration(
-                            color: AppColors.white,
-                            borderRadius: BorderRadius.circular(logoSize * 0.2),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.black.withValues(alpha: 0.2),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
+      children: [
+        // Left side - Branding
+        Expanded(
+          flex: 1,
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.primary,
+                  AppColors.primaryDark,
+                ],
+              ),
+            ),
+            child: Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Large logo
+                    Container(
+                      width: logoSize.clamp(150.0, 300.0),
+                      height: logoSize.clamp(150.0, 300.0),
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.circular(logoSize * 0.2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.black.withValues(alpha: 0.2),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
                           ),
+                        ],
+                      ),
                           child: AnimatedHandshake(
-                            size: logoSize * 0.5,
-                            color: AppColors.primary,
+                        size: logoSize * 0.5,
+                        color: AppColors.primary,
                             animationDuration: const Duration(milliseconds: 2500),
-                          ),
-                        ),
-                        SizedBox(height: screenHeight * 0.05),
-                        Text(
+                      ),
+                    ),
+                    SizedBox(height: screenHeight * 0.05),
+                                      Text(
                           AppStrings.getString('appName', languageService.currentLanguage),
-                          style: GoogleFonts.cairo(
-                            fontSize: titleSize.clamp(32.0, 64.0),
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.white,
-                          ),
-                        ),
-                        SizedBox(height: screenHeight * 0.02),
-                        Text(
-                          AppStrings.getString('appTagline', languageService.currentLanguage),
-                          style: GoogleFonts.cairo(
-                            fontSize: taglineSize.clamp(16.0, 24.0),
-                            color: AppColors.white.withValues(alpha: 0.9),
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+                    style: GoogleFonts.cairo(
+                      fontSize: titleSize.clamp(32.0, 64.0),
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.white,
                     ),
                   ),
+                    SizedBox(height: screenHeight * 0.02),
+                    Text(
+                          AppStrings.getString('appTagline', languageService.currentLanguage),
+                      style: GoogleFonts.cairo(
+                        fontSize: taglineSize.clamp(16.0, 24.0),
+                        color: AppColors.white.withValues(alpha: 0.9),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ),
             ),
+          ),
+        ),
             // Right side - Loading/Error
-            Expanded(
-              flex: 1,
-              child: Container(
-                color: AppColors.background,
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
+        Expanded(
+          flex: 1,
+          child: Container(
+            color: AppColors.background,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
                       if (healthService.isLoading) ...[
-                        SizedBox(
-                          width: loadingSize.clamp(40.0, 80.0),
-                          height: loadingSize.clamp(40.0, 80.0),
-                          child: const CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                            strokeWidth: 4.0,
-                          ),
-                        ),
-                        SizedBox(height: screenHeight * 0.03),
-                        Text(
+                  SizedBox(
+                    width: loadingSize.clamp(40.0, 80.0),
+                    height: loadingSize.clamp(40.0, 80.0),
+                    child: const CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      strokeWidth: 4.0,
+                    ),
+                  ),
+                  SizedBox(height: screenHeight * 0.03),
+                  Text(
                           'Checking server...',
-                          style: GoogleFonts.cairo(
-                            fontSize: taglineSize.clamp(16.0, 22.0),
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
+                    style: GoogleFonts.cairo(
+                      fontSize: taglineSize.clamp(16.0, 22.0),
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                       ] else if (healthService.isConnected) ...[
                         Icon(
                           Icons.check_circle,
@@ -247,10 +248,10 @@ class _SplashScreenState extends State<SplashScreen> {
                           ),
                         ),
                       ],
-                    ],
-                  ),
-                ),
+                ],
               ),
+            ),
+          ),
             ),
           ],
         ),
@@ -268,58 +269,59 @@ class _SplashScreenState extends State<SplashScreen> {
     
     return Stack(
       children: [
-        // Language button - top right
+        // Language button - positioned based on language direction
         Positioned(
           top: 20,
-          right: 20,
+          right: languageService.isRTL ? null : 20,
+          left: languageService.isRTL ? 20 : null,
           child: _buildLanguageButton(),
         ),
         // Main content
         Center(
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: horizontalPadding,
-              vertical: screenHeight * 0.05,
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // App logo - much larger on mobile
-                Container(
-                  width: logoSize.clamp(100.0, 200.0),
-                  height: logoSize.clamp(100.0, 200.0),
-                  decoration: BoxDecoration(
-                    color: AppColors.white,
-                    borderRadius: BorderRadius.circular(logoSize * 0.16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.black.withValues(alpha: 0.2),
-                        blurRadius: 15,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: horizontalPadding,
+          vertical: screenHeight * 0.05,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // App logo - much larger on mobile
+            Container(
+              width: logoSize.clamp(100.0, 200.0),
+              height: logoSize.clamp(100.0, 200.0),
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                borderRadius: BorderRadius.circular(logoSize * 0.16),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.black.withValues(alpha: 0.2),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
                   ),
+                ],
+              ),
                   child: AnimatedHandshake(
-                    size: logoSize * 0.5,
-                    color: AppColors.primary,
+                size: logoSize * 0.5,
+                color: AppColors.primary,
                     animationDuration: const Duration(milliseconds: 2500),
-                  ),
-                ),
-                SizedBox(height: screenHeight * 0.04),
-                // App name - larger and more prominent
-                Text(
+              ),
+            ),
+            SizedBox(height: screenHeight * 0.04),
+            // App name - larger and more prominent
+                              Text(
                   AppStrings.getString('appName', languageService.currentLanguage),
-                  style: GoogleFonts.cairo(
-                    fontSize: titleSize.clamp(24.0, 48.0),
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.white,
-                    letterSpacing: 1.2,
+                    style: GoogleFonts.cairo(
+                      fontSize: titleSize.clamp(24.0, 48.0),
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.white,
+                      letterSpacing: 1.2,
+                    ),
                   ),
-                ),
-                SizedBox(height: screenHeight * 0.015),
-                // Tagline - better sized for mobile
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+            SizedBox(height: screenHeight * 0.015),
+            // Tagline - better sized for mobile
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
                   child: Text(
                     AppStrings.getString('appTagline', languageService.currentLanguage),
                     style: GoogleFonts.cairo(
@@ -329,26 +331,26 @@ class _SplashScreenState extends State<SplashScreen> {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                ),
-                SizedBox(height: screenHeight * 0.06),
+            ),
+            SizedBox(height: screenHeight * 0.06),
                 // Loading/Error indicator
                 if (healthService.isLoading) ...[
-                  SizedBox(
-                    width: loadingSize.clamp(32.0, 60.0),
-                    height: loadingSize.clamp(32.0, 60.0),
-                    child: const CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
-                      strokeWidth: 4.0,
-                    ),
-                  ),
-                  SizedBox(height: screenHeight * 0.02),
-                  Text(
+            SizedBox(
+              width: loadingSize.clamp(32.0, 60.0),
+              height: loadingSize.clamp(32.0, 60.0),
+              child: const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
+                strokeWidth: 4.0,
+              ),
+            ),
+            SizedBox(height: screenHeight * 0.02),
+            Text(
                     'Checking server...',
-                    style: GoogleFonts.cairo(
-                      fontSize: (taglineSize * 0.8).clamp(12.0, 16.0),
-                      color: AppColors.white.withValues(alpha: 0.8),
-                    ),
-                  ),
+              style: GoogleFonts.cairo(
+                fontSize: (taglineSize * 0.8).clamp(12.0, 16.0),
+                color: AppColors.white.withValues(alpha: 0.8),
+              ),
+            ),
                 ] else if (healthService.isConnected) ...[
                   Icon(
                     Icons.check_circle,
@@ -411,9 +413,9 @@ class _SplashScreenState extends State<SplashScreen> {
                     ),
                   ),
                 ],
-              ],
-            ),
-          ),
+          ],
+        ),
+      ),
         ),
       ],
     );

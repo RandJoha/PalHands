@@ -889,6 +889,158 @@ class AppStrings {
     'ar': 'العربية',
   };
 
+  // Home screen strings
+  static const Map<String, String> heroTitle = {
+    'en': 'Trusted Home Services',
+    'ar': 'خدمات منزلية موثوقة',
+  };
+
+  static const Map<String, String> heroSubtitle = {
+    'en': 'From local hands... Together we serve each other',
+    'ar': 'من أيدي محلية... معاً نخدم بعضنا البعض',
+  };
+
+  static const Map<String, String> mainCategories = {
+    'en': 'Main Categories',
+    'ar': 'الفئات الرئيسية',
+  };
+
+  static const Map<String, String> homeCooking = {
+    'en': 'Home Cooking',
+    'ar': 'طبخ منزلي',
+  };
+
+  static const Map<String, String> childcare = {
+    'en': 'Childcare',
+    'ar': 'رعاية الأطفال',
+  };
+
+  static const Map<String, String> homeMaintenance = {
+    'en': 'Home Maintenance',
+    'ar': 'صيانة منزلية',
+  };
+
+  static const Map<String, String> homeOrganizing = {
+    'en': 'Home Organizing',
+    'ar': 'تنظيم منزلي',
+  };
+
+  static const Map<String, String> fullHouseCleaning = {
+    'en': 'Full House Cleaning',
+    'ar': 'تنظيف منزل كامل',
+  };
+
+  static const Map<String, String> traditionalDishes = {
+    'en': 'Traditional Dishes',
+    'ar': 'أطباق تقليدية',
+  };
+
+  static const Map<String, String> apartmentSetup = {
+    'en': 'Apartment Setup',
+    'ar': 'تجهيز شقة',
+  };
+
+  static const Map<String, String> whyPalHands = {
+    'en': 'Why PalHands?',
+    'ar': 'لماذا بال هاندز؟',
+  };
+
+  static const Map<String, String> secureTrusted = {
+    'en': 'Secure & Trusted',
+    'ar': 'آمن وموثوق',
+  };
+
+  static const Map<String, String> directCommunication = {
+    'en': 'Direct Communication',
+    'ar': 'تواصل مباشر',
+  };
+
+  static const Map<String, String> palestinianIdentity = {
+    'en': 'Palestinian Identity',
+    'ar': 'الهوية الفلسطينية',
+  };
+
+  static const Map<String, String> cleaningDiscount = {
+    'en': '20% off cleaning services this week',
+    'ar': 'خصم 20% على خدمات التنظيف هذا الأسبوع',
+  };
+
+  static const Map<String, String> registerAsProvider = {
+    'en': 'Register as Service Provider',
+    'ar': 'سجل كمقدم خدمة',
+  };
+
+  static const Map<String, String> contactUs = {
+    'en': 'Contact Us',
+    'ar': 'تواصل معنا',
+  };
+
+  static const Map<String, String> copyright = {
+    'en': '© 2024 PalHands. All rights reserved.',
+    'ar': '© 2024 بال هاندز. جميع الحقوق محفوظة.',
+  };
+
+  // Hero banner strings
+  static const Map<String, String> upTo = {
+    'en': 'Up to',
+    'ar': 'حتى',
+  };
+
+  static const Map<String, String> off = {
+    'en': 'off',
+    'ar': 'خصم',
+  };
+
+  // Navigation and UI strings
+  static const Map<String, String> categories = {
+    'en': 'Categories',
+    'ar': 'الفئات',
+  };
+
+  static const Map<String, String> viewAll = {
+    'en': 'View all',
+    'ar': 'عرض الكل',
+  };
+
+  static const Map<String, String> browse = {
+    'en': 'Browse',
+    'ar': 'تصفح',
+  };
+
+  static const Map<String, String> myRequests = {
+    'en': 'My Requests',
+    'ar': 'طلباتي',
+  };
+
+  static const Map<String, String> chat = {
+    'en': 'Chat',
+    'ar': 'محادثة',
+  };
+
+  // Navigation strings
+  static const Map<String, String> aboutUs = {
+    'en': 'About Us',
+    'ar': 'من نحن',
+  };
+
+  static const Map<String, String> ourServices = {
+    'en': 'Our Services',
+    'ar': 'خدماتنا',
+  };
+
+  static const Map<String, String> faqs = {
+    'en': 'FAQs',
+    'ar': 'الأسئلة الشائعة',
+  };
+
+  // Hero banner description
+  static const Map<String, String> professionalCleaningDescription = {
+    'en': 'Professional cleaning by trusted local providers. Experience the difference with our community-driven service platform.',
+    'ar': 'تنظيف احترافي من قبل مقدمي الخدمات المحليين الموثوقين. اختبر الفرق مع منصة خدماتنا القائمة على المجتمع.',
+  };
+
+
+
   // Helper method to get localized string
   static String getString(String key, String languageCode) {
     final Map<String, Map<String, String>> allStrings = {
@@ -1067,15 +1219,43 @@ class AppStrings {
       'error': error,
       'loading': loading,
       'noData': noData,
-      'jerusalem': jerusalem,
-      'ramallah': ramallah,
-      'nablus': nablus,
-      'hebron': hebron,
-      'bethlehem': bethlehem,
-      'gaza': gaza,
       'language': language,
       'englishLanguage': englishLanguage,
       'arabicLanguage': arabicLanguage,
+      // Home screen strings
+      'heroTitle': heroTitle,
+      'heroSubtitle': heroSubtitle,
+      'mainCategories': mainCategories,
+      'homeCooking': homeCooking,
+      'childcare': childcare,
+      'homeMaintenance': homeMaintenance,
+      'homeOrganizing': homeOrganizing,
+      'fullHouseCleaning': fullHouseCleaning,
+      'traditionalDishes': traditionalDishes,
+      'apartmentSetup': apartmentSetup,
+      'whyPalHands': whyPalHands,
+      'secureTrusted': secureTrusted,
+      'directCommunication': directCommunication,
+      'palestinianIdentity': palestinianIdentity,
+      'cleaningDiscount': cleaningDiscount,
+      'registerAsProvider': registerAsProvider,
+      'contactUs': contactUs,
+      'copyright': copyright,
+      // Hero banner strings
+      'upTo': upTo,
+      'off': off,
+      // Navigation and UI strings
+      'categories': categories,
+      'viewAll': viewAll,
+      'browse': browse,
+      'myRequests': myRequests,
+      'chat': chat,
+      // Navigation strings
+      'aboutUs': aboutUs,
+      'ourServices': ourServices,
+      'faqs': faqs,
+      // Hero banner description
+      'professionalCleaningDescription': professionalCleaningDescription,
     };
 
     return allStrings[key]?[languageCode] ?? allStrings[key]?['en'] ?? key;

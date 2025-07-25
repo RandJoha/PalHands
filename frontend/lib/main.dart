@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +11,7 @@ import 'core/constants/app_strings.dart';
 
 // Widget imports
 import 'shared/widgets/splash_screen.dart';
+import 'features/home/presentation/pages/home_screen.dart';
 
 // Services
 import 'shared/services/language_service.dart';
@@ -52,6 +54,16 @@ class PalHandsApp extends StatelessWidget {
               return MaterialApp(
                 title: AppStrings.getString('appName', languageService.currentLanguage),
                 debugShowCheckedModeBanner: false,
+                locale: Locale(languageService.currentLanguage),
+                localizationsDelegates: const [
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
+                supportedLocales: const [
+                  Locale('en'),
+                  Locale('ar'),
+                ],
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
               seedColor: AppColors.primary,
@@ -88,6 +100,9 @@ class PalHandsApp extends StatelessWidget {
             ),
           ),
                 home: const SplashScreen(),
+                routes: {
+                  '/home': (context) => const HomeScreen(),
+                },
               );
             },
           ),

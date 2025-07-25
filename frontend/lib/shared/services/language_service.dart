@@ -35,4 +35,10 @@ class LanguageService extends ChangeNotifier {
 
   // Check if current language is English
   bool get isEnglish => _currentLanguage == 'en';
+
+  // Get text direction for current language
+  TextDirection get textDirection => _currentLanguage == 'ar' ? TextDirection.rtl : TextDirection.ltr;
+
+  // Check if current language is RTL
+  bool get isRTL => _currentLanguage == 'ar';
 } 
