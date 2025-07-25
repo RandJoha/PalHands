@@ -22,54 +22,9 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> {
       builder: (context, languageService, child) {
         return Scaffold(
           backgroundColor: const Color(0xFFFDF5EC), // Soft off-white beige
+          drawer: _buildDrawer(languageService),
           body: Stack(
             children: [
-              // Background Tatreez patterns in all four corners
-              Positioned(
-                top: 0,
-                left: 0,
-                child: TatreezPattern(
-                  size: 80,
-                  color: const Color(0xFF8B0000), // Deep red
-                  opacity: 0.3,
-                ),
-              ),
-              Positioned(
-                top: 0,
-                right: 0,
-                child: Transform.rotate(
-                  angle: 1.5708, // 90 degrees
-                  child: TatreezPattern(
-                    size: 80,
-                    color: const Color(0xFF8B0000),
-                    opacity: 0.3,
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: 0,
-                left: 0,
-                child: Transform.rotate(
-                  angle: 3.1416, // 180 degrees
-                  child: TatreezPattern(
-                    size: 80,
-                    color: const Color(0xFF8B0000),
-                    opacity: 0.3,
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Transform.rotate(
-                  angle: 4.7124, // 270 degrees
-                  child: TatreezPattern(
-                    size: 80,
-                    color: const Color(0xFF8B0000),
-                    opacity: 0.3,
-                  ),
-                ),
-              ),
               
               // Main content
               Column(
@@ -118,34 +73,53 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> {
         textDirection: languageService.textDirection,
         child: Row(
           children: [
-            // Logo with hand icon and text
-            Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
+            // Hamburger menu
+            Builder(
+              builder: (context) => GestureDetector(
+                onTap: () {
+                  Scaffold.of(context).openDrawer();
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  child: Icon(
+                    Icons.menu,
                     color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.handshake,
-                    color: Colors.white,
-                    size: 20,
+                    size: 24,
                   ),
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  AppStrings.getString('appName', languageService.currentLanguage),
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ],
+              ),
             ),
-            const Spacer(),
+            const SizedBox(width: 12),
+            // Logo with hand icon and text
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.handshake,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    AppStrings.getString('appName', languageService.currentLanguage),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             // Language toggle
             GestureDetector(
               onTap: () {
@@ -170,6 +144,130 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildDrawer(LanguageService languageService) {
+    return Drawer(
+      child: Directionality(
+        textDirection: languageService.textDirection,
+        child: Column(
+          children: [
+            // Drawer header
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.handshake,
+                      color: AppColors.primary,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    AppStrings.getString('appName', languageService.currentLanguage),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Navigation items
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  _buildDrawerItem(
+                    icon: Icons.home,
+                    title: AppStrings.getString('home', languageService.currentLanguage),
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.info,
+                    title: AppStrings.getString('aboutUs', languageService.currentLanguage),
+                    onTap: () {
+                      Navigator.pop(context);
+                      // TODO: Navigate to about us
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.cleaning_services,
+                    title: AppStrings.getString('ourServices', languageService.currentLanguage),
+                    onTap: () {
+                      Navigator.pop(context);
+                      // TODO: Navigate to services
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.question_answer,
+                    title: AppStrings.getString('faqs', languageService.currentLanguage),
+                    onTap: () {
+                      Navigator.pop(context);
+                      // TODO: Navigate to FAQs
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.contact_support,
+                    title: AppStrings.getString('contactUs', languageService.currentLanguage),
+                    onTap: () {
+                      Navigator.pop(context);
+                      // TODO: Navigate to contact
+                    },
+                  ),
+                  const Divider(),
+                  _buildDrawerItem(
+                    icon: Icons.privacy_tip,
+                    title: AppStrings.getString('privacyPolicy', languageService.currentLanguage),
+                    onTap: () {
+                      Navigator.pop(context);
+                      // TODO: Navigate to privacy policy
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDrawerItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: AppColors.primary),
+      title: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+        ),
+        textAlign: TextAlign.start,
+      ),
+      onTap: onTap,
     );
   }
 
@@ -355,10 +453,10 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> {
 
   Widget _buildCategoriesSection(LanguageService languageService) {
     final categories = [
-      {'icon': Icons.cleaning_services, 'name': 'cleaning'},
-      {'icon': Icons.restaurant, 'name': 'homeCooking'},
-      {'icon': Icons.child_care, 'name': 'childcare'},
-      {'icon': Icons.elderly, 'name': 'elderlyCare'},
+      {'icon': Icons.cleaning_services, 'name': 'cleaning', 'image': 'cleaning_icon.png'},
+      {'icon': Icons.restaurant, 'name': 'homeCooking', 'image': 'home_cooking_icon.png'},
+      {'icon': Icons.child_care, 'name': 'childcare', 'image': 'babysitting_icon.png'},
+      {'icon': Icons.elderly, 'name': 'elderlyCare', 'image': 'elderly_care_icon.png'},
     ];
 
     return Container(
@@ -369,14 +467,14 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                AppStrings.getString('categories', languageService.currentLanguage),
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
+                        Text(
+            AppStrings.getString('categories', languageService.currentLanguage),
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
               TextButton(
                 onPressed: () {
                   // TODO: Navigate to all categories
@@ -398,8 +496,8 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> {
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
+              crossAxisSpacing: 8, // Reduced from 16 to 8
+              mainAxisSpacing: 8, // Reduced from 16 to 8
               childAspectRatio: 1.0,
             ),
             itemCount: categories.length,
@@ -407,6 +505,7 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> {
               return _buildCategoryCard(
                 categories[index]['icon'] as IconData,
                 AppStrings.getString(categories[index]['name'] as String, languageService.currentLanguage),
+                categories[index]['image'] as String,
               );
             },
           ),
@@ -415,43 +514,64 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> {
     );
   }
 
-  Widget _buildCategoryCard(IconData icon, String name) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.primary,
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+    Widget _buildCategoryCard(IconData icon, String name, String imagePath) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Calculate responsive sizes based on available space
+        final containerSize = constraints.maxWidth;
+        final framePadding = (containerSize * 0.03).clamp(6.0, 15.0); // 3% padding with min/max limits
+        final iconSize = containerSize * 0.5; // 50% of container for icon
+        final fontSize = (containerSize * 0.08).clamp(10.0, 18.0); // Responsive font size
+        
+        return Container(
+          width: 180, // Increased from 150 to 180
+          height: 180, // Increased from 150 to 180
+          child: Stack(
+            children: [
+              // Frame image as background - responsive padding
+              Positioned(
+                top: framePadding,
+                left: framePadding,
+                right: framePadding,
+                bottom: framePadding,
+                child: Image.asset(
+                  'assets/images/category_frame.png',
+                  fit: BoxFit.contain,
+                ),
+              ),
+              // Content in the center
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Category image - responsive size
+                    Container(
+                      width: iconSize,
+                      height: iconSize,
+                      child: Image.asset(
+                        'assets/images/$imagePath',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                    SizedBox(height: containerSize * 0.03), // Reduced spacing between icon and text
+                    Text(
+                      name,
+                      style: TextStyle(
+                        fontSize: fontSize,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            size: 32,
-            color: Colors.black,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            name,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -462,14 +582,21 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> {
         'icon': Icons.cleaning_services,
         'rating': 4.9,
         'reviews': 238,
-        'image': null,
+        'image': 'cleaning_popular_service.png',
       },
       {
         'name': 'traditionalDishes',
         'icon': Icons.restaurant,
         'rating': 4.8,
         'reviews': 156,
-        'image': 'grape_leaves', // Placeholder for real image
+        'image': 'traditional_dishes_popular_service.png',
+      },
+      {
+        'name': 'apartmentSetup',
+        'icon': Icons.home,
+        'rating': 4.7,
+        'reviews': 89,
+        'image': 'apartment_setup_popular_service.png',
       },
     ];
 
@@ -487,117 +614,117 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> {
             ),
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            height: 200,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: services.length,
-              itemBuilder: (context, index) {
-                return Container(
-                  width: 160,
-                  margin: const EdgeInsets.only(right: 16),
-                  child: _buildServiceCard(
-                    AppStrings.getString(services[index]['name'] as String, languageService.currentLanguage),
-                    services[index]['icon'] as IconData,
-                    services[index]['rating'] as double,
-                    services[index]['reviews'] as int,
-                    services[index]['image'] as String?,
-                  ),
-                );
-              },
-            ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final screenWidth = MediaQuery.of(context).size.width;
+              
+              // All mobile sizes - Rectangular frames in three rows
+              return Column(
+                children: services.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final service = entry.value;
+                  return Container(
+                    width: double.infinity,
+                    height: 200,
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: _buildServiceCard(
+                      AppStrings.getString(service['name'] as String, languageService.currentLanguage),
+                      service['icon'] as IconData,
+                      service['rating'] as double,
+                      service['reviews'] as int,
+                      service['image'] as String?,
+                      index,
+                    ),
+                  );
+                }).toList(),
+              );
+            },
           ),
         ],
       ),
     );
   }
 
-  Widget _buildServiceCard(String name, IconData icon, double rating, int reviews, String? image) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.primary,
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Image or icon
-          Container(
-            height: 100,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0F0F0),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(10),
-                topRight: Radius.circular(10),
+  Widget _buildServiceCard(String name, IconData icon, double rating, int reviews, String? image, int index) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Use rectangular frames for all mobile sizes
+        String frameType = 'service_frame_rectangle.png';
+
+        // Calculate responsive sizes based on available space
+        final containerWidth = constraints.maxWidth;
+        final containerHeight = 200.0; // Fixed height for mobile service cards
+        final framePadding = (containerWidth * 0.04).clamp(8.0, 16.0);
+        
+        return Container(
+          height: containerHeight,
+          child: Stack(
+            children: [
+              // Frame image as background
+              Positioned.fill(
+                child: Image.asset(
+                  'assets/images/$frameType',
+                  fit: BoxFit.fill,
+                ),
               ),
-            ),
-            child: image == 'grape_leaves'
-                ? Container(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(10),
-                        topRight: Radius.circular(10),
-                      ),
-                      image: const DecorationImage(
-                        image: NetworkImage('https://via.placeholder.com/160x100/8B0000/FFFFFF?text=Grape+Leaves'),
-                        fit: BoxFit.cover,
+              // Content inside the frame
+              Positioned(
+                top: framePadding,
+                left: framePadding,
+                right: framePadding,
+                bottom: framePadding,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Service icon
+                    Container(
+                      width: (containerWidth * 0.25).clamp(40.0, 80.0), // 25% with larger limits
+                      height: (containerWidth * 0.25).clamp(40.0, 80.0), // 25% with larger limits
+                      child: Image.asset(
+                        'assets/images/$image',
+                        fit: BoxFit.contain,
                       ),
                     ),
-                  )
-                : Icon(
-                    icon,
-                    size: 40,
-                    color: AppColors.primary,
-                  ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    ...List.generate(5, (index) => Icon(
-                      index < rating.floor() ? Icons.star : Icons.star_border,
-                      size: 12,
-                      color: Colors.amber,
-                    )),
-                    const SizedBox(width: 4),
+                    SizedBox(height: (containerWidth * 0.025).clamp(4.0, 8.0)), // Responsive spacing with limits
+                    // Service name
                     Text(
-                      '($reviews)',
+                      name,
                       style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.grey[600],
+                        fontSize: (containerWidth * 0.045).clamp(12.0, 18.0),
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
                       ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: (containerWidth * 0.02).clamp(3.0, 6.0)), // Responsive spacing with limits
+                    // Rating and reviews
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ...List.generate(5, (index) => Icon(
+                          index < rating.floor() ? Icons.star : Icons.star_border,
+                          size: (containerWidth * 0.03).clamp(10.0, 16.0),
+                          color: Colors.amber,
+                        )),
+                        SizedBox(width: (containerWidth * 0.02).clamp(3.0, 5.0)),
+                        Text(
+                          '($reviews)',
+                          style: TextStyle(
+                            fontSize: (containerWidth * 0.025).clamp(8.0, 14.0),
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
