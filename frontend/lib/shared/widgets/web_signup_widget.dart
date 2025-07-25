@@ -48,6 +48,13 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
   String? _selectedMainCategory;
   String? _selectedSubCategory;
   int _serviceProvidersCount = 1;
+  String? _selectedLocation;
+  
+  // Available cities - Basic Palestinian cities
+  final List<String> _availableCities = [
+    'jerusalem', 'ramallah', 'nablus', 'hebron', 'bethlehem', 'gaza',
+    'jenin', 'tulkarm', 'qalqilya', 'salfit', 'tubas', 'jericho'
+  ];
   
   // Service categories
   final Map<String, Map<String, dynamic>> _serviceCategories = {
@@ -120,6 +127,139 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
   }
 
   void _nextStep() {
+    // For step 0 (basic information), only validate the form fields
+    if (_currentStep == 0) {
+      if (_formKey.currentState?.validate() != true) {
+        return;
+      }
+      // Move to next step without checking category selection
+      setState(() {
+        _currentStep++;
+      });
+      return;
+    }
+    
+    // For step 1 (category selection), check if category is selected
+    if (_currentStep == 1 && _selectedUserType == 'provider') {
+      if (_selectedMainCategory == null) {
+        // Show a more prominent error message
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return Consumer<LanguageService>(
+              builder: (context, languageService, child) {
+                return AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  title: Row(
+                    children: [
+                      Icon(Icons.warning, color: AppColors.primary, size: 24),
+                      SizedBox(width: 8),
+                      Text(
+                        languageService.currentLanguage == 'ar' ? 'الفئة مطلوبة' : 'Category Required',
+                        style: GoogleFonts.cairo(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  content: Text(
+                    languageService.currentLanguage == 'ar' 
+                      ? 'يرجى اختيار فئة الخدمة الرئيسية للمتابعة.'
+                      : 'Please select a main service category to continue.',
+                    style: GoogleFonts.cairo(
+                      fontSize: 16,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(
+                        languageService.currentLanguage == 'ar' ? 'موافق' : 'OK',
+                        style: GoogleFonts.cairo(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+        return;
+      }
+      setState(() {
+        _currentStep++;
+      });
+      return;
+    }
+    
+    // For step 2 (sub-category selection), check if sub-category is selected
+    if (_currentStep == 2 && _selectedUserType == 'provider') {
+      if (_selectedSubCategory == null) {
+        // Show a more prominent error message
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return Consumer<LanguageService>(
+              builder: (context, languageService, child) {
+                return AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  title: Row(
+                    children: [
+                      Icon(Icons.warning, color: AppColors.primary, size: 24),
+                      SizedBox(width: 8),
+                      Text(
+                        languageService.currentLanguage == 'ar' ? 'الفئة الفرعية مطلوبة' : 'Sub-Category Required',
+                        style: GoogleFonts.cairo(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  content: Text(
+                    languageService.currentLanguage == 'ar' 
+                      ? 'يرجى اختيار فئة الخدمة الفرعية للمتابعة.'
+                      : 'Please select a sub-service category to continue.',
+                    style: GoogleFonts.cairo(
+                      fontSize: 16,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(
+                        languageService.currentLanguage == 'ar' ? 'موافق' : 'OK',
+                        style: GoogleFonts.cairo(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+        return;
+      }
+      setState(() {
+        _currentStep++;
+      });
+      return;
+    }
+    
+    // For other steps, just move forward
     if (_currentStep < _getMaxSteps()) {
       setState(() {
         _currentStep++;
@@ -163,6 +303,59 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
 
   void _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // For service providers, ensure subcategory is selected before submission
+    if (_selectedUserType == 'provider' && _selectedSubCategory == null) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return Consumer<LanguageService>(
+            builder: (context, languageService, child) {
+              return AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                title: Row(
+                  children: [
+                    Icon(Icons.warning, color: AppColors.primary, size: 24),
+                    SizedBox(width: 8),
+                    Text(
+                      languageService.currentLanguage == 'ar' ? 'الفئة الفرعية مطلوبة' : 'Sub-Category Required',
+                      style: GoogleFonts.cairo(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                content: Text(
+                  languageService.currentLanguage == 'ar' 
+                    ? 'يرجى اختيار فئة الخدمة الفرعية قبل إرسال طلبك.'
+                    : 'Please select a sub-service category before submitting your application.',
+                  style: GoogleFonts.cairo(
+                    fontSize: 16,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(
+                      languageService.currentLanguage == 'ar' ? 'موافق' : 'OK',
+                      style: GoogleFonts.cairo(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      );
+      return;
+    }
 
     setState(() {
       _isLoading = true;
@@ -414,17 +607,30 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
         bool isCompleted = index < _currentStep;
         
         return Expanded(
-          child: Container(
-            height: 4,
-            margin: EdgeInsets.only(right: index < 2 ? 8 : 0),
-            decoration: BoxDecoration(
-              color: isCompleted 
-                ? AppColors.primary 
-                : isActive 
-                  ? AppColors.primary.withValues(alpha: 0.5)
-                  : AppColors.grey.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(2),
-            ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: isCompleted ? AppColors.primary : 
+                         isActive ? AppColors.primary.withOpacity(0.3) : AppColors.gray,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isCompleted ? Icons.check : Icons.circle,
+                  color: isCompleted ? AppColors.white : AppColors.primary,
+                  size: 20,
+                ),
+              ),
+              if (index < 2)
+                Expanded(
+                  child: Container(
+                    height: 2,
+                    color: isCompleted ? AppColors.primary : AppColors.gray,
+                  ),
+                ),
+            ],
           ),
         );
       }),
@@ -492,7 +698,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
             return null;
           },
         ),
-        SizedBox(width: widget.screenWidth * 0.02),
+        SizedBox(height: widget.screenHeight * 0.02),
         _buildPasswordField(
           controller: _confirmPasswordController,
           label: AppStrings.getString('confirmPassword', languageService.currentLanguage),
@@ -523,9 +729,17 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
             if (value == null || value.isEmpty) {
               return AppStrings.getString('pleaseEnterPhoneNumber', languageService.currentLanguage);
             }
+            // Palestinian phone number validation
+            final pattern = r'^(05[9|6|8|4|2|0|1|3|5|7]|09)\d{7}$';
+            final regExp = RegExp(pattern);
+            if (!regExp.hasMatch(value)) {
+              return 'Please enter a valid Palestinian phone number';
+            }
             return null;
           },
         ),
+        SizedBox(height: widget.screenHeight * 0.02),
+        _buildLocationDropdown(languageService),
       ],
     );
   }
@@ -988,6 +1202,68 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
         ),
         validator: validator,
       ),
+    );
+  }
+
+  Widget _buildLocationDropdown(LanguageService languageService) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          _selectedUserType == 'provider' 
+            ? AppStrings.getString('whereDoYouWantToProvideService', languageService.currentLanguage)
+            : AppStrings.getString('whereDoYouPreferToGetService', languageService.currentLanguage),
+          style: GoogleFonts.cairo(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        SizedBox(height: widget.screenHeight * 0.02),
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.inputFieldBackground,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.inputBorder),
+          ),
+          child: DropdownButtonFormField<String>(
+            value: _selectedLocation,
+            decoration: InputDecoration(
+              hintText: AppStrings.getString('selectYourLocation', languageService.currentLanguage),
+              hintStyle: GoogleFonts.cairo(
+                fontSize: 16,
+                color: AppColors.placeholderText,
+              ),
+              prefixIcon: Icon(Icons.location_on, color: AppColors.primary),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            ),
+            items: _availableCities.map((city) {
+              return DropdownMenuItem(
+                value: city,
+                child: Text(
+                  AppStrings.getString(city, languageService.currentLanguage),
+                  style: GoogleFonts.cairo(
+                    fontSize: 16,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _selectedLocation = value;
+              });
+            },
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return AppStrings.getString('pleaseSelectLocation', languageService.currentLanguage);
+              }
+              return null;
+            },
+          ),
+        ),
+      ],
     );
   }
 } 

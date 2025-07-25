@@ -129,17 +129,17 @@ class AppStrings {
 
   static const Map<String, String> thankYouForSigningUp = {
     'en': 'Thank you for signing up!',
-    'ar': 'شكراً لك على التسجيل!',
+    'ar': '!شكراً لك على التسجيل',
   };
 
   static const Map<String, String> weWillReviewYourApplication = {
     'en': 'We will review your application and get back to you soon.',
-    'ar': 'سنراجع طلبك ونعود إليك قريباً.',
+    'ar': '.سنراجع طلبك ونعود إليك قريباً',
   };
 
   static const Map<String, String> supportReminder = {
     'en': 'For service providers: Our support team will contact you within 24 hours to verify your services.',
-    'ar': 'لمقدمي الخدمات: سيتصل بك فريق الدعم خلال 24 ساعة للتحقق من خدماتك.',
+    'ar': '.لمقدمي الخدمات: سيتصل بك فريق الدعم خلال 24 ساعة للتحقق من خدماتك',
   };
 
   static const Map<String, String> next = {
@@ -450,7 +450,7 @@ class AppStrings {
 
   static const Map<String, String> wantToOfferNewService = {
     'en': 'Want to offer a new service that\'s not listed? Contact us at: +970 59 123 4567',
-    'ar': 'تريد تقديم خدمة جديدة غير مدرجة؟ اتصل بنا على: +970 59 123 4567',
+    'ar': '+970 59 123 4567 تريد تقديم خدمة جديدة غير مدرجة؟ اتصل بنا على: ',
   };
 
   // Validation messages
@@ -681,6 +681,132 @@ class AppStrings {
     'ar': 'أضف أي ملاحظات أو تفضيلات إضافية...',
   };
 
+  // Additional missing strings
+  static const Map<String, String> basicInformation = {
+    'en': 'Basic Information',
+    'ar': 'المعلومات الأساسية',
+  };
+
+  static const Map<String, String> connectWithTrustedServiceProvider = {
+    'en': 'Connect with trusted service providers in your area',
+    'ar': 'تواصل مع مزودي الخدمات الموثوقين في منطقتك',
+  };
+
+  static const Map<String, String> joinPalhands = {
+    'en': 'Join PalHands',
+    'ar': 'انضم إلى بال هاندز',
+  };
+
+  // User type selection
+  static const Map<String, String> doYouWantToSignUpAs = {
+    'en': 'Do you want to sign up as a client or as a service provider?',
+    'ar': 'هل تريد التسجيل كعميل أم كمقدم خدمة؟',
+  };
+
+  // Location/City selection
+  static const Map<String, String> location = {
+    'en': 'Location',
+    'ar': 'الموقع',
+  };
+
+  static const Map<String, String> selectYourLocation = {
+    'en': 'Select your location',
+    'ar': 'اختر موقعك',
+  };
+
+  static const Map<String, String> whereDoYouWantToProvideService = {
+    'en': 'Where do you want to provide your service?',
+    'ar': 'أين تريد تقديم خدمتك؟',
+  };
+
+  static const Map<String, String> whereDoYouPreferToGetService = {
+    'en': 'Where do you prefer to get the service?',
+    'ar': 'أين تفضل الحصول على الخدمة؟',
+  };
+
+  static const Map<String, String> pleaseSelectLocation = {
+    'en': 'Please select your location',
+    'ar': 'يرجى اختيار موقعك',
+  };
+
+  // Palestinian Cities
+  static const Map<String, String> jerusalem = {
+    'en': 'Jerusalem',
+    'ar': 'القدس',
+  };
+
+  static const Map<String, String> ramallah = {
+    'en': 'Ramallah',
+    'ar': 'رام الله',
+  };
+
+  static const Map<String, String> nablus = {
+    'en': 'Nablus',
+    'ar': 'نابلس',
+  };
+
+  static const Map<String, String> hebron = {
+    'en': 'Hebron',
+    'ar': 'الخليل',
+  };
+
+  static const Map<String, String> bethlehem = {
+    'en': 'Bethlehem',
+    'ar': 'بيت لحم',
+  };
+
+  static const Map<String, String> gaza = {
+    'en': 'Gaza',
+    'ar': 'غزة',
+  };
+
+  static const Map<String, String> jenin = {
+    'en': 'Jenin',
+    'ar': 'جنين',
+  };
+
+  static const Map<String, String> tulkarm = {
+    'en': 'Tulkarm',
+    'ar': 'طولكرم',
+  };
+
+  static const Map<String, String> qalqilya = {
+    'en': 'Qalqilya',
+    'ar': 'قلقيلية',
+  };
+
+  static const Map<String, String> salfit = {
+    'en': 'Salfit',
+    'ar': 'سلفيت',
+  };
+
+  static const Map<String, String> tubas = {
+    'en': 'Tubas',
+    'ar': 'طوباس',
+  };
+
+  static const Map<String, String> jericho = {
+    'en': 'Jericho',
+    'ar': 'أريحا',
+  };
+
+  // Person/People strings
+  static const Map<String, String> onePerson = {
+    'en': '1 person',
+    'ar': 'شخص واحد',
+  };
+
+  static const Map<String, String> people = {
+    'en': 'people',
+    'ar': 'أشخاص',
+  };
+
+  // Phone number formatting
+  static const Map<String, String> contactPhoneNumber = {
+    'en': '+970 59 123 4567',
+    'ar': '٩٧٠ ٥٩ ١٢٣ ٤٥٦٧+', // Arabic numerals
+  };
+
   // Reviews
   static const Map<String, String> reviews = {
     'en': 'Reviews',
@@ -745,36 +871,7 @@ class AppStrings {
     'ar': 'لا توجد بيانات متاحة',
   };
 
-  // Palestine locations
-  static const Map<String, String> jerusalem = {
-    'en': 'Jerusalem',
-    'ar': 'القدس',
-  };
 
-  static const Map<String, String> ramallah = {
-    'en': 'Ramallah',
-    'ar': 'رام الله',
-  };
-
-  static const Map<String, String> nablus = {
-    'en': 'Nablus',
-    'ar': 'نابلس',
-  };
-
-  static const Map<String, String> hebron = {
-    'en': 'Hebron',
-    'ar': 'الخليل',
-  };
-
-  static const Map<String, String> bethlehem = {
-    'en': 'Bethlehem',
-    'ar': 'بيت لحم',
-  };
-
-  static const Map<String, String> gaza = {
-    'en': 'Gaza',
-    'ar': 'غزة',
-  };
 
   // Language
   static const Map<String, String> language = {
@@ -933,6 +1030,31 @@ class AppStrings {
       'gardenMaintenance': gardenMaintenance,
       'selectSpecificServices': selectSpecificServices,
       'addAdditionalNotes': addAdditionalNotes,
+      'basicInformation': basicInformation,
+      'connectWithTrustedServiceProvider': connectWithTrustedServiceProvider,
+      'joinPalhands': joinPalhands,
+              'doYouWantToSignUpAs': doYouWantToSignUpAs,
+        'location': location,
+        'selectYourLocation': selectYourLocation,
+        'whereDoYouWantToProvideService': whereDoYouWantToProvideService,
+        'whereDoYouPreferToGetService': whereDoYouPreferToGetService,
+        'pleaseSelectLocation': pleaseSelectLocation,
+        // Palestinian Cities
+        'jerusalem': jerusalem,
+        'ramallah': ramallah,
+        'nablus': nablus,
+        'hebron': hebron,
+        'bethlehem': bethlehem,
+        'gaza': gaza,
+        'jenin': jenin,
+        'tulkarm': tulkarm,
+        'qalqilya': qalqilya,
+        'salfit': salfit,
+        'tubas': tubas,
+        'jericho': jericho,
+      'onePerson': onePerson,
+      'people': people,
+      'contactPhoneNumber': contactPhoneNumber,
       'reviews': reviews,
       'writeReview': writeReview,
       'rating': rating,

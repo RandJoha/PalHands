@@ -48,6 +48,13 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
   String? _selectedMainCategory;
   String? _selectedSubCategory;
   int _serviceProvidersCount = 1;
+  String? _selectedLocation;
+  
+  // Available cities - Basic Palestinian cities
+  final List<String> _availableCities = [
+    'jerusalem', 'ramallah', 'nablus', 'hebron', 'bethlehem', 'gaza',
+    'jenin', 'tulkarm', 'qalqilya', 'salfit', 'tubas', 'jericho'
+  ];
   
   // Service categories
   final Map<String, Map<String, dynamic>> _serviceCategories = {
@@ -120,6 +127,139 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
   }
 
   void _nextStep() {
+    // For step 0 (basic information), only validate the form fields
+    if (_currentStep == 0) {
+      if (_formKey.currentState?.validate() != true) {
+        return;
+      }
+      // Move to next step without checking category selection
+      setState(() {
+        _currentStep++;
+      });
+      return;
+    }
+    
+    // For step 1 (category selection), check if category is selected
+    if (_currentStep == 1 && _selectedUserType == 'provider') {
+      if (_selectedMainCategory == null) {
+        // Show a more prominent error message
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return Consumer<LanguageService>(
+              builder: (context, languageService, child) {
+                return AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  title: Row(
+                    children: [
+                      Icon(Icons.warning, color: AppColors.primary, size: 24),
+                      SizedBox(width: 8),
+                      Text(
+                        languageService.currentLanguage == 'ar' ? 'الفئة مطلوبة' : 'Category Required',
+                        style: GoogleFonts.cairo(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  content: Text(
+                    languageService.currentLanguage == 'ar' 
+                      ? 'يرجى اختيار فئة الخدمة الرئيسية للمتابعة.'
+                      : 'Please select a main service category to continue.',
+                    style: GoogleFonts.cairo(
+                      fontSize: 16,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(
+                        languageService.currentLanguage == 'ar' ? 'موافق' : 'OK',
+                        style: GoogleFonts.cairo(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+        return;
+      }
+      setState(() {
+        _currentStep++;
+      });
+      return;
+    }
+    
+    // For step 2 (sub-category selection), check if sub-category is selected
+    if (_currentStep == 2 && _selectedUserType == 'provider') {
+      if (_selectedSubCategory == null) {
+        // Show a more prominent error message
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return Consumer<LanguageService>(
+              builder: (context, languageService, child) {
+                return AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  title: Row(
+                    children: [
+                      Icon(Icons.warning, color: AppColors.primary, size: 24),
+                      SizedBox(width: 8),
+                      Text(
+                        languageService.currentLanguage == 'ar' ? 'الفئة الفرعية مطلوبة' : 'Sub-Category Required',
+                        style: GoogleFonts.cairo(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  content: Text(
+                    languageService.currentLanguage == 'ar' 
+                      ? 'يرجى اختيار فئة الخدمة الفرعية للمتابعة.'
+                      : 'Please select a sub-service category to continue.',
+                    style: GoogleFonts.cairo(
+                      fontSize: 16,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(
+                        languageService.currentLanguage == 'ar' ? 'موافق' : 'OK',
+                        style: GoogleFonts.cairo(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+        return;
+      }
+      setState(() {
+        _currentStep++;
+      });
+      return;
+    }
+    
+    // For other steps, just move forward
     if (_currentStep < _getMaxSteps()) {
       setState(() {
         _currentStep++;
@@ -163,6 +303,59 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
 
   void _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // For service providers, ensure subcategory is selected before submission
+    if (_selectedUserType == 'provider' && _selectedSubCategory == null) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return Consumer<LanguageService>(
+            builder: (context, languageService, child) {
+              return AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                title: Row(
+                  children: [
+                    Icon(Icons.warning, color: AppColors.primary, size: 24),
+                    SizedBox(width: 8),
+                    Text(
+                      languageService.currentLanguage == 'ar' ? 'الفئة الفرعية مطلوبة' : 'Sub-Category Required',
+                      style: GoogleFonts.cairo(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                content: Text(
+                  languageService.currentLanguage == 'ar' 
+                    ? 'يرجى اختيار فئة الخدمة الفرعية قبل إرسال طلبك.'
+                    : 'Please select a sub-service category before submitting your application.',
+                  style: GoogleFonts.cairo(
+                    fontSize: 16,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(
+                      languageService.currentLanguage == 'ar' ? 'موافق' : 'OK',
+                      style: GoogleFonts.cairo(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      );
+      return;
+    }
 
     setState(() {
       _isLoading = true;
@@ -220,7 +413,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
           ),
           SizedBox(height: widget.screenHeight * 0.03),
           Text(
-            'Join PalHands',
+            AppStrings.getString('joinPalhands', languageService.currentLanguage),
             style: GoogleFonts.cairo(
               fontSize: 32,
               fontWeight: FontWeight.bold,
@@ -229,7 +422,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
           ),
           SizedBox(height: widget.screenHeight * 0.02),
           Text(
-            'Connect with trusted service providers in Palestine',
+            AppStrings.getString('connectWithTrustedServiceProvider', languageService.currentLanguage),
             style: GoogleFonts.cairo(
               fontSize: 16,
               color: AppColors.textSecondary,
@@ -286,7 +479,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
           // Support reminder for service providers
           if (_selectedUserType == 'provider' && _currentStep < _getMaxSteps()) ...[
             SizedBox(height: widget.screenHeight * 0.03),
-            _buildSupportReminder(),
+            _buildSupportReminder(languageService),
           ],
         ],
       ),
@@ -297,7 +490,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
     return Column(
       children: [
         Text(
-          'Do you want to sign up as a client or as a service provider?',
+          AppStrings.getString('doYouWantToSignUpAs', languageService.currentLanguage),
           style: GoogleFonts.cairo(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -419,7 +612,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Basic Information',
+          AppStrings.getString('basicInformation', languageService.currentLanguage),
           style: GoogleFonts.cairo(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -465,7 +658,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
         // Password
         _buildPasswordField(
           controller: _passwordController,
-                      label: AppStrings.getString('password', languageService.currentLanguage),
+          label: AppStrings.getString('password', languageService.currentLanguage),
           icon: Icons.lock,
           obscureText: _obscurePassword,
           onToggleVisibility: () {
@@ -483,13 +676,10 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
             return null;
           },
         ),
-        
         SizedBox(height: widget.screenHeight * 0.02),
-        
-        // Confirm Password
         _buildPasswordField(
           controller: _confirmPasswordController,
-                      label: AppStrings.getString('confirmPassword', languageService.currentLanguage),
+          label: AppStrings.getString('confirmPassword', languageService.currentLanguage),
           icon: Icons.lock_outline,
           obscureText: _obscureConfirmPassword,
           onToggleVisibility: () {
@@ -507,69 +697,27 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
             return null;
           },
         ),
-        
-        SizedBox(height: widget.screenHeight * 0.03),
-        
-        // OR divider
-        Row(
-          children: [
-            Expanded(child: Divider(color: AppColors.gray)),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                'OR',
-                style: GoogleFonts.cairo(
-                  color: AppColors.gray,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Expanded(child: Divider(color: AppColors.gray)),
-          ],
-        ),
-        
-        SizedBox(height: widget.screenHeight * 0.03),
-        
-        // Google Sign Up
-        SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: OutlinedButton.icon(
-            onPressed: () {
-              // TODO: Implement Google sign up
-            },
-            icon: Text('🔍', style: TextStyle(fontSize: 20)),
-            label: Text(
-              'Sign up with Google',
-              style: GoogleFonts.cairo(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: AppColors.primary),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          ),
-        ),
-        
         SizedBox(height: widget.screenHeight * 0.02),
-        
-        // Phone Number
         _buildTextField(
           controller: _phoneController,
-                      label: AppStrings.getString('phoneNumber', languageService.currentLanguage),
+          label: AppStrings.getString('phoneNumber', languageService.currentLanguage),
           icon: Icons.phone,
           keyboardType: TextInputType.phone,
           validator: (value) {
             if (value == null || value.isEmpty) {
               return AppStrings.getString('pleaseEnterPhoneNumber', languageService.currentLanguage);
             }
+            // Palestinian phone number validation
+            final pattern = r'^(05[9|6|8|4|2|0|1|3|5|7]|09)\d{7}$';
+            final regExp = RegExp(pattern);
+            if (!regExp.hasMatch(value)) {
+              return 'Please enter a valid Palestinian phone number';
+            }
             return null;
           },
         ),
+        SizedBox(height: widget.screenHeight * 0.02),
+        _buildLocationDropdown(languageService),
       ],
     );
   }
@@ -579,7 +727,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Choose your main service category',
+          AppStrings.getString('selectMainCategory', languageService.currentLanguage),
           style: GoogleFonts.cairo(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -588,7 +736,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
         ),
         SizedBox(height: widget.screenHeight * 0.02),
         Text(
-          'Select the category that best describes your primary service:',
+          AppStrings.getString('selectSpecificServices', languageService.currentLanguage),
           style: GoogleFonts.cairo(
             fontSize: 16,
             color: AppColors.textSecondary,
@@ -773,7 +921,9 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
               return DropdownMenuItem(
                 value: number,
                 child: Text(
-                  number == 1 ? '1 person' : '$number people',
+                  number == 1 
+                    ? AppStrings.getString('onePerson', languageService.currentLanguage)
+                    : '$number ${AppStrings.getString('people', languageService.currentLanguage)}',
                   style: GoogleFonts.cairo(fontSize: 16),
                 ),
               );
@@ -842,7 +992,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
               child: Text(
-                'Previous',
+                AppStrings.getString('back', languageService.currentLanguage),
                 style: GoogleFonts.cairo(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -895,7 +1045,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
     );
   }
 
-  Widget _buildSupportReminder() {
+  Widget _buildSupportReminder(LanguageService languageService) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -909,7 +1059,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
           SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Want to offer a new service that\'s not listed? Contact us at: +970 59 123 4567',
+              AppStrings.getString('wantToOfferNewService', languageService.currentLanguage),
               style: GoogleFonts.cairo(
                 fontSize: 14,
                 color: AppColors.textSecondary,
@@ -922,66 +1072,69 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
   }
 
   Widget _buildSuccessMessage(LanguageService languageService) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: 120,
-          height: 120,
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.check,
-            size: 60,
-            color: AppColors.white,
-          ),
-        ),
-        SizedBox(height: widget.screenHeight * 0.04),
-        
-        Text(
-          'Thank you! We\'re excited to welcome you onboard.',
-          style: GoogleFonts.cairo(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        
-        SizedBox(height: widget.screenHeight * 0.02),
-        
-        Text(
-          'Your request has been successfully sent to our admin team. We\'ll review and contact you shortly.',
-          style: GoogleFonts.cairo(
-            fontSize: 16,
-            color: AppColors.textSecondary,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        
-        SizedBox(height: widget.screenHeight * 0.04),
-        
-        ElevatedButton(
-          onPressed: () => Navigator.of(context).pop(),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            child: Icon(
+              Icons.check,
+              size: 60,
+              color: AppColors.white,
+            ),
           ),
-          child: Text(
-            AppStrings.getString('login', languageService.currentLanguage),
+          SizedBox(height: widget.screenHeight * 0.04),
+          
+          Text(
+            AppStrings.getString('thankYouForSigningUp', languageService.currentLanguage),
+            style: GoogleFonts.cairo(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          
+          SizedBox(height: widget.screenHeight * 0.02),
+          
+          Text(
+            AppStrings.getString('weWillReviewYourApplication', languageService.currentLanguage),
             style: GoogleFonts.cairo(
               fontSize: 16,
-              fontWeight: FontWeight.bold,
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          
+          SizedBox(height: widget.screenHeight * 0.04),
+          
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            ),
+            child: Text(
+              AppStrings.getString('login', languageService.currentLanguage),
+              style: GoogleFonts.cairo(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -1060,6 +1213,68 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
         ),
         validator: validator,
       ),
+    );
+  }
+
+  Widget _buildLocationDropdown(LanguageService languageService) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          _selectedUserType == 'provider' 
+            ? AppStrings.getString('whereDoYouWantToProvideService', languageService.currentLanguage)
+            : AppStrings.getString('whereDoYouPreferToGetService', languageService.currentLanguage),
+          style: GoogleFonts.cairo(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        SizedBox(height: widget.screenHeight * 0.01),
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.inputFieldBackground,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.inputBorder),
+          ),
+          child: DropdownButtonFormField<String>(
+            value: _selectedLocation,
+            decoration: InputDecoration(
+              hintText: AppStrings.getString('selectYourLocation', languageService.currentLanguage),
+              hintStyle: GoogleFonts.cairo(
+                fontSize: 16,
+                color: AppColors.placeholderText,
+              ),
+              prefixIcon: Icon(Icons.location_on, color: AppColors.primary),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            ),
+            items: _availableCities.map((city) {
+              return DropdownMenuItem(
+                value: city,
+                child: Text(
+                  AppStrings.getString(city, languageService.currentLanguage),
+                  style: GoogleFonts.cairo(
+                    fontSize: 16,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _selectedLocation = value;
+              });
+            },
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return AppStrings.getString('pleaseSelectLocation', languageService.currentLanguage);
+              }
+              return null;
+            },
+          ),
+        ),
+      ],
     );
   }
 } 
