@@ -119,6 +119,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                   _buildNavLink('home', languageService),
                   _buildNavLink('aboutUs', languageService),
                   _buildNavLink('ourServices', languageService),
+                  _buildNavLink('faqs', languageService),
                   _buildNavLink('contactUs', languageService),
                 ],
               ),
@@ -160,8 +161,12 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
             Navigator.pushReplacementNamed(context, '/home');
           } else if (key == 'aboutUs') {
             Navigator.pushNamed(context, '/about');
+          } else if (key == 'ourServices') {
+            Navigator.pushNamed(context, '/categories');
+          } else if (key == 'faqs') {
+            Navigator.pushNamed(context, '/faqs');
           }
-          // TODO: Navigate to other pages
+          // TODO: Navigate to contact page
         },
         style: TextButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

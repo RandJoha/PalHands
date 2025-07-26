@@ -60,34 +60,53 @@ class _MobileAboutWidgetState extends State<MobileAboutWidget> {
       ),
       child: Row(
         children: [
-          // Logo and app name
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
+          // Hamburger menu
+          Builder(
+            builder: (context) => GestureDetector(
+              onTap: () {
+                Scaffold.of(context).openDrawer();
+              },
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                child: Icon(
+                  Icons.menu,
                   color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const AnimatedHandshake(
-                  size: 20,
-                  color: Colors.white,
-                  animationDuration: Duration(milliseconds: 2000),
+                  size: 24,
                 ),
               ),
-              const SizedBox(width: 12),
-              Text(
-                AppStrings.getString('appName', languageService.currentLanguage),
-                style: GoogleFonts.cairo(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
+            ),
           ),
-          const Spacer(),
+          const SizedBox(width: 12),
+          // Logo and app name
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const AnimatedHandshake(
+                    size: 20,
+                    color: Colors.white,
+                    animationDuration: Duration(milliseconds: 2000),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  AppStrings.getString('appName', languageService.currentLanguage),
+                  style: GoogleFonts.cairo(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
           // Language toggle
           _buildLanguageToggle(languageService),
         ],

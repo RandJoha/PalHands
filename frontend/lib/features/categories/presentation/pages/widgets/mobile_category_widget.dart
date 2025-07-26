@@ -67,17 +67,19 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> {
         textDirection: languageService.textDirection,
         child: Row(
           children: [
-            // Back button
-            GestureDetector(
-              onTap: () {
-                Navigator.pop(context);
-              },
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                child: Icon(
-                  Icons.arrow_back,
-                  color: AppColors.primary,
-                  size: 24,
+            // Hamburger menu
+            Builder(
+              builder: (context) => GestureDetector(
+                onTap: () {
+                  Scaffold.of(context).openDrawer();
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  child: Icon(
+                    Icons.menu,
+                    color: AppColors.primary,
+                    size: 24,
+                  ),
                 ),
               ),
             ),
@@ -203,7 +205,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> {
                     title: AppStrings.getString('ourServices', languageService.currentLanguage),
                     onTap: () {
                       Navigator.pop(context);
-                      // TODO: Navigate to services
+                      // Already on services/categories page
                     },
                     languageService: languageService,
                   ),
@@ -612,7 +614,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> {
 
   Widget _buildCategoryDetailsSheet(Map<String, dynamic> category, LanguageService languageService, StateSetter setModalState) {
     return Container(
-      height: MediaQuery.of(context).size.height * 0.8,
+      height: MediaQuery.of(context).size.height * 0.85,
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
@@ -685,77 +687,76 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> {
           ),
           // Services list
           Expanded(
-            child: ListView.builder(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
-              itemCount: (category['services'] as List).length,
-              itemBuilder: (context, index) {
-                final service = category['services'][index] as String;
-                final categoryId = category['id'] as String;
-                final isSelected = _selectedServices[categoryId]?.contains(service) ?? false;
-                
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isSelected ? (category['color'] as Color).withOpacity(0.1) : Colors.grey[50],
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isSelected ? (category['color'] as Color) : (category['color'] as Color).withOpacity(0.2),
-                      width: isSelected ? 2 : 1,
-                    ),
-                  ),
-                  constraints: const BoxConstraints(minHeight: 80),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          setModalState(() {
-                            if (_selectedServices[categoryId] == null) {
-                              _selectedServices[categoryId] = <String>{};
-                            }
-                            if (isSelected) {
-                              _selectedServices[categoryId]!.remove(service);
-                            } else {
-                              _selectedServices[categoryId]!.add(service);
-                            }
-                          });
-                        },
-                        child: Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: isSelected ? (category['color'] as Color) : Colors.transparent,
-                            border: Border.all(
-                              color: isSelected ? (category['color'] as Color) : Colors.grey[400]!,
-                              width: 2,
-                            ),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: isSelected
-                              ? Icon(
-                                  Icons.check,
-                                  color: Colors.white,
-                                  size: 16,
-                                )
-                              : null,
-                        ),
+              child: Column(
+                children: List.generate((category['services'] as List).length, (index) {
+                  final service = category['services'][index] as String;
+                  final categoryId = category['id'] as String;
+                  final isSelected = _selectedServices[categoryId]?.contains(service) ?? false;
+                  
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isSelected ? (category['color'] as Color).withOpacity(0.1) : Colors.grey[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected ? (category['color'] as Color) : (category['color'] as Color).withOpacity(0.2),
+                        width: isSelected ? 2 : 1,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              AppStrings.getString(service, languageService.currentLanguage),
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                                color: isSelected ? (category['color'] as Color) : Colors.black,
+                    ),
+                    constraints: const BoxConstraints(minHeight: 80),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            setModalState(() {
+                              if (_selectedServices[categoryId] == null) {
+                                _selectedServices[categoryId] = <String>{};
+                              }
+                              if (isSelected) {
+                                _selectedServices[categoryId]!.remove(service);
+                              } else {
+                                _selectedServices[categoryId]!.add(service);
+                              }
+                            });
+                          },
+                          child: Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: isSelected ? (category['color'] as Color) : Colors.transparent,
+                              border: Border.all(
+                                color: isSelected ? (category['color'] as Color) : Colors.grey[400]!,
+                                width: 2,
                               ),
+                              borderRadius: BorderRadius.circular(4),
                             ),
-                            const SizedBox(height: 4),
-                            Expanded(
-                              child: Text(
+                            child: isSelected
+                                ? Icon(
+                                    Icons.check,
+                                    color: Colors.white,
+                                    size: 16,
+                                  )
+                                : null,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                AppStrings.getString(service, languageService.currentLanguage),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                  color: isSelected ? (category['color'] as Color) : Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
                                 _getServiceDescription(service, languageService.currentLanguage),
                                 style: TextStyle(
                                   fontSize: 12,
@@ -765,14 +766,14 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> {
                                 maxLines: 3,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+                      ],
+                    ),
+                  );
+                }),
+              ),
             ),
           ),
           // Action buttons
@@ -791,6 +792,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> {
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: (category['color'] as Color).withOpacity(0.3),
+                        width: 1,
                       ),
                     ),
                     child: Text(
@@ -812,7 +814,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> {
                         },
                         style: OutlinedButton.styleFrom(
                           foregroundColor: category['color'] as Color,
-                          side: BorderSide(color: category['color'] as Color),
+                          side: BorderSide(color: category['color'] as Color, width: 1),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -975,7 +977,22 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> {
                   setState(() {
                     _selectedIndex = index;
                   });
-                  // TODO: Navigate to respective screens
+                  
+                  // Navigate to respective screens
+                  switch (index) {
+                    case 0: // Home
+                      Navigator.pushReplacementNamed(context, '/home');
+                      break;
+                    case 1: // Categories (current page)
+                      // Already on categories page
+                      break;
+                    case 2: // My Requests
+                      // TODO: Navigate to my requests page
+                      break;
+                    case 3: // Chat
+                      // TODO: Navigate to chat page
+                      break;
+                  }
                 },
                 child: Column(
                   mainAxisSize: MainAxisSize.min,

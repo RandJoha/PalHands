@@ -759,6 +759,22 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
                   setState(() {
                     _selectedIndex = index;
                   });
+                  
+                  // Navigate to respective screens
+                  switch (index) {
+                    case 0: // Home (current page)
+                      // Already on home page
+                      break;
+                    case 1: // Browse
+                      Navigator.pushNamed(context, '/categories');
+                      break;
+                    case 2: // My Requests
+                      // TODO: Navigate to my requests page
+                      break;
+                    case 3: // Chat
+                      // TODO: Navigate to chat page
+                      break;
+                  }
                 },
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
