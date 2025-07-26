@@ -1712,6 +1712,102 @@ class AppStrings {
     'ar': 'جلب وصفات طبية',
   };
 
+  // About Us page strings
+  static const Map<String, String> missionStatement = {
+    'en': 'PalHands brings trusted local care into your home — by the hands of your own community.\n\nWhether it\'s a helping hand, a home-cooked meal, or trusted care for your loved ones — PalHands connects you with skilled locals ready to serve.\n\nOur goal is to empower individuals through meaningful work and provide families with reliable, affordable services — all rooted in culture, care, and community.',
+    'ar': 'PalHands تجلب الرعاية المحلية الموثوقة إلى منزلك — بأيدي مجتمعك.\n\nسواء كانت يد مساعدة، أو وجبة منزلية، أو رعاية موثوقة لأحبائك — PalHands تربطك بمحليين مهرة مستعدين للخدمة.\n\nهدفنا هو تمكين الأفراد من خلال العمل الهادف وتوفير خدمات موثوقة وميسرة للعائلات — كل ذلك متجذر في الثقافة والرعاية والمجتمع.',
+  };
+
+  static const Map<String, String> ourValues = {
+    'en': 'Our Values',
+    'ar': 'قيمنا',
+  };
+
+  static const Map<String, String> communityEmpowerment = {
+    'en': 'Community Empowerment',
+    'ar': 'تمكين المجتمع',
+  };
+
+  static const Map<String, String> localTalentFirst = {
+    'en': 'Local Talent First',
+    'ar': 'المواهب المحلية أولاً',
+  };
+
+  static const Map<String, String> trustAndTransparency = {
+    'en': 'Trust and Transparency',
+    'ar': 'الثقة والشفافية',
+  };
+
+  static const Map<String, String> culturalRespect = {
+    'en': 'Cultural Respect',
+    'ar': 'الاحترام الثقافي',
+  };
+
+  static const Map<String, String> simplicityAndSafety = {
+    'en': 'Simplicity and Safety',
+    'ar': 'البساطة والأمان',
+  };
+
+  static const Map<String, String> whoWeServe = {
+    'en': 'Who We Serve',
+    'ar': 'من نخدم',
+  };
+
+  static const Map<String, String> whoWeServeDescription = {
+    'en': 'Families and individuals looking for trusted help at home, women and local residents offering their time and skills, and NGOs or partners who support community labor.',
+    'ar': 'العائلات والأفراد الذين يبحثون عن مساعدة موثوقة في المنزل، والنساء والمقيمون المحليون الذين يقدمون وقتهم ومهاراتهم، والمنظمات غير الحكومية أو الشركاء الذين يدعمون العمل المجتمعي.',
+  };
+
+  static const Map<String, String> culturalIdentity = {
+    'en': 'Cultural Identity',
+    'ar': 'الهوية الثقافية',
+  };
+
+  static const Map<String, String> culturalIdentityDescription = {
+    'en': 'We are proudly rooted in Palestinian culture. The red embroidery on our cards isn\'t just design — it\'s a symbol of dignity, heritage, and the care we put into every home.',
+    'ar': 'نحن متجذرون بفخر في الثقافة الفلسطينية. التطريز الأحمر على بطاقاتنا ليس مجرد تصميم — إنه رمز للكرامة والتراث والرعاية التي نضعها في كل منزل.',
+  };
+
+  static const Map<String, String> howItWorks = {
+    'en': 'How It Works',
+    'ar': 'كيف يعمل',
+  };
+
+  static const Map<String, String> howItWorksDescription = {
+    'en': 'Simply browse our service categories, connect directly with trusted local providers, and enjoy reliable, community-driven services tailored to your needs.',
+    'ar': 'تصفح فئات خدماتنا ببساطة، تواصل مباشرة مع مقدمي الخدمات المحليين الموثوقين، واستمتع بخدمات موثوقة قائمة على المجتمع مصممة لاحتياجاتك.',
+  };
+
+  static const Map<String, String> ourStory = {
+    'en': 'Our Story',
+    'ar': 'قصتنا',
+  };
+
+  static const Map<String, String> ourStoryDescription = {
+    'en': 'Born from a vision to strengthen local communities and preserve cultural heritage, PalHands emerged as a bridge between traditional values and modern convenience, creating opportunities for meaningful work and trusted services.',
+    'ar': 'ولدت من رؤية لتقوية المجتمعات المحلية والحفاظ على التراث الثقافي، ظهرت بال هاندز كجسر بين القيم التقليدية والراحة الحديثة، مما يخلق فرصاً للعمل الهادف والخدمات الموثوقة.',
+  };
+
+  static const Map<String, String> wantToLearnMore = {
+    'en': 'Want to learn more or partner with us?',
+    'ar': 'هل تريد معرفة المزيد أو الشراكة معنا؟',
+  };
+
+  static const Map<String, String> emailUs = {
+    'en': 'Email Us',
+    'ar': 'راسلنا',
+  };
+
+  static const Map<String, String> callUs = {
+    'en': 'Call Us',
+    'ar': 'اتصل بنا',
+  };
+
+  static const Map<String, String> followUs = {
+    'en': 'Follow Us',
+    'ar': 'تابعنا',
+  };
+
 
 
   // Helper method to get localized string
@@ -2072,6 +2168,26 @@ class AppStrings {
       'specialErrands': specialErrands,
       'billPayment': billPayment,
       'prescriptionPickup': prescriptionPickup,
+      // About Us page strings
+      'missionStatement': missionStatement,
+      'ourValues': ourValues,
+      'communityEmpowerment': communityEmpowerment,
+      'localTalentFirst': localTalentFirst,
+      'trustAndTransparency': trustAndTransparency,
+      'culturalRespect': culturalRespect,
+      'simplicityAndSafety': simplicityAndSafety,
+      'whoWeServe': whoWeServe,
+      'whoWeServeDescription': whoWeServeDescription,
+      'culturalIdentity': culturalIdentity,
+      'culturalIdentityDescription': culturalIdentityDescription,
+      'howItWorks': howItWorks,
+      'howItWorksDescription': howItWorksDescription,
+      'ourStory': ourStory,
+      'ourStoryDescription': ourStoryDescription,
+      'wantToLearnMore': wantToLearnMore,
+      'emailUs': emailUs,
+      'callUs': callUs,
+      'followUs': followUs,
     };
 
     return allStrings[key]?[languageCode] ?? allStrings[key]?['en'] ?? key;

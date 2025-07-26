@@ -178,6 +178,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> {
                       Navigator.pop(context);
                       Navigator.pushReplacementNamed(context, '/home');
                     },
+                    languageService: languageService,
                   ),
                   _buildDrawerItem(
                     icon: Icons.category,
@@ -186,14 +187,16 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> {
                       Navigator.pop(context);
                     },
                     isSelected: true,
+                    languageService: languageService,
                   ),
                   _buildDrawerItem(
                     icon: Icons.info,
                     title: AppStrings.getString('aboutUs', languageService.currentLanguage),
                     onTap: () {
                       Navigator.pop(context);
-                      // TODO: Navigate to about us
+                      Navigator.pushNamed(context, '/about');
                     },
+                    languageService: languageService,
                   ),
                   _buildDrawerItem(
                     icon: Icons.cleaning_services,
@@ -202,6 +205,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> {
                       Navigator.pop(context);
                       // TODO: Navigate to services
                     },
+                    languageService: languageService,
                   ),
                   _buildDrawerItem(
                     icon: Icons.question_answer,
@@ -210,6 +214,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> {
                       Navigator.pop(context);
                       // TODO: Navigate to FAQs
                     },
+                    languageService: languageService,
                   ),
                   _buildDrawerItem(
                     icon: Icons.contact_support,
@@ -218,6 +223,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> {
                       Navigator.pop(context);
                       // TODO: Navigate to contact
                     },
+                    languageService: languageService,
                   ),
                 ],
               ),
@@ -233,23 +239,27 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> {
     required String title,
     required VoidCallback onTap,
     bool isSelected = false,
+    required LanguageService languageService,
   }) {
-    return ListTile(
-      leading: Icon(
-        icon, 
-        color: isSelected ? AppColors.primary : Colors.grey[600],
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-          color: isSelected ? AppColors.primary : Colors.black,
+    return Directionality(
+      textDirection: languageService.textDirection,
+      child: ListTile(
+        leading: Icon(
+          icon, 
+          color: isSelected ? AppColors.primary : Colors.grey[600],
         ),
-        textAlign: TextAlign.start,
+        title: Text(
+          title,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            color: isSelected ? AppColors.primary : Colors.black,
+          ),
+          textAlign: languageService.currentLanguage == 'ar' ? TextAlign.center : TextAlign.start,
+        ),
+        onTap: onTap,
+        tileColor: isSelected ? AppColors.primary.withOpacity(0.1) : null,
       ),
-      onTap: onTap,
-      tileColor: isSelected ? AppColors.primary.withOpacity(0.1) : null,
     );
   }
 

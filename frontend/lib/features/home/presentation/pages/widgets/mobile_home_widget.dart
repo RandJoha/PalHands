@@ -250,7 +250,7 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
                     title: AppStrings.getString('aboutUs', languageService.currentLanguage),
                     onTap: () {
                       Navigator.pop(context);
-                      // TODO: Navigate to about us
+                      Navigator.pushNamed(context, '/about');
                     },
                   ),
                   _buildDrawerItem(
@@ -976,7 +976,9 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
                 ),
               ),
               TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.pushNamed(context, '/about');
+                },
                 child: Text(
                   AppStrings.getString('aboutUs', languageService.currentLanguage),
                   style: TextStyle(color: AppColors.primary),

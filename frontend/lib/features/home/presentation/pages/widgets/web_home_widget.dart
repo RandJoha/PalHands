@@ -210,6 +210,10 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
               text == 'الخدمات' ||
               text == 'Services') {
             Navigator.pushNamed(context, '/categories');
+          } else if (text == AppStrings.getString('aboutUs', languageService.currentLanguage) ||
+                     text == 'من نحن' ||
+                     text == 'About') {
+            Navigator.pushNamed(context, '/about');
           }
           // TODO: Add navigation for other pages
         },
@@ -811,7 +815,9 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
                 ),
               ),
               TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.pushNamed(context, '/about');
+                },
                 child: Text(
                   AppStrings.getString('aboutUs', languageService.currentLanguage),
                   style: TextStyle(color: AppColors.primary, fontSize: 16),

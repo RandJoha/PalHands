@@ -158,6 +158,8 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
         onPressed: () {
           if (key == 'home') {
             Navigator.pushReplacementNamed(context, '/home');
+          } else if (key == 'aboutUs') {
+            Navigator.pushNamed(context, '/about');
           }
           // TODO: Navigate to other pages
         },
