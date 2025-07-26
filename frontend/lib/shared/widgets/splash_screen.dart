@@ -13,6 +13,7 @@ import '../services/language_service.dart';
 // Widget imports
 import 'login_screen.dart';
 import 'animated_handshake.dart';
+import '../../features/home/presentation/pages/home_screen.dart';
 
 // Splash screen with navigation logic
 class SplashScreen extends StatefulWidget {
@@ -40,7 +41,7 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Consumer2<HealthService, LanguageService>(
       builder: (context, healthService, languageService, child) {
-        // Navigate to login when health check is successful
+        // Navigate directly to home when health check is successful
         if (healthService.isConnected && !healthService.isLoading) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
@@ -48,7 +49,7 @@ class _SplashScreenState extends State<SplashScreen> {
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (context) => const LoginScreen(),
+            builder: (context) => const HomeScreen(),
           ),
         );
                 }

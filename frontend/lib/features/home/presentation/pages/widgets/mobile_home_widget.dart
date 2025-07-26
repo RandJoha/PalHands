@@ -13,8 +13,51 @@ class MobileHomeWidget extends StatefulWidget {
   State<MobileHomeWidget> createState() => _MobileHomeWidgetState();
 }
 
-class _MobileHomeWidgetState extends State<MobileHomeWidget> {
-  int _selectedIndex = 0; // For bottom navigation
+class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProviderStateMixin {
+  int _selectedIndex = 0;
+  late AnimationController _bannerController;
+  late AnimationController _cardController;
+  late Animation<double> _bannerAnimation;
+  late Animation<double> _cardAnimation; // For bottom navigation
+
+  @override
+  void initState() {
+    super.initState();
+    _bannerController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+    _cardController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    
+    _bannerAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _bannerController,
+      curve: Curves.easeInOut,
+    ));
+    
+    _cardAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _cardController,
+      curve: Curves.easeOutBack,
+    ));
+    
+    _bannerController.forward();
+    _cardController.forward();
+  }
+
+  @override
+  void dispose() {
+    _bannerController.dispose();
+    _cardController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -272,182 +315,113 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> {
   }
 
   Widget _buildHeroBanner(LanguageService languageService) {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      height: 200,
-      decoration: BoxDecoration(
-        color: const Color(0xFFFDF5EC), // Cream background
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Muted green half-circle background for illustration
-          Positioned(
-            left: -20,
-            top: -20,
+    return AnimatedBuilder(
+      animation: _bannerAnimation,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(0, 50 * (1 - _bannerAnimation.value)),
+          child: Opacity(
+            opacity: _bannerAnimation.value,
             child: Container(
-              width: 140,
-              height: 140,
+              margin: const EdgeInsets.all(16),
+              height: 220,
               decoration: BoxDecoration(
-                color: const Color(0xFF6B8E23), // Muted olive green
-                borderRadius: BorderRadius.circular(70),
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFFFDF5EC),
+                    const Color(0xFFF5F5DC),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    // Hijab girl image - placeholder for now
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(60),
+                        border: Border.all(
+                          color: AppColors.primary.withOpacity(0.3),
+                          width: 2,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.person,
+                        size: 60,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    // Text content
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Hero title
+                          Text(
+                            AppStrings.getString('heroTitle', languageService.currentLanguage),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          // Description
+                          Text(
+                            AppStrings.getString('professionalCleaningDescription', languageService.currentLanguage),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                              height: 1.3,
+                            ),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 12),
+                          // Book Now button
+                          ElevatedButton(
+                            onPressed: () {
+                              // TODO: Navigate to booking
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: Text(
+                              AppStrings.getString('bookNow', languageService.currentLanguage),
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-          // Main content row
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                // Illustration of woman with hijab and cleaning tools
-                Container(
-                  width: 100,
-                  height: 100,
-                  child: Stack(
-                    children: [
-                      // Woman with hijab
-                      Positioned(
-                        left: 15,
-                        top: 15,
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary, // Red hijab
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                        ),
-                      ),
-                      // Face
-                      Positioned(
-                        left: 17,
-                        top: 17,
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFE4C4), // Light skin tone
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                        ),
-                      ),
-                      // Black long-sleeve shirt
-                      Positioned(
-                        left: 25,
-                        top: 45,
-                        child: Container(
-                          width: 25,
-                          height: 35,
-                          decoration: BoxDecoration(
-                            color: Colors.black,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                      // Green apron
-                      Positioned(
-                        left: 20,
-                        top: 42,
-                        child: Container(
-                          width: 35,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF228B22), // Green apron
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                      // Red feather duster (right hand)
-                      Positioned(
-                        right: 8,
-                        top: 35,
-                        child: Container(
-                          width: 18,
-                          height: 25,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary, // Red duster
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                      ),
-                      // Red bucket (left hand)
-                      Positioned(
-                        left: 8,
-                        bottom: 8,
-                        child: Container(
-                          width: 15,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary, // Red bucket
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 20),
-                // Text content
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Hero title
-                      Text(
-                        AppStrings.getString('heroTitle', languageService.currentLanguage),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      // Description
-                      Text(
-                        AppStrings.getString('professionalCleaningDescription', languageService.currentLanguage),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                          height: 1.3,
-                        ),
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 12),
-                      // Book Now button
-                      ElevatedButton(
-                        onPressed: () {
-                          // TODO: Navigate to booking
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: Text(
-                          AppStrings.getString('bookNow', languageService.currentLanguage),
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -502,10 +476,21 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> {
             ),
             itemCount: categories.length,
             itemBuilder: (context, index) {
-              return _buildCategoryCard(
-                categories[index]['icon'] as IconData,
-                AppStrings.getString(categories[index]['name'] as String, languageService.currentLanguage),
-                categories[index]['image'] as String,
+              return AnimatedBuilder(
+                animation: _cardAnimation,
+                builder: (context, child) {
+                  return Transform.scale(
+                    scale: 0.8 + (0.2 * _cardAnimation.value),
+                    child: Opacity(
+                      opacity: _cardAnimation.value,
+                      child: _buildCategoryCard(
+                        categories[index]['icon'] as IconData,
+                        AppStrings.getString(categories[index]['name'] as String, languageService.currentLanguage),
+                        categories[index]['image'] as String,
+                      ),
+                    ),
+                  );
+                },
               );
             },
           ),
@@ -527,7 +512,9 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> {
           onTap: () {
             Navigator.pushNamed(context, '/categories');
           },
-          child: Container(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
             width: 180, // Increased from 150 to 180
             height: 180, // Increased from 150 to 180
             child: Stack(

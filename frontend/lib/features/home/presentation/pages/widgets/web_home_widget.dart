@@ -238,7 +238,14 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
       margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 40),
       height: 400,
       decoration: BoxDecoration(
-        color: const Color(0xFFFDF5EC), // Cream background
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFFFDF5EC),
+            const Color(0xFFF5F5DC),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -248,165 +255,78 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
           ),
         ],
       ),
-      child: Stack(
-        children: [
-          // Muted green half-circle background for illustration
-          Positioned(
-            left: -40,
-            top: -40,
-            child: Container(
-              width: 300,
-              height: 300,
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Row(
+          children: [
+            // Hijab girl image - placeholder for now
+            Container(
+              width: 280,
+              height: 280,
               decoration: BoxDecoration(
-                color: const Color(0xFF6B8E23), // Muted olive green
-                borderRadius: BorderRadius.circular(150),
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(140),
+                border: Border.all(
+                  color: AppColors.primary.withOpacity(0.3),
+                  width: 3,
+                ),
+              ),
+              child: Icon(
+                Icons.person,
+                size: 120,
+                color: AppColors.primary,
               ),
             ),
-          ),
-          // Main content row
-          Padding(
-            padding: const EdgeInsets.all(40),
-            child: Row(
-              children: [
-                // Illustration of woman with hijab and cleaning tools
-                Container(
-                  width: 250,
-                  height: 250,
-                  child: Stack(
-                    children: [
-                      // Woman with hijab
-                      Positioned(
-                        left: 50,
-                        top: 50,
-                        child: Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary, // Red hijab
-                            borderRadius: BorderRadius.circular(50),
-                          ),
-                        ),
-                      ),
-                      // Face
-                      Positioned(
-                        left: 55,
-                        top: 55,
-                        child: Container(
-                          width: 90,
-                          height: 90,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFE4C4), // Light skin tone
-                            borderRadius: BorderRadius.circular(45),
-                          ),
-                        ),
-                      ),
-                      // Black long-sleeve shirt
-                      Positioned(
-                        left: 75,
-                        top: 120,
-                        child: Container(
-                          width: 60,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            color: Colors.black,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                      // Green apron
-                      Positioned(
-                        left: 60,
-                        top: 115,
-                        child: Container(
-                          width: 90,
-                          height: 90,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF228B22), // Green apron
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                      // Red feather duster (right hand)
-                      Positioned(
-                        right: 30,
-                        top: 100,
-                        child: Container(
-                          width: 35,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary, // Red duster
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                        ),
-                      ),
-                      // Red bucket (left hand)
-                      Positioned(
-                        left: 30,
-                        bottom: 30,
-                        child: Container(
-                          width: 25,
-                          height: 35,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary, // Red bucket
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                        ),
-                      ),
-                    ],
+            const SizedBox(width: 50),
+            // Text content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Hero title
+                  Text(
+                    AppStrings.getString('heroTitle', languageService.currentLanguage),
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 50),
-                // Text content
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Hero title
-                      Text(
-                        AppStrings.getString('heroTitle', languageService.currentLanguage),
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Description
-                      Text(
-                        AppStrings.getString('professionalCleaningDescription', languageService.currentLanguage),
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.grey[600],
-                          height: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      // Book Now button
-                      ElevatedButton(
-                        onPressed: () {
-                          // TODO: Navigate to booking
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          AppStrings.getString('bookNow', languageService.currentLanguage),
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: 16),
+                  // Description
+                  Text(
+                    AppStrings.getString('professionalCleaningDescription', languageService.currentLanguage),
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.grey[600],
+                      height: 1.5,
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 24),
+                  // Book Now button
+                  ElevatedButton(
+                    onPressed: () {
+                      // TODO: Navigate to booking
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      AppStrings.getString('bookNow', languageService.currentLanguage),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

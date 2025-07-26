@@ -837,6 +837,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> {
   String _getServiceDescription(String serviceKey, String language) {
     // Map service keys to their description keys
     final descriptionMap = {
+      // Cleaning services
       'bedroomCleaning': 'bedroomCleaningDesc',
       'livingRoomCleaning': 'livingRoomCleaningDesc',
       'kitchenCleaning': 'kitchenCleaningDesc',
@@ -854,6 +855,57 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> {
       'postConstructionCleaning': 'postConstructionCleaningDesc',
       'apartmentCleaning': 'apartmentCleaningDesc',
       'regularCleaning': 'regularCleaningDesc',
+      // Organizing services
+      'bedroomOrganizing': 'bedroomOrganizingDesc',
+      'kitchenOrganizing': 'kitchenOrganizingDesc',
+      'closetOrganizing': 'closetOrganizingDesc',
+      'storageOrganizing': 'storageOrganizingDesc',
+      'livingRoomOrganizing': 'livingRoomOrganizingDesc',
+      'postPartyOrganizing': 'postPartyOrganizingDesc',
+      'fullHouseOrganizing': 'fullHouseOrganizingDesc',
+      'childrenOrganizing': 'childrenOrganizingDesc',
+      // Cooking services
+      'mainDishes': 'mainDishesDesc',
+      'desserts': 'dessertsDesc',
+      'specialRequests': 'specialRequestsDesc',
+      // Childcare services
+      'homeBabysitting': 'homeBabysittingDesc',
+      'schoolAccompaniment': 'schoolAccompanimentDesc',
+      'homeworkHelp': 'homeworkHelpDesc',
+      'educationalActivities': 'educationalActivitiesDesc',
+      'childrenMealPrep': 'childrenMealPrepDesc',
+      'sickChildCare': 'sickChildCareDesc',
+      // Elderly care services
+      'homeElderlyCare': 'homeElderlyCareDesc',
+      'medicalTransport': 'medicalTransportDesc',
+      'healthMonitoring': 'healthMonitoringDesc',
+      'medicationAssistance': 'medicationAssistanceDesc',
+      'emotionalSupport': 'emotionalSupportDesc',
+      'mobilityAssistance': 'mobilityAssistanceDesc',
+      // Maintenance services
+      'electricalWork': 'electricalWorkDesc',
+      'plumbingWork': 'plumbingWorkDesc',
+      'aluminumWork': 'aluminumWorkDesc',
+      'carpentryWork': 'carpentryWorkDesc',
+      'painting': 'paintingDesc',
+      'hangingItems': 'hangingItemsDesc',
+      'satelliteInstallation': 'satelliteInstallationDesc',
+      'applianceMaintenance': 'applianceMaintenanceDesc',
+      // New home services
+      'furnitureMoving': 'furnitureMovingDesc',
+      'packingUnpacking': 'packingUnpackingDesc',
+      'furnitureWrapping': 'furnitureWrappingDesc',
+      'newHomeArrangement': 'newHomeArrangementDesc',
+      'newApartmentCleaning': 'newApartmentCleaningDesc',
+      'preOccupancyRepairs': 'preOccupancyRepairsDesc',
+      'kitchenSetup': 'kitchenSetupDesc',
+      'applianceInstallation': 'applianceInstallationDesc',
+      // Miscellaneous services
+      'documentDelivery': 'documentDeliveryDesc',
+      'shoppingDelivery': 'shoppingDeliveryDesc',
+      'specialErrands': 'specialErrandsDesc',
+      'billPayment': 'billPaymentDesc',
+      'prescriptionPickup': 'prescriptionPickupDesc',
     };
 
     final descriptionKey = descriptionMap[serviceKey];

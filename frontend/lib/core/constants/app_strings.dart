@@ -1146,6 +1146,233 @@ class AppStrings {
     'ar': 'خدمات تنظيف منتظمة يومياً أو أسبوعياً أو شهرياً',
   };
 
+  // Cooking service descriptions
+  static const Map<String, String> mainDishesDesc = {
+    'en': 'Delicious main dishes prepared with fresh ingredients and traditional Palestinian recipes, including maqluba, mansaf, and other authentic meals.',
+    'ar': 'أطباق رئيسية لذيذة محضرة بمكونات طازجة ووصفات فلسطينية تقليدية، تشمل المقلوبة والمنسف وأطباق أخرى أصيلة.',
+  };
+
+  static const Map<String, String> dessertsDesc = {
+    'en': 'Sweet treats and traditional Palestinian desserts including knafeh, baklava, and homemade pastries made with love and authentic recipes.',
+    'ar': 'حلويات ووجبات حلوة فلسطينية تقليدية تشمل الكنافة والباقلوا والمعجنات المنزلية المحضرة بالحب ووصفات أصيلة.',
+  };
+
+  static const Map<String, String> specialRequestsDesc = {
+    'en': 'Custom meal preparation for special occasions, dietary restrictions, or unique requests with personalized attention to your specific needs.',
+    'ar': 'تحضير وجبات مخصصة للمناسبات الخاصة أو القيود الغذائية أو الطلبات الفريدة مع اهتمام شخصي لاحتياجاتك المحددة.',
+  };
+
+  // Organizing service descriptions
+  static const Map<String, String> bedroomOrganizingDesc = {
+    'en': 'Transform your bedroom into a peaceful sanctuary with professional organizing services for furniture, clothing, and personal items.',
+    'ar': 'حول غرفة نومك إلى ملاذ هادئ مع خدمات تنظيم احترافية للأثاث والملابس والأغراض الشخصية.',
+  };
+
+  static const Map<String, String> kitchenOrganizingDesc = {
+    'en': 'Optimize your kitchen space with smart storage solutions, pantry organization, and efficient layout planning for better functionality.',
+    'ar': 'حسن مساحة مطبخك مع حلول تخزين ذكية وتنظيم المخزن وتخطيط تخطيط فعال لوظائف أفضل.',
+  };
+
+  static const Map<String, String> closetOrganizingDesc = {
+    'en': 'Professional closet organization with seasonal sorting, space optimization, and storage solutions for all your clothing and accessories.',
+    'ar': 'تنظيم احترافي للخزائن مع ترتيب موسمي وتحسين المساحة وحلول تخزين لجميع ملابسك وملحقاتك.',
+  };
+
+  static const Map<String, String> storageOrganizingDesc = {
+    'en': 'Maximize storage space efficiency with custom storage solutions, decluttering services, and systematic organization methods.',
+    'ar': 'زيادة كفاءة مساحة التخزين مع حلول تخزين مخصصة وخدمات إزالة الفوضى وطرق تنظيم منهجية.',
+  };
+
+  static const Map<String, String> livingRoomOrganizingDesc = {
+    'en': 'Create a welcoming and organized living space with furniture arrangement, decorative organization, and functional layout design.',
+    'ar': 'أنشئ مساحة معيشة ترحيبية ومنظمة مع ترتيب الأثاث وتنظيم الديكور وتصميم تخطيط وظيفي.',
+  };
+
+  static const Map<String, String> postPartyOrganizingDesc = {
+    'en': 'Post-party cleanup and organization services to restore your space quickly and efficiently after celebrations and gatherings.',
+    'ar': 'خدمات تنظيف وتنظيم ما بعد الحفلات لاستعادة مساحتك بسرعة وكفاءة بعد الاحتفالات والتجمعات.',
+  };
+
+  static const Map<String, String> fullHouseOrganizingDesc = {
+    'en': 'Comprehensive home organization service covering all rooms and spaces with systematic decluttering and storage optimization.',
+    'ar': 'خدمة تنظيم منزلية شاملة تغطي جميع الغرف والمساحات مع إزالة الفوضى المنهجية وتحسين التخزين.',
+  };
+
+  static const Map<String, String> childrenOrganizingDesc = {
+    'en': 'Child-friendly organizing services for playrooms, study areas, and children\'s bedrooms with educational storage solutions.',
+    'ar': 'خدمات تنظيم صديقة للأطفال لغرف اللعب ومناطق الدراسة وغرف نوم الأطفال مع حلول تخزين تعليمية.',
+  };
+
+  // Childcare service descriptions
+  static const Map<String, String> homeBabysittingDesc = {
+    'en': 'Professional in-home babysitting services with experienced caregivers who provide safe, engaging, and educational childcare.',
+    'ar': 'خدمات مجالسة أطفال احترافية في المنزل مع مقدمي رعاية ذوي خبرة يقدمون رعاية أطفال آمنة وجذابة وتعليمية.',
+  };
+
+  static const Map<String, String> schoolAccompanimentDesc = {
+    'en': 'Reliable school and nursery accompaniment services ensuring safe transportation and supervision for your children.',
+    'ar': 'خدمات مرافقة موثوقة للمدارس والحضانات تضمن النقل الآمن والإشراف على أطفالك.',
+  };
+
+  static const Map<String, String> homeworkHelpDesc = {
+    'en': 'Educational homework assistance and tutoring services to support your child\'s academic development and learning progress.',
+    'ar': 'مساعدة تعليمية في الواجبات المنزلية وخدمات الدروس الخصوصية لدعم التطور الأكاديمي وتقدم التعلم لطفلك.',
+  };
+
+  static const Map<String, String> educationalActivitiesDesc = {
+    'en': 'Engaging educational and recreational activities designed to stimulate learning, creativity, and social development in children.',
+    'ar': 'أنشطة تعليمية وترفيهية جذابة مصممة لتحفيز التعلم والإبداع والتطور الاجتماعي لدى الأطفال.',
+  };
+
+  static const Map<String, String> childrenMealPrepDesc = {
+    'en': 'Healthy and nutritious meal preparation for children with attention to dietary needs, preferences, and balanced nutrition.',
+    'ar': 'تحضير وجبات صحية ومغذية للأطفال مع الاهتمام بالاحتياجات الغذائية والتفضيلات والتغذية المتوازنة.',
+  };
+
+  static const Map<String, String> sickChildCareDesc = {
+    'en': 'Specialized care for sick children including medication administration, comfort care, and monitoring under professional supervision.',
+    'ar': 'رعاية متخصصة للأطفال المرضى تشمل إعطاء الأدوية والرعاية المريحة والمراقبة تحت إشراف احترافي.',
+  };
+
+  // Elderly care service descriptions
+  static const Map<String, String> homeElderlyCareDesc = {
+    'en': 'Compassionate in-home elderly care services providing companionship, daily assistance, and personalized care for senior family members.',
+    'ar': 'خدمات رعاية كبار السن الرحيمة في المنزل توفر الرفقة والمساعدة اليومية والرعاية الشخصية لأفراد الأسرة المسنين.',
+  };
+
+  static const Map<String, String> medicalTransportDesc = {
+    'en': 'Safe and reliable transportation services to medical centers and clinics with assistance and support throughout the journey.',
+    'ar': 'خدمات نقل آمنة وموثوقة للمراكز الطبية والعيادات مع المساعدة والدعم طوال الرحلة.',
+  };
+
+  static const Map<String, String> healthMonitoringDesc = {
+    'en': 'Professional health monitoring services including blood pressure and blood sugar tracking with regular reporting and alerts.',
+    'ar': 'خدمات مراقبة صحية احترافية تشمل تتبع ضغط الدم وسكر الدم مع التقارير المنتظمة والتنبيهات.',
+  };
+
+  static const Map<String, String> medicationAssistanceDesc = {
+    'en': 'Supervised medication administration and management services ensuring proper dosage, timing, and medication safety.',
+    'ar': 'خدمات إعطاء وإدارة الأدوية تحت الإشراف تضمن الجرعة المناسبة والتوقيت وسلامة الأدوية.',
+  };
+
+  static const Map<String, String> emotionalSupportDesc = {
+    'en': 'Psychological and emotional support services providing companionship, conversation, and mental well-being assistance.',
+    'ar': 'خدمات الدعم النفسي والعاطفي توفر الرفقة والمحادثة والمساعدة في الرفاهية العقلية.',
+  };
+
+  static const Map<String, String> mobilityAssistanceDesc = {
+    'en': 'Physical mobility assistance and support services helping with walking, transfers, and daily movement activities.',
+    'ar': 'خدمات المساعدة والدعم في الحركة البدنية تساعد في المشي والانتقالات وأنشطة الحركة اليومية.',
+  };
+
+  // Maintenance service descriptions
+  static const Map<String, String> electricalWorkDesc = {
+    'en': 'Professional electrical work including installations, repairs, and maintenance with safety standards and quality assurance.',
+    'ar': 'أعمال كهربائية احترافية تشمل التركيبات والإصلاحات والصيانة مع معايير السلامة وضمان الجودة.',
+  };
+
+  static const Map<String, String> plumbingWorkDesc = {
+    'en': 'Expert plumbing services for repairs, installations, and maintenance of water systems, pipes, and fixtures.',
+    'ar': 'خدمات سباكة خبيرة للإصلاحات والتركيبات وصيانة أنظمة المياه والأنابيب والتركيبات.',
+  };
+
+  static const Map<String, String> aluminumWorkDesc = {
+    'en': 'Specialized aluminum work including window frames, doors, and structural elements with precision and durability.',
+    'ar': 'أعمال ألمنيوم متخصصة تشمل إطارات النوافذ والأبواب والعناصر الهيكلية بدقة ومتانة.',
+  };
+
+  static const Map<String, String> carpentryWorkDesc = {
+    'en': 'Skilled carpentry services for furniture repair, custom woodwork, and structural improvements with quality craftsmanship.',
+    'ar': 'خدمات نجارة ماهرة لإصلاح الأثاث والأعمال الخشبية المخصصة والتحسينات الهيكلية مع الحرفية عالية الجودة.',
+  };
+
+  static const Map<String, String> paintingDesc = {
+    'en': 'Professional painting services for interior and exterior surfaces with color consultation and quality finishes.',
+    'ar': 'خدمات دهان احترافية للأسطح الداخلية والخارجية مع استشارة الألوان والإنهاءات عالية الجودة.',
+  };
+
+  static const Map<String, String> hangingItemsDesc = {
+    'en': 'Safe and secure hanging services for pictures, mirrors, shelves, and decorative items with proper mounting techniques.',
+    'ar': 'خدمات تعليق آمنة وموثوقة للصور والمرايا والرفوف والعناصر الزخرفية مع تقنيات التركيب المناسبة.',
+  };
+
+  static const Map<String, String> satelliteInstallationDesc = {
+    'en': 'Professional satellite dish installation and setup services with signal optimization and proper positioning.',
+    'ar': 'خدمات تركيب وإعداد صحون الأقمار الصناعية الاحترافية مع تحسين الإشارة والموضع المناسب.',
+  };
+
+  static const Map<String, String> applianceMaintenanceDesc = {
+    'en': 'Comprehensive appliance maintenance and repair services for household electronics and kitchen equipment.',
+    'ar': 'خدمات صيانة وإصلاح شاملة للأجهزة الإلكترونية المنزلية ومعدات المطبخ.',
+  };
+
+  // New home service descriptions
+  static const Map<String, String> furnitureMovingDesc = {
+    'en': 'Professional furniture moving services with careful handling, protection, and efficient relocation of all household items.',
+    'ar': 'خدمات نقل أثاث احترافية مع التعامل الحذر والحماية والنقل الفعال لجميع الأغراض المنزلية.',
+  };
+
+  static const Map<String, String> packingUnpackingDesc = {
+    'en': 'Complete packing and unpacking services with organized labeling, protection, and systematic arrangement of belongings.',
+    'ar': 'خدمات تعبئة وفك تعبئة كاملة مع تسمية منظمة وحماية وترتيب منهجي للممتلكات.',
+  };
+
+  static const Map<String, String> furnitureWrappingDesc = {
+    'en': 'Professional furniture wrapping and protection services using quality materials to prevent damage during transport.',
+    'ar': 'خدمات تغليف وحماية أثاث احترافية باستخدام مواد عالية الجودة لمنع الضرر أثناء النقل.',
+  };
+
+  static const Map<String, String> newHomeArrangementDesc = {
+    'en': 'Complete home arrangement and interior design services to create a comfortable and functional living space.',
+    'ar': 'خدمات ترتيب منزلية كاملة وتصميم داخلي لإنشاء مساحة معيشة مريحة ووظيفية.',
+  };
+
+  static const Map<String, String> newApartmentCleaningDesc = {
+    'en': 'Thorough cleaning services for new apartments including deep cleaning, sanitization, and preparation for occupancy.',
+    'ar': 'خدمات تنظيف شاملة للشقق الجديدة تشمل التنظيف العميق والتعقيم والتحضير للسكن.',
+  };
+
+  static const Map<String, String> preOccupancyRepairsDesc = {
+    'en': 'Pre-occupancy repair and maintenance services to ensure your new home is in perfect condition before moving in.',
+    'ar': 'خدمات إصلاح وصيانة ما قبل السكن لضمان أن منزلك الجديد في حالة مثالية قبل الانتقال إليه.',
+  };
+
+  static const Map<String, String> kitchenSetupDesc = {
+    'en': 'Complete kitchen setup and organization services including appliance installation, storage solutions, and functional layout.',
+    'ar': 'خدمات إعداد وتنظيم مطبخ كاملة تشمل تركيب الأجهزة وحلول التخزين والتخطيط الوظيفي.',
+  };
+
+  static const Map<String, String> applianceInstallationDesc = {
+    'en': 'Professional appliance installation services for kitchen and household equipment with proper setup and testing.',
+    'ar': 'خدمات تركيب أجهزة احترافية لمعدات المطبخ والمنزل مع الإعداد والاختبار المناسب.',
+  };
+
+  // Miscellaneous service descriptions
+  static const Map<String, String> documentDeliveryDesc = {
+    'en': 'Reliable document delivery services for important papers, contracts, and official documents with secure handling.',
+    'ar': 'خدمات توصيل وثائق موثوقة للأوراق المهمة والعقود والمستندات الرسمية مع التعامل الآمن.',
+  };
+
+  static const Map<String, String> shoppingDeliveryDesc = {
+    'en': 'Convenient shopping and delivery services for groceries, household items, and personal shopping needs.',
+    'ar': 'خدمات تسوق وتوصيل مريحة للبقالة والأغراض المنزلية واحتياجات التسوق الشخصية.',
+  };
+
+  static const Map<String, String> specialErrandsDesc = {
+    'en': 'Custom errand services for special requests, unique tasks, and personalized assistance with attention to detail.',
+    'ar': 'خدمات مهام مخصصة للطلبات الخاصة والمهام الفريدة والمساعدة الشخصية مع الاهتمام بالتفاصيل.',
+  };
+
+  static const Map<String, String> billPaymentDesc = {
+    'en': 'Convenient bill payment services for utilities, services, and other payments with secure transaction handling.',
+    'ar': 'خدمات دفع فواتير مريحة للمرافق والخدمات والمدفوعات الأخرى مع التعامل الآمن للمعاملات.',
+  };
+
+  static const Map<String, String> prescriptionPickupDesc = {
+    'en': 'Reliable prescription pickup and delivery services from pharmacies with proper handling and timely delivery.',
+    'ar': 'خدمات استلام وتوصيل وصفات طبية موثوقة من الصيدليات مع التعامل المناسب والتوصيل في الوقت المحدد.',
+  };
+
   static const Map<String, String> serviceDescription = {
     'en': 'Professional service with attention to detail',
     'ar': 'خدمة احترافية مع الاهتمام بالتفاصيل',
@@ -1725,6 +1952,57 @@ class AppStrings {
         'postConstructionCleaningDesc': postConstructionCleaningDesc,
         'apartmentCleaningDesc': apartmentCleaningDesc,
         'regularCleaningDesc': regularCleaningDesc,
+        // Cooking service descriptions
+        'mainDishesDesc': mainDishesDesc,
+        'dessertsDesc': dessertsDesc,
+        'specialRequestsDesc': specialRequestsDesc,
+        // Organizing service descriptions
+        'bedroomOrganizingDesc': bedroomOrganizingDesc,
+        'kitchenOrganizingDesc': kitchenOrganizingDesc,
+        'closetOrganizingDesc': closetOrganizingDesc,
+        'storageOrganizingDesc': storageOrganizingDesc,
+        'livingRoomOrganizingDesc': livingRoomOrganizingDesc,
+        'postPartyOrganizingDesc': postPartyOrganizingDesc,
+        'fullHouseOrganizingDesc': fullHouseOrganizingDesc,
+        'childrenOrganizingDesc': childrenOrganizingDesc,
+        // Childcare service descriptions
+        'homeBabysittingDesc': homeBabysittingDesc,
+        'schoolAccompanimentDesc': schoolAccompanimentDesc,
+        'homeworkHelpDesc': homeworkHelpDesc,
+        'educationalActivitiesDesc': educationalActivitiesDesc,
+        'childrenMealPrepDesc': childrenMealPrepDesc,
+        'sickChildCareDesc': sickChildCareDesc,
+        // Elderly care service descriptions
+        'homeElderlyCareDesc': homeElderlyCareDesc,
+        'medicalTransportDesc': medicalTransportDesc,
+        'healthMonitoringDesc': healthMonitoringDesc,
+        'medicationAssistanceDesc': medicationAssistanceDesc,
+        'emotionalSupportDesc': emotionalSupportDesc,
+        'mobilityAssistanceDesc': mobilityAssistanceDesc,
+        // Maintenance service descriptions
+        'electricalWorkDesc': electricalWorkDesc,
+        'plumbingWorkDesc': plumbingWorkDesc,
+        'aluminumWorkDesc': aluminumWorkDesc,
+        'carpentryWorkDesc': carpentryWorkDesc,
+        'paintingDesc': paintingDesc,
+        'hangingItemsDesc': hangingItemsDesc,
+        'satelliteInstallationDesc': satelliteInstallationDesc,
+        'applianceMaintenanceDesc': applianceMaintenanceDesc,
+        // New home service descriptions
+        'furnitureMovingDesc': furnitureMovingDesc,
+        'packingUnpackingDesc': packingUnpackingDesc,
+        'furnitureWrappingDesc': furnitureWrappingDesc,
+        'newHomeArrangementDesc': newHomeArrangementDesc,
+        'newApartmentCleaningDesc': newApartmentCleaningDesc,
+        'preOccupancyRepairsDesc': preOccupancyRepairsDesc,
+        'kitchenSetupDesc': kitchenSetupDesc,
+        'applianceInstallationDesc': applianceInstallationDesc,
+        // Miscellaneous service descriptions
+        'documentDeliveryDesc': documentDeliveryDesc,
+        'shoppingDeliveryDesc': shoppingDeliveryDesc,
+        'specialErrandsDesc': specialErrandsDesc,
+        'billPaymentDesc': billPaymentDesc,
+        'prescriptionPickupDesc': prescriptionPickupDesc,
         'serviceDescription': serviceDescription,
       // Service descriptions
       'cleaningServicesDescription': cleaningServicesDescription,
