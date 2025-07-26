@@ -442,20 +442,36 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
             ),
           ),
           const SizedBox(height: 32),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              crossAxisSpacing: 24,
-              mainAxisSpacing: 24,
-              childAspectRatio: 0.8,
-            ),
-            itemCount: categories.length,
-            itemBuilder: (context, index) {
-              return _buildCategoryCard(
-                categories[index],
-                languageService,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // Responsive grid based on available width
+              int crossAxisCount;
+              if (constraints.maxWidth > 1400) {
+                crossAxisCount = 4;
+              } else if (constraints.maxWidth > 1000) {
+                crossAxisCount = 3;
+              } else if (constraints.maxWidth > 700) {
+                crossAxisCount = 2;
+              } else {
+                crossAxisCount = 1;
+              }
+              
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  crossAxisSpacing: 24,
+                  mainAxisSpacing: 24,
+                  childAspectRatio: crossAxisCount == 1 ? 2.5 : 0.8,
+                ),
+                itemCount: categories.length,
+                itemBuilder: (context, index) {
+                  return _buildCategoryCard(
+                    categories[index],
+                    languageService,
+                  );
+                },
               );
             },
           ),

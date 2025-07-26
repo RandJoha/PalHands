@@ -468,20 +468,34 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> {
             ),
           ),
           const SizedBox(height: 16),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 0.85,
-            ),
-            itemCount: categories.length,
-            itemBuilder: (context, index) {
-              return _buildCategoryCard(
-                categories[index],
-                languageService,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // Responsive grid based on available width
+              int crossAxisCount;
+              if (constraints.maxWidth > 600) {
+                crossAxisCount = 3;
+              } else if (constraints.maxWidth > 400) {
+                crossAxisCount = 2;
+              } else {
+                crossAxisCount = 1;
+              }
+              
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: crossAxisCount == 1 ? 2.0 : 0.85,
+                ),
+                itemCount: categories.length,
+                itemBuilder: (context, index) {
+                  return _buildCategoryCard(
+                    categories[index],
+                    languageService,
+                  );
+                },
               );
             },
           ),

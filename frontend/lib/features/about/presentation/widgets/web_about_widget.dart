@@ -288,20 +288,36 @@ class WebAboutWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 60),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 5,
-              crossAxisSpacing: 32,
-              mainAxisSpacing: 32,
-              childAspectRatio: 1.0,
-            ),
-            itemCount: values.length,
-            itemBuilder: (context, index) {
-              return _buildValueCard(
-                values[index]['icon'] as IconData,
-                AppStrings.getString(values[index]['title'] as String, languageService.currentLanguage),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // Responsive grid based on available width
+              int crossAxisCount;
+              if (constraints.maxWidth > 1200) {
+                crossAxisCount = 5;
+              } else if (constraints.maxWidth > 900) {
+                crossAxisCount = 4;
+              } else if (constraints.maxWidth > 600) {
+                crossAxisCount = 3;
+              } else {
+                crossAxisCount = 2;
+              }
+              
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  crossAxisSpacing: 24,
+                  mainAxisSpacing: 24,
+                  childAspectRatio: 1.2,
+                ),
+                itemCount: values.length,
+                itemBuilder: (context, index) {
+                  return _buildValueCard(
+                    values[index]['icon'] as IconData,
+                    AppStrings.getString(values[index]['title'] as String, languageService.currentLanguage),
+                  );
+                },
               );
             },
           ),
@@ -312,7 +328,7 @@ class WebAboutWidget extends StatelessWidget {
 
   Widget _buildValueCard(IconData icon, String title) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.primary.withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
@@ -326,18 +342,20 @@ class WebAboutWidget extends StatelessWidget {
         children: [
           Icon(
             icon,
-            size: 48,
+            size: 36,
             color: AppColors.primary,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Text(
             title,
             style: GoogleFonts.cairo(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
               color: AppColors.primary,
             ),
             textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
