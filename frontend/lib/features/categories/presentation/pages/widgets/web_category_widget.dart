@@ -165,8 +165,9 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
             Navigator.pushNamed(context, '/categories');
           } else if (key == 'faqs') {
             Navigator.pushNamed(context, '/faqs');
+          } else if (key == 'contactUs') {
+            Navigator.pushNamed(context, '/contact');
           }
-          // TODO: Navigate to contact page
         },
         style: TextButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

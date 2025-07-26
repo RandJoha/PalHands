@@ -1278,6 +1278,11 @@ class AppStrings {
     'ar': 'جميع الفئات',
   };
 
+  static const Map<String, String> allQuestions = {
+    'en': 'All Questions',
+    'ar': 'جميع الأسئلة',
+  };
+
   static const Map<String, String> viewDetails = {
     'en': 'View Details',
     'ar': 'عرض التفاصيل',
@@ -2041,6 +2046,197 @@ class AppStrings {
     'ar': 'تابعنا',
   };
 
+  // Contact Us Page Strings
+  static const Map<String, String> contactPageTitle = {
+    'en': 'Contact Us',
+    'ar': 'تواصل معنا',
+  };
+
+  static const Map<String, String> contactPageDescription = {
+    'en': 'We\'re here to listen, support, and grow — together.',
+    'ar': 'نحن هنا للاستماع والدعم والنمو — معاً.',
+  };
+
+  static const Map<String, String> contactPurposeTitle = {
+    'en': 'What can we help you with?',
+    'ar': 'كيف يمكننا مساعدتك؟',
+  };
+
+  static const Map<String, String> reportServiceProvider = {
+    'en': 'Report a Service Provider/Client',
+    'ar': 'الإبلاغ عن مقدم خدمة/عميل',
+  };
+
+  static const Map<String, String> suggestFeature = {
+    'en': 'Suggest a New Feature or Idea',
+    'ar': 'اقترح ميزة أو فكرة جديدة',
+  };
+
+  static const Map<String, String> requestServiceCategory = {
+    'en': 'Request a New Service Category',
+    'ar': 'طلب فئة خدمة جديدة',
+  };
+
+  static const Map<String, String> technicalProblem = {
+    'en': 'Technical Problem or Bug',
+    'ar': 'مشكلة تقنية أو خطأ',
+  };
+
+  static const Map<String, String> businessInquiry = {
+    'en': 'Business/Partnership Inquiry',
+    'ar': 'استفسار تجاري/شراكة',
+  };
+
+  static const Map<String, String> otherInquiry = {
+    'en': 'Other',
+    'ar': 'أخرى',
+  };
+
+  static const Map<String, String> yourName = {
+    'en': 'Your Name',
+    'ar': 'اسمك',
+  };
+
+  static const Map<String, String> contactEmail = {
+    'en': 'Contact Email',
+    'ar': 'البريد الإلكتروني للتواصل',
+  };
+
+  static const Map<String, String> serviceName = {
+    'en': 'Service Name / Person',
+    'ar': 'اسم الخدمة / الشخص',
+  };
+
+  static const Map<String, String> whatWentWrong = {
+    'en': 'What went wrong?',
+    'ar': 'ما الذي حدث خطأ؟',
+  };
+
+  static const Map<String, String> attachScreenshot = {
+    'en': 'Optional: Attach screenshot or photo',
+    'ar': 'اختياري: إرفاق لقطة شاشة أو صورة',
+  };
+
+  static const Map<String, String> issueType = {
+    'en': 'Issue Type',
+    'ar': 'نوع المشكلة',
+  };
+
+  static const Map<String, String> unsafe = {
+    'en': 'Unsafe',
+    'ar': 'غير آمن',
+  };
+
+  static const Map<String, String> misleading = {
+    'en': 'Misleading',
+    'ar': 'مضلل',
+  };
+
+  static const Map<String, String> otherIssue = {
+    'en': 'Other',
+    'ar': 'أخرى',
+  };
+
+  static const Map<String, String> ideaTitle = {
+    'en': 'Idea Title',
+    'ar': 'عنوان الفكرة',
+  };
+
+  static const Map<String, String> ideaDescription = {
+    'en': 'Description',
+    'ar': 'الوصف',
+  };
+
+  static const Map<String, String> howItHelpsCommunity = {
+    'en': 'How do you think it helps the community?',
+    'ar': 'كيف تعتقد أنها تساعد المجتمع؟',
+  };
+
+  static const Map<String, String> newServiceName = {
+    'en': 'Name of the Service',
+    'ar': 'اسم الخدمة',
+  };
+
+  static const Map<String, String> whichCategory = {
+    'en': 'Which category would it fit in?',
+    'ar': 'في أي فئة ستندرج؟',
+  };
+
+  static const Map<String, String> whyImportant = {
+    'en': 'Why do you think it\'s important?',
+    'ar': 'لماذا تعتقد أنها مهمة؟',
+  };
+
+  static const Map<String, String> problemDescription = {
+    'en': 'Describe the problem or bug',
+    'ar': 'صف المشكلة أو الخطأ',
+  };
+
+  static const Map<String, String> businessInquiryDetails = {
+    'en': 'Tell us about your inquiry',
+    'ar': 'أخبرنا عن استفسارك',
+  };
+
+  static const Map<String, String> otherDetails = {
+    'en': 'Tell us more',
+    'ar': 'أخبرنا المزيد',
+  };
+
+  static const Map<String, String> consentCheckbox = {
+    'en': 'I understand that PalHands will review this but may not reply individually.',
+    'ar': 'أفهم أن بال هاندز ستراجع هذا ولكن قد لا ترد بشكل فردي.',
+  };
+
+  static const Map<String, String> submitForm = {
+    'en': 'Submit',
+    'ar': 'إرسال',
+  };
+
+  static const Map<String, String> responseTimeEstimate = {
+    'en': 'We usually respond within 24–48 hours for most inquiries.',
+    'ar': 'نحن عادة نرد خلال 24-48 ساعة لمعظم الاستفسارات.',
+  };
+
+  static const Map<String, String> communityQuote = {
+    'en': 'This platform is built by people like you. Your voice shapes it.',
+    'ar': 'هذه المنصة مبنية من قبل أشخاص مثلك. صوتك يشكلها.',
+  };
+
+  static const Map<String, String> quickAccessTitle = {
+    'en': 'Quick Access',
+    'ar': 'وصول سريع',
+  };
+
+  static const Map<String, String> viewFAQs = {
+    'en': 'View FAQs',
+    'ar': 'عرض الأسئلة الشائعة',
+  };
+
+  static const Map<String, String> liveChat = {
+    'en': 'Live Chat',
+    'ar': 'دردشة مباشرة',
+  };
+
+  static const Map<String, String> whatsappSupport = {
+    'en': 'WhatsApp Support',
+    'ar': 'دعم واتساب',
+  };
+
+  static const Map<String, String> traditionalContact = {
+    'en': 'Traditional Contact',
+    'ar': 'التواصل التقليدي',
+  };
+
+  static const Map<String, String> formSubmitted = {
+    'en': 'Form Submitted Successfully!',
+    'ar': 'تم إرسال النموذج بنجاح!',
+  };
+
+  static const Map<String, String> thankYouMessage = {
+    'en': 'Thank you for your feedback. We\'ll get back to you soon.',
+    'ar': 'شكراً لك على ملاحظاتك. سنرد عليك قريباً.',
+  };
+
 
 
   // Helper method to get localized string
@@ -2309,6 +2505,7 @@ class AppStrings {
       'professionalCleaningDescription': professionalCleaningDescription,
       // Category screen strings
       'allCategories': allCategories,
+      'allQuestions': allQuestions,
       'viewDetails': viewDetails,
               'close': close,
         'selected': selected,
@@ -2470,6 +2667,45 @@ class AppStrings {
       'emailUs': emailUs,
       'callUs': callUs,
       'followUs': followUs,
+      // Contact Us page strings
+      'contactPageTitle': contactPageTitle,
+      'contactPageDescription': contactPageDescription,
+      'contactPurposeTitle': contactPurposeTitle,
+      'reportServiceProvider': reportServiceProvider,
+      'suggestFeature': suggestFeature,
+      'requestServiceCategory': requestServiceCategory,
+      'technicalProblem': technicalProblem,
+      'businessInquiry': businessInquiry,
+      'otherInquiry': otherInquiry,
+      'yourName': yourName,
+      'contactEmail': contactEmail,
+      'serviceName': serviceName,
+      'whatWentWrong': whatWentWrong,
+      'attachScreenshot': attachScreenshot,
+      'issueType': issueType,
+      'unsafe': unsafe,
+      'misleading': misleading,
+      'otherIssue': otherIssue,
+      'ideaTitle': ideaTitle,
+      'ideaDescription': ideaDescription,
+      'howItHelpsCommunity': howItHelpsCommunity,
+      'newServiceName': newServiceName,
+      'whichCategory': whichCategory,
+      'whyImportant': whyImportant,
+      'problemDescription': problemDescription,
+      'businessInquiryDetails': businessInquiryDetails,
+      'otherDetails': otherDetails,
+      'consentCheckbox': consentCheckbox,
+      'submitForm': submitForm,
+      'responseTimeEstimate': responseTimeEstimate,
+      'communityQuote': communityQuote,
+      'quickAccessTitle': quickAccessTitle,
+      'viewFAQs': viewFAQs,
+      'liveChat': liveChat,
+      'whatsappSupport': whatsappSupport,
+      'traditionalContact': traditionalContact,
+      'formSubmitted': formSubmitted,
+      'thankYouMessage': thankYouMessage,
     };
 
     return allStrings[key]?[languageCode] ?? allStrings[key]?['en'] ?? key;

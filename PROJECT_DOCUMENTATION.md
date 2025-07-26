@@ -263,6 +263,16 @@ permission_handler: ^11.1.0
 - Arabic/English support
 - User-friendly interface
 
+#### **Contact Us Screen** ✅
+- Interactive contact purpose selector (6 categories)
+- Dynamic form generation based on selected purpose
+- Required name and email validation for user accountability
+- Quick access widgets (FAQs, Live Chat, WhatsApp, Traditional Contact)
+- Responsive design with mobile-optimized 2-column layout
+- Arabic/English bilingual support
+- Professional centered layout with max-width constraint
+- Form validation and submission handling
+
 ### **Design Components**
 
 #### **Animated Handshake** ✅
@@ -276,6 +286,52 @@ permission_handler: ^11.1.0
 - Custom SVG patterns
 - Cultural authenticity
 - Scalable design elements
+
+## 📞 **Contact Us System**
+
+### **Feature Overview**
+The Contact Us system provides a comprehensive way for users to reach out to PalHands support with various types of inquiries. It features dynamic form generation, responsive design, and user accountability measures.
+
+### **Contact Purpose Categories**
+1. **Report Service Provider/Client**: Report issues with service providers or clients
+2. **Suggest Feature**: Propose new features or improvements
+3. **Request Service Category**: Request new service categories
+4. **Technical Problem**: Report bugs or technical issues
+5. **Business Inquiry**: Partnership or business-related inquiries
+6. **Other**: General inquiries not covered by other categories
+
+### **Architecture Components**
+
+#### **Data Layer**
+- **ContactData**: Centralized data model defining contact purposes and form fields
+- **ContactFormField**: Reusable field definition with validation rules
+- **FieldType**: Enum for different input types (text, email, textarea, dropdown, file)
+
+#### **Presentation Layer**
+- **ContactScreen**: Main screen with responsive layout detection
+- **WebContactWidget**: Desktop-optimized layout with sidebar navigation
+- **MobileContactWidget**: Mobile-optimized layout with drawer navigation
+- **ContactPurposeSelector**: Interactive grid of contact purpose options
+- **ContactForm**: Dynamic form generation based on selected purpose
+- **QuickAccessWidgets**: Quick access to FAQs, chat, WhatsApp, and traditional contact
+
+#### **Form Validation**
+- **Required Fields**: Name and email are mandatory for all contact forms
+- **User Accountability**: Prevents anonymous submissions and spam
+- **Dynamic Validation**: Form validation adapts to selected contact purpose
+- **Error Handling**: Comprehensive error messages and validation feedback
+
+### **Responsive Design Features**
+- **Mobile Layout**: 2-column grid for quick access widgets
+- **Desktop Layout**: 3-column grid for contact purpose selector
+- **Centered Design**: Max-width constraint prevents over-expansion
+- **Touch-Friendly**: Optimized card sizes and spacing for mobile interaction
+
+### **Integration Points**
+- **Navigation**: Integrated into all existing screens' navigation menus
+- **Localization**: Full Arabic/English support with RTL layout
+- **External Services**: WhatsApp integration, email launching, phone dialing
+- **Form Submission**: Ready for backend API integration
 
 ## 🔐 **Authentication System**
 
@@ -495,6 +551,7 @@ permission_handler: ^11.1.0
 - [x] Service management
 - [x] Booking system
 - [x] Basic UI/UX
+- [x] Contact Us system with dynamic forms
 
 ### **Phase 2: Advanced Features**
 - [ ] Real-time messaging
@@ -513,6 +570,96 @@ permission_handler: ^11.1.0
 - [ ] Advanced security
 - [ ] Enterprise features
 - [ ] API marketplace
+
+## 🎨 **UI/UX Implementation Status**
+
+### **Completed UI/UX Fixes** ✅
+
+#### **1. Menu Title Display Issue - RESOLVED**
+- **Problem**: Category title in menu displayed incorrectly with alignment issues
+- **Solution**: 
+  - Fixed text rendering and alignment in category titles
+  - Added missing FAQ link to web category widget navigation
+  - Updated navigation logic to handle all menu items properly
+- **Files Modified**: `frontend/lib/features/categories/presentation/pages/widgets/web_category_widget.dart`
+
+#### **2. "Our Service" Tab Bug - RESOLVED**
+- **Problem**: FAQ section disappeared when "Our Service" tab was selected
+- **Solution**: 
+  - Preserved full menu structure across all tabs and sections
+  - Ensured FAQ section remains visible in all navigation states
+  - Fixed tab switching behavior to maintain menu integrity
+- **Files Modified**: `frontend/lib/features/categories/presentation/pages/widgets/web_category_widget.dart`
+
+#### **3. Category Overflow Error - RESOLVED**
+- **Problem**: Bottom Overflow by Pixels warning in "Boxes" category
+- **Solution**: 
+  - Implemented scrollable containers to handle content overflow
+  - Adjusted layout constraints for better responsive design
+  - Fixed modal bottom sheet structure with proper scrolling
+- **Files Modified**: `frontend/lib/features/categories/presentation/pages/widgets/mobile_category_widget.dart`
+
+#### **4. Mobile Mini Menu Bug - RESOLVED**
+- **Problem**: Mini menu failed to disappear properly when switching tabs on mobile
+- **Solution**: 
+  - Implemented correct menu toggle behavior and state reset on tab change
+  - Fixed bottom navigation bar navigation logic
+  - Added proper state management for menu visibility
+- **Files Modified**: 
+  - `frontend/lib/features/categories/presentation/pages/widgets/mobile_category_widget.dart`
+  - `frontend/lib/features/home/presentation/pages/widgets/mobile_home_widget.dart`
+
+#### **5. Mobile Hamburger Menu Issue - RESOLVED**
+- **Problem**: Hamburger menu not appearing on mobile view, especially in category tab
+- **Solution**: 
+  - Added hamburger menu to mobile category widget header
+  - Added hamburger menu to mobile FAQ widget header
+  - Added hamburger menu to mobile about widget header
+  - Ensured consistent navigation experience across all mobile screens
+- **Files Modified**: 
+  - `frontend/lib/features/categories/presentation/pages/widgets/mobile_category_widget.dart`
+  - `frontend/lib/features/faqs/presentation/widgets/mobile_faqs_widget.dart`
+  - `frontend/lib/features/about/presentation/widgets/mobile_about_widget.dart`
+
+#### **6. Mobile FAQ Category Navigation Issue - RESOLVED**
+- **Problem**: Category navigation not appearing on mobile FAQ screen, making it difficult to filter questions by category
+- **Solution**: 
+  - Added two-row grid layout for category navigation to mobile FAQ widget (improved from horizontal scrolling)
+  - Implemented category filtering functionality with visual feedback
+  - Added "All Questions" option to show all FAQs (updated from "All Categories")
+  - Included all FAQ categories: General Questions, Booking & App Usage, Payments, Trust & Safety, Service Providers, and Localization
+  - Organized categories in a 2x2 grid layout for better mobile usability
+  - Integrated category selection with search functionality
+  - Ensured responsive design for small screens
+- **Files Modified**: 
+  - `frontend/lib/features/faqs/presentation/widgets/mobile_faqs_widget.dart`
+  - `frontend/lib/core/constants/app_strings.dart`
+
+#### **7. Contact Us Feature Implementation - COMPLETED**
+- **Feature**: Complete Contact Us system with dynamic forms and responsive design
+- **Implementation**: 
+  - Created comprehensive Contact Us feature with 6 contact purpose categories
+  - Implemented dynamic form generation based on selected contact purpose
+  - Added required name and email validation for user accountability and spam prevention
+  - Built responsive quick access widgets with mobile-optimized 2-column layout
+  - Integrated Arabic/English bilingual support throughout the feature
+  - Designed professional centered layout with max-width constraint to prevent over-expansion
+  - Fixed layout overflow issues and optimized card sizing for better mobile experience
+  - Added comprehensive form validation and submission handling
+- **Contact Purposes**: Report Service Provider, Suggest Feature, Request Service Category, Technical Problem, Business Inquiry, Other
+- **Quick Access**: FAQs Link, Live Chat, WhatsApp Support, Traditional Contact (Email/Phone)
+- **Files Created/Modified**: 
+  - `frontend/lib/features/contact/` (entire feature directory)
+  - `frontend/lib/core/constants/app_strings.dart` (added contact-related strings)
+  - `frontend/lib/main.dart` (added contact route)
+  - Updated navigation in all existing screens to include Contact Us link
+
+### **UI/UX Best Practices Implemented**
+- **Responsive Design**: All components adapt to different screen sizes
+- **Consistent Navigation**: Unified navigation experience across all screens
+- **Accessibility**: Proper touch targets and readable text sizes
+- **Performance**: Optimized layouts to prevent overflow and rendering issues
+- **User Experience**: Smooth transitions and intuitive interactions
 
 ## 📞 **Support & Maintenance**
 
@@ -539,6 +686,6 @@ This documentation serves as the **single source of truth** for the PalHands pro
 3. **Development rules are modified**
 4. **New team members join**
 
-**Last Updated**: [Current Date]
-**Version**: 1.0.0
+**Last Updated**: December 2024
+**Version**: 1.1.0
 **Maintained By**: PalHands Development Team 

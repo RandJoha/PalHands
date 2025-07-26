@@ -215,7 +215,7 @@ class _MobileAboutWidgetState extends State<MobileAboutWidget> {
             title: AppStrings.getString('contactUs', languageService.currentLanguage),
             onTap: () {
               Navigator.pop(context);
-              // TODO: Navigate to contact
+              Navigator.pushNamed(context, '/contact');
             },
             languageService: languageService,
           ),

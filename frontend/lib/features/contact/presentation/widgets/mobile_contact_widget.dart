@@ -6,77 +6,64 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/services/language_service.dart';
 import '../../../../shared/widgets/animated_handshake.dart';
 import '../../../../shared/widgets/tatreez_pattern.dart';
-import '../../data/faq_data.dart';
-import 'faq_item_widget.dart';
-import 'faq_search_widget.dart';
+import '../../data/contact_data.dart';
+import 'contact_purpose_selector.dart';
+import 'contact_form.dart';
+import 'quick_access_widgets.dart';
 
-class MobileFAQsWidget extends StatefulWidget {
-  const MobileFAQsWidget({super.key});
+class MobileContactWidget extends StatefulWidget {
+  const MobileContactWidget({super.key});
 
   @override
-  State<MobileFAQsWidget> createState() => _MobileFAQsWidgetState();
+  State<MobileContactWidget> createState() => _MobileContactWidgetState();
 }
 
-class _MobileFAQsWidgetState extends State<MobileFAQsWidget> {
-  String _searchQuery = '';
-  Set<int> _expandedItems = {};
-  List<FAQItem> _filteredItems = [];
-  String? _selectedCategory;
+class _MobileContactWidgetState extends State<MobileContactWidget> {
+  ContactPurpose? _selectedPurpose;
+  bool _consentChecked = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _filteredItems = FAQData.getAllFAQItems();
-  }
-
-  void _onSearchChanged(String query) {
+  void _onPurposeSelected(ContactPurpose purpose) {
     setState(() {
-      _searchQuery = query;
-      _selectedCategory = null; // Clear category filter when searching
-      if (query.isEmpty) {
-        _filteredItems = _selectedCategory != null
-            ? FAQData.getAllFAQItems().where((item) => item.categoryKey == _selectedCategory).toList()
-            : FAQData.getAllFAQItems();
-      } else {
-        _filteredItems = FAQData.getAllFAQItems().where((item) {
-          final question = AppStrings.getString(
-            item.questionKey,
-            context.read<LanguageService>().currentLanguage,
-          ).toLowerCase();
-          final answer = AppStrings.getString(
-            item.answerKey,
-            context.read<LanguageService>().currentLanguage,
-          ).toLowerCase();
-          final searchLower = query.toLowerCase();
-          return question.contains(searchLower) || answer.contains(searchLower);
-        }).toList();
-      }
-      // Close all expanded items when searching
-      _expandedItems.clear();
+      _selectedPurpose = purpose;
     });
   }
 
-  void _toggleItem(int index) {
+  void _onConsentChanged(bool? value) {
     setState(() {
-      if (_expandedItems.contains(index)) {
-        _expandedItems.remove(index);
-      } else {
-        _expandedItems.add(index);
-      }
+      _consentChecked = value ?? false;
     });
   }
 
-  void _selectCategory(String? categoryKey) {
-    setState(() {
-      _selectedCategory = categoryKey;
-      _searchQuery = ''; // Clear search when selecting category
-      if (categoryKey == null) {
-        _filteredItems = FAQData.getAllFAQItems();
-      } else {
-        _filteredItems = FAQData.getAllFAQItems().where((item) => item.categoryKey == categoryKey).toList();
-      }
-      _expandedItems.clear();
-    });
+  void _onFormSubmitted(Map<String, dynamic> formData) {
+    // TODO: Implement form submission logic
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          AppStrings.getString('formSubmitted', context.read<LanguageService>().currentLanguage),
+          style: GoogleFonts.cairo(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          AppStrings.getString('thankYouMessage', context.read<LanguageService>().currentLanguage),
+          style: GoogleFonts.cairo(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              setState(() {
+                _selectedPurpose = null;
+                _consentChecked = false;
+              });
+            },
+            child: Text(
+              'OK',
+              style: GoogleFonts.cairo(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -91,13 +78,12 @@ class _MobileFAQsWidgetState extends State<MobileFAQsWidget> {
               children: [
                 _buildHeader(languageService),
                 _buildHeroSection(languageService),
-                FAQSearchWidget(
-                  searchQuery: _searchQuery,
-                  onSearchChanged: _onSearchChanged,
-                ),
-                _buildCategoryNavigation(languageService),
-                _buildFAQContent(languageService),
-                _buildContactSection(languageService),
+                _buildPurposeSelector(languageService),
+                if (_selectedPurpose != null) ...[
+                  _buildFormSection(languageService),
+                  const SizedBox(height: 24),
+                ],
+                _buildQuickAccessSection(languageService),
                 _buildFooter(languageService),
                 const SizedBox(height: 20),
               ],
@@ -269,8 +255,8 @@ class _MobileFAQsWidgetState extends State<MobileFAQsWidget> {
             title: AppStrings.getString('faqs', languageService.currentLanguage),
             onTap: () {
               Navigator.pop(context);
+              Navigator.pushNamed(context, '/faqs');
             },
-            isSelected: true,
             languageService: languageService,
           ),
           _buildDrawerItem(
@@ -278,8 +264,8 @@ class _MobileFAQsWidgetState extends State<MobileFAQsWidget> {
             title: AppStrings.getString('contactUs', languageService.currentLanguage),
             onTap: () {
               Navigator.pop(context);
-              Navigator.pushNamed(context, '/contact');
             },
+            isSelected: true,
             languageService: languageService,
           ),
         ],
@@ -358,7 +344,7 @@ class _MobileFAQsWidgetState extends State<MobileFAQsWidget> {
             children: [
               const SizedBox(height: 24),
               Text(
-                AppStrings.getString('faqPageTitle', languageService.currentLanguage),
+                AppStrings.getString('contactPageTitle', languageService.currentLanguage),
                 style: GoogleFonts.cairo(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -368,7 +354,7 @@ class _MobileFAQsWidgetState extends State<MobileFAQsWidget> {
               ),
               const SizedBox(height: 16),
               Text(
-                AppStrings.getString('faqPageDescription', languageService.currentLanguage),
+                AppStrings.getString('contactPageDescription', languageService.currentLanguage),
                 style: GoogleFonts.cairo(
                   fontSize: 16,
                   color: Colors.black87,
@@ -376,6 +362,28 @@ class _MobileFAQsWidgetState extends State<MobileFAQsWidget> {
                 ),
                 textAlign: TextAlign.center,
               ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.primary.withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  AppStrings.getString('communityQuote', languageService.currentLanguage),
+                  style: GoogleFonts.cairo(
+                    fontSize: 14,
+                    fontStyle: FontStyle.italic,
+                    color: AppColors.primary,
+                    height: 1.3,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
             ],
           ),
         ],
@@ -383,257 +391,95 @@ class _MobileFAQsWidgetState extends State<MobileFAQsWidget> {
     );
   }
 
-  Widget _buildCategoryNavigation(LanguageService languageService) {
+  Widget _buildPurposeSelector(LanguageService languageService) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppStrings.getString('faqs', languageService.currentLanguage),
+            AppStrings.getString('contactPurposeTitle', languageService.currentLanguage),
             style: GoogleFonts.cairo(
-              fontSize: 18,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: AppColors.primary,
             ),
           ),
-          const SizedBox(height: 12),
-          // Two-row grid layout for category chips
-          Column(
-            children: [
-              // First row
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildCategoryChip(
-                      title: AppStrings.getString('allQuestions', languageService.currentLanguage),
-                      isSelected: _selectedCategory == null,
-                      onTap: () => _selectCategory(null),
-                      languageService: languageService,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildCategoryChip(
-                      title: AppStrings.getString('faqGeneralQuestions', languageService.currentLanguage),
-                      isSelected: _selectedCategory == 'faqGeneralQuestions',
-                      onTap: () => _selectCategory('faqGeneralQuestions'),
-                      languageService: languageService,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              // Second row
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildCategoryChip(
-                      title: AppStrings.getString('faqBookingApp', languageService.currentLanguage),
-                      isSelected: _selectedCategory == 'faqBookingApp',
-                      onTap: () => _selectCategory('faqBookingApp'),
-                      languageService: languageService,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildCategoryChip(
-                      title: AppStrings.getString('faqPayments', languageService.currentLanguage),
-                      isSelected: _selectedCategory == 'faqPayments',
-                      onTap: () => _selectCategory('faqPayments'),
-                      languageService: languageService,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              // Third row for remaining categories
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildCategoryChip(
-                      title: AppStrings.getString('faqTrustSafety', languageService.currentLanguage),
-                      isSelected: _selectedCategory == 'faqTrustSafety',
-                      onTap: () => _selectCategory('faqTrustSafety'),
-                      languageService: languageService,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildCategoryChip(
-                      title: AppStrings.getString('faqServiceProviders', languageService.currentLanguage),
-                      isSelected: _selectedCategory == 'faqServiceProviders',
-                      onTap: () => _selectCategory('faqServiceProviders'),
-                      languageService: languageService,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              // Fourth row for the last category
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildCategoryChip(
-                      title: AppStrings.getString('faqLocalization', languageService.currentLanguage),
-                      isSelected: _selectedCategory == 'faqLocalization',
-                      onTap: () => _selectCategory('faqLocalization'),
-                      languageService: languageService,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Empty space to maintain layout
-                  const Expanded(child: SizedBox()),
-                ],
-              ),
-            ],
+          const SizedBox(height: 16),
+          ContactPurposeSelector(
+            selectedPurpose: _selectedPurpose,
+            onPurposeSelected: _onPurposeSelected,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCategoryChip({
-    required String title,
-    required bool isSelected,
-    required VoidCallback onTap,
-    required LanguageService languageService,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.primary.withOpacity(0.3),
-            width: 1,
-          ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: Text(
-          title,
-          style: GoogleFonts.cairo(
-            fontSize: 14,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected ? Colors.white : AppColors.primary,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFAQContent(LanguageService languageService) {
-    if (_filteredItems.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          children: [
-            Icon(
-              Icons.search_off,
-              size: 64,
-              color: AppColors.grey,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              AppStrings.getString('faqNoResults', languageService.currentLanguage),
-              style: GoogleFonts.cairo(
-                fontSize: 16,
-                color: AppColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      );
-    }
-
+  Widget _buildFormSection(LanguageService languageService) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // FAQ Items
-          ...List.generate(_filteredItems.length, (index) {
-            final item = _filteredItems[index];
-            return FAQItemWidget(
-              key: ValueKey('${item.questionKey}_$index'),
-              faqItem: item,
-              isExpanded: _expandedItems.contains(index),
-              onTap: () => _toggleItem(index),
-            );
-          }),
+          ContactForm(
+            purpose: _selectedPurpose!,
+            consentChecked: _consentChecked,
+            onConsentChanged: _onConsentChanged,
+            onSubmit: _onFormSubmitted,
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.primary.withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    AppStrings.getString('responseTimeEstimate', languageService.currentLanguage),
+                    style: GoogleFonts.cairo(
+                      fontSize: 14,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildContactSection(LanguageService languageService) {
+  Widget _buildQuickAccessSection(LanguageService languageService) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppStrings.getString('stillNeedHelp', languageService.currentLanguage),
+            AppStrings.getString('quickAccessTitle', languageService.currentLanguage),
             style: GoogleFonts.cairo(
-              fontSize: 24,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: AppColors.primary,
             ),
-            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
-          Column(
-            children: [
-              _buildContactButton(
-                Icons.email,
-                AppStrings.getString('contactUs', languageService.currentLanguage),
-                () {
-                  // TODO: Open email
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildContactButton(
-                Icons.chat,
-                AppStrings.getString('chatNow', languageService.currentLanguage),
-                () {
-                  // TODO: Open chat
-                },
-              ),
-            ],
-          ),
+          const SizedBox(height: 16),
+          QuickAccessWidgets(),
         ],
-      ),
-    );
-  }
-
-  Widget _buildContactButton(IconData icon, String label, VoidCallback onPressed) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: onPressed,
-        icon: Icon(icon),
-        label: Text(label),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
       ),
     );
   }

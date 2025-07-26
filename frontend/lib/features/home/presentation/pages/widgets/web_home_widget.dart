@@ -219,7 +219,7 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
           } else if (text == AppStrings.getString('contactUs', languageService.currentLanguage) ||
                      text == 'تواصل' ||
                      text == 'Contact') {
-            // TODO: Navigate to contact page
+            Navigator.pushNamed(context, '/contact');
           }
         },
         style: TextButton.styleFrom(

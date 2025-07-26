@@ -274,7 +274,7 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
                     title: AppStrings.getString('contactUs', languageService.currentLanguage),
                     onTap: () {
                       Navigator.pop(context);
-                      // TODO: Navigate to contact
+                      Navigator.pushNamed(context, '/contact');
                     },
                   ),
                   const Divider(),

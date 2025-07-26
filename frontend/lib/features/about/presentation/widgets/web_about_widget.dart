@@ -120,8 +120,9 @@ class WebAboutWidget extends StatelessWidget {
                 Navigator.pushReplacementNamed(context, '/home');
               } else if (key == 'ourServices') {
                 Navigator.pushNamed(context, '/categories');
+              } else if (key == 'contactUs') {
+                Navigator.pushNamed(context, '/contact');
               }
-              // TODO: Add navigation for other pages
             },
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

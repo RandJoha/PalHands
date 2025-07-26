@@ -223,7 +223,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> {
                     title: AppStrings.getString('contactUs', languageService.currentLanguage),
                     onTap: () {
                       Navigator.pop(context);
-                      // TODO: Navigate to contact
+                      Navigator.pushNamed(context, '/contact');
                     },
                     languageService: languageService,
                   ),

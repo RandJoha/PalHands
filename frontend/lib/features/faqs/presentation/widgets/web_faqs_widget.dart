@@ -508,7 +508,7 @@ class _WebFAQsWidgetState extends State<WebFAQsWidget> {
                   Icons.email,
                   AppStrings.getString('contactUs', languageService.currentLanguage),
                   () {
-                    // TODO: Open email
+                    Navigator.pushNamed(context, '/contact');
                   },
                 ),
               ),
