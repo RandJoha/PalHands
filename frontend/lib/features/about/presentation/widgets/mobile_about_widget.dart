@@ -187,7 +187,7 @@ class _MobileAboutWidgetState extends State<MobileAboutWidget> {
             title: AppStrings.getString('faqs', languageService.currentLanguage),
             onTap: () {
               Navigator.pop(context);
-              // TODO: Navigate to FAQs
+              Navigator.pushNamed(context, '/faqs');
             },
             languageService: languageService,
           ),

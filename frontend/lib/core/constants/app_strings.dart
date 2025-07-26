@@ -1033,6 +1033,239 @@ class AppStrings {
     'ar': 'الأسئلة الشائعة',
   };
 
+  // FAQ Page Strings
+  static const Map<String, String> faqPageTitle = {
+    'en': 'Frequently Asked Questions',
+    'ar': 'الأسئلة الشائعة',
+  };
+
+  static const Map<String, String> faqPageDescription = {
+    'en': 'Find answers to common questions about PalHands',
+    'ar': 'اعثر على إجابات للأسئلة الشائعة حول بال هاندز',
+  };
+
+  static const Map<String, String> faqSearchPlaceholder = {
+    'en': 'Type a keyword (e.g. payment, cancel, verify)...',
+    'ar': 'اكتب كلمة مفتاحية (مثل الدفع، الإلغاء، التحقق)...',
+  };
+
+  static const Map<String, String> faqNoResults = {
+    'en': 'No results found. Try different keywords.',
+    'ar': 'لم يتم العثور على نتائج. جرب كلمات مفتاحية مختلفة.',
+  };
+
+  static const Map<String, String> stillNeedHelp = {
+    'en': 'Still need help?',
+    'ar': 'هل ما زلت تحتاج مساعدة؟',
+  };
+
+  static const Map<String, String> chatNow = {
+    'en': 'Chat Now',
+    'ar': 'دردشة الآن',
+  };
+
+  // FAQ Categories
+  static const Map<String, String> faqGeneralQuestions = {
+    'en': 'General Questions',
+    'ar': 'أسئلة عامة',
+  };
+
+  static const Map<String, String> faqBookingApp = {
+    'en': 'Booking & Using the App',
+    'ar': 'الحجز واستخدام التطبيق',
+  };
+
+  static const Map<String, String> faqPayments = {
+    'en': 'Payments',
+    'ar': 'الدفع',
+  };
+
+  static const Map<String, String> faqTrustSafety = {
+    'en': 'Trust & Safety',
+    'ar': 'الثقة والأمان',
+  };
+
+  static const Map<String, String> faqServiceProviders = {
+    'en': 'For Service Providers',
+    'ar': 'لمقدمي الخدمات',
+  };
+
+  static const Map<String, String> faqLocalization = {
+    'en': 'Localization / Language',
+    'ar': 'الموقع واللغة',
+  };
+
+  // FAQ Questions and Answers
+  static const Map<String, String> faqWhatIsPalHands = {
+    'en': 'What is PalHands?',
+    'ar': 'ما هو بال هاندز؟',
+  };
+
+  static const Map<String, String> faqWhatIsPalHandsAnswer = {
+    'en': 'PalHands is a community-driven service platform that connects local Palestinian service providers with customers in need of various home services. We focus on empowering local talent and building trust within our community.',
+    'ar': 'بال هاندز هو منصة خدمات قائمة على المجتمع تربط مقدمي الخدمات الفلسطينيين المحليين بالعملاء الذين يحتاجون إلى خدمات منزلية متنوعة. نركز على تمكين المواهب المحلية وبناء الثقة داخل مجتمعنا.',
+  };
+
+  static const Map<String, String> faqWhoAreProviders = {
+    'en': 'Who are the service providers?',
+    'ar': 'من هم مقدمي الخدمات؟',
+  };
+
+  static const Map<String, String> faqWhoAreProvidersAnswer = {
+    'en': 'Our service providers are verified local Palestinian professionals and skilled individuals who offer various home services including cleaning, caregiving, maintenance, and more. All providers go through a verification process to ensure quality and reliability.',
+    'ar': 'مقدمو خدماتنا هم محترفون فلسطينيون محليون موثقون وأفراد ماهرون يقدمون خدمات منزلية متنوعة تشمل التنظيف والرعاية والصيانة والمزيد. يخضع جميع المقدمين لعملية تحقق لضمان الجودة والموثوقية.',
+  };
+
+  static const Map<String, String> faqHowDifferent = {
+    'en': 'How is PalHands different from other platforms?',
+    'ar': 'كيف يختلف بال هاندز عن المنصات الأخرى؟',
+  };
+
+  static const Map<String, String> faqHowDifferentAnswer = {
+    'en': 'PalHands is uniquely focused on the Palestinian community, prioritizing local talent and cultural understanding. We emphasize trust, community empowerment, and provide services that respect our cultural values and traditions.',
+    'ar': 'بال هاندز يركز بشكل فريد على المجتمع الفلسطيني، مع إعطاء الأولوية للمواهب المحلية والفهم الثقافي. نؤكد على الثقة وتمكين المجتمع ونقدم خدمات تحترم قيمنا وتقاليدنا الثقافية.',
+  };
+
+  static const Map<String, String> faqHowToBook = {
+    'en': 'How do I book a service?',
+    'ar': 'كيف أحجز خدمة؟',
+  };
+
+  static const Map<String, String> faqHowToBookAnswer = {
+    'en': 'Booking a service is simple! Browse our service categories, select the service you need, choose your preferred provider, set your preferred date and time, and confirm your booking. You can also schedule services in advance.',
+    'ar': 'حجز الخدمة بسيط! تصفح فئات خدماتنا، اختر الخدمة التي تحتاجها، اختر مقدم الخدمة المفضل لديك، حدد التاريخ والوقت المفضل، وأكد حجزك. يمكنك أيضًا جدولة الخدمات مسبقًا.',
+  };
+
+  static const Map<String, String> faqScheduleAdvance = {
+    'en': 'Can I schedule a service in advance?',
+    'ar': 'هل يمكنني جدولة خدمة مسبقًا؟',
+  };
+
+  static const Map<String, String> faqScheduleAdvanceAnswer = {
+    'en': 'Yes! You can schedule services up to 30 days in advance. This is especially useful for regular cleaning services, special events, or when you need to plan ahead.',
+    'ar': 'نعم! يمكنك جدولة الخدمات حتى 30 يومًا مسبقًا. هذا مفيد بشكل خاص لخدمات التنظيف المنتظمة أو المناسبات الخاصة أو عندما تحتاج إلى التخطيط مسبقًا.',
+  };
+
+  static const Map<String, String> faqCancelReschedule = {
+    'en': 'Can I cancel or reschedule my request?',
+    'ar': 'هل يمكنني إلغاء أو إعادة جدولة طلبي؟',
+  };
+
+  static const Map<String, String> faqCancelRescheduleAnswer = {
+    'en': 'Yes, you can cancel or reschedule your booking up to 24 hours before the scheduled service time. Cancellations within 24 hours may be subject to our cancellation policy.',
+    'ar': 'نعم، يمكنك إلغاء أو إعادة جدولة حجزك حتى 24 ساعة قبل وقت الخدمة المجدولة. قد تخضع الإلغاءات خلال 24 ساعة لسياسة الإلغاء الخاصة بنا.',
+  };
+
+  static const Map<String, String> faqHowToPay = {
+    'en': 'How do I pay for the service?',
+    'ar': 'كيف أدفع للخدمة؟',
+  };
+
+  static const Map<String, String> faqHowToPayAnswer = {
+    'en': 'We offer multiple payment options including cash on delivery, online payment through secure payment gateways, and mobile payment solutions. All online payments are processed securely.',
+    'ar': 'نقدم خيارات دفع متعددة تشمل الدفع النقدي عند التسليم، والدفع الإلكتروني من خلال بوابات الدفع الآمنة، وحلول الدفع عبر الهاتف المحمول. جميع المدفوعات الإلكترونية تتم معالجتها بأمان.',
+  };
+
+  static const Map<String, String> faqOnlinePayment = {
+    'en': 'Is online payment available?',
+    'ar': 'هل الدفع الإلكتروني متاح؟',
+  };
+
+  static const Map<String, String> faqOnlinePaymentAnswer = {
+    'en': 'Yes, we offer secure online payment options through trusted payment gateways. You can pay using credit cards, debit cards, and other digital payment methods.',
+    'ar': 'نعم، نقدم خيارات دفع إلكتروني آمنة من خلال بوابات الدفع الموثوقة. يمكنك الدفع باستخدام بطاقات الائتمان والخصم وطرق الدفع الرقمية الأخرى.',
+  };
+
+  static const Map<String, String> faqHiddenFees = {
+    'en': 'Are there any hidden fees?',
+    'ar': 'هل هناك رسوم مخفية؟',
+  };
+
+  static const Map<String, String> faqHiddenFeesAnswer = {
+    'en': 'No hidden fees! All our prices are transparent and clearly displayed. You\'ll see the exact cost before confirming your booking, including any applicable taxes or service fees.',
+    'ar': 'لا توجد رسوم مخفية! جميع أسعارنا شفافة ومعروضة بوضوح. سترى التكلفة الدقيقة قبل تأكيد حجزك، بما في ذلك أي ضرائب أو رسوم خدمة مطبقة.',
+  };
+
+  static const Map<String, String> faqProvidersVerified = {
+    'en': 'Are the service providers verified?',
+    'ar': 'هل مقدمي الخدمات موثقون؟',
+  };
+
+  static const Map<String, String> faqProvidersVerifiedAnswer = {
+    'en': 'Yes, all our service providers go through a comprehensive verification process including identity verification, background checks, and skill assessments. We continuously monitor provider performance and customer feedback.',
+    'ar': 'نعم، يخضع جميع مقدمي خدماتنا لعملية تحقق شاملة تشمل التحقق من الهوية وفحوصات الخلفية وتقييمات المهارات. نراقب باستمرار أداء المقدمين وملاحظات العملاء.',
+  };
+
+  static const Map<String, String> faqNotSatisfied = {
+    'en': 'What if I\'m not satisfied with the service?',
+    'ar': 'ماذا لو لم أكن راضيًا عن الخدمة؟',
+  };
+
+  static const Map<String, String> faqNotSatisfiedAnswer = {
+    'en': 'Your satisfaction is our priority. If you\'re not satisfied with a service, please contact our support team within 24 hours. We\'ll work with you and the provider to resolve any issues.',
+    'ar': 'رضاك هو أولويتنا. إذا لم تكن راضيًا عن خدمة، يرجى الاتصال بفريق الدعم لدينا خلال 24 ساعة. سنعمل معك ومع مقدم الخدمة لحل أي مشاكل.',
+  };
+
+  static const Map<String, String> faqPrivacy = {
+    'en': 'How does PalHands ensure my privacy?',
+    'ar': 'كيف يضمن بال هاندز خصوصيتي؟',
+  };
+
+  static const Map<String, String> faqPrivacyAnswer = {
+    'en': 'We take your privacy seriously. All personal information is encrypted and stored securely. We never share your personal data with third parties without your explicit consent.',
+    'ar': 'نأخذ خصوصيتك على محمل الجد. جميع المعلومات الشخصية مشفرة ومخزنة بأمان. لا نشارك بياناتك الشخصية مع أطراف ثالثة دون موافقتك الصريحة.',
+  };
+
+  static const Map<String, String> faqSignUpProvider = {
+    'en': 'How do I sign up as a provider?',
+    'ar': 'كيف أسجل كمقدم خدمة؟',
+  };
+
+  static const Map<String, String> faqSignUpProviderAnswer = {
+    'en': 'To become a service provider, download the app and select "Sign up as Service Provider" during registration. You\'ll need to provide identification documents, complete a skill assessment, and pass our verification process.',
+    'ar': 'لتصبح مقدم خدمة، قم بتحميل التطبيق واختر "إنشاء حساب كمقدم خدمة" أثناء التسجيل. ستحتاج إلى تقديم وثائق الهوية وإكمال تقييم المهارات واجتياز عملية التحقق لدينا.',
+  };
+
+  static const Map<String, String> faqMultipleServices = {
+    'en': 'Can I offer more than one service?',
+    'ar': 'هل يمكنني تقديم أكثر من خدمة واحدة؟',
+  };
+
+  static const Map<String, String> faqMultipleServicesAnswer = {
+    'en': 'Yes! You can offer multiple services across different categories. Simply add the services you\'re qualified to provide during your profile setup, and we\'ll help you get started.',
+    'ar': 'نعم! يمكنك تقديم خدمات متعددة عبر فئات مختلفة. ما عليك سوى إضافة الخدمات التي أنت مؤهل لتقديمها أثناء إعداد ملفك الشخصي، وسنساعدك في البدء.',
+  };
+
+  static const Map<String, String> faqHowGetPaid = {
+    'en': 'How do I get paid?',
+    'ar': 'كيف أحصل على المال؟',
+  };
+
+  static const Map<String, String> faqHowGetPaidAnswer = {
+    'en': 'Providers receive payments through our secure payment system. Payments are processed after service completion and customer confirmation, typically within 3-5 business days.',
+    'ar': 'يحصل المقدمون على المدفوعات من خلال نظام الدفع الآمن لدينا. تتم معالجة المدفوعات بعد اكتمال الخدمة وتأكيد العميل، عادةً خلال 3-5 أيام عمل.',
+  };
+
+  static const Map<String, String> faqLanguagesAvailable = {
+    'en': 'Is PalHands available in Arabic and English?',
+    'ar': 'هل بال هاندز متاح باللغة العربية والإنجليزية؟',
+  };
+
+  static const Map<String, String> faqLanguagesAvailableAnswer = {
+    'en': 'Yes! PalHands is fully bilingual, supporting both Arabic and English. You can switch between languages at any time in the app settings.',
+    'ar': 'نعم! بال هاندز ثنائي اللغة بالكامل، يدعم العربية والإنجليزية. يمكنك التبديل بين اللغات في أي وقت في إعدادات التطبيق.',
+  };
+
+  static const Map<String, String> faqCitiesServed = {
+    'en': 'Which cities/regions does the app serve?',
+    'ar': 'ما هي المدن/المناطق التي يخدمها التطبيق؟',
+  };
+
+  static const Map<String, String> faqCitiesServedAnswer = {
+    'en': 'PalHands currently serves major Palestinian cities and surrounding areas. We\'re continuously expanding our coverage. Check the app for the most up-to-date list of service areas.',
+    'ar': 'بال هاندز يخدم حاليًا المدن الفلسطينية الرئيسية والمناطق المحيطة. نحن نوسع تغطيتنا باستمرار. تحقق من التطبيق للحصول على أحدث قائمة بمناطق الخدمة.',
+  };
+
   // Hero banner description
   static const Map<String, String> professionalCleaningDescription = {
     'en': 'Professional cleaning by trusted local providers. Experience the difference with our community-driven service platform.',
@@ -2023,6 +2256,55 @@ class AppStrings {
       'aboutUs': aboutUs,
       'ourServices': ourServices,
       'faqs': faqs,
+      // FAQ Page strings
+      'faqPageTitle': faqPageTitle,
+      'faqPageDescription': faqPageDescription,
+      'faqSearchPlaceholder': faqSearchPlaceholder,
+      'faqNoResults': faqNoResults,
+      'stillNeedHelp': stillNeedHelp,
+      'chatNow': chatNow,
+      // FAQ Categories
+      'faqGeneralQuestions': faqGeneralQuestions,
+      'faqBookingApp': faqBookingApp,
+      'faqPayments': faqPayments,
+      'faqTrustSafety': faqTrustSafety,
+      'faqServiceProviders': faqServiceProviders,
+      'faqLocalization': faqLocalization,
+      // FAQ Questions and Answers
+      'faqWhatIsPalHands': faqWhatIsPalHands,
+      'faqWhatIsPalHandsAnswer': faqWhatIsPalHandsAnswer,
+      'faqWhoAreProviders': faqWhoAreProviders,
+      'faqWhoAreProvidersAnswer': faqWhoAreProvidersAnswer,
+      'faqHowDifferent': faqHowDifferent,
+      'faqHowDifferentAnswer': faqHowDifferentAnswer,
+      'faqHowToBook': faqHowToBook,
+      'faqHowToBookAnswer': faqHowToBookAnswer,
+      'faqScheduleAdvance': faqScheduleAdvance,
+      'faqScheduleAdvanceAnswer': faqScheduleAdvanceAnswer,
+      'faqCancelReschedule': faqCancelReschedule,
+      'faqCancelRescheduleAnswer': faqCancelRescheduleAnswer,
+      'faqHowToPay': faqHowToPay,
+      'faqHowToPayAnswer': faqHowToPayAnswer,
+      'faqOnlinePayment': faqOnlinePayment,
+      'faqOnlinePaymentAnswer': faqOnlinePaymentAnswer,
+      'faqHiddenFees': faqHiddenFees,
+      'faqHiddenFeesAnswer': faqHiddenFeesAnswer,
+      'faqProvidersVerified': faqProvidersVerified,
+      'faqProvidersVerifiedAnswer': faqProvidersVerifiedAnswer,
+      'faqNotSatisfied': faqNotSatisfied,
+      'faqNotSatisfiedAnswer': faqNotSatisfiedAnswer,
+      'faqPrivacy': faqPrivacy,
+      'faqPrivacyAnswer': faqPrivacyAnswer,
+      'faqSignUpProvider': faqSignUpProvider,
+      'faqSignUpProviderAnswer': faqSignUpProviderAnswer,
+      'faqMultipleServices': faqMultipleServices,
+      'faqMultipleServicesAnswer': faqMultipleServicesAnswer,
+      'faqHowGetPaid': faqHowGetPaid,
+      'faqHowGetPaidAnswer': faqHowGetPaidAnswer,
+      'faqLanguagesAvailable': faqLanguagesAvailable,
+      'faqLanguagesAvailableAnswer': faqLanguagesAvailableAnswer,
+      'faqCitiesServed': faqCitiesServed,
+      'faqCitiesServedAnswer': faqCitiesServedAnswer,
       // Hero banner description
       'professionalCleaningDescription': professionalCleaningDescription,
       // Category screen strings

@@ -266,7 +266,7 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
                     title: AppStrings.getString('faqs', languageService.currentLanguage),
                     onTap: () {
                       Navigator.pop(context);
-                      // TODO: Navigate to FAQs
+                      Navigator.pushNamed(context, '/faqs');
                     },
                   ),
                   _buildDrawerItem(

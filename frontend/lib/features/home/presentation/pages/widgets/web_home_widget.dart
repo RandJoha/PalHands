@@ -214,8 +214,13 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
                      text == 'من نحن' ||
                      text == 'About') {
             Navigator.pushNamed(context, '/about');
+          } else if (text == AppStrings.getString('faqs', languageService.currentLanguage)) {
+            Navigator.pushNamed(context, '/faqs');
+          } else if (text == AppStrings.getString('contactUs', languageService.currentLanguage) ||
+                     text == 'تواصل' ||
+                     text == 'Contact') {
+            // TODO: Navigate to contact page
           }
-          // TODO: Add navigation for other pages
         },
         style: TextButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
