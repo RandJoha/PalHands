@@ -215,7 +215,7 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> {
                     title: AppStrings.getString('ourServices', languageService.currentLanguage),
                     onTap: () {
                       Navigator.pop(context);
-                      // TODO: Navigate to services
+                      Navigator.pushNamed(context, '/categories');
                     },
                   ),
                   _buildDrawerItem(
@@ -477,7 +477,7 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> {
           ),
               TextButton(
                 onPressed: () {
-                  // TODO: Navigate to all categories
+                  Navigator.pushNamed(context, '/categories');
                 },
                 child: Text(
                   AppStrings.getString('viewAll', languageService.currentLanguage),
@@ -523,52 +523,57 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> {
         final iconSize = containerSize * 0.5; // 50% of container for icon
         final fontSize = (containerSize * 0.08).clamp(10.0, 18.0); // Responsive font size
         
-        return Container(
-          width: 180, // Increased from 150 to 180
-          height: 180, // Increased from 150 to 180
-          child: Stack(
-            children: [
-              // Frame image as background - responsive padding
-              Positioned(
-                top: framePadding,
-                left: framePadding,
-                right: framePadding,
-                bottom: framePadding,
-                child: Image.asset(
-                  'assets/images/category_frame.png',
-                  fit: BoxFit.contain,
+        return GestureDetector(
+          onTap: () {
+            Navigator.pushNamed(context, '/categories');
+          },
+          child: Container(
+            width: 180, // Increased from 150 to 180
+            height: 180, // Increased from 150 to 180
+            child: Stack(
+              children: [
+                // Frame image as background - responsive padding
+                Positioned(
+                  top: framePadding,
+                  left: framePadding,
+                  right: framePadding,
+                  bottom: framePadding,
+                  child: Image.asset(
+                    'assets/images/category_frame.png',
+                    fit: BoxFit.contain,
+                  ),
                 ),
-              ),
-              // Content in the center
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Category image - responsive size
-                    Container(
-                      width: iconSize,
-                      height: iconSize,
-                      child: Image.asset(
-                        'assets/images/$imagePath',
-                        fit: BoxFit.contain,
+                // Content in the center
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Category image - responsive size
+                      Container(
+                        width: iconSize,
+                        height: iconSize,
+                        child: Image.asset(
+                          'assets/images/$imagePath',
+                          fit: BoxFit.contain,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: containerSize * 0.03), // Reduced spacing between icon and text
-                    Text(
-                      name,
-                      style: TextStyle(
-                        fontSize: fontSize,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
+                      SizedBox(height: containerSize * 0.03), // Reduced spacing between icon and text
+                      Text(
+                        name,
+                        style: TextStyle(
+                          fontSize: fontSize,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -656,72 +661,77 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> {
         final containerHeight = 200.0; // Fixed height for mobile service cards
         final framePadding = (containerWidth * 0.04).clamp(8.0, 16.0);
         
-        return Container(
-          height: containerHeight,
-          child: Stack(
-            children: [
-              // Frame image as background
-              Positioned.fill(
-                child: Image.asset(
-                  'assets/images/$frameType',
-                  fit: BoxFit.fill,
+        return GestureDetector(
+          onTap: () {
+            Navigator.pushNamed(context, '/categories');
+          },
+          child: Container(
+            height: containerHeight,
+            child: Stack(
+              children: [
+                // Frame image as background
+                Positioned.fill(
+                  child: Image.asset(
+                    'assets/images/$frameType',
+                    fit: BoxFit.fill,
+                  ),
                 ),
-              ),
-              // Content inside the frame
-              Positioned(
-                top: framePadding,
-                left: framePadding,
-                right: framePadding,
-                bottom: framePadding,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Service icon
-                    Container(
-                      width: (containerWidth * 0.25).clamp(40.0, 80.0), // 25% with larger limits
-                      height: (containerWidth * 0.25).clamp(40.0, 80.0), // 25% with larger limits
-                      child: Image.asset(
-                        'assets/images/$image',
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                    SizedBox(height: (containerWidth * 0.025).clamp(4.0, 8.0)), // Responsive spacing with limits
-                    // Service name
-                    Text(
-                      name,
-                      style: TextStyle(
-                        fontSize: (containerWidth * 0.045).clamp(12.0, 18.0),
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: (containerWidth * 0.02).clamp(3.0, 6.0)), // Responsive spacing with limits
-                    // Rating and reviews
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ...List.generate(5, (index) => Icon(
-                          index < rating.floor() ? Icons.star : Icons.star_border,
-                          size: (containerWidth * 0.03).clamp(10.0, 16.0),
-                          color: Colors.amber,
-                        )),
-                        SizedBox(width: (containerWidth * 0.02).clamp(3.0, 5.0)),
-                        Text(
-                          '($reviews)',
-                          style: TextStyle(
-                            fontSize: (containerWidth * 0.025).clamp(8.0, 14.0),
-                            color: Colors.grey[600],
-                          ),
+                // Content inside the frame
+                Positioned(
+                  top: framePadding,
+                  left: framePadding,
+                  right: framePadding,
+                  bottom: framePadding,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Service icon
+                      Container(
+                        width: (containerWidth * 0.25).clamp(40.0, 80.0), // 25% with larger limits
+                        height: (containerWidth * 0.25).clamp(40.0, 80.0), // 25% with larger limits
+                        child: Image.asset(
+                          'assets/images/$image',
+                          fit: BoxFit.contain,
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                      SizedBox(height: (containerWidth * 0.025).clamp(4.0, 8.0)), // Responsive spacing with limits
+                      // Service name
+                      Text(
+                        name,
+                        style: TextStyle(
+                          fontSize: (containerWidth * 0.045).clamp(12.0, 18.0),
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: (containerWidth * 0.02).clamp(3.0, 6.0)), // Responsive spacing with limits
+                      // Rating and reviews
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ...List.generate(5, (index) => Icon(
+                            index < rating.floor() ? Icons.star : Icons.star_border,
+                            size: (containerWidth * 0.03).clamp(10.0, 16.0),
+                            color: Colors.amber,
+                          )),
+                          SizedBox(width: (containerWidth * 0.02).clamp(3.0, 5.0)),
+                          Text(
+                            '($reviews)',
+                            style: TextStyle(
+                              fontSize: (containerWidth * 0.025).clamp(8.0, 14.0),
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },

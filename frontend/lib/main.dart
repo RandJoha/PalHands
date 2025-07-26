@@ -12,6 +12,7 @@ import 'core/constants/app_strings.dart';
 // Widget imports
 import 'shared/widgets/splash_screen.dart';
 import 'features/home/presentation/pages/home_screen.dart';
+import 'features/categories/presentation/pages/category_screen.dart';
 
 // Services
 import 'shared/services/language_service.dart';
@@ -102,6 +103,7 @@ class PalHandsApp extends StatelessWidget {
                 home: const SplashScreen(),
                 routes: {
                   '/home': (context) => const HomeScreen(),
+                  '/categories': (context) => const CategoryScreen(),
                 },
               );
             },

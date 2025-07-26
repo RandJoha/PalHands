@@ -234,7 +234,7 @@ class AppStrings {
     'ar': 'نجارة',
   };
 
-  static const Map<String, String> painting = {
+  static const Map<String, String> paintingService = {
     'en': 'Painting',
     'ar': 'دهان',
   };
@@ -546,12 +546,12 @@ class AppStrings {
     'ar': 'تنظيف عميق',
   };
 
-  static const Map<String, String> windowCleaning = {
+  static const Map<String, String> windowCleaningService = {
     'en': 'Window Cleaning',
     'ar': 'تنظيف النوافذ',
   };
 
-  static const Map<String, String> carpetCleaning = {
+  static const Map<String, String> carpetCleaningService = {
     'en': 'Carpet Cleaning',
     'ar': 'تنظيف السجاد',
   };
@@ -1039,6 +1039,452 @@ class AppStrings {
     'ar': 'تنظيف احترافي من قبل مقدمي الخدمات المحليين الموثوقين. اختبر الفرق مع منصة خدماتنا القائمة على المجتمع.',
   };
 
+  // Category screen strings
+  static const Map<String, String> allCategories = {
+    'en': 'All Categories',
+    'ar': 'جميع الفئات',
+  };
+
+  static const Map<String, String> viewDetails = {
+    'en': 'View Details',
+    'ar': 'عرض التفاصيل',
+  };
+
+  static const Map<String, String> close = {
+    'en': 'Close',
+    'ar': 'إغلاق',
+  };
+
+  static const Map<String, String> selected = {
+    'en': 'Selected',
+    'ar': 'محدد',
+  };
+
+  // Service descriptions
+  static const Map<String, String> bedroomCleaningDesc = {
+    'en': 'Professional bedroom cleaning including dusting, sweeping, and bed making',
+    'ar': 'تنظيف احترافي لغرفة النوم يشمل إزالة الغبار والكنس وترتيب السرير',
+  };
+
+  static const Map<String, String> livingRoomCleaningDesc = {
+    'en': 'Complete living room cleaning with furniture dusting and floor care',
+    'ar': 'تنظيف كامل للصالون مع إزالة الغبار من الأثاث والعناية بالأرضيات',
+  };
+
+  static const Map<String, String> kitchenCleaningDesc = {
+    'en': 'Thorough kitchen cleaning including appliances, countertops, and cabinets',
+    'ar': 'تنظيف شامل للمطبخ يشمل الأجهزة والطاولات والخزائن',
+  };
+
+  static const Map<String, String> bathroomCleaningDesc = {
+    'en': 'Deep bathroom cleaning with sanitization and fixture care',
+    'ar': 'تنظيف عميق للحمام مع التعقيم والعناية بالتركيبات',
+  };
+
+  static const Map<String, String> windowCleaningDesc = {
+    'en': 'Professional window cleaning for crystal clear views',
+    'ar': 'تنظيف احترافي للنوافذ للحصول على رؤية واضحة',
+  };
+
+  static const Map<String, String> doorCabinetCleaningDesc = {
+    'en': 'Detailed cleaning of doors and cabinets to remove dirt and stains',
+    'ar': 'تنظيف تفصيلي للأبواب والخزائن لإزالة الأوساخ والبقع',
+  };
+
+  static const Map<String, String> floorCleaningDesc = {
+    'en': 'Specialized floor cleaning for ceramic, marble, and tile surfaces',
+    'ar': 'تنظيف متخصص للأرضيات للسيراميك والرخام والبلاط',
+  };
+
+  static const Map<String, String> carpetCleaningDesc = {
+    'en': 'Deep carpet and rug cleaning with stain removal',
+    'ar': 'تنظيف عميق للسجاد والموكيت مع إزالة البقع',
+  };
+
+  static const Map<String, String> furnitureCleaningDesc = {
+    'en': 'Professional furniture and sofa cleaning with fabric care',
+    'ar': 'تنظيف احترافي للأثاث والكنب مع العناية بالأقمشة',
+  };
+
+  static const Map<String, String> gardenCleaningDesc = {
+    'en': 'Outdoor garden cleaning and maintenance services',
+    'ar': 'خدمات تنظيف وصيانة الحدائق الخارجية',
+  };
+
+  static const Map<String, String> entranceCleaningDesc = {
+    'en': 'House entrance cleaning and welcome area maintenance',
+    'ar': 'تنظيف مدخل المنزل وصيانة منطقة الاستقبال',
+  };
+
+  static const Map<String, String> stairCleaningDesc = {
+    'en': 'Staircase and courtyard cleaning for safety and appearance',
+    'ar': 'تنظيف الدرج والباحات للسلامة والمظهر',
+  };
+
+  static const Map<String, String> garageCleaningDesc = {
+    'en': 'Garage or roof cleaning and organization services',
+    'ar': 'خدمات تنظيف وتنظيم الكراج أو السطح',
+  };
+
+  static const Map<String, String> postEventCleaningDesc = {
+    'en': 'Post-event cleaning to restore your space after celebrations',
+    'ar': 'تنظيف ما بعد المناسبات لاستعادة مساحتك بعد الاحتفالات',
+  };
+
+  static const Map<String, String> postConstructionCleaningDesc = {
+    'en': 'Post-construction cleaning to remove dust and debris',
+    'ar': 'تنظيف ما بعد البناء لإزالة الغبار والحطام',
+  };
+
+  static const Map<String, String> apartmentCleaningDesc = {
+    'en': 'Complete apartment cleaning for rental preparation',
+    'ar': 'تنظيف كامل للشقق لتحضيرها للإيجار',
+  };
+
+  static const Map<String, String> regularCleaningDesc = {
+    'en': 'Regular cleaning services on daily, weekly, or monthly basis',
+    'ar': 'خدمات تنظيف منتظمة يومياً أو أسبوعياً أو شهرياً',
+  };
+
+  static const Map<String, String> serviceDescription = {
+    'en': 'Professional service with attention to detail',
+    'ar': 'خدمة احترافية مع الاهتمام بالتفاصيل',
+  };
+
+  // Service descriptions
+  static const Map<String, String> cleaningServicesDescription = {
+    'en': 'Professional cleaning services for your home, including regular cleaning, deep cleaning, and specialized cleaning services.',
+    'ar': 'خدمات تنظيف احترافية لمنزلك، تشمل التنظيف المنتظم والتنظيف العميق والخدمات المتخصصة.',
+  };
+
+  static const Map<String, String> organizingServicesDescription = {
+    'en': 'Professional organizing services to help you declutter and organize your home and workspace.',
+    'ar': 'خدمات تنظيم احترافية لمساعدتك في ترتيب وتنظيم منزلك ومساحة العمل.',
+  };
+
+  static const Map<String, String> homeCookingServicesDescription = {
+    'en': 'Delicious homemade meals prepared with love and care, including traditional Palestinian dishes.',
+    'ar': 'وجبات منزلية لذيذة محضرة بالحب والاهتمام، تشمل الأطباق الفلسطينية التقليدية.',
+  };
+
+  static const Map<String, String> childCareServicesDescription = {
+    'en': 'Professional childcare services including babysitting, educational activities, and special needs care.',
+    'ar': 'خدمات رعاية الأطفال الاحترافية تشمل مجالسة الأطفال والأنشطة التعليمية ورعاية ذوي الاحتياجات الخاصة.',
+  };
+
+  static const Map<String, String> personalElderlyCareDescription = {
+    'en': 'Compassionate care for elderly individuals, including medical support, companionship, and daily assistance.',
+    'ar': 'رعاية رحيمة لكبار السن، تشمل الدعم الطبي والرفقة والمساعدة اليومية.',
+  };
+
+  static const Map<String, String> maintenanceRepairDescription = {
+    'en': 'Professional maintenance and repair services for electrical, plumbing, carpentry, and general home repairs.',
+    'ar': 'خدمات الصيانة والإصلاح الاحترافية للكهرباء والسباكة والنجارة والإصلاحات المنزلية العامة.',
+  };
+
+  static const Map<String, String> newHomeServicesDescription = {
+    'en': 'Complete services for new homes including moving, setup, cleaning, and preparation for comfortable living.',
+    'ar': 'خدمات شاملة للمنازل الجديدة تشمل النقل والإعداد والتنظيف والتحضير للعيش المريح.',
+  };
+
+  static const Map<String, String> miscellaneousErrandsDescription = {
+    'en': 'Various errand and delivery services to help with your daily tasks and special requests.',
+    'ar': 'خدمات متنوعة للمهام والتوصيل لمساعدتك في مهامك اليومية والطلبات الخاصة.',
+  };
+
+  // Individual services
+  // Cleaning services
+  static const Map<String, String> bedroomCleaning = {
+    'en': 'Bedroom Cleaning',
+    'ar': 'تنظيف غرفة نوم',
+  };
+
+  static const Map<String, String> livingRoomCleaning = {
+    'en': 'Living Room Cleaning',
+    'ar': 'تنظيف صالون',
+  };
+
+  static const Map<String, String> kitchenCleaning = {
+    'en': 'Kitchen Cleaning',
+    'ar': 'تنظيف مطبخ',
+  };
+
+  static const Map<String, String> bathroomCleaning = {
+    'en': 'Bathroom Cleaning',
+    'ar': 'تنظيف حمام',
+  };
+
+  static const Map<String, String> doorCabinetCleaning = {
+    'en': 'Door & Cabinet Cleaning',
+    'ar': 'تنظيف أبواب وخزائن',
+  };
+
+  static const Map<String, String> floorCleaning = {
+    'en': 'Floor Cleaning (Ceramic/Marble)',
+    'ar': 'تنظيف أرضيات (سيراميك/رخام)',
+  };
+
+  static const Map<String, String> carpetCleaning = {
+    'en': 'Carpet/Rug Cleaning',
+    'ar': 'تنظيف سجاد/موكيت',
+  };
+
+  static const Map<String, String> furnitureCleaning = {
+    'en': 'Furniture/Sofa Cleaning',
+    'ar': 'تنظيف فرش/كنب',
+  };
+
+  static const Map<String, String> gardenCleaning = {
+    'en': 'Garden Cleaning',
+    'ar': 'تنظيف حديقة',
+  };
+
+  static const Map<String, String> entranceCleaning = {
+    'en': 'House Entrance Cleaning',
+    'ar': 'تنظيف مدخل منزل',
+  };
+
+  static const Map<String, String> stairCleaning = {
+    'en': 'Stair & Courtyard Cleaning',
+    'ar': 'تنظيف درج وباحات',
+  };
+
+  static const Map<String, String> garageCleaning = {
+    'en': 'Garage or Roof Cleaning',
+    'ar': 'تنظيف كراج أو سطح',
+  };
+
+  static const Map<String, String> postEventCleaning = {
+    'en': 'Post-Event/Party Cleaning',
+    'ar': 'تنظيف بعد مناسبة/عزومة',
+  };
+
+  static const Map<String, String> postConstructionCleaning = {
+    'en': 'Post-Construction/Painting Cleaning',
+    'ar': 'تنظيف ما بعد البناء/الدهان',
+  };
+
+  static const Map<String, String> apartmentCleaning = {
+    'en': 'Apartment Cleaning (Before/After Rental)',
+    'ar': 'تنظيف شقق للإيجار قبل/بعد',
+  };
+
+  static const Map<String, String> regularCleaning = {
+    'en': 'Daily/Weekly/Monthly Cleaning',
+    'ar': 'تنظيف يومي/أسبوعي/شهري',
+  };
+
+  // Organizing services
+  static const Map<String, String> bedroomOrganizing = {
+    'en': 'Bedroom Organizing',
+    'ar': 'ترتيب غرفة نوم',
+  };
+
+  static const Map<String, String> kitchenOrganizing = {
+    'en': 'Kitchen & Cabinet Organizing',
+    'ar': 'ترتيب مطبخ وخزائن',
+  };
+
+  static const Map<String, String> closetOrganizing = {
+    'en': 'Closet Organizing',
+    'ar': 'ترتيب خزانة ملابس',
+  };
+
+  static const Map<String, String> storageOrganizing = {
+    'en': 'Storage/Warehouse Organizing',
+    'ar': 'ترتيب مستودع/مخزن',
+  };
+
+  static const Map<String, String> livingRoomOrganizing = {
+    'en': 'Living Room or Majlis Organizing',
+    'ar': 'ترتيب صالة أو مجلس',
+  };
+
+  static const Map<String, String> postPartyOrganizing = {
+    'en': 'Post-Party or Event Organizing',
+    'ar': 'ترتيب بعد حفلة أو فعالية',
+  };
+
+  static const Map<String, String> fullHouseOrganizing = {
+    'en': 'Full House Organizing',
+    'ar': 'ترتيب منزل كامل',
+  };
+
+  static const Map<String, String> childrenOrganizing = {
+    'en': 'Children or School Organizing',
+    'ar': 'ترتيب للأطفال أو المدارس',
+  };
+
+  // Child care services
+  static const Map<String, String> homeBabysitting = {
+    'en': 'Home Babysitting',
+    'ar': 'مجالسة أطفال في المنزل',
+  };
+
+  static const Map<String, String> schoolAccompaniment = {
+    'en': 'School/Nursery Accompaniment',
+    'ar': 'مرافقة أطفال للمدرسة/الحضانة',
+  };
+
+  static const Map<String, String> homeworkHelp = {
+    'en': 'Homework Assistance',
+    'ar': 'مساعدة بالواجبات المنزلية',
+  };
+
+  static const Map<String, String> educationalActivities = {
+    'en': 'Educational & Recreational Activities',
+    'ar': 'أنشطة تعليمية وترفيهية',
+  };
+
+  static const Map<String, String> childrenMealPrep = {
+    'en': 'Children Meal Preparation',
+    'ar': 'تحضير الطعام للأطفال',
+  };
+
+  static const Map<String, String> sickChildCare = {
+    'en': 'Sick Child Care',
+    'ar': 'رعاية أطفال مرضى',
+  };
+
+  // Elderly care services
+  static const Map<String, String> homeElderlyCare = {
+    'en': 'Home Elderly Care',
+    'ar': 'رعاية كبار السن في المنزل',
+  };
+
+  static const Map<String, String> medicalTransport = {
+    'en': 'Medical Center/Clinic Transportation',
+    'ar': 'توصيل للمراكز الطبية/العيادات',
+  };
+
+  static const Map<String, String> healthMonitoring = {
+    'en': 'Blood Pressure & Sugar Monitoring',
+    'ar': 'مراقبة ضغط وسكر',
+  };
+
+  static const Map<String, String> medicationAssistance = {
+    'en': 'Medication Administration (Under Supervision)',
+    'ar': 'إعطاء دواء (بإشراف)',
+  };
+
+  static const Map<String, String> emotionalSupport = {
+    'en': 'Psychological & Moral Support',
+    'ar': 'دعم نفسي ومعنوي',
+  };
+
+  static const Map<String, String> mobilityAssistance = {
+    'en': 'Mobility & Bathing Assistance',
+    'ar': 'مساعدة في الحركة والاستحمام',
+  };
+
+  // Maintenance services
+  static const Map<String, String> electricalWork = {
+    'en': 'Electrical Work',
+    'ar': 'أعمال كهرباء',
+  };
+
+  static const Map<String, String> plumbingWork = {
+    'en': 'Plumbing Work',
+    'ar': 'أعمال صحية (سباكة)',
+  };
+
+  static const Map<String, String> aluminumWork = {
+    'en': 'Aluminum Work',
+    'ar': 'أعمال ألمنيوم',
+  };
+
+  static const Map<String, String> carpentryWork = {
+    'en': 'Carpentry Work',
+    'ar': 'أعمال نجارة',
+  };
+
+  static const Map<String, String> wallPainting = {
+    'en': 'Wall or Room Painting',
+    'ar': 'دهان حائط أو غرفة',
+  };
+
+  static const Map<String, String> hangingItems = {
+    'en': 'Hanging Pictures/Mirrors/Curtains',
+    'ar': 'تعليق لوحات/مرايا/ستائر',
+  };
+
+  static const Map<String, String> satelliteInstallation = {
+    'en': 'Satellite or WiFi Installation',
+    'ar': 'تركيب ستالايت أو واي فاي',
+  };
+
+  static const Map<String, String> applianceMaintenance = {
+    'en': 'Water Heater or Washing Machine Maintenance',
+    'ar': 'صيانة سخان أو غسالة',
+  };
+
+  // New home services
+  static const Map<String, String> furnitureMoving = {
+    'en': 'Indoor Furniture Moving',
+    'ar': 'نقل أثاث داخلي',
+  };
+
+  static const Map<String, String> packingUnpacking = {
+    'en': 'Packing & Unpacking Items',
+    'ar': 'تعبئة وتفريغ أغراض',
+  };
+
+  static const Map<String, String> furnitureWrapping = {
+    'en': 'Furniture & Belongings Wrapping',
+    'ar': 'تغليف أثاث ومنقولات',
+  };
+
+  static const Map<String, String> newHomeArrangement = {
+    'en': 'New Home Arrangement After Moving',
+    'ar': 'ترتيب البيت الجديد بعد النقل',
+  };
+
+  static const Map<String, String> newApartmentCleaning = {
+    'en': 'Complete New Apartment Cleaning',
+    'ar': 'تنظيف كامل للشقة الجديدة',
+  };
+
+  static const Map<String, String> preOccupancyRepairs = {
+    'en': 'Pre-Occupancy Repairs',
+    'ar': 'إصلاح الأعطال قبل السكن',
+  };
+
+  static const Map<String, String> kitchenSetup = {
+    'en': 'Kitchen/Cabinets/Rooms Setup',
+    'ar': 'تجهيز مطبخ/خزائن/غرف',
+  };
+
+  static const Map<String, String> applianceInstallation = {
+    'en': 'Electrical Appliance Installation',
+    'ar': 'تركيب الأجهزة الكهربائية',
+  };
+
+  // Miscellaneous services
+  static const Map<String, String> documentDelivery = {
+    'en': 'Document or Paper Delivery',
+    'ar': 'توصيل أوراق أو مستندات',
+  };
+
+  static const Map<String, String> shoppingDelivery = {
+    'en': 'Shopping Delivery from Market/Mall',
+    'ar': 'توصيل أغراض من سوق/مول',
+  };
+
+  static const Map<String, String> specialErrands = {
+    'en': 'Special Errands',
+    'ar': 'مشاوير خاصة',
+  };
+
+  static const Map<String, String> billPayment = {
+    'en': 'Bill Payment/Transaction Processing',
+    'ar': 'دفع فواتير/إنجاز معاملات',
+  };
+
+  static const Map<String, String> prescriptionPickup = {
+    'en': 'Prescription Pickup',
+    'ar': 'جلب وصفات طبية',
+  };
+
 
 
   // Helper method to get localized string
@@ -1089,7 +1535,7 @@ class AppStrings {
       'plumbing': plumbing,
       'electrical': electrical,
       'carpentry': carpentry,
-      'painting': painting,
+      'painting': paintingService,
       'gardening': gardening,
       'legalServices': legalServices,
       'accounting': accounting,
@@ -1150,8 +1596,8 @@ class AppStrings {
       'miscellaneousErrands': miscellaneousErrands,
       'houseCleaning': houseCleaning,
       'deepCleaning': deepCleaning,
-      'windowCleaning': windowCleaning,
-      'carpetCleaning': carpetCleaning,
+      'windowCleaning': windowCleaningService,
+      'carpetCleaning': carpetCleaningService,
       'homeOrganization': homeOrganization,
       'closetOrganization': closetOrganization,
       'officeOrganization': officeOrganization,
@@ -1256,6 +1702,98 @@ class AppStrings {
       'faqs': faqs,
       // Hero banner description
       'professionalCleaningDescription': professionalCleaningDescription,
+      // Category screen strings
+      'allCategories': allCategories,
+      'viewDetails': viewDetails,
+              'close': close,
+        'selected': selected,
+        // Service descriptions
+        'bedroomCleaningDesc': bedroomCleaningDesc,
+        'livingRoomCleaningDesc': livingRoomCleaningDesc,
+        'kitchenCleaningDesc': kitchenCleaningDesc,
+        'bathroomCleaningDesc': bathroomCleaningDesc,
+        'windowCleaningDesc': windowCleaningDesc,
+        'doorCabinetCleaningDesc': doorCabinetCleaningDesc,
+        'floorCleaningDesc': floorCleaningDesc,
+        'carpetCleaningDesc': carpetCleaningDesc,
+        'furnitureCleaningDesc': furnitureCleaningDesc,
+        'gardenCleaningDesc': gardenCleaningDesc,
+        'entranceCleaningDesc': entranceCleaningDesc,
+        'stairCleaningDesc': stairCleaningDesc,
+        'garageCleaningDesc': garageCleaningDesc,
+        'postEventCleaningDesc': postEventCleaningDesc,
+        'postConstructionCleaningDesc': postConstructionCleaningDesc,
+        'apartmentCleaningDesc': apartmentCleaningDesc,
+        'regularCleaningDesc': regularCleaningDesc,
+        'serviceDescription': serviceDescription,
+      // Service descriptions
+      'cleaningServicesDescription': cleaningServicesDescription,
+      'organizingServicesDescription': organizingServicesDescription,
+      'homeCookingServicesDescription': homeCookingServicesDescription,
+      'childCareServicesDescription': childCareServicesDescription,
+      'personalElderlyCareDescription': personalElderlyCareDescription,
+      'maintenanceRepairDescription': maintenanceRepairDescription,
+      'newHomeServicesDescription': newHomeServicesDescription,
+      'miscellaneousErrandsDescription': miscellaneousErrandsDescription,
+      // Individual services
+      'bedroomCleaning': bedroomCleaning,
+      'livingRoomCleaning': livingRoomCleaning,
+      'kitchenCleaning': kitchenCleaning,
+      'bathroomCleaning': bathroomCleaning,
+      'windowCleaning': windowCleaningService,
+      'doorCabinetCleaning': doorCabinetCleaning,
+      'floorCleaning': floorCleaning,
+      'carpetCleaning': carpetCleaningService,
+      'furnitureCleaning': furnitureCleaning,
+      'gardenCleaning': gardenCleaning,
+      'entranceCleaning': entranceCleaning,
+      'stairCleaning': stairCleaning,
+      'garageCleaning': garageCleaning,
+      'postEventCleaning': postEventCleaning,
+      'postConstructionCleaning': postConstructionCleaning,
+      'apartmentCleaning': apartmentCleaning,
+      'regularCleaning': regularCleaning,
+      'bedroomOrganizing': bedroomOrganizing,
+      'kitchenOrganizing': kitchenOrganizing,
+      'closetOrganizing': closetOrganizing,
+      'storageOrganizing': storageOrganizing,
+      'livingRoomOrganizing': livingRoomOrganizing,
+      'postPartyOrganizing': postPartyOrganizing,
+      'fullHouseOrganizing': fullHouseOrganizing,
+      'childrenOrganizing': childrenOrganizing,
+      'homeBabysitting': homeBabysitting,
+      'schoolAccompaniment': schoolAccompaniment,
+      'homeworkHelp': homeworkHelp,
+      'educationalActivities': educationalActivities,
+      'childrenMealPrep': childrenMealPrep,
+      'sickChildCare': sickChildCare,
+      'homeElderlyCare': homeElderlyCare,
+      'medicalTransport': medicalTransport,
+      'healthMonitoring': healthMonitoring,
+      'medicationAssistance': medicationAssistance,
+      'emotionalSupport': emotionalSupport,
+      'mobilityAssistance': mobilityAssistance,
+      'electricalWork': electricalWork,
+      'plumbingWork': plumbingWork,
+      'aluminumWork': aluminumWork,
+      'carpentryWork': carpentryWork,
+      'painting': wallPainting,
+      'hangingItems': hangingItems,
+      'satelliteInstallation': satelliteInstallation,
+      'applianceMaintenance': applianceMaintenance,
+      'furnitureMoving': furnitureMoving,
+      'packingUnpacking': packingUnpacking,
+      'furnitureWrapping': furnitureWrapping,
+      'newHomeArrangement': newHomeArrangement,
+      'newApartmentCleaning': newApartmentCleaning,
+      'preOccupancyRepairs': preOccupancyRepairs,
+      'kitchenSetup': kitchenSetup,
+      'applianceInstallation': applianceInstallation,
+      'documentDelivery': documentDelivery,
+      'shoppingDelivery': shoppingDelivery,
+      'specialErrands': specialErrands,
+      'billPayment': billPayment,
+      'prescriptionPickup': prescriptionPickup,
     };
 
     return allStrings[key]?[languageCode] ?? allStrings[key]?['en'] ?? key;
