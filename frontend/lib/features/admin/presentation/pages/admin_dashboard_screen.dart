@@ -24,15 +24,20 @@ class AdminDashboardScreen extends StatefulWidget {
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    
-    // Better responsive breakpoints
-    if (screenWidth > 900) {
-      // Desktop and large tablet - use web dashboard
-      return const WebAdminDashboard();
-    } else {
-      // Small tablet and mobile - use mobile dashboard
-      return const MobileAdminDashboard();
-    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Use constraints.maxWidth instead of MediaQuery for more stable responsive behavior
+        final screenWidth = constraints.maxWidth;
+        
+        // Better responsive breakpoints with more stable transitions
+        if (screenWidth > 900) {
+          // Desktop and large tablet - use web dashboard
+          return const WebAdminDashboard();
+        } else {
+          // Small tablet and mobile - use mobile dashboard
+          return const MobileAdminDashboard();
+        }
+      },
+    );
   }
 }

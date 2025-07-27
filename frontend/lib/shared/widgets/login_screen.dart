@@ -56,12 +56,8 @@ class _LoginScreenState extends State<LoginScreen> {
           // Admin login successful - navigate to admin dashboard
           Navigator.of(context).pushReplacementNamed('/admin');
         } else if (_emailController.text == testEmail && _passwordController.text == testPassword) {
-          // Regular user login successful - navigate to home screen
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => const HomeScreen(),
-            ),
-          );
+          // Regular user login successful - navigate to user dashboard
+          Navigator.of(context).pushReplacementNamed('/user');
         } else {
           // Login failed - show error message
           ScaffoldMessenger.of(context).showSnackBar(

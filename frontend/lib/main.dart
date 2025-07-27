@@ -17,6 +17,7 @@ import 'features/about/presentation/pages/about_screen.dart';
 import 'features/faqs/presentation/pages/faqs_screen.dart';
 import 'features/contact/presentation/pages/contact_screen.dart';
 import 'features/admin/presentation/pages/admin_dashboard_screen.dart';
+import 'features/profile/presentation/pages/user_dashboard_screen.dart';
 
 // Services
 import 'shared/services/language_service.dart';
@@ -114,6 +115,7 @@ class PalHandsApp extends StatelessWidget {
                   '/faqs': (context) => const FAQsScreen(),
                   '/contact': (context) => const ContactScreen(),
                   '/admin': (context) => const AdminDashboardScreen(),
+                  '/user': (context) => const UserDashboardScreen(),
                 },
               );
             },
