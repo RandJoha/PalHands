@@ -2237,7 +2237,510 @@ class AppStrings {
     'ar': 'شكراً لك على ملاحظاتك. سنرد عليك قريباً.',
   };
 
+  // Admin Dashboard Strings
+  static const Map<String, String> adminDashboard = {
+    'en': 'Admin Dashboard',
+    'ar': 'لوحة تحكم المدير',
+  };
 
+  static const Map<String, String> adminPanel = {
+    'en': 'Admin Panel',
+    'ar': 'لوحة المدير',
+  };
+
+  static const Map<String, String> administrator = {
+    'en': 'Administrator',
+    'ar': 'مدير',
+  };
+
+  static const Map<String, String> overview = {
+    'en': 'Overview',
+    'ar': 'نظرة عامة',
+  };
+
+  static const Map<String, String> userManagement = {
+    'en': 'User Management',
+    'ar': 'إدارة المستخدمين',
+  };
+
+  static const Map<String, String> serviceManagement = {
+    'en': 'Service Management',
+    'ar': 'إدارة الخدمات',
+  };
+
+  static const Map<String, String> bookingManagement = {
+    'en': 'Booking Management',
+    'ar': 'إدارة الحجوزات',
+  };
+
+  static const Map<String, String> reportsDisputes = {
+    'en': 'Reports & Disputes',
+    'ar': 'التقارير والنزاعات',
+  };
+
+  static const Map<String, String> analytics = {
+    'en': 'Analytics',
+    'ar': 'التحليلات',
+  };
+
+  static const Map<String, String> systemSettings = {
+    'en': 'System Settings',
+    'ar': 'إعدادات النظام',
+  };
+
+  static const Map<String, String> welcomeBackAdmin = {
+    'en': 'Welcome back, Administrator!',
+    'ar': 'مرحباً بعودتك، المدير!',
+  };
+
+  static const Map<String, String> expand = {
+    'en': 'Expand',
+    'ar': 'توسيع',
+  };
+
+  static const Map<String, String> collapse = {
+    'en': 'Collapse',
+    'ar': 'طي',
+  };
+
+  static const Map<String, String> logout = {
+    'en': 'Logout',
+    'ar': 'تسجيل الخروج',
+  };
+
+  static const Map<String, String> notifications = {
+    'en': 'Notifications',
+    'ar': 'الإشعارات',
+  };
+
+  static const Map<String, String> palestinianHeritage = {
+    'en': 'Palestinian Heritage',
+    'ar': 'التراث الفلسطيني',
+  };
+
+  static const Map<String, String> connectingCommunities = {
+    'en': 'Connecting Communities',
+    'ar': 'ربط المجتمعات',
+  };
+
+  // Dashboard Overview Strings
+  static const Map<String, String> platformOverview = {
+    'en': 'Here\'s what\'s happening with your platform today',
+    'ar': 'إليك ما يحدث في منصتك اليوم',
+  };
+
+  static const Map<String, String> totalUsers = {
+    'en': 'Total Users',
+    'ar': 'إجمالي المستخدمين',
+  };
+
+  static const Map<String, String> activeServices = {
+    'en': 'Active Services',
+    'ar': 'الخدمات النشطة',
+  };
+
+  static const Map<String, String> todaysBookings = {
+    'en': 'Today\'s Bookings',
+    'ar': 'حجوزات اليوم',
+  };
+
+  static const Map<String, String> monthlyRevenue = {
+    'en': 'Monthly Revenue',
+    'ar': 'الإيرادات الشهرية',
+  };
+
+  static const Map<String, String> pendingReports = {
+    'en': 'Pending Reports',
+    'ar': 'التقارير المعلقة',
+  };
+
+  static const Map<String, String> systemUptime = {
+    'en': 'System Uptime',
+    'ar': 'وقت تشغيل النظام',
+  };
+
+  static const Map<String, String> userGrowth = {
+    'en': 'User Growth',
+    'ar': 'نمو المستخدمين',
+  };
+
+  static const Map<String, String> last30Days = {
+    'en': 'Last 30 days',
+    'ar': 'آخر 30 يوم',
+  };
+
+  static const Map<String, String> revenueTrend = {
+    'en': 'Revenue Trend',
+    'ar': 'اتجاه الإيرادات',
+  };
+
+  static const Map<String, String> monthlyEarnings = {
+    'en': 'Monthly earnings',
+    'ar': 'الأرباح الشهرية',
+  };
+
+  static const Map<String, String> recentActivity = {
+    'en': 'Recent Activity',
+    'ar': 'النشاط الأخير',
+  };
+
+  static const Map<String, String> newUserRegistered = {
+    'en': 'New user registered',
+    'ar': 'مستخدم جديد مسجل',
+  };
+
+  static const Map<String, String> ahmedHassanJoined = {
+    'en': 'Ahmed Hassan joined as a service provider',
+    'ar': 'انضم أحمد حسن كمقدم خدمة',
+  };
+
+  static const Map<String, String> bookingCompleted = {
+    'en': 'Booking completed',
+    'ar': 'تم إكمال الحجز',
+  };
+
+  static const Map<String, String> cleaningServiceRamallah = {
+    'en': 'Cleaning service in Ramallah',
+    'ar': 'خدمة تنظيف في رام الله',
+  };
+
+  static const Map<String, String> reportSubmitted = {
+    'en': 'Report submitted',
+    'ar': 'تم تقديم تقرير',
+  };
+
+  static const Map<String, String> userReportedInappropriate = {
+    'en': 'User reported inappropriate behavior',
+    'ar': 'أبلغ المستخدم عن سلوك غير لائق',
+  };
+
+  static const Map<String, String> paymentProcessed = {
+    'en': 'Payment processed',
+    'ar': 'تمت معالجة الدفع',
+  };
+
+  static const Map<String, String> paymentForHomeMaintenance = {
+    'en': '₪150 payment for home maintenance',
+    'ar': 'دفع 150 شيكل لصيانة المنزل',
+  };
+
+  static const Map<String, String> minutesAgo = {
+    'en': 'minutes ago',
+    'ar': 'دقائق مضت',
+  };
+
+  static const Map<String, String> hoursAgo = {
+    'en': 'hours ago',
+    'ar': 'ساعات مضت',
+  };
+
+  static const Map<String, String> hourAgo = {
+    'en': 'hour ago',
+    'ar': 'ساعة مضت',
+  };
+
+  static const Map<String, String> stable = {
+    'en': 'Stable',
+    'ar': 'مستقر',
+  };
+
+  static const Map<String, String> chartPlaceholder = {
+    'en': 'Chart Placeholder',
+    'ar': 'مخطط تجريبي',
+  };
+
+  // User Management Strings
+  static const Map<String, String> managePlatformUsers = {
+    'en': 'Manage platform users, verify providers, and monitor activity',
+    'ar': 'إدارة مستخدمي المنصة، التحقق من مقدمي الخدمات، ومراقبة النشاط',
+  };
+
+  static const Map<String, String> addUser = {
+    'en': 'Add User',
+    'ar': 'إضافة مستخدم',
+  };
+
+  static const Map<String, String> filters = {
+    'en': 'Filters',
+    'ar': 'المرشحات',
+  };
+
+  static const Map<String, String> searchByNameEmailPhone = {
+    'en': 'Search by name, email, or phone...',
+    'ar': 'البحث بالاسم، البريد الإلكتروني، أو الهاتف...',
+  };
+
+  static const Map<String, String> role = {
+    'en': 'Role',
+    'ar': 'الدور',
+  };
+
+  static const Map<String, String> status = {
+    'en': 'Status',
+    'ar': 'الحالة',
+  };
+
+  static const Map<String, String> allRoles = {
+    'en': 'All Roles',
+    'ar': 'جميع الأدوار',
+  };
+
+  static const Map<String, String> client = {
+    'en': 'Client',
+    'ar': 'عميل',
+  };
+
+  static const Map<String, String> provider = {
+    'en': 'Provider',
+    'ar': 'مقدم خدمة',
+  };
+
+  static const Map<String, String> admin = {
+    'en': 'Admin',
+    'ar': 'مدير',
+  };
+
+  static const Map<String, String> allStatus = {
+    'en': 'All Status',
+    'ar': 'جميع الحالات',
+  };
+
+  static const Map<String, String> active = {
+    'en': 'Active',
+    'ar': 'نشط',
+  };
+
+  static const Map<String, String> inactive = {
+    'en': 'Inactive',
+    'ar': 'غير نشط',
+  };
+
+  static const Map<String, String> noUsersFound = {
+    'en': 'No users found',
+    'ar': 'لم يتم العثور على مستخدمين',
+  };
+
+  static const Map<String, String> user = {
+    'en': 'User',
+    'ar': 'المستخدم',
+  };
+
+  static const Map<String, String> joined = {
+    'en': 'Joined',
+    'ar': 'انضم',
+  };
+
+  static const Map<String, String> actions = {
+    'en': 'Actions',
+    'ar': 'الإجراءات',
+  };
+
+  static const Map<String, String> edit = {
+    'en': 'Edit',
+    'ar': 'تعديل',
+  };
+
+  static const Map<String, String> view = {
+    'en': 'View',
+    'ar': 'عرض',
+  };
+
+  static const Map<String, String> delete = {
+    'en': 'Delete',
+    'ar': 'حذف',
+  };
+
+  static const Map<String, String> activate = {
+    'en': 'Activate',
+    'ar': 'تفعيل',
+  };
+
+  static const Map<String, String> deactivate = {
+    'en': 'Deactivate',
+    'ar': 'إلغاء التفعيل',
+  };
+
+  static const Map<String, String> verify = {
+    'en': 'Verify',
+    'ar': 'التحقق',
+  };
+
+  static const Map<String, String> unverify = {
+    'en': 'Unverify',
+    'ar': 'إلغاء التحقق',
+  };
+
+  static const Map<String, String> promoteToAdmin = {
+    'en': 'Promote to Admin',
+    'ar': 'ترقية إلى مدير',
+  };
+
+  static const Map<String, String> demoteFromAdmin = {
+    'en': 'Demote from Admin',
+    'ar': 'إلغاء ترقية المدير',
+  };
+
+  static const Map<String, String> resetPassword = {
+    'en': 'Reset Password',
+    'ar': 'إعادة تعيين كلمة المرور',
+  };
+
+  static const Map<String, String> forceLogout = {
+    'en': 'Force Logout',
+    'ar': 'إجبار تسجيل الخروج',
+  };
+
+  static const Map<String, String> userDetails = {
+    'en': 'User Details',
+    'ar': 'تفاصيل المستخدم',
+  };
+
+  static const Map<String, String> createdAt = {
+    'en': 'Created At',
+    'ar': 'تاريخ الإنشاء',
+  };
+
+  static const Map<String, String> lastLogin = {
+    'en': 'Last Login',
+    'ar': 'آخر تسجيل دخول',
+  };
+
+  static const Map<String, String> totalBookings = {
+    'en': 'Total Bookings',
+    'ar': 'إجمالي الحجوزات',
+  };
+
+  static const Map<String, String> totalServices = {
+    'en': 'Total Services',
+    'ar': 'إجمالي الخدمات',
+  };
+
+  static const Map<String, String> totalEarnings = {
+    'en': 'Total Earnings',
+    'ar': 'إجمالي الأرباح',
+  };
+
+  static const Map<String, String> isVerified = {
+    'en': 'Verified',
+    'ar': 'متحقق',
+  };
+
+  static const Map<String, String> notVerified = {
+    'en': 'Not Verified',
+    'ar': 'غير متحقق',
+  };
+
+  static const Map<String, String> na = {
+    'en': 'N/A',
+    'ar': 'غير متوفر',
+  };
+
+  // Service Management Strings
+  static const Map<String, String> manageServiceListings = {
+    'en': 'Manage service listings, approve providers, and monitor quality',
+    'ar': 'إدارة قوائم الخدمات، الموافقة على مقدمي الخدمات، ومراقبة الجودة',
+  };
+
+  static const Map<String, String> addService = {
+    'en': 'Add Service',
+    'ar': 'إضافة خدمة',
+  };
+
+  static const Map<String, String> category = {
+    'en': 'Category',
+    'ar': 'الفئة',
+  };
+
+  static const Map<String, String> elderlySupport = {
+    'en': 'Elderly Support',
+    'ar': 'رعاية المسنين',
+  };
+
+  static const Map<String, String> maintenance = {
+    'en': 'Maintenance',
+    'ar': 'صيانة',
+  };
+
+  static const Map<String, String> noServicesFound = {
+    'en': 'No services found',
+    'ar': 'لم يتم العثور على خدمات',
+  };
+
+  static const Map<String, String> service = {
+    'en': 'Service',
+    'ar': 'الخدمة',
+  };
+
+  static const Map<String, String> price = {
+    'en': 'Price',
+    'ar': 'السعر',
+  };
+
+  static const Map<String, String> hourly = {
+    'en': 'hourly',
+    'ar': 'بالساعة',
+  };
+
+  static const Map<String, String> daily = {
+    'en': 'daily',
+    'ar': 'يومي',
+  };
+
+  static const Map<String, String> fixed = {
+    'en': 'fixed',
+    'ar': 'ثابت',
+  };
+
+  // Booking Management Strings
+  static const Map<String, String> monitorBookings = {
+    'en': 'Monitor bookings, track payments, and manage schedules',
+    'ar': 'مراقبة الحجوزات، تتبع المدفوعات، وإدارة الجداول',
+  };
+
+  static const Map<String, String> pending = {
+    'en': 'Pending',
+    'ar': 'معلق',
+  };
+
+  static const Map<String, String> completed = {
+    'en': 'Completed',
+    'ar': 'مكتمل',
+  };
+
+  static const Map<String, String> revenue = {
+    'en': 'Revenue',
+    'ar': 'الإيرادات',
+  };
+
+  static const Map<String, String> noBookingsFound = {
+    'en': 'No bookings found',
+    'ar': 'لم يتم العثور على حجوزات',
+  };
+
+  static const Map<String, String> bookingId = {
+    'en': 'Booking ID',
+    'ar': 'رقم الحجز',
+  };
+
+  static const Map<String, String> dateTime = {
+    'en': 'Date & Time',
+    'ar': 'التاريخ والوقت',
+  };
+
+  static const Map<String, String> amount = {
+    'en': 'Amount',
+    'ar': 'المبلغ',
+  };
+
+  static const Map<String, String> confirmed = {
+    'en': 'Confirmed',
+    'ar': 'مؤكد',
+  };
+
+  static const Map<String, String> cancelled = {
+    'en': 'Cancelled',
+    'ar': 'ملغي',
+  };
 
   // Helper method to get localized string
   static String getString(String key, String languageCode) {
@@ -2706,6 +3209,111 @@ class AppStrings {
       'traditionalContact': traditionalContact,
       'formSubmitted': formSubmitted,
       'thankYouMessage': thankYouMessage,
+      // Admin Dashboard strings
+      'adminDashboard': adminDashboard,
+      'adminPanel': adminPanel,
+      'administrator': administrator,
+      'overview': overview,
+      'userManagement': userManagement,
+      'serviceManagement': serviceManagement,
+      'bookingManagement': bookingManagement,
+      'reportsDisputes': reportsDisputes,
+      'analytics': analytics,
+      'systemSettings': systemSettings,
+      'welcomeBackAdmin': welcomeBackAdmin,
+      'expand': expand,
+      'collapse': collapse,
+      'logout': logout,
+      'notifications': notifications,
+      'palestinianHeritage': palestinianHeritage,
+      'connectingCommunities': connectingCommunities,
+      // Dashboard Overview strings
+      'platformOverview': platformOverview,
+      'totalUsers': totalUsers,
+      'activeServices': activeServices,
+      'todaysBookings': todaysBookings,
+      'monthlyRevenue': monthlyRevenue,
+      'pendingReports': pendingReports,
+      'systemUptime': systemUptime,
+      'userGrowth': userGrowth,
+      'last30Days': last30Days,
+      'revenueTrend': revenueTrend,
+      'monthlyEarnings': monthlyEarnings,
+      'recentActivity': recentActivity,
+      'newUserRegistered': newUserRegistered,
+      'ahmedHassanJoined': ahmedHassanJoined,
+      'bookingCompleted': bookingCompleted,
+      'cleaningServiceRamallah': cleaningServiceRamallah,
+      'reportSubmitted': reportSubmitted,
+      'userReportedInappropriate': userReportedInappropriate,
+      'paymentProcessed': paymentProcessed,
+      'paymentForHomeMaintenance': paymentForHomeMaintenance,
+      'minutesAgo': minutesAgo,
+      'hoursAgo': hoursAgo,
+      'hourAgo': hourAgo,
+      'stable': stable,
+      'chartPlaceholder': chartPlaceholder,
+      // User Management strings
+      'managePlatformUsers': managePlatformUsers,
+      'addUser': addUser,
+      'filters': filters,
+      'searchByNameEmailPhone': searchByNameEmailPhone,
+      'role': role,
+      'status': status,
+      'allRoles': allRoles,
+      'client': client,
+      'provider': provider,
+      'admin': admin,
+      'allStatus': allStatus,
+      'active': active,
+      'inactive': inactive,
+      'noUsersFound': noUsersFound,
+      'user': user,
+      'joined': joined,
+      'actions': actions,
+      'edit': edit,
+      'view': view,
+      'delete': delete,
+      'activate': activate,
+      'deactivate': deactivate,
+      'verify': verify,
+      'unverify': unverify,
+      'promoteToAdmin': promoteToAdmin,
+      'demoteFromAdmin': demoteFromAdmin,
+      'resetPassword': resetPassword,
+      'forceLogout': forceLogout,
+      'userDetails': userDetails,
+      'createdAt': createdAt,
+      'lastLogin': lastLogin,
+      'totalBookings': totalBookings,
+      'totalServices': totalServices,
+      'totalEarnings': totalEarnings,
+      'isVerified': isVerified,
+      'notVerified': notVerified,
+      'na': na,
+      // Service Management strings
+      'manageServiceListings': manageServiceListings,
+      'addService': addService,
+      'category': category,
+      'elderlySupport': elderlySupport,
+      'maintenance': maintenance,
+      'noServicesFound': noServicesFound,
+      'service': service,
+      'price': price,
+      'hourly': hourly,
+      'daily': daily,
+      'fixed': fixed,
+      // Booking Management strings
+      'monitorBookings': monitorBookings,
+      'pending': pending,
+      'completed': completed,
+      'revenue': revenue,
+      'noBookingsFound': noBookingsFound,
+      'bookingId': bookingId,
+      'dateTime': dateTime,
+      'amount': amount,
+      'confirmed': confirmed,
+      'cancelled': cancelled,
     };
 
     return allStrings[key]?[languageCode] ?? allStrings[key]?['en'] ?? key;

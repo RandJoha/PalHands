@@ -9,6 +9,7 @@ import '../../../../core/constants/app_strings.dart';
 
 // Shared imports
 import '../../../../shared/services/auth_service.dart';
+import '../../../../shared/services/language_service.dart';
 
 // Admin widgets
 import 'dashboard_overview.dart';
@@ -18,6 +19,7 @@ import 'booking_management_widget.dart';
 import 'reports_widget.dart';
 import 'analytics_widget.dart';
 import 'system_settings_widget.dart';
+import 'language_toggle_widget.dart';
 
 // Admin models
 import '../../domain/models/admin_menu_item.dart';
@@ -32,56 +34,66 @@ class MobileAdminDashboard extends StatefulWidget {
 class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
   int _selectedIndex = 0;
 
-  final List<AdminMenuItem> _menuItems = [
-    AdminMenuItem(
-      title: 'Overview',
-      icon: Icons.dashboard,
-      index: 0,
-    ),
-    AdminMenuItem(
-      title: 'User Management',
-      icon: Icons.people,
-      index: 1,
-    ),
-    AdminMenuItem(
-      title: 'Service Management',
-      icon: Icons.business_center,
-      index: 2,
-    ),
-    AdminMenuItem(
-      title: 'Booking Management',
-      icon: Icons.calendar_today,
-      index: 3,
-    ),
-    AdminMenuItem(
-      title: 'Reports & Disputes',
-      icon: Icons.report_problem,
-      index: 4,
-    ),
-    AdminMenuItem(
-      title: 'Analytics',
-      icon: Icons.analytics,
-      index: 5,
-    ),
-    AdminMenuItem(
-      title: 'System Settings',
-      icon: Icons.settings,
-      index: 6,
-    ),
-  ];
+  List<AdminMenuItem> _getMenuItems(String languageCode) {
+    return [
+      AdminMenuItem(
+        title: AppStrings.getString('overview', languageCode),
+        icon: Icons.dashboard,
+        index: 0,
+      ),
+      AdminMenuItem(
+        title: AppStrings.getString('userManagement', languageCode),
+        icon: Icons.people,
+        index: 1,
+      ),
+      AdminMenuItem(
+        title: AppStrings.getString('serviceManagement', languageCode),
+        icon: Icons.business_center,
+        index: 2,
+      ),
+      AdminMenuItem(
+        title: AppStrings.getString('bookingManagement', languageCode),
+        icon: Icons.calendar_today,
+        index: 3,
+      ),
+      AdminMenuItem(
+        title: AppStrings.getString('reportsDisputes', languageCode),
+        icon: Icons.report_problem,
+        index: 4,
+      ),
+      AdminMenuItem(
+        title: AppStrings.getString('analytics', languageCode),
+        icon: Icons.analytics,
+        index: 5,
+      ),
+      AdminMenuItem(
+        title: AppStrings.getString('systemSettings', languageCode),
+        icon: Icons.settings,
+        index: 6,
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.adminBackground,
-      appBar: _buildAppBar(),
-      drawer: _buildDrawer(),
-      body: _buildContent(),
-      bottomNavigationBar: _buildBottomNavigation(),
+    return Consumer<LanguageService>(
+      builder: (context, languageService, child) {
+        return _buildDashboard(context, languageService);
+      },
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  Widget _buildDashboard(BuildContext context, LanguageService languageService) {
+    return Scaffold(
+      backgroundColor: AppColors.adminBackground,
+      appBar: _buildAppBar(languageService),
+      drawer: _buildDrawer(languageService),
+      body: _buildContent(),
+      bottomNavigationBar: _buildBottomNavigation(languageService),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar(LanguageService languageService) {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 2,
@@ -115,7 +127,7 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  _menuItems[_selectedIndex].title,
+                  _getMenuItems(languageService.currentLanguage)[_selectedIndex].title,
                   style: GoogleFonts.cairo(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -124,7 +136,7 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  'Admin Dashboard',
+                  AppStrings.getString('adminDashboard', languageService.currentLanguage),
                   style: GoogleFonts.cairo(
                     fontSize: 10,
                     color: AppColors.textLight,
@@ -136,6 +148,69 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
         ],
       ),
       actions: [
+        // Language toggle button
+        Container(
+          margin: const EdgeInsets.only(right: 4),
+          child: Consumer<LanguageService>(
+            builder: (context, languageService, child) {
+              return Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => languageService.toggleLanguage(),
+                  borderRadius: BorderRadius.circular(6),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: AppColors.primary.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Language flag/icon
+                        Container(
+                          width: 16,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            color: languageService.isArabic ? AppColors.primary : AppColors.secondary,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Center(
+                            child: Text(
+                              languageService.isArabic ? 'ع' : 'EN',
+                              style: GoogleFonts.cairo(
+                                color: Colors.white,
+                                fontSize: 8,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        // Language text
+                        Text(
+                          languageService.isArabic
+                            ? AppStrings.getString('arabicLanguage', 'ar')
+                            : AppStrings.getString('englishLanguage', 'en'),
+                          style: GoogleFonts.cairo(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+
         // Notifications - Smaller
         IconButton(
           onPressed: () {
@@ -184,7 +259,7 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
     );
   }
 
-  Widget _buildDrawer() {
+  Widget _buildDrawer(LanguageService languageService) {
     return Drawer(
       child: Column(
         children: [
@@ -232,7 +307,7 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
                             ),
                           ),
                           Text(
-                            'Admin Panel',
+                            AppStrings.getString('adminPanel', languageService.currentLanguage),
                             style: GoogleFonts.cairo(
                               fontSize: 12,
                               color: Colors.white.withOpacity(0.8),
@@ -276,7 +351,7 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
                                 ),
                               ),
                               Text(
-                                'Administrator',
+                                AppStrings.getString('administrator', languageService.currentLanguage),
                                 style: GoogleFonts.cairo(
                                   fontSize: 10,
                                   color: Colors.white.withOpacity(0.8),
@@ -297,9 +372,9 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
           Expanded(
             child: ListView.builder(
               padding: EdgeInsets.zero,
-              itemCount: _menuItems.length,
+              itemCount: _getMenuItems(languageService.currentLanguage).length,
               itemBuilder: (context, index) {
-                final item = _menuItems[index];
+                final item = _getMenuItems(languageService.currentLanguage)[index];
                 final isSelected = _selectedIndex == index;
                 
                 return ListTile(
@@ -367,24 +442,6 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
-                
-                // Footer text - Smaller
-                Text(
-                  'Palestinian Heritage',
-                  style: GoogleFonts.cairo(
-                    fontSize: 10,
-                    color: AppColors.textLight,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Text(
-                  'Connecting Communities',
-                  style: GoogleFonts.cairo(
-                    fontSize: 8,
-                    color: AppColors.textLight.withOpacity(0.7),
-                  ),
-                ),
               ],
             ),
           ),
@@ -393,7 +450,7 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
     );
   }
 
-  Widget _buildBottomNavigation() {
+  Widget _buildBottomNavigation(LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
     
     return BottomNavigationBar(
@@ -416,33 +473,33 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
         });
       },
       items: [
-        const BottomNavigationBarItem(
-          icon: Icon(Icons.dashboard, size: 20),
-          label: 'Overview',
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.dashboard, size: 20),
+          label: AppStrings.getString('overview', languageService.currentLanguage),
         ),
-        const BottomNavigationBarItem(
-          icon: Icon(Icons.people, size: 20),
-          label: 'Users',
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.people, size: 20),
+          label: AppStrings.getString('userManagement', languageService.currentLanguage),
         ),
-        const BottomNavigationBarItem(
-          icon: Icon(Icons.business_center, size: 20),
-          label: 'Services',
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.business_center, size: 20),
+          label: AppStrings.getString('serviceManagement', languageService.currentLanguage),
         ),
-        const BottomNavigationBarItem(
-          icon: Icon(Icons.calendar_today, size: 20),
-          label: 'Bookings',
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.calendar_today, size: 20),
+          label: AppStrings.getString('bookingManagement', languageService.currentLanguage),
         ),
-        const BottomNavigationBarItem(
-          icon: Icon(Icons.report_problem, size: 20),
-          label: 'Reports',
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.report_problem, size: 20),
+          label: AppStrings.getString('reportsDisputes', languageService.currentLanguage),
         ),
-        const BottomNavigationBarItem(
-          icon: Icon(Icons.analytics, size: 20),
-          label: 'Analytics',
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.analytics, size: 20),
+          label: AppStrings.getString('analytics', languageService.currentLanguage),
         ),
-        const BottomNavigationBarItem(
-          icon: Icon(Icons.settings, size: 20),
-          label: 'Settings',
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.settings, size: 20),
+          label: AppStrings.getString('systemSettings', languageService.currentLanguage),
         ),
       ],
     );

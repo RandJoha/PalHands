@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 // Core imports
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_strings.dart';
+
+// Shared imports
+import '../../../../shared/services/language_service.dart';
 
 class ServiceManagementWidget extends StatefulWidget {
   const ServiceManagementWidget({super.key});
@@ -127,33 +132,45 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
 
   @override
   Widget build(BuildContext context) {
+    return Consumer<LanguageService>(
+      builder: (context, languageService, child) {
+        return _buildServiceManagement(context, languageService);
+      },
+    );
+  }
+
+  Widget _buildServiceManagement(BuildContext context, LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final isArabic = languageService.isArabic;
     
-    return Padding(
-      padding: EdgeInsets.all(screenWidth > 1400 ? 20 : screenWidth > 1024 ? 16 : 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header - More compact
-          _buildHeader(),
-          
-          SizedBox(height: screenWidth > 1400 ? 20 : screenWidth > 1024 ? 16 : 12),
-          
-          // Filters - Improved sizing
-          _buildFilters(),
-          
-          SizedBox(height: screenWidth > 1400 ? 20 : screenWidth > 1024 ? 16 : 12),
-          
-          // Services table
-          Expanded(
-            child: _buildServicesTable(),
-          ),
-        ],
+    return Directionality(
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: Padding(
+        padding: EdgeInsets.all(screenWidth > 1400 ? 20 : screenWidth > 1024 ? 16 : 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header - More compact
+            _buildHeader(languageService),
+            
+            SizedBox(height: screenWidth > 1400 ? 20 : screenWidth > 1024 ? 16 : 12),
+            
+            // Filters - Improved sizing
+            _buildFilters(languageService),
+            
+            SizedBox(height: screenWidth > 1400 ? 20 : screenWidth > 1024 ? 16 : 12),
+            
+            // Services table
+            Expanded(
+              child: _buildServicesTable(languageService),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
     
     return Row(
@@ -163,7 +180,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Service Management',
+                AppStrings.getString('serviceManagement', languageService.currentLanguage),
                 style: GoogleFonts.cairo(
                   fontSize: screenWidth > 1400 ? 22 : screenWidth > 1024 ? 20 : 18,
                   fontWeight: FontWeight.bold,
@@ -172,7 +189,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
               ),
               SizedBox(height: 4.h),
               Text(
-                'Manage service listings, approve providers, and monitor quality',
+                AppStrings.getString('manageServiceListings', languageService.currentLanguage),
                 style: GoogleFonts.cairo(
                   fontSize: screenWidth > 1400 ? 14 : screenWidth > 1024 ? 13 : 12,
                   color: AppColors.textLight,
@@ -189,7 +206,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
           },
           icon: const Icon(Icons.add_business, size: 18),
           label: Text(
-            'Add Service',
+            AppStrings.getString('addService', languageService.currentLanguage),
             style: GoogleFonts.cairo(
               fontWeight: FontWeight.w600,
               fontSize: 14,
@@ -211,7 +228,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
     );
   }
 
-  Widget _buildFilters() {
+  Widget _buildFilters(LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
     
     return Container(
@@ -231,7 +248,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Filters',
+            AppStrings.getString('filters', languageService.currentLanguage),
             style: GoogleFonts.cairo(
               fontSize: screenWidth > 1400 ? 16 : 14,
               fontWeight: FontWeight.w600,
@@ -255,7 +272,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                       });
                     },
                     decoration: InputDecoration(
-                      hintText: 'Search services...',
+                      hintText: AppStrings.getString('searchServices', languageService.currentLanguage),
                       hintStyle: GoogleFonts.cairo(
                         color: AppColors.textLight,
                         fontSize: 13,
@@ -284,7 +301,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                       });
                     },
                     decoration: InputDecoration(
-                      labelText: 'Category',
+                      labelText: AppStrings.getString('category', languageService.currentLanguage),
                       labelStyle: GoogleFonts.cairo(
                         color: AppColors.textLight,
                         fontSize: 13,
@@ -298,10 +315,10 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                       ),
                     ),
                     items: [
-                      DropdownMenuItem(value: 'all', child: Text('All Categories', style: GoogleFonts.cairo(fontSize: 13))),
-                      DropdownMenuItem(value: 'cleaning', child: Text('Cleaning', style: GoogleFonts.cairo(fontSize: 13))),
-                      DropdownMenuItem(value: 'elderly_support', child: Text('Elderly Support', style: GoogleFonts.cairo(fontSize: 13))),
-                      DropdownMenuItem(value: 'maintenance', child: Text('Maintenance', style: GoogleFonts.cairo(fontSize: 13))),
+                      DropdownMenuItem(value: 'all', child: Text(AppStrings.getString('allCategories', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
+                      DropdownMenuItem(value: 'cleaning', child: Text(AppStrings.getString('cleaning', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
+                      DropdownMenuItem(value: 'elderly_support', child: Text(AppStrings.getString('elderlySupport', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
+                      DropdownMenuItem(value: 'maintenance', child: Text(AppStrings.getString('maintenance', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
                     ],
                   ),
                 ),
@@ -318,7 +335,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                       });
                     },
                     decoration: InputDecoration(
-                      labelText: 'Status',
+                      labelText: AppStrings.getString('status', languageService.currentLanguage),
                       labelStyle: GoogleFonts.cairo(
                         color: AppColors.textLight,
                         fontSize: 13,
@@ -332,9 +349,9 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                       ),
                     ),
                     items: [
-                      DropdownMenuItem(value: 'all', child: Text('All Status', style: GoogleFonts.cairo(fontSize: 13))),
-                      DropdownMenuItem(value: 'active', child: Text('Active', style: GoogleFonts.cairo(fontSize: 13))),
-                      DropdownMenuItem(value: 'inactive', child: Text('Inactive', style: GoogleFonts.cairo(fontSize: 13))),
+                      DropdownMenuItem(value: 'all', child: Text(AppStrings.getString('allStatus', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
+                      DropdownMenuItem(value: 'active', child: Text(AppStrings.getString('active', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
+                      DropdownMenuItem(value: 'inactive', child: Text(AppStrings.getString('inactive', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
                     ],
                   ),
                 ),
@@ -352,7 +369,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                     });
                   },
                   decoration: InputDecoration(
-                    hintText: 'Search services...',
+                    hintText: AppStrings.getString('searchServices', languageService.currentLanguage),
                     hintStyle: GoogleFonts.cairo(
                       color: AppColors.textLight,
                       fontSize: 13,
@@ -383,7 +400,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                           });
                         },
                         decoration: InputDecoration(
-                          labelText: 'Category',
+                          labelText: AppStrings.getString('category', languageService.currentLanguage),
                           labelStyle: GoogleFonts.cairo(
                             color: AppColors.textLight,
                             fontSize: 13,
@@ -397,10 +414,10 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                           ),
                         ),
                         items: [
-                          DropdownMenuItem(value: 'all', child: Text('All Categories', style: GoogleFonts.cairo(fontSize: 13))),
-                          DropdownMenuItem(value: 'cleaning', child: Text('Cleaning', style: GoogleFonts.cairo(fontSize: 13))),
-                          DropdownMenuItem(value: 'elderly_support', child: Text('Elderly Support', style: GoogleFonts.cairo(fontSize: 13))),
-                          DropdownMenuItem(value: 'maintenance', child: Text('Maintenance', style: GoogleFonts.cairo(fontSize: 13))),
+                          DropdownMenuItem(value: 'all', child: Text(AppStrings.getString('allCategories', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
+                          DropdownMenuItem(value: 'cleaning', child: Text(AppStrings.getString('cleaning', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
+                          DropdownMenuItem(value: 'elderly_support', child: Text(AppStrings.getString('elderlySupport', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
+                          DropdownMenuItem(value: 'maintenance', child: Text(AppStrings.getString('maintenance', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
                         ],
                       ),
                     ),
@@ -417,7 +434,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                           });
                         },
                         decoration: InputDecoration(
-                          labelText: 'Status',
+                          labelText: AppStrings.getString('status', languageService.currentLanguage),
                           labelStyle: GoogleFonts.cairo(
                             color: AppColors.textLight,
                             fontSize: 13,
@@ -431,9 +448,9 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                           ),
                         ),
                         items: [
-                          DropdownMenuItem(value: 'all', child: Text('All Status', style: GoogleFonts.cairo(fontSize: 13))),
-                          DropdownMenuItem(value: 'active', child: Text('Active', style: GoogleFonts.cairo(fontSize: 13))),
-                          DropdownMenuItem(value: 'inactive', child: Text('Inactive', style: GoogleFonts.cairo(fontSize: 13))),
+                          DropdownMenuItem(value: 'all', child: Text(AppStrings.getString('allStatus', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
+                          DropdownMenuItem(value: 'active', child: Text(AppStrings.getString('active', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
+                          DropdownMenuItem(value: 'inactive', child: Text(AppStrings.getString('inactive', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
                         ],
                       ),
                     ),
@@ -447,7 +464,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
     );
   }
 
-  Widget _buildServicesTable() {
+  Widget _buildServicesTable(LanguageService languageService) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -464,7 +481,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
             ),
             const SizedBox(height: 12),
             Text(
-              'No services found',
+              AppStrings.getString('noServicesFound', languageService.currentLanguage),
               style: GoogleFonts.cairo(
                 fontSize: 16,
                 color: AppColors.textLight,
@@ -503,15 +520,15 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
             ),
             child: Row(
               children: [
-                Expanded(flex: 2, child: _buildHeaderCell('Service')),
-                Expanded(flex: 1, child: _buildHeaderCell('Provider')),
+                Expanded(flex: 2, child: _buildHeaderCell(AppStrings.getString('service', languageService.currentLanguage))),
+                Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('provider', languageService.currentLanguage))),
                 if (screenWidth > 768) ...[
-                  Expanded(flex: 1, child: _buildHeaderCell('Category')),
-                  Expanded(flex: 1, child: _buildHeaderCell('Price')),
-                  Expanded(flex: 1, child: _buildHeaderCell('Rating')),
+                  Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('category', languageService.currentLanguage))),
+                  Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('price', languageService.currentLanguage))),
+                  Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('rating', languageService.currentLanguage))),
                 ],
-                Expanded(flex: 1, child: _buildHeaderCell('Status')),
-                Expanded(flex: 1, child: _buildHeaderCell('Actions')),
+                Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('status', languageService.currentLanguage))),
+                Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('actions', languageService.currentLanguage))),
               ],
             ),
           ),
@@ -522,7 +539,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
               itemCount: _filteredServices.length,
               itemBuilder: (context, index) {
                 final service = _filteredServices[index];
-                return _buildServiceRow(service);
+                return _buildServiceRow(service, languageService);
               },
             ),
           ),
@@ -544,7 +561,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
     );
   }
 
-  Widget _buildServiceRow(Map<String, dynamic> service) {
+  Widget _buildServiceRow(Map<String, dynamic> service, LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
     
     return Container(
@@ -635,7 +652,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  _getCategoryLabel(service['category']).toUpperCase(),
+                  _getLocalizedCategoryLabel(service['category'], languageService).toUpperCase(),
                   style: GoogleFonts.cairo(
                     fontSize: screenWidth > 1400 ? 11 : screenWidth > 1024 ? 10 : 9,
                     fontWeight: FontWeight.w600,
@@ -652,7 +669,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
             Expanded(
               flex: 1,
               child: Text(
-                '₪${service['price']['amount']}/${service['price']['type']}',
+                '₪${service['price']['amount']}/${_getLocalizedPriceType(service['price']['type'], languageService)}',
                 style: GoogleFonts.cairo(
                   fontSize: screenWidth > 1400 ? 13 : screenWidth > 1024 ? 12 : 11,
                   color: AppColors.textDark,
@@ -700,7 +717,9 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                service['isActive'] ? 'ACTIVE' : 'INACTIVE',
+                service['isActive'] 
+                  ? AppStrings.getString('active', languageService.currentLanguage).toUpperCase()
+                  : AppStrings.getString('inactive', languageService.currentLanguage).toUpperCase(),
                 style: GoogleFonts.cairo(
                   fontSize: screenWidth > 1400 ? 11 : screenWidth > 1024 ? 10 : 9,
                   fontWeight: FontWeight.w600,
@@ -725,7 +744,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                     size: screenWidth > 1400 ? 18 : 16,
                     color: AppColors.textLight,
                   ),
-                  tooltip: 'View',
+                  tooltip: AppStrings.getString('view', languageService.currentLanguage),
                 ),
                 IconButton(
                   onPressed: () {
@@ -736,7 +755,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                     size: screenWidth > 1400 ? 18 : 16,
                     color: AppColors.primary,
                   ),
-                  tooltip: 'Edit',
+                  tooltip: AppStrings.getString('edit', languageService.currentLanguage),
                 ),
               ],
             ),
@@ -744,6 +763,32 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
         ],
       ),
     );
+  }
+
+  String _getLocalizedCategoryLabel(String category, LanguageService languageService) {
+    switch (category) {
+      case 'cleaning':
+        return AppStrings.getString('cleaning', languageService.currentLanguage);
+      case 'elderly_support':
+        return AppStrings.getString('elderlySupport', languageService.currentLanguage);
+      case 'maintenance':
+        return AppStrings.getString('maintenance', languageService.currentLanguage);
+      default:
+        return category;
+    }
+  }
+
+  String _getLocalizedPriceType(String type, LanguageService languageService) {
+    switch (type) {
+      case 'hourly':
+        return AppStrings.getString('hourly', languageService.currentLanguage);
+      case 'daily':
+        return AppStrings.getString('daily', languageService.currentLanguage);
+      case 'fixed':
+        return AppStrings.getString('fixed', languageService.currentLanguage);
+      default:
+        return type;
+    }
   }
 
   Color _getCategoryColor(String category) {

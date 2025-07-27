@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 // Core imports
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_strings.dart';
+
+// Shared imports
+import '../../../../shared/services/language_service.dart';
 
 class BookingManagementWidget extends StatefulWidget {
   const BookingManagementWidget({super.key});
@@ -73,33 +78,45 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
 
   @override
   Widget build(BuildContext context) {
+    return Consumer<LanguageService>(
+      builder: (context, languageService, child) {
+        return _buildBookingManagement(context, languageService);
+      },
+    );
+  }
+
+  Widget _buildBookingManagement(BuildContext context, LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final isArabic = languageService.isArabic;
     
-    return Padding(
-      padding: EdgeInsets.all(screenWidth > 1400 ? 20 : screenWidth > 1024 ? 16 : 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header - More compact
-          _buildHeader(),
-          
-          SizedBox(height: screenWidth > 1400 ? 20 : screenWidth > 1024 ? 16 : 12),
-          
-          // Statistics cards - More compact
-          _buildStatisticsCards(),
-          
-          SizedBox(height: screenWidth > 1400 ? 20 : screenWidth > 1024 ? 16 : 12),
-          
-          // Bookings table
-          Expanded(
-            child: _buildBookingsTable(),
-          ),
-        ],
+    return Directionality(
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: Padding(
+        padding: EdgeInsets.all(screenWidth > 1400 ? 20 : screenWidth > 1024 ? 16 : 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header - More compact
+            _buildHeader(languageService),
+            
+            SizedBox(height: screenWidth > 1400 ? 20 : screenWidth > 1024 ? 16 : 12),
+            
+            // Statistics cards - More compact
+            _buildStatisticsCards(languageService),
+            
+            SizedBox(height: screenWidth > 1400 ? 20 : screenWidth > 1024 ? 16 : 12),
+            
+            // Bookings table
+            Expanded(
+              child: _buildBookingsTable(languageService),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
     
     return Row(
@@ -109,7 +126,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Booking Management',
+                AppStrings.getString('bookingManagement', languageService.currentLanguage),
                 style: GoogleFonts.cairo(
                   fontSize: screenWidth > 1400 ? 22 : screenWidth > 1024 ? 20 : 18,
                   fontWeight: FontWeight.bold,
@@ -118,7 +135,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
               ),
               SizedBox(height: 4.h),
               Text(
-                'Monitor bookings, track payments, and manage schedules',
+                AppStrings.getString('monitorBookings', languageService.currentLanguage),
                 style: GoogleFonts.cairo(
                   fontSize: screenWidth > 1400 ? 14 : screenWidth > 1024 ? 13 : 12,
                   color: AppColors.textLight,
@@ -131,7 +148,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
     );
   }
 
-  Widget _buildStatisticsCards() {
+  Widget _buildStatisticsCards(LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
     
     // Calculate statistics
@@ -144,25 +161,25 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
 
     final stats = [
       {
-        'title': 'Total Bookings',
+        'title': AppStrings.getString('totalBookings', languageService.currentLanguage),
         'value': totalBookings.toString(),
         'icon': Icons.calendar_today,
         'color': AppColors.primary,
       },
       {
-        'title': 'Pending',
+        'title': AppStrings.getString('pending', languageService.currentLanguage),
         'value': pendingBookings.toString(),
         'icon': Icons.schedule,
         'color': Colors.orange,
       },
       {
-        'title': 'Completed',
+        'title': AppStrings.getString('completed', languageService.currentLanguage),
         'value': completedBookings.toString(),
         'icon': Icons.check_circle,
         'color': Colors.green,
       },
       {
-        'title': 'Revenue',
+        'title': AppStrings.getString('revenue', languageService.currentLanguage),
         'value': '₪${totalRevenue.toStringAsFixed(0)}',
         'icon': Icons.attach_money,
         'color': Colors.purple,
@@ -259,7 +276,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
     );
   }
 
-  Widget _buildBookingsTable() {
+  Widget _buildBookingsTable(LanguageService languageService) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -276,7 +293,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
             ),
             const SizedBox(height: 12),
             Text(
-              'No bookings found',
+              AppStrings.getString('noBookingsFound', languageService.currentLanguage),
               style: GoogleFonts.cairo(
                 fontSize: 16,
                 color: AppColors.textLight,
@@ -315,20 +332,20 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
             ),
             child: Row(
               children: [
-                Expanded(flex: 1, child: _buildHeaderCell('Booking ID')),
-                Expanded(flex: 2, child: _buildHeaderCell('Service')),
+                Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('bookingId', languageService.currentLanguage))),
+                Expanded(flex: 2, child: _buildHeaderCell(AppStrings.getString('service', languageService.currentLanguage))),
                 if (screenWidth > 768) ...[
-                  Expanded(flex: 1, child: _buildHeaderCell('Client')),
-                  Expanded(flex: 1, child: _buildHeaderCell('Provider')),
+                  Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('client', languageService.currentLanguage))),
+                  Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('provider', languageService.currentLanguage))),
                 ],
                 if (screenWidth > 1024) ...[
-                  Expanded(flex: 1, child: _buildHeaderCell('Date & Time')),
+                  Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('dateTime', languageService.currentLanguage))),
                 ],
                 if (screenWidth > 768) ...[
-                  Expanded(flex: 1, child: _buildHeaderCell('Amount')),
+                  Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('amount', languageService.currentLanguage))),
                 ],
-                Expanded(flex: 1, child: _buildHeaderCell('Status')),
-                Expanded(flex: 1, child: _buildHeaderCell('Actions')),
+                Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('status', languageService.currentLanguage))),
+                Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('actions', languageService.currentLanguage))),
               ],
             ),
           ),
@@ -339,7 +356,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
               itemCount: _bookings.length,
               itemBuilder: (context, index) {
                 final booking = _bookings[index];
-                return _buildBookingRow(booking);
+                return _buildBookingRow(booking, languageService);
               },
             ),
           ),
@@ -361,7 +378,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
     );
   }
 
-  Widget _buildBookingRow(Map<String, dynamic> booking) {
+  Widget _buildBookingRow(Map<String, dynamic> booking, LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
     
     return Container(
@@ -423,7 +440,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
                         maxLines: 1,
                       ),
                       Text(
-                        booking['service']['category'],
+                        _getLocalizedCategoryLabel(booking['service']['category'], languageService),
                         style: GoogleFonts.cairo(
                           fontSize: screenWidth > 1400 ? 12 : screenWidth > 1024 ? 11 : 10,
                           color: AppColors.textLight,
@@ -534,7 +551,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
                   ),
                   SizedBox(width: 4),
                   Text(
-                    _getStatusLabel(booking['status']).toUpperCase(),
+                    _getLocalizedStatusLabel(booking['status'], languageService).toUpperCase(),
                     style: GoogleFonts.cairo(
                       fontSize: screenWidth > 1400 ? 10 : 9,
                       fontWeight: FontWeight.w600,
@@ -560,7 +577,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
                     size: screenWidth > 1400 ? 18 : 16,
                     color: AppColors.textLight,
                   ),
-                  tooltip: 'View',
+                  tooltip: AppStrings.getString('view', languageService.currentLanguage),
                 ),
                 IconButton(
                   onPressed: () {
@@ -571,7 +588,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
                     size: screenWidth > 1400 ? 18 : 16,
                     color: AppColors.primary,
                   ),
-                  tooltip: 'Edit',
+                  tooltip: AppStrings.getString('edit', languageService.currentLanguage),
                 ),
               ],
             ),
@@ -579,6 +596,34 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
         ],
       ),
     );
+  }
+
+  String _getLocalizedCategoryLabel(String category, LanguageService languageService) {
+    switch (category) {
+      case 'cleaning':
+        return AppStrings.getString('cleaning', languageService.currentLanguage);
+      case 'elderly_support':
+        return AppStrings.getString('elderlySupport', languageService.currentLanguage);
+      case 'maintenance':
+        return AppStrings.getString('maintenance', languageService.currentLanguage);
+      default:
+        return category;
+    }
+  }
+
+  String _getLocalizedStatusLabel(String status, LanguageService languageService) {
+    switch (status) {
+      case 'confirmed':
+        return AppStrings.getString('confirmed', languageService.currentLanguage);
+      case 'pending':
+        return AppStrings.getString('pending', languageService.currentLanguage);
+      case 'completed':
+        return AppStrings.getString('completed', languageService.currentLanguage);
+      case 'cancelled':
+        return AppStrings.getString('cancelled', languageService.currentLanguage);
+      default:
+        return status;
+    }
   }
 
   Color _getServiceColor(String category) {

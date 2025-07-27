@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 // Core imports
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_strings.dart';
+
+// Shared imports
+import '../../../../shared/services/language_service.dart';
 
 // Admin models
 import '../../domain/models/admin_menu_item.dart';
+
+// Admin widgets
+import 'language_toggle_widget.dart';
 
 class AdminSidebar extends StatefulWidget {
   final List<AdminMenuItem> menuItems;
@@ -31,6 +39,14 @@ class AdminSidebar extends StatefulWidget {
 class _AdminSidebarState extends State<AdminSidebar> {
   @override
   Widget build(BuildContext context) {
+    return Consumer<LanguageService>(
+      builder: (context, languageService, child) {
+        return _buildSidebar(context, languageService);
+      },
+    );
+  }
+
+  Widget _buildSidebar(BuildContext context, LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
     
     // Reduced sidebar width for better content space allocation
@@ -58,21 +74,24 @@ class _AdminSidebarState extends State<AdminSidebar> {
       child: Column(
         children: [
           // Header - Reduced height
-          _buildHeader(context),
+          _buildHeader(context, languageService),
           
           // Menu items
           Expanded(
             child: _buildMenuItems(),
           ),
           
+          // Language toggle
+          _buildLanguageToggle(),
+          
           // Footer - More compact
-          _buildFooter(),
+          _buildFooter(languageService),
         ],
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
     
     return Container(
@@ -123,7 +142,7 @@ class _AdminSidebarState extends State<AdminSidebar> {
                     ),
                   ),
                   Text(
-                    'Admin Panel',
+                    AppStrings.getString('adminPanel', languageService.currentLanguage),
                     style: GoogleFonts.cairo(
                       fontSize: screenWidth > 1400 ? 10 : 9,
                       color: Colors.white.withOpacity(0.8),
@@ -142,7 +161,9 @@ class _AdminSidebarState extends State<AdminSidebar> {
               color: Colors.white,
               size: screenWidth > 1400 ? 18 : 16,
             ),
-            tooltip: widget.isCollapsed ? 'Expand' : 'Collapse',
+            tooltip: widget.isCollapsed 
+              ? AppStrings.getString('expand', languageService.currentLanguage)
+              : AppStrings.getString('collapse', languageService.currentLanguage),
             padding: EdgeInsets.zero,
             constraints: BoxConstraints(
               minWidth: screenWidth > 1400 ? 32 : 28,
@@ -280,7 +301,22 @@ class _AdminSidebarState extends State<AdminSidebar> {
     );
   }
 
-  Widget _buildFooter() {
+  Widget _buildLanguageToggle() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: screenWidth > 1400 ? 12 : 10,
+        vertical: 8,
+      ),
+      child: LanguageToggleWidget(
+        isCollapsed: widget.isCollapsed,
+        screenWidth: screenWidth,
+      ),
+    );
+  }
+
+  Widget _buildFooter(LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
     
     return Container(
@@ -311,29 +347,6 @@ class _AdminSidebarState extends State<AdminSidebar> {
                 borderRadius: BorderRadius.circular(0.75.r),
               ),
             ),
-          
-          if (!widget.isCollapsed) ...[
-            SizedBox(height: 8.h),
-            
-            Text(
-              'Palestinian Heritage',
-              style: GoogleFonts.cairo(
-                fontSize: 10.sp,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textLight,
-              ),
-            ),
-            
-            SizedBox(height: 2.h),
-            
-            Text(
-              'Connecting Communities',
-              style: GoogleFonts.cairo(
-                fontSize: 8.sp,
-                color: AppColors.textLight.withOpacity(0.7),
-              ),
-            ),
-          ],
         ],
       ),
     );

@@ -9,6 +9,7 @@ import '../../../../core/constants/app_strings.dart';
 
 // Shared imports
 import '../../../../shared/services/auth_service.dart';
+import '../../../../shared/services/language_service.dart';
 
 // Admin widgets
 import 'admin_sidebar.dart';
@@ -34,47 +35,58 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
   int _selectedIndex = 0;
   bool _isSidebarCollapsed = false;
 
-  final List<AdminMenuItem> _menuItems = [
-    AdminMenuItem(
-      title: 'Overview',
-      icon: Icons.dashboard,
-      index: 0,
-    ),
-    AdminMenuItem(
-      title: 'User Management',
-      icon: Icons.people,
-      index: 1,
-    ),
-    AdminMenuItem(
-      title: 'Service Management',
-      icon: Icons.business_center,
-      index: 2,
-    ),
-    AdminMenuItem(
-      title: 'Booking Management',
-      icon: Icons.calendar_today,
-      index: 3,
-    ),
-    AdminMenuItem(
-      title: 'Reports & Disputes',
-      icon: Icons.report_problem,
-      index: 4,
-    ),
-    AdminMenuItem(
-      title: 'Analytics',
-      icon: Icons.analytics,
-      index: 5,
-    ),
-    AdminMenuItem(
-      title: 'System Settings',
-      icon: Icons.settings,
-      index: 6,
-    ),
-  ];
+  List<AdminMenuItem> _getMenuItems(String languageCode) {
+    return [
+      AdminMenuItem(
+        title: AppStrings.getString('overview', languageCode),
+        icon: Icons.dashboard,
+        index: 0,
+      ),
+      AdminMenuItem(
+        title: AppStrings.getString('userManagement', languageCode),
+        icon: Icons.people,
+        index: 1,
+      ),
+      AdminMenuItem(
+        title: AppStrings.getString('serviceManagement', languageCode),
+        icon: Icons.business_center,
+        index: 2,
+      ),
+      AdminMenuItem(
+        title: AppStrings.getString('bookingManagement', languageCode),
+        icon: Icons.calendar_today,
+        index: 3,
+      ),
+      AdminMenuItem(
+        title: AppStrings.getString('reportsDisputes', languageCode),
+        icon: Icons.report_problem,
+        index: 4,
+      ),
+      AdminMenuItem(
+        title: AppStrings.getString('analytics', languageCode),
+        icon: Icons.analytics,
+        index: 5,
+      ),
+      AdminMenuItem(
+        title: AppStrings.getString('systemSettings', languageCode),
+        icon: Icons.settings,
+        index: 6,
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
+    return Consumer<LanguageService>(
+      builder: (context, languageService, child) {
+        return _buildDashboard(context, languageService);
+      },
+    );
+  }
+
+  Widget _buildDashboard(BuildContext context, LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final menuItems = _getMenuItems(languageService.currentLanguage);
     
     // Auto-collapse sidebar on medium screens for better content space
     if (screenWidth <= 1200 && !_isSidebarCollapsed) {
@@ -91,7 +103,7 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
         children: [
           // Sidebar - Reduced width and better responsive behavior
           AdminSidebar(
-            menuItems: _menuItems,
+            menuItems: menuItems,
             selectedIndex: _selectedIndex,
             isCollapsed: _isSidebarCollapsed,
             onItemSelected: (index) {
@@ -129,6 +141,14 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
   }
 
   Widget _buildHeader() {
+    return Consumer<LanguageService>(
+      builder: (context, languageService, child) {
+        return _buildHeaderContent(context, languageService);
+      },
+    );
+  }
+
+  Widget _buildHeaderContent(BuildContext context, LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
     
     return Container(
@@ -176,7 +196,7 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        _menuItems[_selectedIndex].title,
+                        _getMenuItems(languageService.currentLanguage)[_selectedIndex].title,
                         style: GoogleFonts.cairo(
                           fontSize: screenWidth > 1400 ? 28 : 24,
                           fontWeight: FontWeight.bold,
@@ -184,7 +204,7 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
                         ),
                       ),
                       Text(
-                        'Admin Dashboard',
+                        AppStrings.getString('adminDashboard', languageService.currentLanguage),
                         style: GoogleFonts.cairo(
                           fontSize: screenWidth > 1400 ? 16 : 14,
                           color: AppColors.textLight,
@@ -260,7 +280,7 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
                               ),
                             ),
                             Text(
-                              'Administrator',
+                              AppStrings.getString('administrator', languageService.currentLanguage),
                               style: GoogleFonts.cairo(
                                 fontSize: screenWidth > 1400 ? 12 : 10,
                                 color: AppColors.textLight,
@@ -286,7 +306,7 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
                   },
                   icon: Icon(Icons.logout, 
                             size: screenWidth > 1400 ? 26 : 24),
-                  tooltip: 'Logout',
+                  tooltip: AppStrings.getString('logout', languageService.currentLanguage),
                 ),
               ],
             ),

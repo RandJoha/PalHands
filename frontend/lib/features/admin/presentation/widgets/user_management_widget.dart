@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 // Core imports
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_strings.dart';
+
+// Shared imports
+import '../../../../shared/services/language_service.dart';
 
 class UserManagementWidget extends StatefulWidget {
   const UserManagementWidget({super.key});
@@ -117,33 +122,45 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
 
   @override
   Widget build(BuildContext context) {
+    return Consumer<LanguageService>(
+      builder: (context, languageService, child) {
+        return _buildUserManagement(context, languageService);
+      },
+    );
+  }
+
+  Widget _buildUserManagement(BuildContext context, LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final isArabic = languageService.isArabic;
     
-    return Padding(
-      padding: EdgeInsets.all(screenWidth > 1400 ? 20 : screenWidth > 1024 ? 16 : 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header - More compact
-          _buildHeader(),
-          
-          SizedBox(height: screenWidth > 1400 ? 20 : screenWidth > 1024 ? 16 : 12),
-          
-          // Filters - Improved sizing
-          _buildFilters(),
-          
-          SizedBox(height: screenWidth > 1400 ? 20 : screenWidth > 1024 ? 16 : 12),
-          
-          // Users table
-          Expanded(
-            child: _buildUsersTable(),
-          ),
-        ],
+    return Directionality(
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: Padding(
+        padding: EdgeInsets.all(screenWidth > 1400 ? 20 : screenWidth > 1024 ? 16 : 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header - More compact
+            _buildHeader(languageService),
+            
+            SizedBox(height: screenWidth > 1400 ? 20 : screenWidth > 1024 ? 16 : 12),
+            
+            // Filters - Improved sizing
+            _buildFilters(languageService),
+            
+            SizedBox(height: screenWidth > 1400 ? 20 : screenWidth > 1024 ? 16 : 12),
+            
+            // Users table
+            Expanded(
+              child: _buildUsersTable(languageService),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
     
     return Row(
@@ -153,7 +170,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'User Management',
+                AppStrings.getString('userManagement', languageService.currentLanguage),
                 style: GoogleFonts.cairo(
                   fontSize: screenWidth > 1400 ? 22 : screenWidth > 1024 ? 20 : 18,
                   fontWeight: FontWeight.bold,
@@ -162,7 +179,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
               ),
               SizedBox(height: 4.h),
               Text(
-                'Manage platform users, verify providers, and monitor activity',
+                AppStrings.getString('managePlatformUsers', languageService.currentLanguage),
                 style: GoogleFonts.cairo(
                   fontSize: screenWidth > 1400 ? 14 : screenWidth > 1024 ? 13 : 12,
                   color: AppColors.textLight,
@@ -179,7 +196,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
           },
           icon: const Icon(Icons.person_add, size: 18),
           label: Text(
-            'Add User',
+            AppStrings.getString('addUser', languageService.currentLanguage),
             style: GoogleFonts.cairo(
               fontWeight: FontWeight.w600,
               fontSize: 14,
@@ -201,7 +218,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
     );
   }
 
-  Widget _buildFilters() {
+  Widget _buildFilters(LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
     
     return Container(
@@ -221,7 +238,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Filters',
+            AppStrings.getString('filters', languageService.currentLanguage),
             style: GoogleFonts.cairo(
               fontSize: screenWidth > 1400 ? 16 : 14,
               fontWeight: FontWeight.w600,
@@ -245,7 +262,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                       });
                     },
                     decoration: InputDecoration(
-                      hintText: 'Search by name, email, or phone...',
+                      hintText: AppStrings.getString('searchByNameEmailPhone', languageService.currentLanguage),
                       hintStyle: GoogleFonts.cairo(
                         color: AppColors.textLight,
                         fontSize: 13,
@@ -274,7 +291,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                       });
                     },
                     decoration: InputDecoration(
-                      labelText: 'Role',
+                      labelText: AppStrings.getString('role', languageService.currentLanguage),
                       labelStyle: GoogleFonts.cairo(
                         color: AppColors.textLight,
                         fontSize: 13,
@@ -288,10 +305,10 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                       ),
                     ),
                     items: [
-                      DropdownMenuItem(value: 'all', child: Text('All Roles', style: GoogleFonts.cairo(fontSize: 13))),
-                      DropdownMenuItem(value: 'client', child: Text('Client', style: GoogleFonts.cairo(fontSize: 13))),
-                      DropdownMenuItem(value: 'provider', child: Text('Provider', style: GoogleFonts.cairo(fontSize: 13))),
-                      DropdownMenuItem(value: 'admin', child: Text('Admin', style: GoogleFonts.cairo(fontSize: 13))),
+                      DropdownMenuItem(value: 'all', child: Text(AppStrings.getString('allRoles', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
+                      DropdownMenuItem(value: 'client', child: Text(AppStrings.getString('client', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
+                      DropdownMenuItem(value: 'provider', child: Text(AppStrings.getString('provider', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
+                      DropdownMenuItem(value: 'admin', child: Text(AppStrings.getString('admin', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
                     ],
                   ),
                 ),
@@ -308,7 +325,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                       });
                     },
                     decoration: InputDecoration(
-                      labelText: 'Status',
+                      labelText: AppStrings.getString('status', languageService.currentLanguage),
                       labelStyle: GoogleFonts.cairo(
                         color: AppColors.textLight,
                         fontSize: 13,
@@ -322,9 +339,9 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                       ),
                     ),
                     items: [
-                      DropdownMenuItem(value: 'all', child: Text('All Status', style: GoogleFonts.cairo(fontSize: 13))),
-                      DropdownMenuItem(value: 'active', child: Text('Active', style: GoogleFonts.cairo(fontSize: 13))),
-                      DropdownMenuItem(value: 'inactive', child: Text('Inactive', style: GoogleFonts.cairo(fontSize: 13))),
+                      DropdownMenuItem(value: 'all', child: Text(AppStrings.getString('allStatus', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
+                      DropdownMenuItem(value: 'active', child: Text(AppStrings.getString('active', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
+                      DropdownMenuItem(value: 'inactive', child: Text(AppStrings.getString('inactive', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
                     ],
                   ),
                 ),
@@ -342,7 +359,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                     });
                   },
                   decoration: InputDecoration(
-                    hintText: 'Search by name, email, or phone...',
+                    hintText: AppStrings.getString('searchByNameEmailPhone', languageService.currentLanguage),
                     hintStyle: GoogleFonts.cairo(
                       color: AppColors.textLight,
                       fontSize: 13,
@@ -373,7 +390,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                           });
                         },
                         decoration: InputDecoration(
-                          labelText: 'Role',
+                          labelText: AppStrings.getString('role', languageService.currentLanguage),
                           labelStyle: GoogleFonts.cairo(
                             color: AppColors.textLight,
                             fontSize: 13,
@@ -387,10 +404,10 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                           ),
                         ),
                         items: [
-                          DropdownMenuItem(value: 'all', child: Text('All Roles', style: GoogleFonts.cairo(fontSize: 13))),
-                          DropdownMenuItem(value: 'client', child: Text('Client', style: GoogleFonts.cairo(fontSize: 13))),
-                          DropdownMenuItem(value: 'provider', child: Text('Provider', style: GoogleFonts.cairo(fontSize: 13))),
-                          DropdownMenuItem(value: 'admin', child: Text('Admin', style: GoogleFonts.cairo(fontSize: 13))),
+                          DropdownMenuItem(value: 'all', child: Text(AppStrings.getString('allRoles', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
+                          DropdownMenuItem(value: 'client', child: Text(AppStrings.getString('client', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
+                          DropdownMenuItem(value: 'provider', child: Text(AppStrings.getString('provider', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
+                          DropdownMenuItem(value: 'admin', child: Text(AppStrings.getString('admin', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
                         ],
                       ),
                     ),
@@ -407,7 +424,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                           });
                         },
                         decoration: InputDecoration(
-                          labelText: 'Status',
+                          labelText: AppStrings.getString('status', languageService.currentLanguage),
                           labelStyle: GoogleFonts.cairo(
                             color: AppColors.textLight,
                             fontSize: 13,
@@ -421,9 +438,9 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                           ),
                         ),
                         items: [
-                          DropdownMenuItem(value: 'all', child: Text('All Status', style: GoogleFonts.cairo(fontSize: 13))),
-                          DropdownMenuItem(value: 'active', child: Text('Active', style: GoogleFonts.cairo(fontSize: 13))),
-                          DropdownMenuItem(value: 'inactive', child: Text('Inactive', style: GoogleFonts.cairo(fontSize: 13))),
+                          DropdownMenuItem(value: 'all', child: Text(AppStrings.getString('allStatus', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
+                          DropdownMenuItem(value: 'active', child: Text(AppStrings.getString('active', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
+                          DropdownMenuItem(value: 'inactive', child: Text(AppStrings.getString('inactive', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
                         ],
                       ),
                     ),
@@ -437,7 +454,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
     );
   }
 
-  Widget _buildUsersTable() {
+  Widget _buildUsersTable(LanguageService languageService) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -454,7 +471,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
             ),
             const SizedBox(height: 12),
             Text(
-              'No users found',
+              AppStrings.getString('noUsersFound', languageService.currentLanguage),
               style: GoogleFonts.cairo(
                 fontSize: 16,
                 color: AppColors.textLight,
@@ -493,14 +510,14 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
             ),
             child: Row(
               children: [
-                Expanded(flex: 2, child: _buildHeaderCell('User')),
-                Expanded(flex: 1, child: _buildHeaderCell('Role')),
-                Expanded(flex: 1, child: _buildHeaderCell('Status')),
+                Expanded(flex: 2, child: _buildHeaderCell(AppStrings.getString('user', languageService.currentLanguage))),
+                Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('role', languageService.currentLanguage))),
+                Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('status', languageService.currentLanguage))),
                 if (screenWidth > 768) ...[
-                  Expanded(flex: 1, child: _buildHeaderCell('Rating')),
-                  Expanded(flex: 1, child: _buildHeaderCell('Joined')),
+                  Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('rating', languageService.currentLanguage))),
+                  Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('joined', languageService.currentLanguage))),
                 ],
-                Expanded(flex: 1, child: _buildHeaderCell('Actions')),
+                Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('actions', languageService.currentLanguage))),
               ],
             ),
           ),
@@ -511,7 +528,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
               itemCount: _filteredUsers.length,
               itemBuilder: (context, index) {
                 final user = _filteredUsers[index];
-                return _buildUserRow(user);
+                return _buildUserRow(user, languageService);
               },
             ),
           ),
@@ -533,7 +550,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
     );
   }
 
-  Widget _buildUserRow(Map<String, dynamic> user) {
+  Widget _buildUserRow(Map<String, dynamic> user, LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
     
     return Container(
@@ -609,7 +626,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                user['role'].toString().toUpperCase(),
+                _getLocalizedRole(user['role'], languageService),
                 style: GoogleFonts.cairo(
                   fontSize: screenWidth > 1400 ? 11 : screenWidth > 1024 ? 10 : 9,
                   fontWeight: FontWeight.w600,
@@ -635,7 +652,9 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                user['isActive'] ? 'ACTIVE' : 'INACTIVE',
+                user['isActive'] 
+                  ? AppStrings.getString('active', languageService.currentLanguage).toUpperCase()
+                  : AppStrings.getString('inactive', languageService.currentLanguage).toUpperCase(),
                 style: GoogleFonts.cairo(
                   fontSize: screenWidth > 1400 ? 11 : screenWidth > 1024 ? 10 : 9,
                   fontWeight: FontWeight.w600,
@@ -698,7 +717,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                     size: screenWidth > 1400 ? 18 : 16,
                     color: AppColors.primary,
                   ),
-                  tooltip: 'Edit',
+                  tooltip: AppStrings.getString('edit', languageService.currentLanguage),
                 ),
                 IconButton(
                   onPressed: () {
@@ -709,7 +728,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                     size: screenWidth > 1400 ? 18 : 16,
                     color: AppColors.textLight,
                   ),
-                  tooltip: 'View',
+                  tooltip: AppStrings.getString('view', languageService.currentLanguage),
                 ),
               ],
             ),
@@ -717,6 +736,19 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
         ],
       ),
     );
+  }
+
+  String _getLocalizedRole(String role, LanguageService languageService) {
+    switch (role) {
+      case 'admin':
+        return AppStrings.getString('admin', languageService.currentLanguage).toUpperCase();
+      case 'provider':
+        return AppStrings.getString('provider', languageService.currentLanguage).toUpperCase();
+      case 'client':
+        return AppStrings.getString('client', languageService.currentLanguage).toUpperCase();
+      default:
+        return role.toUpperCase();
+    }
   }
 
   Color _getRoleColor(String role) {
@@ -737,7 +769,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
       final date = DateTime.parse(dateString);
       return '${date.day}/${date.month}/${date.year}';
     } catch (e) {
-      return 'N/A';
+      return AppStrings.getString('na', 'en'); // Use English for date format
     }
   }
 } 

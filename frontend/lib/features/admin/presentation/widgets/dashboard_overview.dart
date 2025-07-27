@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 // Core imports
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_strings.dart';
+
+// Shared imports
+import '../../../../shared/services/language_service.dart';
 
 class DashboardOverview extends StatefulWidget {
   const DashboardOverview({super.key});
@@ -74,39 +79,52 @@ class _DashboardOverviewState extends State<DashboardOverview> {
 
   @override
   Widget build(BuildContext context) {
+    return Consumer<LanguageService>(
+      builder: (context, languageService, child) {
+        return _buildDashboard(context, languageService);
+      },
+    );
+  }
+
+  Widget _buildDashboard(BuildContext context, LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final isArabic = languageService.isArabic;
     
     return _isLoading
         ? const Center(child: CircularProgressIndicator())
-        : SingleChildScrollView(
-            padding: EdgeInsets.all(screenWidth > 1400 ? 24 : screenWidth > 1024 ? 20 : 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Welcome section - More compact
-                _buildWelcomeSection(),
-                
-                SizedBox(height: screenWidth > 1400 ? 32 : screenWidth > 1024 ? 28 : 24),
-                
-                // Statistics cards - Improved layout
-                _buildStatisticsCards(),
-                
-                SizedBox(height: screenWidth > 1400 ? 32 : screenWidth > 1024 ? 28 : 24),
-                
-                // Charts and graphs - Better positioning
-                _buildChartsSection(),
-                
-                SizedBox(height: screenWidth > 1400 ? 32 : screenWidth > 1024 ? 28 : 24),
-                
-                // Recent activity - More compact
-                _buildRecentActivity(),
-              ],
+        : Directionality(
+            textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(screenWidth > 1400 ? 24 : screenWidth > 1024 ? 20 : 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Welcome section - More compact
+                  _buildWelcomeSection(languageService),
+                  
+                  SizedBox(height: screenWidth > 1400 ? 32 : screenWidth > 1024 ? 28 : 24),
+                  
+                  // Statistics cards - Improved layout
+                  _buildStatisticsCards(languageService),
+                  
+                  SizedBox(height: screenWidth > 1400 ? 32 : screenWidth > 1024 ? 28 : 24),
+                  
+                  // Charts and graphs - Better positioning
+                  _buildChartsSection(languageService),
+                  
+                  SizedBox(height: screenWidth > 1400 ? 32 : screenWidth > 1024 ? 28 : 24),
+                  
+                  // Recent activity - More compact
+                  _buildRecentActivity(languageService),
+                ],
+              ),
             ),
           );
   }
 
-  Widget _buildWelcomeSection() {
+  Widget _buildWelcomeSection(LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final isArabic = languageService.isArabic;
     
     return Container(
       padding: EdgeInsets.all(screenWidth > 1400 ? 28 : screenWidth > 1024 ? 24 : 20),
@@ -153,7 +171,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Welcome back, Administrator!',
+                  AppStrings.getString('welcomeBackAdmin', languageService.currentLanguage),
                   style: GoogleFonts.cairo(
                     fontSize: screenWidth > 1400 ? 26 : screenWidth > 1024 ? 22 : 18,
                     fontWeight: FontWeight.bold,
@@ -162,7 +180,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
                 ),
                 SizedBox(height: screenWidth > 1400 ? 8 : screenWidth > 1024 ? 6 : 4),
                 Text(
-                  'Here\'s what\'s happening with your platform today',
+                  AppStrings.getString('platformOverview', languageService.currentLanguage),
                   style: GoogleFonts.cairo(
                     fontSize: screenWidth > 1400 ? 16 : screenWidth > 1024 ? 14 : 12,
                     color: Colors.white.withOpacity(0.9),
@@ -195,13 +213,13 @@ class _DashboardOverviewState extends State<DashboardOverview> {
     );
   }
 
-  Widget _buildStatisticsCards() {
+  Widget _buildStatisticsCards(LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
     
     // Improved responsive breakpoints with better mobile optimization
     if (screenWidth <= 768) {
       // Mobile: Use 2-column grid layout instead of horizontal scrolling
-      return _buildMobileStatisticsGrid();
+      return _buildMobileStatisticsGrid(languageService);
     }
     
     // Desktop/Tablet: Use grid layout with consistent sizing
@@ -240,59 +258,65 @@ class _DashboardOverviewState extends State<DashboardOverview> {
       childAspectRatio: childAspectRatio,
       children: [
         _buildStatCard(
-          title: 'Total Users',
+          title: AppStrings.getString('totalUsers', languageService.currentLanguage),
           value: _dashboardData['users']?['total']?.toString() ?? '0',
           icon: Icons.people,
           color: AppColors.primary,
           trend: '+12%',
           trendUp: true,
+          languageService: languageService,
         ),
         _buildStatCard(
-          title: 'Active Services',
+          title: AppStrings.getString('activeServices', languageService.currentLanguage),
           value: _dashboardData['services']?['active']?.toString() ?? '0',
           icon: Icons.business_center,
           color: AppColors.secondary,
           trend: '+5%',
           trendUp: true,
+          languageService: languageService,
         ),
         _buildStatCard(
-          title: 'Today\'s Bookings',
+          title: AppStrings.getString('todaysBookings', languageService.currentLanguage),
           value: _dashboardData['bookings']?['today']?.toString() ?? '0',
           icon: Icons.calendar_today,
           color: const Color(0xFF2E8B57),
           trend: '+8%',
           trendUp: true,
+          languageService: languageService,
         ),
         _buildStatCard(
-          title: 'Monthly Revenue',
+          title: AppStrings.getString('monthlyRevenue', languageService.currentLanguage),
           value: '₪${_dashboardData['revenue']?['monthly']?.toStringAsFixed(0) ?? '0'}',
           icon: Icons.attach_money,
           color: const Color(0xFF9C27B0),
           trend: '+15%',
           trendUp: true,
+          languageService: languageService,
         ),
         _buildStatCard(
-          title: 'Pending Reports',
+          title: AppStrings.getString('pendingReports', languageService.currentLanguage),
           value: _dashboardData['reports']?['pending']?.toString() ?? '0',
           icon: Icons.report_problem,
           color: const Color(0xFFFF5722),
           trend: '-3',
           trendUp: false,
+          languageService: languageService,
         ),
         _buildStatCard(
-          title: 'System Uptime',
+          title: AppStrings.getString('systemUptime', languageService.currentLanguage),
           value: '${_dashboardData['systemHealth']?['uptime']?.toStringAsFixed(1) ?? '99.9'}%',
           icon: Icons.check_circle,
           color: const Color(0xFF4CAF50),
-          trend: 'Stable',
+          trend: AppStrings.getString('stable', languageService.currentLanguage),
           trendUp: true,
+          languageService: languageService,
         ),
       ],
     );
   }
   
   // Mobile-optimized statistics grid with 2 columns
-  Widget _buildMobileStatisticsGrid() {
+  Widget _buildMobileStatisticsGrid(LanguageService languageService) {
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -302,52 +326,58 @@ class _DashboardOverviewState extends State<DashboardOverview> {
       childAspectRatio: 1.2, // Slightly taller for mobile
       children: [
         _buildMobileStatCard(
-          title: 'Total Users',
+          title: AppStrings.getString('totalUsers', languageService.currentLanguage),
           value: _dashboardData['users']?['total']?.toString() ?? '0',
           icon: Icons.people,
           color: AppColors.primary,
           trend: '+12%',
           trendUp: true,
+          languageService: languageService,
         ),
         _buildMobileStatCard(
-          title: 'Active Services',
+          title: AppStrings.getString('activeServices', languageService.currentLanguage),
           value: _dashboardData['services']?['active']?.toString() ?? '0',
           icon: Icons.business_center,
           color: AppColors.secondary,
           trend: '+5%',
           trendUp: true,
+          languageService: languageService,
         ),
         _buildMobileStatCard(
-          title: 'Today\'s Bookings',
+          title: AppStrings.getString('todaysBookings', languageService.currentLanguage),
           value: _dashboardData['bookings']?['today']?.toString() ?? '0',
           icon: Icons.calendar_today,
           color: const Color(0xFF2E8B57),
           trend: '+8%',
           trendUp: true,
+          languageService: languageService,
         ),
         _buildMobileStatCard(
-          title: 'Monthly Revenue',
+          title: AppStrings.getString('monthlyRevenue', languageService.currentLanguage),
           value: '₪${_dashboardData['revenue']?['monthly']?.toStringAsFixed(0) ?? '0'}',
           icon: Icons.attach_money,
           color: const Color(0xFF9C27B0),
           trend: '+15%',
           trendUp: true,
+          languageService: languageService,
         ),
         _buildMobileStatCard(
-          title: 'Pending Reports',
+          title: AppStrings.getString('pendingReports', languageService.currentLanguage),
           value: _dashboardData['reports']?['pending']?.toString() ?? '0',
           icon: Icons.report_problem,
           color: const Color(0xFFFF5722),
           trend: '-3',
           trendUp: false,
+          languageService: languageService,
         ),
         _buildMobileStatCard(
-          title: 'System Uptime',
+          title: AppStrings.getString('systemUptime', languageService.currentLanguage),
           value: '${_dashboardData['systemHealth']?['uptime']?.toStringAsFixed(1) ?? '99.9'}%',
           icon: Icons.check_circle,
           color: const Color(0xFF4CAF50),
-          trend: 'Stable',
+          trend: AppStrings.getString('stable', languageService.currentLanguage),
           trendUp: true,
+          languageService: languageService,
         ),
       ],
     );
@@ -361,6 +391,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
     required Color color,
     required String trend,
     required bool trendUp,
+    required LanguageService languageService,
   }) {
     String formattedValue = _formatValueForDisplay(value, 400); // Mobile width
     
@@ -475,6 +506,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
     required Color color,
     required String trend,
     required bool trendUp,
+    required LanguageService languageService,
   }) {
     final screenWidth = MediaQuery.of(context).size.width;
     
@@ -667,7 +699,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
     return value;
   }
 
-  Widget _buildChartsSection() {
+  Widget _buildChartsSection(LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
     
     // Better responsive layout for charts
@@ -679,8 +711,8 @@ class _DashboardOverviewState extends State<DashboardOverview> {
           Expanded(
             flex: 1,
             child: _buildChartCard(
-              title: 'User Growth',
-              subtitle: 'Last 30 days',
+              title: AppStrings.getString('userGrowth', languageService.currentLanguage),
+              subtitle: AppStrings.getString('last30Days', languageService.currentLanguage),
               child: Container(
                 height: screenWidth > 1400 ? 300 : screenWidth > 1200 ? 280 : 250,
                 decoration: BoxDecoration(
@@ -689,7 +721,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
                 ),
                 child: Center(
                   child: Text(
-                    '📈 Chart Placeholder',
+                    '📈 ${AppStrings.getString('chartPlaceholder', languageService.currentLanguage)}',
                     style: GoogleFonts.cairo(
                       fontSize: screenWidth > 1400 ? 18 : screenWidth > 1200 ? 16 : 14,
                       color: AppColors.textLight,
@@ -706,8 +738,8 @@ class _DashboardOverviewState extends State<DashboardOverview> {
           Expanded(
             flex: 1,
             child: _buildChartCard(
-              title: 'Revenue Trend',
-              subtitle: 'Monthly earnings',
+              title: AppStrings.getString('revenueTrend', languageService.currentLanguage),
+              subtitle: AppStrings.getString('monthlyEarnings', languageService.currentLanguage),
               child: Container(
                 height: screenWidth > 1400 ? 300 : screenWidth > 1200 ? 280 : 250,
                 decoration: BoxDecoration(
@@ -716,7 +748,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
                 ),
                 child: Center(
                   child: Text(
-                    '💰 Chart Placeholder',
+                    '💰 ${AppStrings.getString('chartPlaceholder', languageService.currentLanguage)}',
                     style: GoogleFonts.cairo(
                       fontSize: screenWidth > 1400 ? 18 : screenWidth > 1200 ? 16 : 14,
                       color: AppColors.textLight,
@@ -734,8 +766,8 @@ class _DashboardOverviewState extends State<DashboardOverview> {
         children: [
           // User growth chart
           _buildChartCard(
-            title: 'User Growth',
-            subtitle: 'Last 30 days',
+            title: AppStrings.getString('userGrowth', languageService.currentLanguage),
+            subtitle: AppStrings.getString('last30Days', languageService.currentLanguage),
             child: Container(
               height: 180, // Reduced height for mobile
               decoration: BoxDecoration(
@@ -744,7 +776,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
               ),
               child: Center(
                 child: Text(
-                  '📈 Chart Placeholder',
+                  '📈 ${AppStrings.getString('chartPlaceholder', languageService.currentLanguage)}',
                   style: GoogleFonts.cairo(
                     fontSize: 14,
                     color: AppColors.textLight,
@@ -758,8 +790,8 @@ class _DashboardOverviewState extends State<DashboardOverview> {
           
           // Revenue chart
           _buildChartCard(
-            title: 'Revenue Trend',
-            subtitle: 'Monthly earnings',
+            title: AppStrings.getString('revenueTrend', languageService.currentLanguage),
+            subtitle: AppStrings.getString('monthlyEarnings', languageService.currentLanguage),
             child: Container(
               height: 180, // Reduced height for mobile
               decoration: BoxDecoration(
@@ -768,7 +800,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
               ),
               child: Center(
                 child: Text(
-                  '💰 Chart Placeholder',
+                  '💰 ${AppStrings.getString('chartPlaceholder', languageService.currentLanguage)}',
                   style: GoogleFonts.cairo(
                     fontSize: 14,
                     color: AppColors.textLight,
@@ -850,7 +882,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
     );
   }
 
-  Widget _buildRecentActivity() {
+  Widget _buildRecentActivity(LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
     
     return Container(
@@ -870,7 +902,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Recent Activity',
+            AppStrings.getString('recentActivity', languageService.currentLanguage),
             style: GoogleFonts.cairo(
               fontSize: screenWidth > 1400 ? 20 : screenWidth > 1024 ? 18 : 16,
               fontWeight: FontWeight.bold,
@@ -882,31 +914,35 @@ class _DashboardOverviewState extends State<DashboardOverview> {
           // Activity items - More compact
           _buildActivityItem(
             icon: Icons.person_add,
-            title: 'New user registered',
-            subtitle: 'Ahmed Hassan joined as a service provider',
-            time: '2 minutes ago',
+            title: AppStrings.getString('newUserRegistered', languageService.currentLanguage),
+            subtitle: AppStrings.getString('ahmedHassanJoined', languageService.currentLanguage),
+            time: '2 ${AppStrings.getString('minutesAgo', languageService.currentLanguage)}',
             color: AppColors.primary,
+            languageService: languageService,
           ),
           _buildActivityItem(
             icon: Icons.calendar_today,
-            title: 'Booking completed',
-            subtitle: 'Cleaning service in Ramallah',
-            time: '15 minutes ago',
+            title: AppStrings.getString('bookingCompleted', languageService.currentLanguage),
+            subtitle: AppStrings.getString('cleaningServiceRamallah', languageService.currentLanguage),
+            time: '15 ${AppStrings.getString('minutesAgo', languageService.currentLanguage)}',
             color: AppColors.secondary,
+            languageService: languageService,
           ),
           _buildActivityItem(
             icon: Icons.report_problem,
-            title: 'Report submitted',
-            subtitle: 'User reported inappropriate behavior',
-            time: '1 hour ago',
+            title: AppStrings.getString('reportSubmitted', languageService.currentLanguage),
+            subtitle: AppStrings.getString('userReportedInappropriate', languageService.currentLanguage),
+            time: '1 ${AppStrings.getString('hourAgo', languageService.currentLanguage)}',
             color: const Color(0xFFFF5722),
+            languageService: languageService,
           ),
           _buildActivityItem(
             icon: Icons.payment,
-            title: 'Payment processed',
-            subtitle: '₪150 payment for home maintenance',
-            time: '2 hours ago',
+            title: AppStrings.getString('paymentProcessed', languageService.currentLanguage),
+            subtitle: AppStrings.getString('paymentForHomeMaintenance', languageService.currentLanguage),
+            time: '2 ${AppStrings.getString('hoursAgo', languageService.currentLanguage)}',
             color: const Color(0xFF4CAF50),
+            languageService: languageService,
           ),
         ],
       ),
@@ -919,6 +955,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
     required String subtitle,
     required String time,
     required Color color,
+    required LanguageService languageService,
   }) {
     final screenWidth = MediaQuery.of(context).size.width;
     
