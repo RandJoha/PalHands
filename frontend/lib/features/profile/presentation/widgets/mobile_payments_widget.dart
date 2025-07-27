@@ -43,28 +43,28 @@ class _MobilePaymentsWidgetState extends State<MobilePaymentsWidget> {
           const SizedBox(height: 20),
           
           // Payment history
-          _buildPaymentHistory(),
+          _buildPaymentHistory(languageService),
         ],
       ),
     );
   }
 
-  Widget _buildPaymentHistory() {
+  Widget _buildPaymentHistory(LanguageService languageService) {
     return Column(
       children: [
         _buildPaymentItem(
-          serviceName: 'Home Cleaning',
+          serviceName: AppStrings.getString('homeCleaning', languageService.currentLanguage),
           amount: '₪150',
-          date: 'Today',
-          status: 'Completed',
+          date: AppStrings.getString('today', languageService.currentLanguage),
+          status: AppStrings.getString('completed', languageService.currentLanguage),
           method: 'Credit Card',
         ),
         const SizedBox(height: 12),
         _buildPaymentItem(
-          serviceName: 'Elderly Care',
+          serviceName: AppStrings.getString('elderlyCare', languageService.currentLanguage),
           amount: '₪200',
-          date: 'Yesterday',
-          status: 'Pending',
+          date: AppStrings.getString('yesterday', languageService.currentLanguage),
+          status: AppStrings.getString('pending', languageService.currentLanguage),
           method: 'Cash',
         ),
       ],

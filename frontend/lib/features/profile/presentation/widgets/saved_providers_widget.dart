@@ -34,7 +34,7 @@ class _SavedProvidersWidgetState extends State<SavedProvidersWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Saved Providers',
+            AppStrings.getString('savedProviders', languageService.currentLanguage),
             style: GoogleFonts.cairo(
               fontSize: 24.sp,
               color: AppColors.textPrimary,
@@ -44,37 +44,40 @@ class _SavedProvidersWidgetState extends State<SavedProvidersWidget> {
           SizedBox(height: 24.h),
           
           // Providers list
-          _buildProvidersList(),
+          _buildProvidersList(languageService),
         ],
       ),
     );
   }
 
-  Widget _buildProvidersList() {
+  Widget _buildProvidersList(LanguageService languageService) {
     return Column(
       children: [
         _buildProviderItem(
           name: 'Fatima Al-Zahra',
-          service: 'Home Cleaning',
+          service: AppStrings.getString('homeCleaning', languageService.currentLanguage),
           rating: 4.8,
           price: '₪150',
           isAvailable: true,
+          languageService: languageService,
         ),
         SizedBox(height: 16.h),
         _buildProviderItem(
           name: 'Mariam Hassan',
-          service: 'Elderly Care',
+          service: AppStrings.getString('elderlyCare', languageService.currentLanguage),
           rating: 4.9,
           price: '₪200',
           isAvailable: true,
+          languageService: languageService,
         ),
         SizedBox(height: 16.h),
         _buildProviderItem(
           name: 'Aisha Mohammed',
-          service: 'Babysitting',
+          service: AppStrings.getString('babysitting', languageService.currentLanguage),
           rating: 4.7,
           price: '₪120',
           isAvailable: false,
+          languageService: languageService,
         ),
       ],
     );
@@ -86,6 +89,7 @@ class _SavedProvidersWidgetState extends State<SavedProvidersWidget> {
     required double rating,
     required String price,
     required bool isAvailable,
+    required LanguageService languageService,
   }) {
     return Container(
       padding: EdgeInsets.all(20.w),
@@ -159,7 +163,7 @@ class _SavedProvidersWidgetState extends State<SavedProvidersWidget> {
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Text(
-                        isAvailable ? 'Available' : 'Busy',
+                        isAvailable ? AppStrings.getString('available', languageService.currentLanguage) : AppStrings.getString('unavailable', languageService.currentLanguage),
                         style: GoogleFonts.cairo(
                           fontSize: 12.sp,
                           color: isAvailable ? AppColors.success : AppColors.error,
@@ -194,7 +198,7 @@ class _SavedProvidersWidgetState extends State<SavedProvidersWidget> {
                   padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                 ),
                 child: Text(
-                  'Book Again',
+                  AppStrings.getString('bookAgain', languageService.currentLanguage),
                   style: GoogleFonts.cairo(
                     fontSize: 12.sp,
                     fontWeight: FontWeight.w600,

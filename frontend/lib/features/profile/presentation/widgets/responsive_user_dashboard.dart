@@ -30,7 +30,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   late Animation<double> _contentAnimation;
 
   // Menu items - will be localized
-  List<UserMenuItem> get _menuItems {
+  List<UserMenuItem> _getMenuItems() {
     return [
       UserMenuItem(title: _getLocalizedString('dashboard_home'), icon: Icons.home, index: 0),
       UserMenuItem(title: _getLocalizedString('my_bookings'), icon: Icons.calendar_today, index: 1),
@@ -125,10 +125,320 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         return isArabic ? 'تواصل' : 'Contact';
       case 'track':
         return isArabic ? 'تتبع' : 'Track';
+      case 'upcoming':
+        return isArabic ? 'قادم' : 'Upcoming';
+      case 'home_cleaning':
+        return isArabic ? 'تنظيف المنزل' : 'Home Cleaning';
+      case 'elderly_care':
+        return isArabic ? 'رعاية المسنين' : 'Elderly Care';
+      case 'babysitting':
+        return isArabic ? 'رعاية الأطفال' : 'Babysitting';
+      case 'fatima_al_zahra':
+        return isArabic ? 'فاطمة الزهراء' : 'Fatima Al-Zahra';
+      case 'mariam_hassan':
+        return isArabic ? 'مريم حسن' : 'Mariam Hassan';
+      case 'aisha_mohammed':
+        return isArabic ? 'عائشة محمد' : 'Aisha Mohammed';
+      case 'tomorrow_10am':
+        return isArabic ? 'غداً، 10:00 صباحاً' : 'Tomorrow, 10:00 AM';
+      case 'friday_2pm':
+        return isArabic ? 'الجمعة، 2:00 مساءً' : 'Friday, 2:00 PM';
+      case 'yesterday_3pm':
+        return isArabic ? 'أمس، 3:00 مساءً' : 'Yesterday, 3:00 PM';
       case 'messages':
         return isArabic ? 'الرسائل' : 'Messages';
+      case 'chat':
+        return isArabic ? 'الدردشة' : 'Chat';
+      case 'online':
+        return isArabic ? 'متصل' : 'Online';
+      case 'offline':
+        return isArabic ? 'غير متصل' : 'Offline';
+      case 'lastSeen':
+        return isArabic ? 'آخر ظهور' : 'Last seen';
+      case 'typing':
+        return isArabic ? 'يكتب...' : 'Typing...';
+      case 'send':
+        return isArabic ? 'إرسال' : 'Send';
+      case 'attach':
+        return isArabic ? 'إرفاق' : 'Attach';
+      case 'voiceMessage':
+        return isArabic ? 'رسالة صوتية' : 'Voice Message';
+      case 'emoji':
+        return isArabic ? 'الرموز التعبيرية' : 'Emoji';
+      case 'noMessages':
+        return isArabic ? 'لا توجد رسائل بعد' : 'No messages yet';
+      case 'startConversation':
+        return isArabic ? 'ابدأ محادثة' : 'Start a conversation';
+      case 'minutesAgo':
+        return isArabic ? 'دقيقة مضت' : 'min ago';
+      case 'hoursAgo':
+        return isArabic ? 'ساعة مضت' : 'hour ago';
+      case 'daysAgo':
+        return isArabic ? 'أيام مضت' : 'days ago';
+      case 'willArriveIn':
+        return isArabic ? 'سأصل خلال 10 دقائق' : 'I will arrive in 10 minutes';
+      case 'thankYouForBooking':
+        return isArabic ? 'شكراً لك على الحجز' : 'Thank you for the booking';
+      case 'childrenDoingGreat':
+        return isArabic ? 'الأطفال بخير' : 'The children are doing great';
       case 'type_message':
         return isArabic ? 'اكتب رسالة...' : 'Type a message...';
+      // Payment strings
+      case 'totalSpent':
+        return isArabic ? 'إجمالي الإنفاق' : 'Total Spent';
+      case 'thisMonth':
+        return isArabic ? 'هذا الشهر' : 'This Month';
+      case 'pending':
+        return isArabic ? 'معلق' : 'Pending';
+      case 'paymentMethods':
+        return isArabic ? 'طرق الدفع' : 'Payment Methods';
+      case 'addNew':
+        return isArabic ? 'إضافة جديد' : 'Add New';
+      case 'defaultText':
+        return isArabic ? 'افتراضي' : 'Default';
+      case 'connected':
+        return isArabic ? 'متصل' : 'Connected';
+      case 'paymentHistory':
+        return isArabic ? 'سجل المدفوعات' : 'Payment History';
+      case 'visaEndingIn':
+        return isArabic ? 'فيزا تنتهي بـ 1234' : 'Visa ending in 1234';
+      case 'paypal':
+        return isArabic ? 'باي بال' : 'PayPal';
+      case 'completed':
+        return isArabic ? 'مكتمل' : 'Completed';
+      case 'today':
+        return isArabic ? 'اليوم' : 'Today';
+      case 'yesterday':
+        return isArabic ? 'أمس' : 'Yesterday';
+      case 'daysAgo':
+        return isArabic ? 'أيام مضت' : 'days ago';
+      case 'at':
+        return isArabic ? 'في' : 'at';
+      case 'totalReviews':
+        return isArabic ? 'إجمالي التقييمات' : 'Total Reviews';
+      case 'averageRating':
+        return isArabic ? 'متوسط التقييم' : 'Average Rating';
+      case 'myReviews':
+        return isArabic ? 'تقييماتي' : 'My Reviews';
+      case 'edit':
+        return isArabic ? 'تعديل' : 'Edit';
+      case 'weekAgo':
+        return isArabic ? 'أسبوع مضى' : 'week ago';
+      case 'weeksAgo':
+        return isArabic ? 'أسابيع مضت' : 'weeks ago';
+      // Profile Settings strings
+      case 'profileSettings':
+        return isArabic ? 'إعدادات الملف الشخصي' : 'Profile Settings';
+      case 'personalInformation':
+        return isArabic ? 'المعلومات الشخصية' : 'Personal Information';
+      case 'firstName':
+        return isArabic ? 'الاسم الأول' : 'First Name';
+      case 'lastName':
+        return isArabic ? 'اسم العائلة' : 'Last Name';
+      case 'phoneNumber':
+        return isArabic ? 'رقم الهاتف' : 'Phone Number';
+      case 'saveChanges':
+        return isArabic ? 'حفظ التغييرات' : 'Save Changes';
+      case 'savedAddresses':
+        return isArabic ? 'العناوين المحفوظة' : 'Saved Addresses';
+      case 'addNewAddress':
+        return isArabic ? 'إضافة عنوان جديد' : 'Add New Address';
+      case 'notificationPreferences':
+        return isArabic ? 'تفضيلات الإشعارات' : 'Notification Preferences';
+      case 'emailNotifications':
+        return isArabic ? 'إشعارات البريد الإلكتروني' : 'Email Notifications';
+      case 'pushNotifications':
+        return isArabic ? 'الإشعارات الفورية' : 'Push Notifications';
+      case 'smsNotifications':
+        return isArabic ? 'إشعارات الرسائل النصية' : 'SMS Notifications';
+      // Saved Providers strings
+      case 'savedProviders':
+        return isArabic ? 'مقدمي الخدمات المحفوظون' : 'Saved Providers';
+      case 'totalProviders':
+        return isArabic ? 'إجمالي مقدمي الخدمات' : 'Total Providers';
+      case 'available':
+        return isArabic ? 'متاح' : 'Available';
+      case 'unavailable':
+        return isArabic ? 'غير متاح' : 'Unavailable';
+      case 'bookNow':
+        return isArabic ? 'احجز الآن' : 'Book Now';
+      case 'remove':
+        return isArabic ? 'إزالة' : 'Remove';
+      // Support Help strings
+      case 'supportHelp':
+        return isArabic ? 'الدعم والمساعدة' : 'Support & Help';
+      case 'quickHelp':
+        return isArabic ? 'مساعدة سريعة' : 'Quick Help';
+      case 'contactSupport':
+        return isArabic ? 'تواصل مع الدعم' : 'Contact Support';
+      case 'faq':
+        return isArabic ? 'الأسئلة الشائعة' : 'FAQ';
+      case 'liveChat':
+        return isArabic ? 'الدردشة المباشرة' : 'Live Chat';
+      case 'reportIssue':
+        return isArabic ? 'الإبلاغ عن مشكلة' : 'Report Issue';
+      case 'recentTickets':
+        return isArabic ? 'التذاكر الحديثة' : 'Recent Tickets';
+      case 'open':
+        return isArabic ? 'مفتوح' : 'Open';
+      case 'closed':
+        return isArabic ? 'مغلق' : 'Closed';
+      // Security strings
+      case 'security':
+        return isArabic ? 'الأمان' : 'Security';
+      case 'securityStatus':
+        return isArabic ? 'حالة الأمان' : 'Security Status';
+      case 'strong':
+        return isArabic ? 'قوي' : 'Strong';
+      case 'changePassword':
+        return isArabic ? 'تغيير كلمة المرور' : 'Change Password';
+      case 'twoFactorAuth':
+        return isArabic ? 'المصادقة الثنائية' : 'Two-Factor Authentication';
+      case 'enabled':
+        return isArabic ? 'مفعل' : 'Enabled';
+      case 'disabled':
+        return isArabic ? 'معطل' : 'Disabled';
+      case 'loginHistory':
+        return isArabic ? 'سجل تسجيل الدخول' : 'Login History';
+      case 'lastLogin':
+        return isArabic ? 'آخر تسجيل دخول' : 'Last Login';
+      case 'device':
+        return isArabic ? 'الجهاز' : 'Device';
+      case 'location':
+        return isArabic ? 'الموقع' : 'Location';
+      case 'accountSettings':
+        return isArabic ? 'إعدادات الحساب' : 'Account Settings';
+      case 'deactivateAccount':
+        return isArabic ? 'إلغاء تفعيل الحساب' : 'Deactivate Account';
+      case 'deleteAccount':
+        return isArabic ? 'حذف الحساب' : 'Delete Account';
+      // Additional strings for complete translation
+      case 'dateOfBirth':
+        return isArabic ? 'تاريخ الميلاد' : 'Date of Birth';
+      case 'recentlyBooked':
+        return isArabic ? 'حجوزات حديثة' : 'Recently Booked';
+      case 'findAnswers':
+        return isArabic ? 'اعثر على إجابات للأسئلة الشائعة' : 'Find answers to common questions';
+      case 'createSupportRequest':
+        return isArabic ? 'إنشاء طلب دعم جديد' : 'Create a new support request';
+      case 'viewPreviousRequests':
+        return isArabic ? 'عرض الطلبات السابقة' : 'View Previous Requests';
+      case 'checkTicketStatus':
+        return isArabic ? 'تحقق من حالة تذاكرك' : 'Check status of your tickets';
+      case 'chatWithSupport':
+        return isArabic ? 'دردشة مع فريق الدعم' : 'Chat with our support team';
+      case 'password':
+        return isArabic ? 'كلمة المرور' : 'Password';
+      case 'loginAlerts':
+        return isArabic ? 'تنبيهات تسجيل الدخول' : 'Login Alerts';
+      case 'active':
+        return isArabic ? 'نشط' : 'Active';
+      case 'deviceTrust':
+        return isArabic ? 'ثقة الجهاز' : 'Device Trust';
+      case 'devices':
+        return isArabic ? 'الأجهزة' : 'Devices';
+      case 'updatePassword':
+        return isArabic ? 'تحديث كلمة مرور حسابك' : 'Update your account password';
+      case 'addExtraSecurity':
+        return isArabic ? 'إضافة طبقة أمان إضافية' : 'Add an extra layer of security';
+      case 'getLoginNotifications':
+        return isArabic ? 'احصل على إشعارات بتسجيلات الدخول الجديدة' : 'Get notified of new logins';
+      case 'trustedDevices':
+        return isArabic ? 'الأجهزة الموثوقة' : 'Trusted Devices';
+      case 'manageTrustedDevices':
+        return isArabic ? 'إدارة أجهزتك الموثوقة' : 'Manage your trusted devices';
+      case 'permanentlyDeleteAccount':
+        return isArabic ? 'حذف حسابك نهائياً' : 'Permanently delete your account';
+      case 'membersSince':
+        return isArabic ? 'عضو منذ' : 'Members since';
+      case 'fullName':
+        return isArabic ? 'الاسم الكامل' : 'Full Name';
+      case 'march15':
+        return isArabic ? '15 اذار 1998' : 'March 15, 1998';
+      case 'home':
+        return isArabic ? 'المنزل' : 'Home';
+      case 'businessF':
+        return isArabic ? 'الأعمال ف' : 'Business F';
+      case 'dellaBia':
+        return isArabic ? 'ديلا بيا' : 'Della Bia';
+      case 'f456':
+        return isArabic ? 'ف456' : 'F456';
+      case 'homeCleaning':
+        return isArabic ? 'تنظيف المنزل' : 'Home Cleaning';
+      case 'elderlyCare':
+        return isArabic ? 'رعاية المسنين' : 'Elderly Care';
+      case 'babysitting':
+        return isArabic ? 'رعاية الأطفال' : 'Babysitting';
+      case 'lastBook':
+        return isArabic ? 'آخر حجز' : 'Last Book';
+      case 'twoDaysAgo':
+        return isArabic ? 'قبل يومين' : 'Two days ago';
+      case 'oneWeekAgo':
+        return isArabic ? 'قبل أسبوع' : 'One week ago';
+      case 'threeWeeksAgo':
+        return isArabic ? 'قبل ثلاثة أسابيع' : 'Three weeks ago';
+      case 'threeDaysAgo':
+        return isArabic ? 'قبل ثلاثة أيام' : 'Three days ago';
+      case 'oneDayAgo':
+        return isArabic ? 'قبل يوم واحد' : 'One day ago';
+      case 'oneWeekAgo':
+        return isArabic ? 'قبل أسبوع' : 'One week ago';
+      case 'twoWeeksAgo':
+        return isArabic ? 'قبل أسبوعين' : 'Two weeks ago';
+      case 'oneMonthAgo':
+        return isArabic ? 'قبل شهر' : 'One month ago';
+      case 'twoMonthsAgo':
+        return isArabic ? 'قبل شهرين' : 'Two months ago';
+      case 'threeMonthsAgo':
+        return isArabic ? 'قبل ثلاثة أشهر' : 'Three months ago';
+      case 'oneYearAgo':
+        return isArabic ? 'قبل سنة' : 'One year ago';
+      case 'twoYearsAgo':
+        return isArabic ? 'قبل سنتين' : 'Two years ago';
+      case 'justNow':
+        return isArabic ? 'الآن' : 'Just now';
+      case 'minutesAgo':
+        return isArabic ? 'دقائق مضت' : 'minutes ago';
+      case 'hoursAgo':
+        return isArabic ? 'ساعات مضت' : 'hours ago';
+      case 'daysAgo':
+        return isArabic ? 'أيام مضت' : 'days ago';
+      case 'weeksAgo':
+        return isArabic ? 'أسابيع مضت' : 'weeks ago';
+      case 'monthsAgo':
+        return isArabic ? 'أشهر مضت' : 'months ago';
+      case 'yearsAgo':
+        return isArabic ? 'سنوات مضت' : 'years ago';
+      case 'keepAccountSafe':
+        return isArabic ? 'حافظ على أمان حسابك' : 'Keep Your Account Safe and Secure';
+      case 'accountSecurity':
+        return isArabic ? 'أمان الحساب' : 'Account Security';
+      case 'january2024':
+        return isArabic ? 'كانون الثاني 2024' : 'January 2024';
+      case 'needHelp':
+        return isArabic ? 'تحتاج مساعدة؟' : 'Need help?';
+      case 'weAreHereToHelp':
+        return isArabic ? 'نحن هنا لمساعدتك على مدار الساعة' : 'We are here to help you 24/7';
+      case 'paymentIssueResolved':
+        return isArabic ? 'تم حل مشكلة الدفع' : 'Payment issue resolved';
+      case 'bookingCancellations':
+        return isArabic ? 'إلغاءات الحجز' : 'Booking cancellations';
+      case 'inProgress':
+        return isArabic ? 'قيد التنفيذ' : 'In progress';
+      case 'jerusalem':
+        return isArabic ? 'القدس' : 'Jerusalem';
+      case 'telAviv':
+        return isArabic ? 'نابلس' : 'Nablus';
+      case 'haifa':
+        return isArabic ? 'حيفا' : 'Haifa';
+      case 'today830AM':
+        return isArabic ? 'اليوم 8:30 صباحاً' : 'Today 8:30 AM';
+      case 'current':
+        return isArabic ? 'الحالي' : 'Current';
+      case 'inActive':
+        return isArabic ? 'نشط' : 'In Active';
+      case 'palestine':
+        return isArabic ? 'فلسطين' : 'Palestine';
       case 'total_spent':
         return isArabic ? 'إجمالي الإنفاق' : 'Total Spent';
       case 'this_month':
@@ -178,6 +488,8 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       case 'recently_booked':
         return isArabic ? 'محجوز مؤخراً' : 'Recently Booked';
       case 'last_booked':
+        return isArabic ? 'آخر حجز' : 'Last booked';
+      case 'lastBooked':
         return isArabic ? 'آخر حجز' : 'Last booked';
       case 'available':
         return isArabic ? 'متاح' : 'Available';
@@ -482,14 +794,15 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   Widget _buildSidebarMenu(bool isDesktop, bool isTablet) {
     return Consumer<LanguageService>(
       builder: (context, languageService, child) {
+        final menuItems = _getMenuItems();
         return ListView.builder(
           padding: EdgeInsets.symmetric(
             vertical: isDesktop ? 16.0 : 12.0,
             horizontal: isDesktop ? 12.0 : 8.0,
           ),
-          itemCount: _menuItems.length,
+          itemCount: menuItems.length,
           itemBuilder: (context, index) {
-            final item = _menuItems[index];
+            final item = menuItems[index];
             final isSelected = _selectedIndex == index;
             
             return AnimatedContainer(
@@ -571,8 +884,9 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           Expanded(
             child: Consumer<LanguageService>(
               builder: (context, languageService, child) {
+                final menuItems = _getMenuItems();
                 return Text(
-                  _menuItems[_selectedIndex].title,
+                  menuItems[_selectedIndex].title,
                   style: GoogleFonts.cairo(
                     fontSize: isMobile ? 20.0 : 24.0,
                     fontWeight: FontWeight.w700,
@@ -617,15 +931,19 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   }
 
   Widget _buildResponsiveContent(bool isMobile, bool isTablet, bool isDesktop) {
-    return AnimatedBuilder(
-      animation: _contentAnimation,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: 0.95 + (_contentAnimation.value * 0.05),
-          child: Opacity(
-            opacity: _contentAnimation.value,
-            child: _buildContent(),
-          ),
+    return Consumer<LanguageService>(
+      builder: (context, languageService, child) {
+        return AnimatedBuilder(
+          animation: _contentAnimation,
+          builder: (context, child) {
+            return Transform.scale(
+              scale: 0.95 + (_contentAnimation.value * 0.05),
+              child: Opacity(
+                opacity: _contentAnimation.value,
+                child: _buildContent(),
+              ),
+            );
+          },
         );
       },
     );
@@ -1325,7 +1643,13 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   }
 
   Widget _buildBookingFilters(bool isMobile, bool isTablet) {
-    final filters = ['All', 'Upcoming', 'Completed', 'Cancelled'];
+    final languageService = Provider.of<LanguageService>(context, listen: false);
+    final filters = [
+      AppStrings.getString('all', languageService.currentLanguage),
+      AppStrings.getString('upcoming', languageService.currentLanguage),
+      AppStrings.getString('completed', languageService.currentLanguage),
+      AppStrings.getString('cancelled', languageService.currentLanguage),
+    ];
     int selectedFilter = 0; // This would be state in a real app
     
     return Wrap(
@@ -1361,33 +1685,34 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   }
 
   Widget _buildBookingsList(bool isMobile, bool isTablet, double screenWidth) {
+    final languageService = Provider.of<LanguageService>(context, listen: false);
     final bookings = [
       {
-        'service': 'Home Cleaning',
+        'service': AppStrings.getString('homeCleaning', languageService.currentLanguage),
         'provider': 'Fatima Al-Zahra',
-        'date': 'Tomorrow, 10:00 AM',
-        'status': 'Confirmed',
+        'date': AppStrings.getString('tomorrow10AM', languageService.currentLanguage),
+        'status': AppStrings.getString('confirmed', languageService.currentLanguage),
         'statusColor': AppColors.success,
         'price': '₪150',
-        'address': '123 Main St, Jerusalem',
+        'address': '${AppStrings.getString('mainStreet', languageService.currentLanguage)}, ${AppStrings.getString('jerusalem', languageService.currentLanguage)}',
       },
       {
-        'service': 'Elderly Care',
+        'service': AppStrings.getString('elderlyCare', languageService.currentLanguage),
         'provider': 'Mariam Hassan',
-        'date': 'Friday, 2:00 PM',
-        'status': 'Pending',
+        'date': AppStrings.getString('friday2PM', languageService.currentLanguage),
+        'status': AppStrings.getString('pending', languageService.currentLanguage),
         'statusColor': AppColors.warning,
         'price': '₪200',
-        'address': '456 Oak Ave, Tel Aviv',
+        'address': '${AppStrings.getString('oakAvenue', languageService.currentLanguage)}, ${AppStrings.getString('telAviv', languageService.currentLanguage)}',
       },
       {
-        'service': 'Babysitting',
+        'service': AppStrings.getString('babysitting', languageService.currentLanguage),
         'provider': 'Aisha Mohammed',
-        'date': 'Yesterday, 3:00 PM',
-        'status': 'Completed',
+        'date': AppStrings.getString('yesterday3PM', languageService.currentLanguage),
+        'status': AppStrings.getString('completed', languageService.currentLanguage),
         'statusColor': AppColors.info,
         'price': '₪120',
-        'address': '789 Pine Rd, Haifa',
+        'address': '${AppStrings.getString('pineRoad', languageService.currentLanguage)}, ${AppStrings.getString('haifa', languageService.currentLanguage)}',
       },
     ];
 
@@ -1402,6 +1727,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   }
 
   Widget _buildDetailedBookingCard(Map<String, dynamic> booking, bool isMobile, bool isTablet, double screenWidth) {
+    final languageService = Provider.of<LanguageService>(context, listen: false);
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
@@ -1458,28 +1784,28 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           // Booking details
           _buildBookingDetailRow(
             Icons.person,
-            'Provider',
+            AppStrings.getString('provider', languageService.currentLanguage),
             booking['provider'],
             isMobile,
           ),
           SizedBox(height: 8.0),
           _buildBookingDetailRow(
             Icons.calendar_today,
-            'Date & Time',
+            AppStrings.getString('dateTime', languageService.currentLanguage),
             booking['date'],
             isMobile,
           ),
           SizedBox(height: 8.0),
           _buildBookingDetailRow(
             Icons.location_on,
-            'Address',
+            AppStrings.getString('address', languageService.currentLanguage),
             booking['address'],
             isMobile,
           ),
           SizedBox(height: 8.0),
           _buildBookingDetailRow(
             Icons.attach_money,
-            'Price',
+            AppStrings.getString('price', languageService.currentLanguage),
             booking['price'],
             isMobile,
           ),
@@ -1493,6 +1819,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   }
 
   Widget _buildBookingDetailRow(IconData icon, String label, String value, bool isMobile) {
+    final languageService = Provider.of<LanguageService>(context, listen: false);
     return Row(
       children: [
         Icon(
@@ -1524,11 +1851,12 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   }
 
   Widget _buildBookingActions(bool isMobile, bool isTablet, double screenWidth) {
+    final languageService = Provider.of<LanguageService>(context, listen: false);
     final actions = [
-      {'icon': Icons.cancel, 'label': 'Cancel', 'color': AppColors.error},
-      {'icon': Icons.schedule, 'label': 'Reschedule', 'color': AppColors.warning},
-      {'icon': Icons.chat, 'label': 'Contact', 'color': AppColors.primary},
-      {'icon': Icons.location_on, 'label': 'Track', 'color': AppColors.info},
+      {'icon': Icons.cancel, 'label': AppStrings.getString('cancel', languageService.currentLanguage), 'color': AppColors.error},
+      {'icon': Icons.schedule, 'label': AppStrings.getString('reschedule', languageService.currentLanguage), 'color': AppColors.warning},
+      {'icon': Icons.chat, 'label': AppStrings.getString('contact', languageService.currentLanguage), 'color': AppColors.primary},
+      {'icon': Icons.location_on, 'label': AppStrings.getString('track', languageService.currentLanguage), 'color': AppColors.info},
     ];
 
     return Wrap(
@@ -1598,28 +1926,29 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   }
 
   Widget _buildChatList(bool isMobile, bool isTablet) {
+    final languageService = Provider.of<LanguageService>(context, listen: false);
     final chats = [
       {
         'name': 'Fatima Al-Zahra',
-        'service': 'Home Cleaning',
+        'service': AppStrings.getString('homeCleaning', languageService.currentLanguage),
         'lastMessage': 'I will arrive in 10 minutes',
-        'time': '2 min ago',
+        'time': '2 ${AppStrings.getString('minutesAgo', languageService.currentLanguage)}',
         'unread': 2,
         'isOnline': true,
       },
       {
         'name': 'Mariam Hassan',
-        'service': 'Elderly Care',
+        'service': AppStrings.getString('elderlyCare', languageService.currentLanguage),
         'lastMessage': 'Thank you for the booking',
-        'time': '1 hour ago',
+        'time': '1 ${AppStrings.getString('hoursAgo', languageService.currentLanguage)}',
         'unread': 0,
         'isOnline': false,
       },
       {
         'name': 'Aisha Mohammed',
-        'service': 'Babysitting',
+        'service': AppStrings.getString('babysitting', languageService.currentLanguage),
         'lastMessage': 'The children are doing great',
-        'time': '3 hours ago',
+        'time': '3 ${AppStrings.getString('hoursAgo', languageService.currentLanguage)}',
         'unread': 1,
         'isOnline': true,
       },
@@ -1645,7 +1974,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               ),
               SizedBox(width: 12.0),
               Text(
-                'Messages',
+                _getLocalizedString('messages'),
                 style: GoogleFonts.cairo(
                   fontSize: isTablet ? 18.0 : 20.0,
                   fontWeight: FontWeight.w600,
@@ -1841,7 +2170,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                       ),
                     ),
                     Text(
-                      'Home Cleaning',
+                      _getLocalizedString('homeCleaning'),
                       style: GoogleFonts.cairo(
                         fontSize: isMobile ? 12.0 : 14.0,
                         fontWeight: FontWeight.w400,
@@ -1982,7 +2311,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           Expanded(
             child: TextField(
               decoration: InputDecoration(
-                hintText: 'Type a message...',
+                hintText: _getLocalizedString('type_message'),
                 hintStyle: GoogleFonts.cairo(
                   fontSize: isMobile ? 14.0 : 16.0,
                   color: AppColors.textSecondary,
@@ -2040,10 +2369,11 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   }
 
   Widget _buildPaymentSummary(bool isMobile, bool isTablet, double screenWidth) {
+    final languageService = Provider.of<LanguageService>(context, listen: false);
     final summaryCards = [
-      {'title': 'Total Spent', 'amount': '₪2,450', 'icon': Icons.account_balance_wallet, 'color': AppColors.primary},
-      {'title': 'This Month', 'amount': '₪580', 'icon': Icons.calendar_today, 'color': AppColors.success},
-      {'title': 'Pending', 'amount': '₪150', 'icon': Icons.pending, 'color': AppColors.warning},
+      {'title': AppStrings.getString('totalSpent', languageService.currentLanguage), 'amount': '₪2,450', 'icon': Icons.account_balance_wallet, 'color': AppColors.primary},
+      {'title': AppStrings.getString('thisMonth', languageService.currentLanguage), 'amount': '₪580', 'icon': Icons.calendar_today, 'color': AppColors.success},
+      {'title': AppStrings.getString('pending', languageService.currentLanguage), 'amount': '₪150', 'icon': Icons.pending, 'color': AppColors.warning},
     ];
 
     return Wrap(
@@ -2109,7 +2439,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Payment Methods',
+              _getLocalizedString('paymentMethods'),
               style: GoogleFonts.cairo(
                 fontSize: isMobile ? 18.0 : 20.0,
                 fontWeight: FontWeight.w600,
@@ -2120,7 +2450,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               onPressed: () {},
               icon: Icon(Icons.add, size: isMobile ? 16.0 : 18.0),
               label: Text(
-                'Add New',
+                _getLocalizedString('addNew'),
                 style: GoogleFonts.cairo(
                   fontSize: isMobile ? 14.0 : 16.0,
                   fontWeight: FontWeight.w500,
@@ -2141,8 +2471,8 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         
         // Payment methods list
         _buildPaymentMethodCard(
-          'Visa ending in 1234',
-          'Default',
+          _getLocalizedString('visaEndingIn'),
+          _getLocalizedString('defaultText'),
           Icons.credit_card,
           AppColors.primary,
           true,
@@ -2150,8 +2480,8 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         ),
         SizedBox(height: 12.0),
         _buildPaymentMethodCard(
-          'PayPal',
-          'Connected',
+          _getLocalizedString('paypal'),
+          _getLocalizedString('connected'),
           Icons.payment,
           AppColors.info,
           false,
@@ -2211,7 +2541,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                'Default',
+                _getLocalizedString('defaultText'),
                 style: GoogleFonts.cairo(
                   fontSize: isMobile ? 12.0 : 14.0,
                   fontWeight: FontWeight.w600,
@@ -2225,29 +2555,30 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   }
 
   Widget _buildPaymentHistory(bool isMobile, bool isTablet) {
+    final languageService = Provider.of<LanguageService>(context, listen: false);
     final payments = [
       {
-        'service': 'Home Cleaning',
+        'service': AppStrings.getString('homeCleaning', languageService.currentLanguage),
         'provider': 'Fatima Al-Zahra',
         'amount': '₪150',
-        'date': 'Today, 10:00 AM',
-        'status': 'Completed',
+        'date': '${AppStrings.getString('today', languageService.currentLanguage)}, 10:00 AM',
+        'status': AppStrings.getString('completed', languageService.currentLanguage),
         'statusColor': AppColors.success,
       },
       {
-        'service': 'Elderly Care',
+        'service': AppStrings.getString('elderlyCare', languageService.currentLanguage),
         'provider': 'Mariam Hassan',
         'amount': '₪200',
-        'date': 'Yesterday, 2:00 PM',
-        'status': 'Pending',
+        'date': '${AppStrings.getString('yesterday', languageService.currentLanguage)}, 2:00 PM',
+        'status': AppStrings.getString('pending', languageService.currentLanguage),
         'statusColor': AppColors.warning,
       },
       {
-        'service': 'Babysitting',
+        'service': AppStrings.getString('babysitting', languageService.currentLanguage),
         'provider': 'Aisha Mohammed',
         'amount': '₪120',
-        'date': '2 days ago',
-        'status': 'Completed',
+        'date': '2 ${AppStrings.getString('daysAgo', languageService.currentLanguage)}',
+        'status': AppStrings.getString('completed', languageService.currentLanguage),
         'statusColor': AppColors.success,
       },
     ];
@@ -2256,7 +2587,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Payment History',
+          _getLocalizedString('paymentHistory'),
           style: GoogleFonts.cairo(
             fontSize: isMobile ? 18.0 : 20.0,
             fontWeight: FontWeight.w600,
@@ -2378,10 +2709,11 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   }
 
   Widget _buildReviewsSummary(bool isMobile, bool isTablet, double screenWidth) {
+    final languageService = Provider.of<LanguageService>(context, listen: false);
     final summaryCards = [
-      {'title': 'Total Reviews', 'count': '8', 'icon': Icons.rate_review, 'color': AppColors.primary},
-      {'title': 'Average Rating', 'count': '4.8', 'icon': Icons.star, 'color': AppColors.warning},
-      {'title': 'This Month', 'count': '3', 'icon': Icons.calendar_today, 'color': AppColors.success},
+      {'title': AppStrings.getString('totalReviews', languageService.currentLanguage), 'count': '8', 'icon': Icons.rate_review, 'color': AppColors.primary},
+      {'title': AppStrings.getString('averageRating', languageService.currentLanguage), 'count': '4.8', 'icon': Icons.star, 'color': AppColors.warning},
+      {'title': AppStrings.getString('thisMonth', languageService.currentLanguage), 'count': '3', 'icon': Icons.calendar_today, 'color': AppColors.success},
     ];
 
     return Wrap(
@@ -2440,29 +2772,30 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   }
 
   Widget _buildMyReviewsList(bool isMobile, bool isTablet) {
+    final languageService = Provider.of<LanguageService>(context, listen: false);
     final reviews = [
       {
         'provider': 'Fatima Al-Zahra',
-        'service': 'Home Cleaning',
+        'service': AppStrings.getString('homeCleaning', languageService.currentLanguage),
         'rating': 5.0,
         'comment': 'Excellent service! Very professional and thorough cleaning.',
-        'date': '2 days ago',
+        'date': '2 ${AppStrings.getString('daysAgo', languageService.currentLanguage)}',
         'canEdit': true,
       },
       {
         'provider': 'Mariam Hassan',
-        'service': 'Elderly Care',
+        'service': AppStrings.getString('elderlyCare', languageService.currentLanguage),
         'rating': 4.5,
         'comment': 'Very caring and attentive. Highly recommended.',
-        'date': '1 week ago',
+        'date': '1 ${AppStrings.getString('weekAgo', languageService.currentLanguage)}',
         'canEdit': false,
       },
       {
         'provider': 'Aisha Mohammed',
-        'service': 'Babysitting',
+        'service': AppStrings.getString('babysitting', languageService.currentLanguage),
         'rating': 5.0,
         'comment': 'Great with kids! Very reliable and trustworthy.',
-        'date': '2 weeks ago',
+        'date': '2 ${AppStrings.getString('weeksAgo', languageService.currentLanguage)}',
         'canEdit': false,
       },
     ];
@@ -2471,7 +2804,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'My Reviews',
+          _getLocalizedString('myReviews'),
           style: GoogleFonts.cairo(
             fontSize: isMobile ? 18.0 : 20.0,
             fontWeight: FontWeight.w600,
@@ -2537,7 +2870,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 TextButton(
                   onPressed: () {},
                   child: Text(
-                    'Edit',
+                    _getLocalizedString('edit'),
                     style: GoogleFonts.cairo(
                       fontSize: isMobile ? 14.0 : 16.0,
                       fontWeight: FontWeight.w600,
@@ -2658,7 +2991,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 ),
                 SizedBox(height: 4.0),
                 Text(
-                  'Member since January 2024',
+                  '${_getLocalizedString('membersSince')} ${_getLocalizedString('january2024')}',
                   style: GoogleFonts.cairo(
                     fontSize: isMobile ? 14.0 : 16.0,
                     fontWeight: FontWeight.w400,
@@ -2693,7 +3026,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Personal Information',
+            _getLocalizedString('personalInformation'),
             style: GoogleFonts.cairo(
               fontSize: isMobile ? 18.0 : 20.0,
               fontWeight: FontWeight.w600,
@@ -2702,13 +3035,13 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           ),
           SizedBox(height: isMobile ? 16.0 : 20.0),
           
-          _buildFormField('Full Name', 'Ahmed Hassan', Icons.person, isMobile),
+          _buildFormField(_getLocalizedString('fullName'), 'Ahmed Hassan', Icons.person, isMobile),
           SizedBox(height: 12.0),
-          _buildFormField('Email', 'ahmed@example.com', Icons.email, isMobile),
+          _buildFormField(_getLocalizedString('email'), 'ahmed@example.com', Icons.email, isMobile),
           SizedBox(height: 12.0),
-          _buildFormField('Phone', '+972 50 123 4567', Icons.phone, isMobile),
+          _buildFormField(_getLocalizedString('phoneNumber'), '+972 50 123 4567', Icons.phone, isMobile),
           SizedBox(height: 12.0),
-          _buildFormField('Date of Birth', '15 March 1985', Icons.calendar_today, isMobile),
+          _buildFormField(_getLocalizedString('dateOfBirth'), _getLocalizedString('march15'), Icons.calendar_today, isMobile),
         ],
       ),
     );
@@ -2773,7 +3106,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Saved Addresses',
+                _getLocalizedString('savedAddresses'),
                 style: GoogleFonts.cairo(
                   fontSize: isMobile ? 18.0 : 20.0,
                   fontWeight: FontWeight.w600,
@@ -2784,7 +3117,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 onPressed: () {},
                 icon: Icon(Icons.add, size: isMobile ? 16.0 : 18.0),
                 label: Text(
-                  'Add New',
+                  _getLocalizedString('addNewAddress'),
                   style: GoogleFonts.cairo(
                     fontSize: isMobile ? 14.0 : 16.0,
                     fontWeight: FontWeight.w500,
@@ -2803,9 +3136,9 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           ),
           SizedBox(height: isMobile ? 12.0 : 16.0),
           
-          _buildAddressCard('Home', '123 Main Street, Jerusalem', true, isMobile),
+          _buildAddressCard(_getLocalizedString('home'), '123 ${_getLocalizedString('mainStreet')}, ${_getLocalizedString('jerusalem')}', true, isMobile),
           SizedBox(height: 12.0),
-          _buildAddressCard('Work', '456 Business Ave, Tel Aviv', false, isMobile),
+          _buildAddressCard(_getLocalizedString('work'), '456 ${_getLocalizedString('businessF')}, ${_getLocalizedString('telAviv')}', false, isMobile),
         ],
       ),
     );
@@ -2861,7 +3194,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                'Default',
+                _getLocalizedString('defaultText'),
                 style: GoogleFonts.cairo(
                   fontSize: isMobile ? 12.0 : 14.0,
                   fontWeight: FontWeight.w600,
@@ -2886,7 +3219,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Notification Preferences',
+            _getLocalizedString('notificationPreferences'),
             style: GoogleFonts.cairo(
               fontSize: isMobile ? 18.0 : 20.0,
               fontWeight: FontWeight.w600,
@@ -2895,11 +3228,11 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           ),
           SizedBox(height: isMobile ? 12.0 : 16.0),
           
-          _buildNotificationToggle('Email Notifications', true, isMobile),
+          _buildNotificationToggle(_getLocalizedString('emailNotifications'), true, isMobile),
           SizedBox(height: 8.0),
-          _buildNotificationToggle('Push Notifications', true, isMobile),
+          _buildNotificationToggle(_getLocalizedString('pushNotifications'), true, isMobile),
           SizedBox(height: 8.0),
-          _buildNotificationToggle('SMS Notifications', false, isMobile),
+          _buildNotificationToggle(_getLocalizedString('smsNotifications'), false, isMobile),
         ],
       ),
     );
@@ -2954,10 +3287,11 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   }
 
   Widget _buildProvidersSummary(bool isMobile, bool isTablet, double screenWidth) {
+    final languageService = Provider.of<LanguageService>(context, listen: false);
     final summaryCards = [
-      {'title': 'Total Saved', 'count': '5', 'icon': Icons.favorite, 'color': AppColors.error},
-      {'title': 'Available Now', 'count': '3', 'icon': Icons.check_circle, 'color': AppColors.success},
-      {'title': 'Recently Booked', 'count': '2', 'icon': Icons.calendar_today, 'color': AppColors.primary},
+      {'title': _getLocalizedString('totalProviders'), 'count': '5', 'icon': Icons.favorite, 'color': AppColors.error},
+      {'title': _getLocalizedString('available'), 'count': '3', 'icon': Icons.check_circle, 'color': AppColors.success},
+      {'title': _getLocalizedString('recentlyBooked'), 'count': '2', 'icon': Icons.calendar_today, 'color': AppColors.primary},
     ];
 
     return Wrap(
@@ -3019,27 +3353,27 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     final providers = [
       {
         'name': 'Fatima Al-Zahra',
-        'service': 'Home Cleaning',
+        'service': _getLocalizedString('homeCleaning'),
         'rating': 4.8,
         'price': '₪150',
         'isAvailable': true,
-        'lastBooked': '2 days ago',
+        'lastBooked': _getLocalizedString('twoDaysAgo'),
       },
       {
         'name': 'Mariam Hassan',
-        'service': 'Elderly Care',
+        'service': _getLocalizedString('elderlyCare'),
         'rating': 4.9,
         'price': '₪200',
         'isAvailable': true,
-        'lastBooked': '1 week ago',
+        'lastBooked': _getLocalizedString('oneWeekAgo'),
       },
       {
         'name': 'Aisha Mohammed',
-        'service': 'Babysitting',
+        'service': _getLocalizedString('babysitting'),
         'rating': 4.7,
         'price': '₪120',
         'isAvailable': false,
-        'lastBooked': '3 weeks ago',
+        'lastBooked': _getLocalizedString('threeWeeksAgo'),
       },
     ];
 
@@ -3047,7 +3381,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Saved Providers',
+          _getLocalizedString('savedProviders'),
           style: GoogleFonts.cairo(
             fontSize: isMobile ? 18.0 : 20.0,
             fontWeight: FontWeight.w600,
@@ -3143,7 +3477,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        provider['isAvailable'] ? 'Available' : 'Busy',
+                        provider['isAvailable'] ? _getLocalizedString('available') : _getLocalizedString('unavailable'),
                         style: GoogleFonts.cairo(
                           fontSize: isMobile ? 12.0 : 14.0,
                           fontWeight: FontWeight.w600,
@@ -3155,7 +3489,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 ),
                 SizedBox(height: 4.0),
                 Text(
-                  'Last booked: ${provider['lastBooked']}',
+                  '${_getLocalizedString('lastBooked')}: ${provider['lastBooked']}',
                   style: GoogleFonts.cairo(
                     fontSize: isMobile ? 12.0 : 14.0,
                     fontWeight: FontWeight.w400,
@@ -3190,7 +3524,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                   ),
                 ),
                 child: Text(
-                  'Book Again',
+                  _getLocalizedString('bookNow'),
                   style: GoogleFonts.cairo(
                     fontSize: isMobile ? 12.0 : 14.0,
                     fontWeight: FontWeight.w600,
@@ -3261,7 +3595,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Need Help?',
+                  _getLocalizedString('needHelp'),
                   style: GoogleFonts.cairo(
                     fontSize: isMobile ? 24.0 : 28.0,
                     fontWeight: FontWeight.w700,
@@ -3270,7 +3604,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 ),
                 SizedBox(height: 4.0),
                 Text(
-                  'We\'re here to help you 24/7',
+                  _getLocalizedString('weAreHereToHelp'),
                   style: GoogleFonts.cairo(
                     fontSize: isMobile ? 14.0 : 16.0,
                     fontWeight: FontWeight.w400,
@@ -3287,17 +3621,17 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
 
   Widget _buildQuickHelp(bool isMobile, bool isTablet, double screenWidth) {
     final helpItems = [
-      {'title': 'FAQs', 'icon': Icons.help_outline, 'color': AppColors.primary},
-      {'title': 'Live Chat', 'icon': Icons.chat, 'color': AppColors.success},
-      {'title': 'Submit Ticket', 'icon': Icons.support_agent, 'color': AppColors.warning},
-      {'title': 'Call Us', 'icon': Icons.phone, 'color': AppColors.info},
+      {'title': _getLocalizedString('faq'), 'icon': Icons.help_outline, 'color': AppColors.primary},
+      {'title': _getLocalizedString('liveChat'), 'icon': Icons.chat, 'color': AppColors.success},
+      {'title': _getLocalizedString('reportIssue'), 'icon': Icons.support_agent, 'color': AppColors.warning},
+      {'title': _getLocalizedString('contactSupport'), 'icon': Icons.phone, 'color': AppColors.info},
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Quick Help',
+          _getLocalizedString('quickHelp'),
           style: GoogleFonts.cairo(
             fontSize: isMobile ? 18.0 : 20.0,
             fontWeight: FontWeight.w600,
@@ -3367,7 +3701,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Support Options',
+            _getLocalizedString('supportHelp'),
             style: GoogleFonts.cairo(
               fontSize: isMobile ? 18.0 : 20.0,
               fontWeight: FontWeight.w600,
@@ -3377,29 +3711,29 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           SizedBox(height: isMobile ? 12.0 : 16.0),
           
           _buildSupportOption(
-            'Browse FAQs',
-            'Find answers to common questions',
+            _getLocalizedString('faq'),
+            _getLocalizedString('findAnswers'),
             Icons.help_outline,
             isMobile,
           ),
           SizedBox(height: 12.0),
           _buildSupportOption(
-            'Submit Support Ticket',
-            'Create a new support request',
+            _getLocalizedString('reportIssue'),
+            _getLocalizedString('createSupportRequest'),
             Icons.support_agent,
             isMobile,
           ),
           SizedBox(height: 12.0),
           _buildSupportOption(
-            'View Previous Requests',
-            'Check status of your tickets',
+            _getLocalizedString('viewPreviousRequests'),
+            _getLocalizedString('checkTicketStatus'),
             Icons.history,
             isMobile,
           ),
           SizedBox(height: 12.0),
           _buildSupportOption(
-            'Live Chat Support',
-            'Chat with our support team',
+            _getLocalizedString('liveChat'),
+            _getLocalizedString('chatWithSupport'),
             Icons.chat,
             isMobile,
           ),
@@ -3459,15 +3793,15 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   Widget _buildRecentTickets(bool isMobile, bool isTablet) {
     final tickets = [
       {
-        'title': 'Payment Issue',
-        'status': 'Resolved',
-        'date': '2 days ago',
+        'title': _getLocalizedString('paymentIssueResolved'),
+        'status': _getLocalizedString('resolved'),
+        'date': _getLocalizedString('twoDaysAgo'),
         'statusColor': AppColors.success,
       },
       {
-        'title': 'Booking Cancellation',
-        'status': 'In Progress',
-        'date': '1 week ago',
+        'title': _getLocalizedString('bookingCancellations'),
+        'status': _getLocalizedString('inProgress'),
+        'date': _getLocalizedString('oneWeekAgo'),
         'statusColor': AppColors.warning,
       },
     ];
@@ -3476,7 +3810,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Recent Support Tickets',
+          _getLocalizedString('recentTickets'),
           style: GoogleFonts.cairo(
             fontSize: isMobile ? 18.0 : 20.0,
             fontWeight: FontWeight.w600,
@@ -3606,7 +3940,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Account Security',
+                  _getLocalizedString('accountSecurity'),
                   style: GoogleFonts.cairo(
                     fontSize: isMobile ? 24.0 : 28.0,
                     fontWeight: FontWeight.w700,
@@ -3615,7 +3949,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 ),
                 SizedBox(height: 4.0),
                 Text(
-                  'Keep your account safe and secure',
+                  _getLocalizedString('keepAccountSafe'),
                   style: GoogleFonts.cairo(
                     fontSize: isMobile ? 14.0 : 16.0,
                     fontWeight: FontWeight.w400,
@@ -3632,10 +3966,10 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
 
   Widget _buildSecurityStatus(bool isMobile, bool isTablet, double screenWidth) {
     final securityItems = [
-      {'title': 'Password', 'status': 'Strong', 'icon': Icons.lock, 'color': AppColors.success},
-      {'title': '2FA', 'status': 'Enabled', 'icon': Icons.verified_user, 'color': AppColors.success},
-      {'title': 'Login Alerts', 'status': 'Active', 'icon': Icons.notifications, 'color': AppColors.success},
-      {'title': 'Device Trust', 'status': '3 Devices', 'icon': Icons.devices, 'color': AppColors.warning},
+      {'title': _getLocalizedString('password'), 'status': _getLocalizedString('strong'), 'icon': Icons.lock, 'color': AppColors.success},
+      {'title': _getLocalizedString('twoFactorAuth'), 'status': _getLocalizedString('enabled'), 'icon': Icons.verified_user, 'color': AppColors.success},
+      {'title': _getLocalizedString('loginAlerts'), 'status': _getLocalizedString('active'), 'icon': Icons.notifications, 'color': AppColors.success},
+      {'title': _getLocalizedString('deviceTrust'), 'status': '3 ${_getLocalizedString('devices')}', 'icon': Icons.devices, 'color': AppColors.warning},
     ];
 
     return Wrap(
@@ -3705,7 +4039,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Security Settings',
+            _getLocalizedString('security'),
             style: GoogleFonts.cairo(
               fontSize: isMobile ? 18.0 : 20.0,
               fontWeight: FontWeight.w600,
@@ -3715,36 +4049,36 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           SizedBox(height: isMobile ? 12.0 : 16.0),
           
           _buildSecurityOption(
-            'Change Password',
-            'Update your account password',
+            _getLocalizedString('changePassword'),
+            _getLocalizedString('updatePassword'),
             Icons.lock,
             isMobile,
           ),
           SizedBox(height: 12.0),
           _buildSecurityOption(
-            'Two-Factor Authentication',
-            'Add an extra layer of security',
+            _getLocalizedString('twoFactorAuth'),
+            _getLocalizedString('addExtraSecurity'),
             Icons.verified_user,
             isMobile,
           ),
           SizedBox(height: 12.0),
           _buildSecurityOption(
-            'Login Alerts',
-            'Get notified of new logins',
+            _getLocalizedString('loginAlerts'),
+            _getLocalizedString('getLoginNotifications'),
             Icons.notifications,
             isMobile,
           ),
           SizedBox(height: 12.0),
           _buildSecurityOption(
-            'Trusted Devices',
-            'Manage your trusted devices',
+            _getLocalizedString('trustedDevices'),
+            _getLocalizedString('manageTrustedDevices'),
             Icons.devices,
             isMobile,
           ),
           SizedBox(height: 12.0),
           _buildSecurityOption(
-            'Delete Account',
-            'Permanently delete your account',
+            _getLocalizedString('deleteAccount'),
+            _getLocalizedString('permanentlyDeleteAccount'),
             Icons.delete_forever,
             isMobile,
             isDestructive: true,
@@ -3806,23 +4140,23 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     final logins = [
       {
         'device': 'iPhone 12',
-        'location': 'Jerusalem, Israel',
-        'time': 'Today, 10:30 AM',
-        'status': 'Current',
+        'location': '${_getLocalizedString('jerusalem')}, ${_getLocalizedString('palestine')}',
+        'time': _getLocalizedString('today830AM'),
+        'status': _getLocalizedString('current'),
         'statusColor': AppColors.success,
       },
       {
         'device': 'MacBook Pro',
-        'location': 'Tel Aviv, Israel',
-        'time': 'Yesterday, 2:15 PM',
-        'status': 'Active',
+        'location': '${_getLocalizedString('telAviv')}, ${_getLocalizedString('palestine')}',
+                  'time': '${_getLocalizedString('yesterday')}, 2:15 PM',
+        'status': _getLocalizedString('inActive'),
         'statusColor': AppColors.info,
       },
       {
         'device': 'Samsung Galaxy',
-        'location': 'Haifa, Israel',
+        'location': '${_getLocalizedString('haifa')}, ${_getLocalizedString('palestine')}',
         'time': '3 days ago',
-        'status': 'Inactive',
+        'status': _getLocalizedString('inactive'),
         'statusColor': AppColors.textSecondary,
       },
     ];
@@ -3831,7 +4165,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Login History',
+          _getLocalizedString('loginHistory'),
           style: GoogleFonts.cairo(
             fontSize: isMobile ? 18.0 : 20.0,
             fontWeight: FontWeight.w600,
