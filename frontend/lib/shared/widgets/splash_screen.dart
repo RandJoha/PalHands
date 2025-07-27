@@ -41,7 +41,7 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Consumer2<HealthService, LanguageService>(
       builder: (context, healthService, languageService, child) {
-        // Navigate directly to home when health check is successful
+        // Navigate to login when health check is successful
         if (healthService.isConnected && !healthService.isLoading) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
@@ -49,7 +49,7 @@ class _SplashScreenState extends State<SplashScreen> {
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (context) => const HomeScreen(),
+                      builder: (context) => const LoginScreen(),
           ),
         );
                 }

@@ -81,4 +81,8 @@ class AppColors {
   static const Color inProgressStatus = Color(0xFF3B82F6);
   static const Color completedStatus = Color(0xFF059669);
   static const Color cancelledStatus = Color(0xFFEF4444);
+  
+  // Admin dashboard colors
+  static const Color adminBackground = Color(0xFFF8FAFC);
+  static const Color textDark = Color(0xFF1F2937);
 } 

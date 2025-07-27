@@ -16,10 +16,12 @@ import 'features/categories/presentation/pages/category_screen.dart';
 import 'features/about/presentation/pages/about_screen.dart';
 import 'features/faqs/presentation/pages/faqs_screen.dart';
 import 'features/contact/presentation/pages/contact_screen.dart';
+import 'features/admin/presentation/pages/admin_dashboard_screen.dart';
 
 // Services
 import 'shared/services/language_service.dart';
 import 'shared/services/health_service.dart';
+import 'shared/services/auth_service.dart';
 
 // Feature imports (to be implemented)
 // import 'features/auth/presentation/bloc/auth_bloc.dart';
@@ -52,6 +54,7 @@ class PalHandsApp extends StatelessWidget {
           providers: [
             ChangeNotifierProvider(create: (context) => LanguageService()..initializeLanguage()),
             ChangeNotifierProvider(create: (context) => HealthService()),
+            ChangeNotifierProvider(create: (context) => AuthService()),
           ],
           child: Consumer<LanguageService>(
             builder: (context, languageService, child) {
@@ -110,6 +113,7 @@ class PalHandsApp extends StatelessWidget {
                   '/about': (context) => const AboutScreen(),
                   '/faqs': (context) => const FAQsScreen(),
                   '/contact': (context) => const ContactScreen(),
+                  '/admin': (context) => const AdminDashboardScreen(),
                 },
               );
             },

@@ -47,11 +47,16 @@ class _LoginScreenState extends State<LoginScreen> {
       // Test account credentials
       final testEmail = 'test@palhands.com';
       final testPassword = 'password123';
+      final adminEmail = 'admin@palhands.com';
+      final adminPassword = 'admin123';
 
       // Simulate API call delay
       Future.delayed(const Duration(seconds: 1), () {
-        if (_emailController.text == testEmail && _passwordController.text == testPassword) {
-          // Login successful - navigate to home screen
+        if (_emailController.text == adminEmail && _passwordController.text == adminPassword) {
+          // Admin login successful - navigate to admin dashboard
+          Navigator.of(context).pushReplacementNamed('/admin');
+        } else if (_emailController.text == testEmail && _passwordController.text == testPassword) {
+          // Regular user login successful - navigate to home screen
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (context) => const HomeScreen(),
@@ -62,11 +67,12 @@ class _LoginScreenState extends State<LoginScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Invalid email or password. Use test@palhands.com / password123',
+                'Invalid email or password.\n\nRegular User: test@palhands.com / password123\nAdmin: admin@palhands.com / admin123',
                 style: GoogleFonts.cairo(),
               ),
               backgroundColor: AppColors.primary,
               behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 5),
             ),
           );
         }

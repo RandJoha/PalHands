@@ -16,14 +16,14 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Static files
 app.use('/uploads', express.static('uploads'));
 
-// Routes (to be implemented)
+// Routes
 // app.use('/api/auth', require('./routes/auth'));
 // app.use('/api/users', require('./routes/users'));
 // app.use('/api/services', require('./routes/services'));
 // app.use('/api/bookings', require('./routes/bookings'));
 // app.use('/api/payments', require('./routes/payments'));
 // app.use('/api/reviews', require('./routes/reviews'));
-// app.use('/api/admin', require('./routes/admin'));
+app.use('/api/admin', require('./routes/admin'));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
