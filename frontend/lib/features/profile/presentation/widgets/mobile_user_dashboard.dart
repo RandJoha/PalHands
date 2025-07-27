@@ -389,7 +389,7 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
         fontSize: 12,
         fontWeight: FontWeight.w400,
       ),
-      currentIndex: _selectedIndex,
+      currentIndex: _selectedIndex.clamp(0, 4),
       onTap: (index) {
         if (mounted) {
           setState(() {

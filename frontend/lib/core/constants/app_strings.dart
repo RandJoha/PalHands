@@ -417,6 +417,57 @@ class AppStrings {
     'ar': 'إلغاء الحجز',
   };
 
+  // Booking Actions
+  static const Map<String, String> track = {
+    'en': 'Track',
+    'ar': 'تتبع',
+  };
+
+  static const Map<String, String> reschedule = {
+    'en': 'Reschedule',
+    'ar': 'إعادة جدولة',
+  };
+
+  // Service Names
+  static const Map<String, String> homeCleaning = {
+    'en': 'Home Cleaning',
+    'ar': 'تنظيف المنزل',
+  };
+
+  // Provider Names
+  static const Map<String, String> fatimaAlZahra = {
+    'en': 'Fatima Al-Zahra',
+    'ar': 'فاطمة الزهراء',
+  };
+
+  static const Map<String, String> mariamHassan = {
+    'en': 'Mariam Hassan',
+    'ar': 'مريم حسن',
+  };
+
+  static const Map<String, String> aishaMohammed = {
+    'en': 'Aisha Mohammed',
+    'ar': 'عائشة محمد',
+  };
+
+  // Date/Time Formats
+  static const Map<String, String> tomorrow10AM = {
+    'en': 'Tomorrow, 10:00 AM',
+    'ar': 'غداً، 10:00 صباحاً',
+  };
+
+  static const Map<String, String> friday2PM = {
+    'en': 'Friday, 2:00 PM',
+    'ar': 'الجمعة، 2:00 مساءً',
+  };
+
+  static const Map<String, String> yesterday3PM = {
+    'en': 'Yesterday, 3:00 PM',
+    'ar': 'أمس، 3:00 مساءً',
+  };
+
+
+
   // Profile
   static const Map<String, String> editProfile = {
     'en': 'Edit Profile',
@@ -788,6 +839,33 @@ class AppStrings {
   static const Map<String, String> jericho = {
     'en': 'Jericho',
     'ar': 'أريحا',
+  };
+
+  // Additional Cities
+  static const Map<String, String> telAviv = {
+    'en': 'Nablus',
+    'ar': 'نابلس',
+  };
+
+  static const Map<String, String> haifa = {
+    'en': 'Haifa',
+    'ar': 'حيفا',
+  };
+
+  // Street Names
+  static const Map<String, String> mainStreet = {
+    'en': 'Main Street',
+    'ar': 'الشارع الرئيسي',
+  };
+
+  static const Map<String, String> oakAvenue = {
+    'en': 'Oak Avenue',
+    'ar': 'شارع البلوط',
+  };
+
+  static const Map<String, String> pineRoad = {
+    'en': 'Pine Road',
+    'ar': 'طريق الصنوبر',
   };
 
   // Person/People strings
@@ -2439,6 +2517,26 @@ class AppStrings {
     'ar': 'ساعة مضت',
   };
 
+  static const Map<String, String> daysAgo = {
+    'en': 'days ago',
+    'ar': 'أيام مضت',
+  };
+
+  static const Map<String, String> willArriveIn = {
+    'en': 'I will arrive in 10 minutes',
+    'ar': 'سأصل خلال 10 دقائق',
+  };
+
+  static const Map<String, String> thankYouForBooking = {
+    'en': 'Thank you for the booking',
+    'ar': 'شكراً لك على الحجز',
+  };
+
+  static const Map<String, String> childrenDoingGreat = {
+    'en': 'The children are doing great',
+    'ar': 'الأطفال بخير',
+  };
+
   static const Map<String, String> stable = {
     'en': 'Stable',
     'ar': 'مستقر',
@@ -2742,6 +2840,695 @@ class AppStrings {
     'ar': 'ملغي',
   };
 
+  // Booking filter strings
+  static const Map<String, String> all = {
+    'en': 'All',
+    'ar': 'الكل',
+  };
+
+  static const Map<String, String> upcoming = {
+    'en': 'Upcoming',
+    'ar': 'قادم',
+  };
+
+  // Booking action strings
+  static const Map<String, String> cancel = {
+    'en': 'Cancel',
+    'ar': 'إلغاء',
+  };
+
+  static const Map<String, String> contact = {
+    'en': 'Contact',
+    'ar': 'تواصل',
+  };
+
+  // Payment strings
+  static const Map<String, String> totalSpent = {
+    'en': 'Total Spent',
+    'ar': 'إجمالي الإنفاق',
+  };
+
+  static const Map<String, String> thisMonth = {
+    'en': 'This Month',
+    'ar': 'هذا الشهر',
+  };
+
+  static const Map<String, String> paymentMethods = {
+    'en': 'Payment Methods',
+    'ar': 'طرق الدفع',
+  };
+
+  static const Map<String, String> addNew = {
+    'en': 'Add New',
+    'ar': 'إضافة جديد',
+  };
+
+  static const Map<String, String> defaultText = {
+    'en': 'Default',
+    'ar': 'افتراضي',
+  };
+
+  static const Map<String, String> connected = {
+    'en': 'Connected',
+    'ar': 'متصل',
+  };
+
+  static const Map<String, String> paymentHistory = {
+    'en': 'Payment History',
+    'ar': 'سجل المدفوعات',
+  };
+
+  static const Map<String, String> visaEndingIn = {
+    'en': 'Visa ending in 1234',
+    'ar': 'فيزا تنتهي بـ 1234',
+  };
+
+  static const Map<String, String> paypal = {
+    'en': 'PayPal',
+    'ar': 'باي بال',
+  };
+
+  // Payment status and date strings
+  static const Map<String, String> today = {
+    'en': 'Today',
+    'ar': 'اليوم',
+  };
+
+  static const Map<String, String> yesterday = {
+    'en': 'Yesterday',
+    'ar': 'أمس',
+  };
+
+  static const Map<String, String> at = {
+    'en': 'at',
+    'ar': 'في',
+  };
+
+  // Review strings
+  static const Map<String, String> totalReviews = {
+    'en': 'Total Reviews',
+    'ar': 'إجمالي التقييمات',
+  };
+
+  static const Map<String, String> averageRating = {
+    'en': 'Average Rating',
+    'ar': 'متوسط التقييم',
+  };
+
+  static const Map<String, String> myReviews = {
+    'en': 'My Reviews',
+    'ar': 'تقييماتي',
+  };
+
+  static const Map<String, String> weekAgo = {
+    'en': 'week ago',
+    'ar': 'أسبوع مضى',
+  };
+
+  static const Map<String, String> weeksAgo = {
+    'en': 'weeks ago',
+    'ar': 'أسابيع مضت',
+  };
+
+  // Profile Settings strings
+  static const Map<String, String> profileSettings = {
+    'en': 'Profile Settings',
+    'ar': 'إعدادات الملف الشخصي',
+  };
+
+  static const Map<String, String> personalInformation = {
+    'en': 'Personal Information',
+    'ar': 'المعلومات الشخصية',
+  };
+
+
+
+  static const Map<String, String> saveChanges = {
+    'en': 'Save Changes',
+    'ar': 'حفظ التغييرات',
+  };
+
+  static const Map<String, String> savedAddresses = {
+    'en': 'Saved Addresses',
+    'ar': 'العناوين المحفوظة',
+  };
+
+  static const Map<String, String> addNewAddress = {
+    'en': 'Add New Address',
+    'ar': 'إضافة عنوان جديد',
+  };
+
+  static const Map<String, String> notificationPreferences = {
+    'en': 'Notification Preferences',
+    'ar': 'تفضيلات الإشعارات',
+  };
+
+  static const Map<String, String> emailNotifications = {
+    'en': 'Email Notifications',
+    'ar': 'إشعارات البريد الإلكتروني',
+  };
+
+  static const Map<String, String> pushNotifications = {
+    'en': 'Push Notifications',
+    'ar': 'الإشعارات الفورية',
+  };
+
+  static const Map<String, String> smsNotifications = {
+    'en': 'SMS Notifications',
+    'ar': 'إشعارات الرسائل النصية',
+  };
+
+  // Saved Providers strings
+  static const Map<String, String> savedProviders = {
+    'en': 'Saved Providers',
+    'ar': 'مقدمي الخدمات المحفوظون',
+  };
+
+  static const Map<String, String> totalProviders = {
+    'en': 'Total Providers',
+    'ar': 'إجمالي مقدمي الخدمات',
+  };
+
+  static const Map<String, String> available = {
+    'en': 'Available',
+    'ar': 'متاح',
+  };
+
+  static const Map<String, String> unavailable = {
+    'en': 'Unavailable',
+    'ar': 'غير متاح',
+  };
+
+  static const Map<String, String> remove = {
+    'en': 'Remove',
+    'ar': 'إزالة',
+  };
+
+  // Support Help strings
+  static const Map<String, String> supportHelp = {
+    'en': 'Support & Help',
+    'ar': 'الدعم والمساعدة',
+  };
+
+  static const Map<String, String> quickHelp = {
+    'en': 'Quick Help',
+    'ar': 'مساعدة سريعة',
+  };
+
+  static const Map<String, String> contactSupport = {
+    'en': 'Contact Support',
+    'ar': 'تواصل مع الدعم',
+  };
+
+  static const Map<String, String> faq = {
+    'en': 'FAQ',
+    'ar': 'الأسئلة الشائعة',
+  };
+
+
+
+  static const Map<String, String> reportIssue = {
+    'en': 'Report Issue',
+    'ar': 'الإبلاغ عن مشكلة',
+  };
+
+  static const Map<String, String> recentTickets = {
+    'en': 'Recent Tickets',
+    'ar': 'التذاكر الحديثة',
+  };
+
+  static const Map<String, String> open = {
+    'en': 'Open',
+    'ar': 'مفتوح',
+  };
+
+  static const Map<String, String> closed = {
+    'en': 'Closed',
+    'ar': 'مغلق',
+  };
+
+  // Security strings
+  static const Map<String, String> security = {
+    'en': 'Security',
+    'ar': 'الأمان',
+  };
+
+  static const Map<String, String> securityStatus = {
+    'en': 'Security Status',
+    'ar': 'حالة الأمان',
+  };
+
+  static const Map<String, String> strong = {
+    'en': 'Strong',
+    'ar': 'قوي',
+  };
+
+  static const Map<String, String> changePassword = {
+    'en': 'Change Password',
+    'ar': 'تغيير كلمة المرور',
+  };
+
+  static const Map<String, String> twoFactorAuth = {
+    'en': 'Two-Factor Authentication',
+    'ar': 'المصادقة الثنائية',
+  };
+
+  static const Map<String, String> enabled = {
+    'en': 'Enabled',
+    'ar': 'مفعل',
+  };
+
+  static const Map<String, String> disabled = {
+    'en': 'Disabled',
+    'ar': 'معطل',
+  };
+
+  static const Map<String, String> loginHistory = {
+    'en': 'Login History',
+    'ar': 'سجل تسجيل الدخول',
+  };
+
+  static const Map<String, String> accountSettings = {
+    'en': 'Account Settings',
+    'ar': 'إعدادات الحساب',
+  };
+
+  static const Map<String, String> deactivateAccount = {
+    'en': 'Deactivate Account',
+    'ar': 'إلغاء تفعيل الحساب',
+  };
+
+  static const Map<String, String> deleteAccount = {
+    'en': 'Delete Account',
+    'ar': 'حذف الحساب',
+  };
+
+  // Additional strings for complete translation
+  static const Map<String, String> dateOfBirth = {
+    'en': 'Date of Birth',
+    'ar': 'تاريخ الميلاد',
+  };
+
+  static const Map<String, String> recentlyBooked = {
+    'en': 'Recently Booked',
+    'ar': 'حجوزات حديثة',
+  };
+
+  static const Map<String, String> findAnswers = {
+    'en': 'Find answers to common questions',
+    'ar': 'اعثر على إجابات للأسئلة الشائعة',
+  };
+
+  static const Map<String, String> createSupportRequest = {
+    'en': 'Create a new support request',
+    'ar': 'إنشاء طلب دعم جديد',
+  };
+
+  static const Map<String, String> viewPreviousRequests = {
+    'en': 'View Previous Requests',
+    'ar': 'عرض الطلبات السابقة',
+  };
+
+  static const Map<String, String> checkTicketStatus = {
+    'en': 'Check status of your tickets',
+    'ar': 'تحقق من حالة تذاكرك',
+  };
+
+  static const Map<String, String> chatWithSupport = {
+    'en': 'Chat with our support team',
+    'ar': 'دردشة مع فريق الدعم',
+  };
+
+  static const Map<String, String> loginAlerts = {
+    'en': 'Login Alerts',
+    'ar': 'تنبيهات تسجيل الدخول',
+  };
+
+  static const Map<String, String> deviceTrust = {
+    'en': 'Device Trust',
+    'ar': 'ثقة الجهاز',
+  };
+
+  static const Map<String, String> devices = {
+    'en': 'Devices',
+    'ar': 'الأجهزة',
+  };
+
+  static const Map<String, String> updatePassword = {
+    'en': 'Update your account password',
+    'ar': 'تحديث كلمة مرور حسابك',
+  };
+
+  static const Map<String, String> addExtraSecurity = {
+    'en': 'Add an extra layer of security',
+    'ar': 'إضافة طبقة أمان إضافية',
+  };
+
+  static const Map<String, String> getLoginNotifications = {
+    'en': 'Get notified of new logins',
+    'ar': 'احصل على إشعارات بتسجيلات الدخول الجديدة',
+  };
+
+  static const Map<String, String> trustedDevices = {
+    'en': 'Trusted Devices',
+    'ar': 'الأجهزة الموثوقة',
+  };
+
+  static const Map<String, String> manageTrustedDevices = {
+    'en': 'Manage your trusted devices',
+    'ar': 'إدارة أجهزتك الموثوقة',
+  };
+
+  static const Map<String, String> permanentlyDeleteAccount = {
+    'en': 'Permanently Delete Account',
+    'ar': 'حذف الحساب نهائياً',
+  };
+
+  // Additional missing strings for complete translation
+  static const Map<String, String> membersSince = {
+    'en': 'Members since',
+    'ar': 'عضو منذ',
+  };
+
+  static const Map<String, String> march15 = {
+    'en': 'March 15, 1998',
+    'ar': '15 اذار 1998',
+  };
+
+  static const Map<String, String> businessF = {
+    'en': 'Business F',
+    'ar': 'الأعمال ف',
+  };
+
+  static const Map<String, String> dellaBia = {
+    'en': 'Della Bia',
+    'ar': 'ديلا بيا',
+  };
+
+  static const Map<String, String> f456 = {
+    'en': 'F456',
+    'ar': 'ف456',
+  };
+
+  static const Map<String, String> lastBook = {
+    'en': 'Last Book',
+    'ar': 'آخر حجز',
+  };
+
+  static const Map<String, String> twoDaysAgo = {
+    'en': 'Two days ago',
+    'ar': 'قبل يومين',
+  };
+
+  static const Map<String, String> oneWeekAgo = {
+    'en': 'One week ago',
+    'ar': 'قبل أسبوع',
+  };
+
+  static const Map<String, String> threeWeeksAgo = {
+    'en': 'Three weeks ago',
+    'ar': 'قبل ثلاثة أسابيع',
+  };
+
+  static const Map<String, String> needHelp = {
+    'en': 'Need help?',
+    'ar': 'تحتاج مساعدة؟',
+  };
+
+  static const Map<String, String> weAreHereToHelp = {
+    'en': 'We are here to help you 24/7',
+    'ar': 'نحن هنا لمساعدتك على مدار الساعة',
+  };
+
+  static const Map<String, String> paymentIssueResolved = {
+    'en': 'Payment issue resolved',
+    'ar': 'تم حل مشكلة الدفع',
+  };
+
+  static const Map<String, String> bookingCancellations = {
+    'en': 'Booking cancellations',
+    'ar': 'إلغاءات الحجز',
+  };
+
+  static const Map<String, String> inProgress = {
+    'en': 'In progress',
+    'ar': 'قيد التنفيذ',
+  };
+
+  static const Map<String, String> today830AM = {
+    'en': 'Today 8:30 AM',
+    'ar': 'اليوم 8:30 صباحاً',
+  };
+
+  static const Map<String, String> current = {
+    'en': 'Current',
+    'ar': 'الحالي',
+  };
+
+  static const Map<String, String> inActive = {
+    'en': 'In Active',
+    'ar': 'نشط',
+  };
+
+  static const Map<String, String> palestine = {
+    'en': 'Palestine',
+    'ar': 'فلسطين',
+  };
+
+  // Month translations - Arabic names
+  static const Map<String, String> january = {
+    'en': 'January',
+    'ar': 'كانون الثاني',
+  };
+
+  static const Map<String, String> february = {
+    'en': 'February',
+    'ar': 'شباط',
+  };
+
+  static const Map<String, String> march = {
+    'en': 'March',
+    'ar': 'اذار',
+  };
+
+  static const Map<String, String> april = {
+    'en': 'April',
+    'ar': 'نيسان',
+  };
+
+  static const Map<String, String> may = {
+    'en': 'May',
+    'ar': 'أيار',
+  };
+
+  static const Map<String, String> june = {
+    'en': 'June',
+    'ar': 'حزيران',
+  };
+
+  static const Map<String, String> july = {
+    'en': 'July',
+    'ar': 'تموز',
+  };
+
+  static const Map<String, String> august = {
+    'en': 'August',
+    'ar': 'آب',
+  };
+
+  static const Map<String, String> september = {
+    'en': 'September',
+    'ar': 'أيلول',
+  };
+
+  static const Map<String, String> october = {
+    'en': 'October',
+    'ar': 'تشرين الأول',
+  };
+
+  static const Map<String, String> november = {
+    'en': 'November',
+    'ar': 'تشرين الثاني',
+  };
+
+  static const Map<String, String> december = {
+    'en': 'December',
+    'ar': 'كانون الأول',
+  };
+
+
+
+
+
+  // January 2024 translation
+  static const Map<String, String> january2024 = {
+    'en': 'January 2024',
+    'ar': 'كانون الثاني 2024',
+  };
+
+  // Additional missing translations
+  static const Map<String, String> bookAgain = {
+    'en': 'Book Again',
+    'ar': 'احجز مرة أخرى',
+  };
+
+  static const Map<String, String> scheduleNewService = {
+    'en': 'Schedule new service',
+    'ar': 'جدولة خدمة جديدة',
+  };
+
+  static const Map<String, String> serviceCompleted = {
+    'en': 'The service is completed',
+    'ar': 'تم إكمال الخدمة',
+  };
+
+  static const Map<String, String> address = {
+    'en': 'Address',
+    'ar': 'العنوان',
+  };
+
+  // Efficient Time Translation System
+  static const Map<String, String> timeAgo = {
+    'en': 'ago',
+    'ar': 'مضى',
+  };
+
+  static const Map<String, String> justNow = {
+    'en': 'Just now',
+    'ar': 'الآن',
+  };
+
+  // Number translations for time periods
+  static const Map<String, String> one = {
+    'en': '1',
+    'ar': 'واحد',
+  };
+
+  static const Map<String, String> two = {
+    'en': '2',
+    'ar': 'اثنان',
+  };
+
+  static const Map<String, String> three = {
+    'en': '3',
+    'ar': 'ثلاثة',
+  };
+
+  // Time unit translations
+  static const Map<String, String> second = {
+    'en': 'second',
+    'ar': 'ثانية',
+  };
+
+  static const Map<String, String> seconds = {
+    'en': 'seconds',
+    'ar': 'ثواني',
+  };
+
+  static const Map<String, String> minute = {
+    'en': 'minute',
+    'ar': 'دقيقة',
+  };
+
+  static const Map<String, String> minutes = {
+    'en': 'minutes',
+    'ar': 'دقائق',
+  };
+
+  static const Map<String, String> hour = {
+    'en': 'hour',
+    'ar': 'ساعة',
+  };
+
+  static const Map<String, String> hours = {
+    'en': 'hours',
+    'ar': 'ساعات',
+  };
+
+  static const Map<String, String> day = {
+    'en': 'day',
+    'ar': 'يوم',
+  };
+
+  static const Map<String, String> days = {
+    'en': 'days',
+    'ar': 'أيام',
+  };
+
+  static const Map<String, String> week = {
+    'en': 'week',
+    'ar': 'أسبوع',
+  };
+
+  static const Map<String, String> weeks = {
+    'en': 'weeks',
+    'ar': 'أسابيع',
+  };
+
+  static const Map<String, String> month = {
+    'en': 'month',
+    'ar': 'شهر',
+  };
+
+  static const Map<String, String> months = {
+    'en': 'months',
+    'ar': 'أشهر',
+  };
+
+  static const Map<String, String> year = {
+    'en': 'year',
+    'ar': 'سنة',
+  };
+
+  static const Map<String, String> years = {
+    'en': 'years',
+    'ar': 'سنوات',
+  };
+
+  // Helper method to get time ago string efficiently
+  static String getTimeAgo(int value, String unit, String languageCode) {
+    if (value == 0) {
+      return getString('justNow', languageCode);
+    }
+
+    String numberStr = value.toString();
+    String unitStr;
+    
+    // Get the appropriate unit (singular or plural)
+    if (value == 1) {
+      unitStr = getString(unit, languageCode);
+    } else {
+      unitStr = getString('${unit}s', languageCode);
+    }
+
+    // For Arabic, we use a different format
+    if (languageCode == 'ar') {
+      if (value == 1) {
+        return 'قبل $unitStr';
+      } else if (value == 2) {
+        return 'قبل $unitStr';
+      } else {
+        return 'قبل $numberStr $unitStr';
+      }
+    } else {
+      // English format
+      return '$value $unitStr ago';
+    }
+  }
+
+  // Helper method to get month name
+  static String getMonthName(int month, String languageCode) {
+    final months = [
+      'january', 'february', 'march', 'april', 'may', 'june',
+      'july', 'august', 'september', 'october', 'november', 'december'
+    ];
+    
+    if (month >= 1 && month <= 12) {
+      return getString(months[month - 1], languageCode);
+    }
+    return '';
+  }
+
   // Helper method to get localized string
   static String getString(String key, String languageCode) {
     final Map<String, Map<String, String>> allStrings = {
@@ -2826,6 +3613,116 @@ class AppStrings {
       'myBookings': myBookings,
       'bookNow': bookNow,
       'cancelBooking': cancelBooking,
+      // Booking Actions
+      'track': track,
+      'reschedule': reschedule,
+      'cancel': cancel,
+      'contact': contact,
+      // Booking Filters
+      'all': all,
+      'upcoming': upcoming,
+      // Payment strings
+      'totalSpent': totalSpent,
+      'thisMonth': thisMonth,
+      'pending': pending,
+      'paymentMethods': paymentMethods,
+      'addNew': addNew,
+      'defaultText': defaultText,
+      'connected': connected,
+      'paymentHistory': paymentHistory,
+      'visaEndingIn': visaEndingIn,
+      'paypal': paypal,
+      'completed': completed,
+      'today': today,
+      'yesterday': yesterday,
+      'daysAgo': daysAgo,
+      'at': at,
+      'totalReviews': totalReviews,
+      'averageRating': averageRating,
+      'myReviews': myReviews,
+      'edit': edit,
+      'weekAgo': weekAgo,
+      'weeksAgo': weeksAgo,
+      // Profile Settings strings
+      'profileSettings': profileSettings,
+      'personalInformation': personalInformation,
+
+      'saveChanges': saveChanges,
+      'savedAddresses': savedAddresses,
+      'addNewAddress': addNewAddress,
+      'notificationPreferences': notificationPreferences,
+      'emailNotifications': emailNotifications,
+      'pushNotifications': pushNotifications,
+      'smsNotifications': smsNotifications,
+      // Saved Providers strings
+      'savedProviders': savedProviders,
+      'totalProviders': totalProviders,
+      'available': available,
+      'unavailable': unavailable,
+      'bookNow': bookNow,
+      'remove': remove,
+      // Support Help strings
+      'supportHelp': supportHelp,
+      'quickHelp': quickHelp,
+      'contactSupport': contactSupport,
+      'faq': faq,
+      'liveChat': liveChat,
+      'reportIssue': reportIssue,
+      'recentTickets': recentTickets,
+      'open': open,
+      'closed': closed,
+      // Security strings
+      'security': security,
+      'securityStatus': securityStatus,
+      'strong': strong,
+      'changePassword': changePassword,
+      'twoFactorAuth': twoFactorAuth,
+      'enabled': enabled,
+      'disabled': disabled,
+      'loginHistory': loginHistory,
+      'accountSettings': accountSettings,
+      'deactivateAccount': deactivateAccount,
+      'deleteAccount': deleteAccount,
+      // Additional strings for complete translation
+      'dateOfBirth': dateOfBirth,
+      'recentlyBooked': recentlyBooked,
+      'findAnswers': findAnswers,
+      'createSupportRequest': createSupportRequest,
+      'viewPreviousRequests': viewPreviousRequests,
+      'checkTicketStatus': checkTicketStatus,
+      'chatWithSupport': chatWithSupport,
+      'loginAlerts': loginAlerts,
+      'deviceTrust': deviceTrust,
+      'devices': devices,
+      'updatePassword': updatePassword,
+      'addExtraSecurity': addExtraSecurity,
+      'getLoginNotifications': getLoginNotifications,
+      'trustedDevices': trustedDevices,
+      'manageTrustedDevices': manageTrustedDevices,
+      'permanentlyDeleteAccount': permanentlyDeleteAccount,
+      // Service Names
+      'homeCleaning': homeCleaning,
+      // Provider Names
+      'fatimaAlZahra': fatimaAlZahra,
+      'mariamHassan': mariamHassan,
+      'aishaMohammed': aishaMohammed,
+      // Date/Time Formats
+      'tomorrow10AM': tomorrow10AM,
+      'friday2PM': friday2PM,
+      'yesterday3PM': yesterday3PM,
+      // Address strings
+      'jerusalem': jerusalem,
+      'telAviv': telAviv,
+      'haifa': haifa,
+      'mainStreet': mainStreet,
+      'oakAvenue': oakAvenue,
+      'pineRoad': pineRoad,
+      // Additional Chat strings
+      'daysAgo': daysAgo,
+      'willArriveIn': willArriveIn,
+      'thankYouForBooking': thankYouForBooking,
+      'childrenDoingGreat': childrenDoingGreat,
+
       'editProfile': editProfile,
       'personalInfo': personalInfo,
       'firstName': firstName,
@@ -2893,7 +3790,6 @@ class AppStrings {
         'whereDoYouPreferToGetService': whereDoYouPreferToGetService,
         'pleaseSelectLocation': pleaseSelectLocation,
         // Palestinian Cities
-        'jerusalem': jerusalem,
         'ramallah': ramallah,
         'nablus': nablus,
         'hebron': hebron,
@@ -3314,6 +4210,64 @@ class AppStrings {
       'amount': amount,
       'confirmed': confirmed,
       'cancelled': cancelled,
+      'membersSince': membersSince,
+      'march15': march15,
+      'businessF': businessF,
+      'dellaBia': dellaBia,
+      'f456': f456,
+      'lastBook': lastBook,
+      'twoDaysAgo': twoDaysAgo,
+      'oneWeekAgo': oneWeekAgo,
+      'threeWeeksAgo': threeWeeksAgo,
+      'needHelp': needHelp,
+      'weAreHereToHelp': weAreHereToHelp,
+      'paymentIssueResolved': paymentIssueResolved,
+      'bookingCancellations': bookingCancellations,
+      'inProgress': inProgress,
+      'today830AM': today830AM,
+      'current': current,
+      'inActive': inActive,
+      'palestine': palestine,
+      // Month translations
+      'january': january,
+      'february': february,
+      'march': march,
+      'april': april,
+      'may': may,
+      'june': june,
+      'july': july,
+      'august': august,
+      'september': september,
+      'october': october,
+      'november': november,
+      'december': december,
+      // Date translations
+      'january2024': january2024,
+      // Additional translations
+      'bookAgain': bookAgain,
+      'scheduleNewService': scheduleNewService,
+      'serviceCompleted': serviceCompleted,
+      'address': address,
+      // Time translation system
+      'timeAgo': timeAgo,
+      'justNow': justNow,
+      'one': one,
+      'two': two,
+      'three': three,
+      'second': second,
+      'seconds': seconds,
+      'minute': minute,
+      'minutes': minutes,
+      'hour': hour,
+      'hours': hours,
+      'day': day,
+      'days': days,
+      'week': week,
+      'weeks': weeks,
+      'month': month,
+      'months': months,
+      'year': year,
+      'years': years,
     };
 
     return allStrings[key]?[languageCode] ?? allStrings[key]?['en'] ?? key;
