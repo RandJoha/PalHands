@@ -107,7 +107,7 @@ class PalHandsApp extends StatelessWidget {
               ),
             ),
           ),
-                home: const UserDashboardScreen(),
+                home: const SplashScreen(),
                 routes: {
                   '/home': (context) => const HomeScreen(),
                   '/categories': (context) => const CategoryScreen(),

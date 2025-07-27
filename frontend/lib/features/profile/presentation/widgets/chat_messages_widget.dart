@@ -44,13 +44,13 @@ class _ChatMessagesWidgetState extends State<ChatMessagesWidget> {
           SizedBox(height: 24.h),
           
           // Chat threads
-          _buildChatThreads(languageService),
+          _buildChatThreads(),
         ],
       ),
     );
   }
 
-  Widget _buildChatThreads(LanguageService languageService) {
+  Widget _buildChatThreads() {
     return Column(
       children: [
         _buildChatThread(
@@ -71,10 +71,10 @@ class _ChatMessagesWidgetState extends State<ChatMessagesWidget> {
         SizedBox(height: 12.h),
         _buildChatThread(
           providerName: 'Aisha Mohammed',
-                      lastMessage: AppStrings.getString('serviceCompleted', languageService.currentLanguage),
-          time: AppStrings.getString('yesterday', languageService.currentLanguage),
+          lastMessage: 'The service is completed',
+          time: 'Yesterday',
           unreadCount: 0,
-                      serviceName: AppStrings.getString('babysitting', languageService.currentLanguage),
+          serviceName: 'Babysitting',
         ),
       ],
     );

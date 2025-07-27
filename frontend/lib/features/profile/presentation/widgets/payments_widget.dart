@@ -44,28 +44,28 @@ class _PaymentsWidgetState extends State<PaymentsWidget> {
           SizedBox(height: 24.h),
           
           // Payment history
-          _buildPaymentHistory(languageService),
+          _buildPaymentHistory(),
         ],
       ),
     );
   }
 
-  Widget _buildPaymentHistory(LanguageService languageService) {
+  Widget _buildPaymentHistory() {
     return Column(
       children: [
         _buildPaymentItem(
-          serviceName: AppStrings.getString('homeCleaning', languageService.currentLanguage),
+          serviceName: 'Home Cleaning',
           amount: '₪150',
-          date: AppStrings.getString('today', languageService.currentLanguage),
-          status: AppStrings.getString('completed', languageService.currentLanguage),
+          date: 'Today',
+          status: 'Completed',
           method: 'Credit Card',
         ),
         SizedBox(height: 12.h),
         _buildPaymentItem(
-          serviceName: AppStrings.getString('elderlyCare', languageService.currentLanguage),
+          serviceName: 'Elderly Care',
           amount: '₪200',
-          date: AppStrings.getString('yesterday', languageService.currentLanguage),
-          status: AppStrings.getString('pending', languageService.currentLanguage),
+          date: 'Yesterday',
+          status: 'Pending',
           method: 'Cash',
         ),
       ],

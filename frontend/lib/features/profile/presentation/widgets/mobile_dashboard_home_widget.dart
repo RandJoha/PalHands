@@ -495,8 +495,8 @@ class _MobileDashboardHomeWidgetState extends State<MobileDashboardHomeWidget> {
         const SizedBox(height: 12),
         _buildActionCard(
           icon: Icons.add_circle,
-                            title: AppStrings.getString('bookAgain', languageService.currentLanguage),
-                      subtitle: AppStrings.getString('scheduleNewService', languageService.currentLanguage),
+          title: 'Book Again',
+          subtitle: 'Schedule new service',
           color: AppColors.primary,
           onTap: () {
             // Navigate to booking

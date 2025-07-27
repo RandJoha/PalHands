@@ -33,7 +33,7 @@ class _MobileProfileSettingsWidgetState extends State<MobileProfileSettingsWidge
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppStrings.getString('profileSettings', languageService.currentLanguage),
+            'Profile Settings',
             style: GoogleFonts.cairo(
               fontSize: 24,
               color: AppColors.textPrimary,
@@ -43,13 +43,13 @@ class _MobileProfileSettingsWidgetState extends State<MobileProfileSettingsWidge
           const SizedBox(height: 20),
           
           // Profile form
-          _buildProfileForm(languageService),
+          _buildProfileForm(),
         ],
       ),
     );
   }
 
-  Widget _buildProfileForm(LanguageService languageService) {
+  Widget _buildProfileForm() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -101,13 +101,13 @@ class _MobileProfileSettingsWidgetState extends State<MobileProfileSettingsWidge
           const SizedBox(height: 24),
           
           // Form fields
-          _buildFormField(AppStrings.getString('fullName', languageService.currentLanguage), 'Ahmed Hassan'),
+          _buildFormField('Full Name', 'Ahmed Hassan'),
           const SizedBox(height: 16),
-                      _buildFormField(AppStrings.getString('email', languageService.currentLanguage), 'ahmed@example.com'),
+          _buildFormField('Email', 'ahmed@example.com'),
           const SizedBox(height: 16),
-                      _buildFormField(AppStrings.getString('phone', languageService.currentLanguage), '+970 59 123 4567'),
+          _buildFormField('Phone', '+970 59 123 4567'),
           const SizedBox(height: 16),
-                      _buildFormField(AppStrings.getString('address', languageService.currentLanguage), 'Ramallah, Palestine'),
+          _buildFormField('Address', 'Ramallah, Palestine'),
           const SizedBox(height: 24),
           
           // Save button

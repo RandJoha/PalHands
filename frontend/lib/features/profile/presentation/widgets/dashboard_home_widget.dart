@@ -478,8 +478,8 @@ class _DashboardHomeWidgetState extends State<DashboardHomeWidget> {
             Expanded(
               child: _buildActionCard(
                 icon: Icons.add_circle,
-                                  title: AppStrings.getString('bookAgain', languageService.currentLanguage),
-                                  subtitle: AppStrings.getString('scheduleNewService', languageService.currentLanguage),
+                title: 'Book Again',
+                subtitle: 'Schedule new service',
                 color: AppColors.primary,
                 onTap: () {
                   // Navigate to booking

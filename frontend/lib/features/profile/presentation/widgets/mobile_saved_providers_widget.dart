@@ -33,7 +33,7 @@ class _MobileSavedProvidersWidgetState extends State<MobileSavedProvidersWidget>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppStrings.getString('savedProviders', languageService.currentLanguage),
+            'Saved Providers',
             style: GoogleFonts.cairo(
               fontSize: 24,
               color: AppColors.textPrimary,
@@ -43,40 +43,37 @@ class _MobileSavedProvidersWidgetState extends State<MobileSavedProvidersWidget>
           const SizedBox(height: 20),
           
           // Providers list
-          _buildProvidersList(languageService),
+          _buildProvidersList(),
         ],
       ),
     );
   }
 
-  Widget _buildProvidersList(LanguageService languageService) {
+  Widget _buildProvidersList() {
     return Column(
       children: [
         _buildProviderItem(
           name: 'Fatima Al-Zahra',
-          service: AppStrings.getString('homeCleaning', languageService.currentLanguage),
+          service: 'Home Cleaning',
           rating: 4.8,
           price: '₪150',
           isAvailable: true,
-          languageService: languageService,
         ),
         const SizedBox(height: 16),
         _buildProviderItem(
           name: 'Mariam Hassan',
-          service: AppStrings.getString('elderlyCare', languageService.currentLanguage),
+          service: 'Elderly Care',
           rating: 4.9,
           price: '₪200',
           isAvailable: true,
-          languageService: languageService,
         ),
         const SizedBox(height: 16),
         _buildProviderItem(
           name: 'Aisha Mohammed',
-          service: AppStrings.getString('babysitting', languageService.currentLanguage),
+          service: 'Babysitting',
           rating: 4.7,
           price: '₪120',
           isAvailable: false,
-          languageService: languageService,
         ),
       ],
     );
@@ -88,7 +85,6 @@ class _MobileSavedProvidersWidgetState extends State<MobileSavedProvidersWidget>
     required double rating,
     required String price,
     required bool isAvailable,
-    required LanguageService languageService,
   }) {
     return Container(
       width: double.infinity,
@@ -163,7 +159,7 @@ class _MobileSavedProvidersWidgetState extends State<MobileSavedProvidersWidget>
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        isAvailable ? AppStrings.getString('available', languageService.currentLanguage) : AppStrings.getString('unavailable', languageService.currentLanguage),
+                        isAvailable ? 'Available' : 'Busy',
                         style: GoogleFonts.cairo(
                           fontSize: 12,
                           color: isAvailable ? AppColors.success : AppColors.error,
@@ -198,7 +194,7 @@ class _MobileSavedProvidersWidgetState extends State<MobileSavedProvidersWidget>
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 ),
                 child: Text(
-                  AppStrings.getString('bookAgain', languageService.currentLanguage),
+                  'Book Again',
                   style: GoogleFonts.cairo(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,

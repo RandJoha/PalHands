@@ -34,7 +34,7 @@ class _MyBookingsWidgetState extends State<MyBookingsWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppStrings.getString('myBookings', languageService.currentLanguage),
+            'My Bookings',
             style: GoogleFonts.cairo(
               fontSize: 24.sp,
               color: AppColors.textPrimary,
@@ -55,7 +55,6 @@ class _MyBookingsWidgetState extends State<MyBookingsWidget> {
   }
 
   Widget _buildFilterTabs() {
-    final languageService = Provider.of<LanguageService>(context, listen: false);
     return Container(
       decoration: BoxDecoration(
         color: AppColors.greyLight,
@@ -64,13 +63,13 @@ class _MyBookingsWidgetState extends State<MyBookingsWidget> {
       child: Row(
         children: [
           Expanded(
-            child: _buildFilterTab(AppStrings.getString('upcoming', languageService.currentLanguage), true),
+            child: _buildFilterTab('Upcoming', true),
           ),
           Expanded(
-            child: _buildFilterTab(AppStrings.getString('completed', languageService.currentLanguage), false),
+            child: _buildFilterTab('Completed', false),
           ),
           Expanded(
-            child: _buildFilterTab(AppStrings.getString('cancelled', languageService.currentLanguage), false),
+            child: _buildFilterTab('Cancelled', false),
           ),
         ],
       ),
@@ -102,32 +101,31 @@ class _MyBookingsWidgetState extends State<MyBookingsWidget> {
   }
 
   Widget _buildBookingsList() {
-    final languageService = Provider.of<LanguageService>(context, listen: false);
     return Column(
       children: [
         _buildBookingItem(
-          serviceName: AppStrings.getString('homeCleaning', languageService.currentLanguage),
+          serviceName: 'Home Cleaning',
           providerName: 'Fatima Al-Zahra',
-          date: AppStrings.getString('tomorrow10AM', languageService.currentLanguage),
-          status: AppStrings.getString('confirmed', languageService.currentLanguage),
+          date: 'Tomorrow, 10:00 AM',
+          status: 'Confirmed',
           statusColor: AppColors.success,
           price: '₪150',
         ),
         SizedBox(height: 16.h),
         _buildBookingItem(
-          serviceName: AppStrings.getString('elderlyCare', languageService.currentLanguage),
+          serviceName: 'Elderly Care',
           providerName: 'Mariam Hassan',
-          date: AppStrings.getString('friday2PM', languageService.currentLanguage),
-          status: AppStrings.getString('pending', languageService.currentLanguage),
+          date: 'Friday, 2:00 PM',
+          status: 'Pending',
           statusColor: AppColors.warning,
           price: '₪200',
         ),
         SizedBox(height: 16.h),
         _buildBookingItem(
-          serviceName: AppStrings.getString('babysitting', languageService.currentLanguage),
+          serviceName: 'Babysitting',
           providerName: 'Aisha Mohammed',
-          date: AppStrings.getString('yesterday3PM', languageService.currentLanguage),
-          status: AppStrings.getString('completed', languageService.currentLanguage),
+          date: 'Yesterday, 3:00 PM',
+          status: 'Completed',
           statusColor: AppColors.info,
           price: '₪120',
         ),
@@ -246,7 +244,7 @@ class _MyBookingsWidgetState extends State<MyBookingsWidget> {
                   },
                   icon: Icon(Icons.message, size: 16.sp),
                   label: Text(
-                    AppStrings.getString('contact', Provider.of<LanguageService>(context, listen: false).currentLanguage),
+                    'Contact',
                     style: GoogleFonts.cairo(fontSize: 14.sp),
                   ),
                   style: OutlinedButton.styleFrom(
@@ -263,7 +261,7 @@ class _MyBookingsWidgetState extends State<MyBookingsWidget> {
                   },
                   icon: Icon(Icons.location_on, size: 16.sp),
                   label: Text(
-                    AppStrings.getString('track', Provider.of<LanguageService>(context, listen: false).currentLanguage),
+                    'Track',
                     style: GoogleFonts.cairo(fontSize: 14.sp),
                   ),
                   style: ElevatedButton.styleFrom(

@@ -43,13 +43,13 @@ class _MobileChatMessagesWidgetState extends State<MobileChatMessagesWidget> {
           const SizedBox(height: 20),
           
           // Chat threads
-          _buildChatThreads(languageService),
+          _buildChatThreads(),
         ],
       ),
     );
   }
 
-  Widget _buildChatThreads(LanguageService languageService) {
+  Widget _buildChatThreads() {
     return Column(
       children: [
         _buildChatThread(
@@ -70,10 +70,10 @@ class _MobileChatMessagesWidgetState extends State<MobileChatMessagesWidget> {
         const SizedBox(height: 12),
         _buildChatThread(
           providerName: 'Aisha Mohammed',
-                      lastMessage: AppStrings.getString('serviceCompleted', languageService.currentLanguage),
-          time: AppStrings.getString('yesterday', languageService.currentLanguage),
+          lastMessage: 'The service is completed',
+          time: 'Yesterday',
           unreadCount: 0,
-                      serviceName: AppStrings.getString('babysitting', languageService.currentLanguage),
+          serviceName: 'Babysitting',
         ),
       ],
     );
