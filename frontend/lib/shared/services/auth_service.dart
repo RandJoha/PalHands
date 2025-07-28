@@ -50,19 +50,23 @@ class AuthService extends ChangeNotifier with BaseApiService {
 
   // Register user
   Future<Map<String, dynamic>> register({
-    required String name,
+    required String firstName,
+    required String lastName,
     required String email,
     required String password,
     required String phone,
+    String role = 'client',
   }) async {
     try {
       final response = await post(
         '${ApiConfig.authEndpoint}/register',
         body: {
-          'name': name,
+          'firstName': firstName,
+          'lastName': lastName,
           'email': email,
           'password': password,
           'phone': phone,
+          'role': role,
         },
       );
 
@@ -135,15 +139,19 @@ class AuthService extends ChangeNotifier with BaseApiService {
 
   // Update user profile
   Future<Map<String, dynamic>> updateProfile({
-    String? name,
+    String? firstName,
+    String? lastName,
     String? phone,
-    String? avatar,
+    String? profileImage,
+    Map<String, dynamic>? address,
   }) async {
     try {
       final body = <String, dynamic>{};
-      if (name != null) body['name'] = name;
+      if (firstName != null) body['firstName'] = firstName;
+      if (lastName != null) body['lastName'] = lastName;
       if (phone != null) body['phone'] = phone;
-      if (avatar != null) body['avatar'] = avatar;
+      if (profileImage != null) body['profileImage'] = profileImage;
+      if (address != null) body['address'] = address;
 
       final response = await put(
         '${ApiConfig.usersEndpoint}/profile',
@@ -198,4 +206,30 @@ class AuthService extends ChangeNotifier with BaseApiService {
     _isAuthenticated = false;
     notifyListeners();
   }
+
+  // Get user role
+  String? get userRole => _currentUser?['role'];
+
+  // Check if user is admin
+  bool get isAdmin => _currentUser?['role'] == 'admin';
+
+  // Check if user is provider
+  bool get isProvider => _currentUser?['role'] == 'provider';
+
+  // Check if user is client
+  bool get isClient => _currentUser?['role'] == 'client';
+
+  // Get user full name
+  String get userFullName {
+    if (_currentUser == null) return '';
+    final firstName = _currentUser!['firstName'] ?? '';
+    final lastName = _currentUser!['lastName'] ?? '';
+    return '$firstName $lastName'.trim();
+  }
+
+  // Check if user is verified
+  bool get isVerified => _currentUser?['isVerified'] ?? false;
+
+  // Check if user is active
+  bool get isActive => _currentUser?['isActive'] ?? false;
 } 

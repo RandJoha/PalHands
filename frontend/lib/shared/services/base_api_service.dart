@@ -123,14 +123,33 @@ mixin BaseApiService {
 
   // Handle HTTP response
   Map<String, dynamic> _handleResponse(http.Response response) {
-    if (response.statusCode >= 200 && response.statusCode < 300) {
+    // Try to parse response body
+    Map<String, dynamic> responseData;
+    try {
       if (response.body.isEmpty) {
-        return {'success': true};
+        responseData = {'success': true};
+      } else {
+        responseData = json.decode(response.body) as Map<String, dynamic>;
       }
-      return json.decode(response.body) as Map<String, dynamic>;
+    } catch (e) {
+      responseData = {
+        'success': false,
+        'message': 'Invalid response format',
+      };
+    }
+
+    // For authentication endpoints, return the response body even for error status codes
+    // This allows the frontend to show proper error messages
+    if (response.request?.url.path.contains('/auth/') == true) {
+      return responseData;
+    }
+
+    // For other endpoints, throw exception for error status codes
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return responseData;
     } else {
       throw ApiException(
-        'HTTP ${response.statusCode}: ${response.reasonPhrase}',
+        responseData['message'] ?? 'HTTP ${response.statusCode}: ${response.reasonPhrase}',
         response.statusCode,
         response.body,
       );

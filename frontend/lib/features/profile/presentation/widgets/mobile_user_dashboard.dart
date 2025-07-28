@@ -305,8 +305,15 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    onTap: () {
+                    onTap: () async {
                       // Handle logout
+                      final authService = Provider.of<AuthService>(context, listen: false);
+                      await authService.logout();
+                      
+                      // Navigate to home page
+                      if (mounted) {
+                        Navigator.of(context).pushReplacementNamed('/home');
+                      }
                     },
                   ),
                 ],

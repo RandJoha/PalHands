@@ -9,6 +9,7 @@ import '../../core/constants/app_strings.dart';
 
 // Services
 import '../services/language_service.dart';
+import '../services/auth_service.dart';
 
 // Widget imports
 import 'tatreez_pattern.dart';
@@ -31,7 +32,8 @@ class MobileSignupWidget extends StatefulWidget {
 
 class _MobileSignupWidgetState extends State<MobileSignupWidget> {
   final _formKey = GlobalKey<FormState>();
-  final _fullNameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -117,7 +119,8 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
 
   @override
   void dispose() {
-    _fullNameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -361,24 +364,87 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
       _isLoading = true;
     });
 
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      
+      // Get first and last name from separate fields
+      final firstName = _firstNameController.text.trim();
+      final lastName = _lastNameController.text.trim();
 
-    setState(() {
-      _isLoading = false;
-      _currentStep = _getMaxSteps();
-    });
+      // Debug: Print the values being sent
+      print('🔍 Debug - Registration values:');
+      print('firstName: "$firstName"');
+      print('lastName: "$lastName"');
+      print('email: "${_emailController.text.trim()}"');
+      print('password: "${_passwordController.text}"');
+      print('phone: "${_phoneController.text.trim()}"');
+      print('role: "${_selectedUserType ?? 'client'}"');
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Thank you! We\'re excited to welcome you onboard.',
-            style: GoogleFonts.cairo(color: AppColors.white),
-          ),
-          backgroundColor: AppColors.primary,
-          duration: const Duration(seconds: 4),
-        ),
+      final response = await authService.register(
+        firstName: firstName,
+        lastName: lastName,
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        phone: _phoneController.text.trim(),
+        role: _selectedUserType ?? 'client',
       );
+
+      if (response['success'] == true) {
+        setState(() {
+          _isLoading = false;
+          _currentStep = _getMaxSteps();
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Registration successful! Welcome to PalHands.',
+                style: GoogleFonts.cairo(color: AppColors.white),
+              ),
+              backgroundColor: AppColors.primary,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+          
+          // Navigate to home page after successful registration
+          Navigator.of(context).pushReplacementNamed('/home');
+        }
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                response['message'] ?? 'Registration failed. Please try again.',
+                style: GoogleFonts.cairo(color: AppColors.white),
+              ),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Connection error. Please check your internet connection and try again.',
+              style: GoogleFonts.cairo(color: AppColors.white),
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
     }
   }
 
@@ -621,17 +687,37 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
         ),
         SizedBox(height: widget.screenHeight * 0.03),
         
-        // Full Name
-        _buildTextField(
-          controller: _fullNameController,
-                      label: AppStrings.getString('fullName', languageService.currentLanguage),
-          icon: Icons.person,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return AppStrings.getString('pleaseEnterFullName', languageService.currentLanguage);
-            }
-            return null;
-          },
+        // First Name and Last Name
+        Row(
+          children: [
+            Expanded(
+              child: _buildTextField(
+                controller: _firstNameController,
+                label: AppStrings.getString('firstName', languageService.currentLanguage),
+                icon: Icons.person,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return AppStrings.getString('pleaseEnterFirstName', languageService.currentLanguage);
+                  }
+                  return null;
+                },
+              ),
+            ),
+            SizedBox(width: 8),
+            Expanded(
+              child: _buildTextField(
+                controller: _lastNameController,
+                label: AppStrings.getString('lastName', languageService.currentLanguage),
+                icon: Icons.person,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return AppStrings.getString('pleaseEnterLastName', languageService.currentLanguage);
+                  }
+                  return null;
+                },
+              ),
+            ),
+          ],
         ),
         
         SizedBox(height: widget.screenHeight * 0.02),
@@ -707,11 +793,11 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
             if (value == null || value.isEmpty) {
               return AppStrings.getString('pleaseEnterPhoneNumber', languageService.currentLanguage);
             }
-            // Palestinian phone number validation
-            final pattern = r'^(05[9|6|8|4|2|0|1|3|5|7]|09)\d{7}$';
+            // More flexible phone number validation
+            final pattern = r'^[\+]?[0-9\s\-\(\)]{8,15}$';
             final regExp = RegExp(pattern);
             if (!regExp.hasMatch(value)) {
-              return 'Please enter a valid Palestinian phone number';
+              return 'Please enter a valid phone number';
             }
             return null;
           },

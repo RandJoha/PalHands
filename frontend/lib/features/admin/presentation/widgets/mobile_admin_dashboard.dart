@@ -421,7 +421,7 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
                       final authService = Provider.of<AuthService>(context, listen: false);
                       await authService.logout();
                       if (mounted) {
-                        Navigator.of(context).pushReplacementNamed('/login');
+                        Navigator.of(context).pushReplacementNamed('/home');
                       }
                     },
                     icon: const Icon(Icons.logout, size: 16),

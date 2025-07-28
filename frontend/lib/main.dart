@@ -11,6 +11,9 @@ import 'core/constants/app_strings.dart';
 
 // Widget imports
 import 'shared/widgets/splash_screen.dart';
+import 'shared/widgets/auth_wrapper.dart';
+import 'shared/widgets/login_screen.dart';
+import 'shared/widgets/signup_screen.dart';
 import 'features/home/presentation/pages/home_screen.dart';
 import 'features/categories/presentation/pages/category_screen.dart';
 import 'features/about/presentation/pages/about_screen.dart';
@@ -107,7 +110,7 @@ class PalHandsApp extends StatelessWidget {
               ),
             ),
           ),
-                home: const UserDashboardScreen(),
+                home: const AuthWrapper(),
                 routes: {
                   '/home': (context) => const HomeScreen(),
                   '/categories': (context) => const CategoryScreen(),
@@ -116,6 +119,8 @@ class PalHandsApp extends StatelessWidget {
                   '/contact': (context) => const ContactScreen(),
                   '/admin': (context) => const AdminDashboardScreen(),
                   '/user': (context) => const UserDashboardScreen(),
+                  '/login': (context) => const LoginScreen(),
+                  '/signup': (context) => const SignupScreen(),
                 },
               );
             },

@@ -18,6 +18,10 @@ mongoose.connect(MONGODB_URI)
 })
 .catch((error) => {
   console.error('❌ MongoDB connection error:', error);
+  console.log('💡 To fix this:');
+  console.log('   1. Start Docker Desktop and run: docker run -d -p 27017:27017 --name mongodb-palhands mongo:latest');
+  console.log('   2. Or update your .env file with MongoDB Atlas connection string');
+  console.log('   3. Or install MongoDB locally');
   process.exit(1);
 });
 

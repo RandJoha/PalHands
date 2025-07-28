@@ -9,6 +9,7 @@ import '../../core/constants/app_strings.dart';
 
 // Services
 import '../services/language_service.dart';
+import '../services/auth_service.dart';
 
 // Widget imports
 import 'tatreez_pattern.dart';
@@ -38,45 +39,54 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleLogin() {
+  void _handleLogin() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
 
-      // Test account credentials
-      final testEmail = 'test@palhands.com';
-      final testPassword = 'password123';
-      final adminEmail = 'admin@palhands.com';
-      final adminPassword = 'admin123';
+      try {
+        final authService = Provider.of<AuthService>(context, listen: false);
+        final response = await authService.login(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
 
-      // Simulate API call delay
-      Future.delayed(const Duration(seconds: 1), () {
-        if (_emailController.text == adminEmail && _passwordController.text == adminPassword) {
-          // Admin login successful - navigate to admin dashboard
-          Navigator.of(context).pushReplacementNamed('/admin');
-        } else if (_emailController.text == testEmail && _passwordController.text == testPassword) {
-          // Regular user login successful - navigate to user dashboard
-          Navigator.of(context).pushReplacementNamed('/user');
+        if (response['success'] == true) {
+          // Login successful - navigate to home page
+          Navigator.of(context).pushReplacementNamed('/home');
         } else {
           // Login failed - show error message
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Invalid email or password.\n\nRegular User: test@palhands.com / password123\nAdmin: admin@palhands.com / admin123',
+                response['message'] ?? 'Login failed. Please try again.',
                 style: GoogleFonts.cairo(),
               ),
               backgroundColor: AppColors.primary,
               behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 5),
+              duration: const Duration(seconds: 3),
             ),
           );
         }
-        
+      } catch (e) {
+        // Network or other error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Connection error. Please check your internet connection and try again.',
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      } finally {
         setState(() {
           _isLoading = false;
         });
-      });
+      }
     }
   }
 

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_strings.dart';
 import '../../../../../shared/services/language_service.dart';
+import '../../../../../shared/services/auth_service.dart';
 import '../../../../../shared/widgets/animated_handshake.dart';
 import '../../../../../shared/widgets/tatreez_pattern.dart';
 
@@ -184,6 +185,10 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
                 ),
               ),
             ),
+            
+            // Authentication buttons
+            const SizedBox(width: 8),
+            _buildMobileAuthButtons(languageService),
           ],
         ),
       ),
@@ -319,9 +324,9 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
       animation: _bannerAnimation,
       builder: (context, child) {
         return Transform.translate(
-          offset: Offset(0, 50 * (1 - _bannerAnimation.value)),
+          offset: Offset(0, 50 * (1 - _bannerAnimation.value.clamp(0.0, 1.0))),
           child: Opacity(
-            opacity: _bannerAnimation.value,
+            opacity: _bannerAnimation.value.clamp(0.0, 1.0),
             child: Container(
               margin: const EdgeInsets.all(16),
               height: 220,
@@ -480,9 +485,9 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
                 animation: _cardAnimation,
                 builder: (context, child) {
                   return Transform.scale(
-                    scale: 0.8 + (0.2 * _cardAnimation.value),
+                    scale: 0.8 + (0.2 * _cardAnimation.value.clamp(0.0, 1.0)),
                     child: Opacity(
-                      opacity: _cardAnimation.value,
+                      opacity: _cardAnimation.value.clamp(0.0, 1.0),
                       child: _buildCategoryCard(
                         categories[index]['icon'] as IconData,
                         AppStrings.getString(categories[index]['name'] as String, languageService.currentLanguage),
@@ -1047,6 +1052,156 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMobileAuthButtons(LanguageService languageService) {
+    return Consumer<AuthService>(
+      builder: (context, authService, child) {
+        if (authService.isAuthenticated) {
+          // User is logged in - show dashboard button and user menu
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Go to Dashboard button
+              ElevatedButton(
+                onPressed: () {
+                  if (authService.isAdmin) {
+                    Navigator.pushNamed(context, '/admin');
+                  } else {
+                    Navigator.pushNamed(context, '/user');
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                child: Text(
+                  AppStrings.getString('goToDashboard', languageService.currentLanguage),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              
+              const SizedBox(width: 4),
+              
+              // User menu
+              PopupMenuButton<String>(
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Icon(
+                    Icons.person,
+                    size: 14,
+                    color: AppColors.primary,
+                  ),
+                ),
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'profile',
+                    child: Row(
+                      children: [
+                        Icon(Icons.person, size: 14, color: AppColors.textSecondary),
+                        const SizedBox(width: 6),
+                        Text(
+                          authService.userFullName,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: 'logout',
+                    child: Row(
+                      children: [
+                        Icon(Icons.logout, size: 14, color: AppColors.error),
+                        const SizedBox(width: 6),
+                        Text(
+                          AppStrings.getString('logout', languageService.currentLanguage),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.error,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                onSelected: (value) async {
+                  if (value == 'logout') {
+                    await authService.logout();
+                    if (mounted) {
+                      Navigator.of(context).pushReplacementNamed('/home');
+                    }
+                  }
+                },
+              ),
+            ],
+          );
+        } else {
+          // User is not logged in - show login/register buttons
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Login button
+              TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/login');
+                },
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  AppStrings.getString('login', languageService.currentLanguage),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              
+              // Register button
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/signup');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                child: Text(
+                  AppStrings.getString('signUp', languageService.currentLanguage),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+      },
     );
   }
 } 

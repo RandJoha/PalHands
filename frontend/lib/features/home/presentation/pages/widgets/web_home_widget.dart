@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_strings.dart';
 import '../../../../../shared/services/language_service.dart';
+import '../../../../../shared/services/auth_service.dart';
 import '../../../../../shared/widgets/animated_handshake.dart';
 import '../../../../../shared/widgets/tatreez_pattern.dart';
 
@@ -144,6 +145,10 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
                     ),
                   ),
                 ),
+                
+                // Authentication buttons
+                const SizedBox(width: 16),
+                _buildAuthButtons(languageService),
               ],
             ),
           );
@@ -875,6 +880,148 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildAuthButtons(LanguageService languageService) {
+    return Consumer<AuthService>(
+      builder: (context, authService, child) {
+        if (authService.isAuthenticated) {
+          // User is logged in - show dashboard button and user menu
+          return Row(
+            children: [
+              // Go to Dashboard button
+              ElevatedButton(
+                onPressed: () {
+                  if (authService.isAdmin) {
+                    Navigator.pushNamed(context, '/admin');
+                  } else {
+                    Navigator.pushNamed(context, '/user');
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                child: Text(
+                  AppStrings.getString('goToDashboard', languageService.currentLanguage),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              
+              const SizedBox(width: 8),
+              
+              // User menu
+              PopupMenuButton<String>(
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(
+                    Icons.person,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
+                ),
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'profile',
+                    child: Row(
+                      children: [
+                        Icon(Icons.person, size: 16, color: AppColors.textSecondary),
+                        const SizedBox(width: 8),
+                        Text(
+                          authService.userFullName,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: 'logout',
+                    child: Row(
+                      children: [
+                        Icon(Icons.logout, size: 16, color: AppColors.error),
+                        const SizedBox(width: 8),
+                        Text(
+                          AppStrings.getString('logout', languageService.currentLanguage),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppColors.error,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                onSelected: (value) async {
+                  if (value == 'logout') {
+                    await authService.logout();
+                    if (mounted) {
+                      Navigator.of(context).pushReplacementNamed('/home');
+                    }
+                  }
+                },
+              ),
+            ],
+          );
+        } else {
+          // User is not logged in - show login/register buttons
+          return Row(
+            children: [
+              // Login button
+              TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/login');
+                },
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                ),
+                child: Text(
+                  AppStrings.getString('login', languageService.currentLanguage),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              
+              // Register button
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/signup');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                child: Text(
+                  AppStrings.getString('signUp', languageService.currentLanguage),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+      },
     );
   }
 } 

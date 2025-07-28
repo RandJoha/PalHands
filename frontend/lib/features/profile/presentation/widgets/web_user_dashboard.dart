@@ -309,10 +309,17 @@ class _WebUserDashboardState extends State<WebUserDashboard> {
                     ),
                   ),
                 ],
-                onSelected: (value) {
+                onSelected: (value) async {
                   // Handle menu selection
                   if (value == 'logout') {
                     // Handle logout
+                    final authService = Provider.of<AuthService>(context, listen: false);
+                    await authService.logout();
+                    
+                    // Navigate to home page
+                    if (mounted) {
+                      Navigator.of(context).pushReplacementNamed('/home');
+                    }
                   }
                 },
               ),

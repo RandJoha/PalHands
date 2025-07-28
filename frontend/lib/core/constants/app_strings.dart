@@ -489,6 +489,11 @@ class AppStrings {
     'ar': 'اسم العائلة',
   };
 
+  static const Map<String, String> personalInformation = {
+    'en': 'Personal Information',
+    'ar': 'المعلومات الشخصية',
+  };
+
   static const Map<String, String> phone = {
     'en': 'Phone',
     'ar': 'الهاتف',
@@ -508,6 +513,16 @@ class AppStrings {
   static const Map<String, String> pleaseEnterFullName = {
     'en': 'Please enter your full name',
     'ar': 'يرجى إدخال اسمك الكامل',
+  };
+
+  static const Map<String, String> pleaseEnterFirstName = {
+    'en': 'Please enter your first name',
+    'ar': 'يرجى إدخال اسمك الأول',
+  };
+
+  static const Map<String, String> pleaseEnterLastName = {
+    'en': 'Please enter your last name',
+    'ar': 'يرجى إدخال اسم العائلة',
   };
 
   static const Map<String, String> pleaseEnterEmail = {
@@ -2386,6 +2401,11 @@ class AppStrings {
     'ar': 'تسجيل الخروج',
   };
 
+  static const Map<String, String> goToDashboard = {
+    'en': 'Go to Dashboard',
+    'ar': 'الذهاب إلى لوحة التحكم',
+  };
+
   static const Map<String, String> notifications = {
     'en': 'Notifications',
     'ar': 'الإشعارات',
@@ -2955,13 +2975,6 @@ class AppStrings {
     'en': 'Profile Settings',
     'ar': 'إعدادات الملف الشخصي',
   };
-
-  static const Map<String, String> personalInformation = {
-    'en': 'Personal Information',
-    'ar': 'المعلومات الشخصية',
-  };
-
-
 
   static const Map<String, String> saveChanges = {
     'en': 'Save Changes',
@@ -3731,6 +3744,8 @@ class AppStrings {
       'phoneNumber': phoneNumber,
       'wantToOfferNewService': wantToOfferNewService,
       'pleaseEnterFullName': pleaseEnterFullName,
+      'pleaseEnterFirstName': pleaseEnterFirstName,
+      'pleaseEnterLastName': pleaseEnterLastName,
       'pleaseEnterEmail': pleaseEnterEmail,
       'pleaseEnterValidEmail': pleaseEnterValidEmail,
       'pleaseEnterPassword': pleaseEnterPassword,
@@ -4120,6 +4135,7 @@ class AppStrings {
       'expand': expand,
       'collapse': collapse,
       'logout': logout,
+      'goToDashboard': goToDashboard,
       'notifications': notifications,
       'palestinianHeritage': palestinianHeritage,
       'connectingCommunities': connectingCommunities,
