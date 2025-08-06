@@ -89,7 +89,7 @@ class WebAboutWidget extends StatelessWidget {
                 ],
               ),
             )
-          else ...[
+           else ...[
             const Spacer(),
             Row(
               children: [
@@ -99,7 +99,7 @@ class WebAboutWidget extends StatelessWidget {
                 _buildNavLink('contactUs', languageService),
               ],
             ),
-          ],
+           ],
           const SizedBox(width: 24),
           // Language toggle
           _buildLanguageToggle(languageService),
