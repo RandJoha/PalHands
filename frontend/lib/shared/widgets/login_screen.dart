@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -15,7 +16,6 @@ import '../services/auth_service.dart';
 import 'tatreez_pattern.dart';
 import 'animated_handshake.dart';
 import 'signup_screen.dart';
-import '../../features/home/presentation/pages/home_screen.dart';
 
 // Responsive login screen
 class LoginScreen extends StatefulWidget {
@@ -39,6 +39,12 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  // Enhanced error handling with secure messages
+  String _getSecureErrorMessage(dynamic error) {
+    // For login, always show the same generic message to avoid leaking information
+    return 'Incorrect email or password';
+  }
+
   void _handleLogin() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -48,44 +54,66 @@ class _LoginScreenState extends State<LoginScreen> {
       try {
         final authService = Provider.of<AuthService>(context, listen: false);
         final response = await authService.login(
-          email: _emailController.text,
+          email: _emailController.text.trim(),
           password: _passwordController.text,
         );
 
         if (response['success'] == true) {
           // Login successful - navigate to root to trigger AuthWrapper routing
-          Navigator.of(context).pushReplacementNamed('/');
+          if (mounted) {
+            Navigator.of(context).pushReplacementNamed('/');
+          }
         } else {
-          // Login failed - show error message
+          // Login failed - show secure error message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  _getSecureErrorMessage(response['error'] ?? 'Login failed'),
+                  style: GoogleFonts.cairo(),
+                ),
+                backgroundColor: AppColors.error,
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 4),
+                action: SnackBarAction(
+                  label: 'Dismiss',
+                  textColor: AppColors.white,
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                  },
+                ),
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        // Network or other error - show secure error message
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                response['message'] ?? 'Login failed. Please try again.',
+                _getSecureErrorMessage(e),
                 style: GoogleFonts.cairo(),
               ),
-              backgroundColor: AppColors.primary,
+              backgroundColor: AppColors.error,
               behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 3),
+              duration: const Duration(seconds: 4),
+              action: SnackBarAction(
+                label: 'Dismiss',
+                textColor: AppColors.white,
+                onPressed: () {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                },
+              ),
             ),
           );
         }
-      } catch (e) {
-        // Network or other error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Connection error. Please check your internet connection and try again.',
-              style: GoogleFonts.cairo(),
-            ),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 3),
-          ),
-        );
       } finally {
-        setState(() {
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
     }
   }
@@ -349,7 +377,17 @@ class _LoginScreenState extends State<LoginScreen> {
                             textAlign: TextAlign.center,
                           ),
                           SizedBox(height: 48.h),
-                          _buildLoginForm(),
+                          Focus(
+                            onKey: (node, event) {
+                              // Handle Enter key press anywhere in the form
+                              if (event.isKeyPressed(LogicalKeyboardKey.enter) && !_isLoading) {
+                                _handleLogin();
+                                return KeyEventResult.handled;
+                              }
+                              return KeyEventResult.ignored;
+                            },
+                            child: _buildLoginForm(),
+                          ),
                         ],
                       ),
                     ),
@@ -480,7 +518,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       SizedBox(height: screenHeight * 0.05),
                       // Login form
-                      _buildLoginForm(screenWidth, screenHeight),
+                      Focus(
+                        onKey: (node, event) {
+                          // Handle Enter key press anywhere in the form
+                          if (event.isKeyPressed(LogicalKeyboardKey.enter) && !_isLoading) {
+                            _handleLogin();
+                            return KeyEventResult.handled;
+                          }
+                          return KeyEventResult.ignored;
+                        },
+                        child: _buildLoginForm(screenWidth, screenHeight),
+                      ),
                     ],
                   ),
                 ),
@@ -573,6 +621,12 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               child: TextFormField(
                 controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                onFieldSubmitted: (value) {
+                  // Focus on password field when Enter is pressed
+                  FocusScope.of(context).nextFocus();
+                },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your email';
@@ -642,13 +696,18 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               child: TextFormField(
                 controller: _passwordController,
+                textInputAction: TextInputAction.done,
+                onFieldSubmitted: (value) {
+                  // Trigger login when Enter is pressed in password field
+                  if (!_isLoading) {
+                    _handleLogin();
+                  }
+                },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your password';
                   }
-                  if (value.length < 6) {
-                    return 'Password must be at least 6 characters';
-                  }
+                  // Remove password length validation for login - it should only apply during signup
                   return null;
                 },
                 obscureText: _obscurePassword,

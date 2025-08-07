@@ -13,7 +13,6 @@ import '../../../../shared/services/language_service.dart';
 
 // User dashboard widgets
 import 'user_sidebar.dart';
-import 'dashboard_home_widget.dart';
 import 'my_bookings_widget.dart';
 import 'chat_messages_widget.dart';
 import 'payments_widget.dart';
@@ -40,51 +39,46 @@ class _WebUserDashboardState extends State<WebUserDashboard> {
   List<UserMenuItem> _getMenuItems(String languageCode) {
     return [
       UserMenuItem(
-        title: AppStrings.getString('dashboardHome', languageCode),
-        icon: Icons.dashboard,
-        index: 0,
-      ),
-      UserMenuItem(
         title: AppStrings.getString('myBookings', languageCode),
         icon: Icons.calendar_today,
-        index: 1,
+        index: 0,
         badge: '3', // Example badge for upcoming bookings
       ),
       UserMenuItem(
         title: AppStrings.getString('chatMessages', languageCode),
         icon: Icons.chat,
-        index: 2,
+        index: 1,
         badge: '2', // Example badge for unread messages
       ),
       UserMenuItem(
         title: AppStrings.getString('payments', languageCode),
         icon: Icons.payment,
-        index: 3,
+        index: 2,
       ),
       UserMenuItem(
         title: AppStrings.getString('myReviews', languageCode),
         icon: Icons.star,
-        index: 4,
+        index: 3,
       ),
       UserMenuItem(
         title: AppStrings.getString('profileSettings', languageCode),
         icon: Icons.person,
-        index: 5,
+        index: 4,
       ),
       UserMenuItem(
         title: AppStrings.getString('savedProviders', languageCode),
         icon: Icons.favorite,
-        index: 6,
+        index: 5,
       ),
       UserMenuItem(
         title: AppStrings.getString('supportHelp', languageCode),
         icon: Icons.help,
-        index: 7,
+        index: 6,
       ),
       UserMenuItem(
         title: AppStrings.getString('security', languageCode),
         icon: Icons.security,
-        index: 8,
+        index: 7,
       ),
     ];
   }
@@ -312,13 +306,27 @@ class _WebUserDashboardState extends State<WebUserDashboard> {
                 onSelected: (value) async {
                   // Handle menu selection
                   if (value == 'logout') {
-                    // Handle logout
-                    final authService = Provider.of<AuthService>(context, listen: false);
-                    await authService.logout();
-                    
-                    // Navigate to home page
-                    if (mounted) {
-                      Navigator.of(context).pushReplacementNamed('/home');
+                    try {
+                      // Handle logout
+                      final authService = Provider.of<AuthService>(context, listen: false);
+                      await authService.logout();
+                      
+                      // Navigate to home screen and clear all routes
+                      if (mounted) {
+                        Navigator.of(context).pushNamedAndRemoveUntil(
+                          '/home',
+                          (route) => false,
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Logout failed: ${e.toString()}'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
                     }
                   }
                 },
@@ -333,25 +341,23 @@ class _WebUserDashboardState extends State<WebUserDashboard> {
   Widget _buildContent() {
     switch (_selectedIndex) {
       case 0:
-        return const DashboardHomeWidget();
-      case 1:
         return const MyBookingsWidget();
-      case 2:
+      case 1:
         return const ChatMessagesWidget();
-      case 3:
+      case 2:
         return const PaymentsWidget();
-      case 4:
+      case 3:
         return const MyReviewsWidget();
-      case 5:
+      case 4:
         return const ProfileSettingsWidget();
-      case 6:
+      case 5:
         return const SavedProvidersWidget();
-      case 7:
+      case 6:
         return const SupportHelpWidget();
-      case 8:
+      case 7:
         return const SecurityWidget();
       default:
-        return const DashboardHomeWidget();
+        return const MyBookingsWidget();
     }
   }
 } 

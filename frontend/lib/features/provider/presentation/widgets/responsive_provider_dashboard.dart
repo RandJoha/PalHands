@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -8,13 +9,15 @@ import '../../../../core/constants/app_strings.dart';
 
 // Shared imports
 import '../../../../shared/services/language_service.dart';
+import '../../../../shared/services/auth_service.dart';
 
-// Provider widgets
-import 'dashboard_overview.dart';
+// Widget imports
 import 'my_services_widget.dart';
 import 'bookings_widget.dart';
 import 'earnings_widget.dart';
 import 'reviews_widget.dart';
+
+import '../../../admin/presentation/widgets/language_toggle_widget.dart';
 
 class ResponsiveProviderDashboard extends StatefulWidget {
   const ResponsiveProviderDashboard({super.key});
@@ -78,6 +81,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
   Widget _buildMobileLayout(bool isMobile, LanguageService languageService) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      drawer: _buildMobileDrawer(languageService),
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         elevation: 0,
@@ -96,82 +100,47 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
               AppStrings.getString('providerDashboard', languageService.currentLanguage),
               style: GoogleFonts.cairo(
                 fontSize: 12,
-                color: AppColors.white.withValues(alpha: 0.8),
+                color: AppColors.white.withOpacity(0.8),
               ),
             ),
           ],
         ),
         actions: [
-          // Language toggle button
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              color: AppColors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(20),
-                onTap: () => languageService.toggleLanguage(),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.language,
-                        size: 16,
-                        color: AppColors.white,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        languageService.isEnglish ? 'عربي' : 'EN',
-                        style: GoogleFonts.cairo(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.white,
-                        ),
-                      ),
-                    ],
+          // Notifications
+          IconButton(
+            onPressed: () {
+              // TODO: Show notifications
+            },
+            icon: Stack(
+              children: [
+                const Icon(Icons.notifications_outlined, size: 20, color: AppColors.white),
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: AppColors.white,
+                      shape: BoxShape.circle,
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
-          // Logout button
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              color: AppColors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(20),
-                onTap: () => Navigator.of(context).pushReplacementNamed('/home'),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.logout,
-                        size: 16,
-                        color: AppColors.white,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        AppStrings.getString('logout', languageService.currentLanguage),
-                        style: GoogleFonts.cairo(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.white,
-                        ),
-                      ),
-                    ],
-                  ),
+          // Provider profile
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: CircleAvatar(
+              radius: 14,
+              backgroundColor: AppColors.white,
+              child: Text(
+                'P',
+                style: GoogleFonts.cairo(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
                 ),
               ),
             ),
@@ -212,12 +181,12 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
         children: [
           // Sidebar
           Container(
-            width: _isSidebarExpanded ? 280 : 80,
+            width: _isSidebarExpanded ? 280 : 70,
             decoration: BoxDecoration(
               color: AppColors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
+                  color: Colors.black.withOpacity(0.1),
                   blurRadius: 4,
                   offset: const Offset(2, 0),
                 ),
@@ -225,70 +194,51 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
             ),
             child: Column(
               children: [
-                // Sidebar header
+                // Sidebar Header
                 _buildSidebarHeader(languageService),
-                // Menu items
+                
+                // Menu Items
                 Expanded(
                   child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     itemCount: _menuItems.length,
                     itemBuilder: (context, index) {
-                      return _buildMenuItem(index, languageService);
+                      final item = _menuItems[index];
+                      final isSelected = _selectedIndex == index;
+                      
+                      return ListTile(
+                        leading: Icon(
+                          item['icon'],
+                          color: isSelected ? AppColors.primary : AppColors.grey,
+                        ),
+                        title: _isSidebarExpanded ? Text(
+                          AppStrings.getString(item['title'], languageService.currentLanguage),
+                          style: GoogleFonts.cairo(
+                            color: isSelected ? AppColors.primary : AppColors.textDark,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                          ),
+                        ) : null,
+                        selected: isSelected,
+                        onTap: () => setState(() => _selectedIndex = index),
+                      );
                     },
                   ),
                 ),
-                // Language toggle at bottom
-                if (_isSidebarExpanded)
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: () => languageService.toggleLanguage(),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.language,
-                                  size: 20,
-                                  color: AppColors.primary,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    languageService.isEnglish ? 'العربية' : 'English',
-                                    style: GoogleFonts.cairo(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.primary,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                
+                // Language Toggle in Sidebar
+                _buildSidebarLanguageToggle(languageService),
               ],
             ),
           ),
-          // Main content
+          
+          // Main Content
           Expanded(
             child: Column(
               children: [
-                // Header - matching admin dashboard design
-                _buildHeader(screenWidth, languageService),
+                // Header - Updated to match Admin Dashboard order
+                _buildHeader(languageService),
                 
-                // Content with proper padding
+                // Content
                 Expanded(
                   child: Container(
                     margin: EdgeInsets.all(screenWidth > 1400 ? 24 : 16),
@@ -303,7 +253,9 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
     );
   }
 
-  Widget _buildHeader(double screenWidth, LanguageService languageService) {
+  Widget _buildHeader(LanguageService languageService) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    
     return Container(
       height: screenWidth > 1400 ? 80 : 70,
       decoration: BoxDecoration(
@@ -318,22 +270,22 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
       ),
       child: Row(
         children: [
-          // Title with better proportions
+          // Title Section
           Expanded(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: screenWidth > 1400 ? 32 : 24),
               child: Row(
                 children: [
-                  // Palestinian flag colors accent - smaller
+                  // Palestinian flag colors accent
                   Container(
                     width: 4,
                     height: 40,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          AppColors.primary, // Palestinian red
-                          AppColors.secondary, // Golden
-                          const Color(0xFF2E8B57), // Sea green
+                          AppColors.primary,
+                          AppColors.secondary,
+                          const Color(0xFF2E8B57),
                         ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
@@ -343,7 +295,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
                   ),
                   SizedBox(width: screenWidth > 1400 ? 20 : 16),
                   
-                  // Title text - better sizing
+                  // Title text
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -351,16 +303,16 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
                       Text(
                         AppStrings.getString(_menuItems[_selectedIndex]['title'], languageService.currentLanguage),
                         style: GoogleFonts.cairo(
-                          fontSize: screenWidth > 1400 ? 28 : 24,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.greyDark,
+                          fontSize: screenWidth > 1400 ? 24 : 20,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textDark,
                         ),
                       ),
                       Text(
                         AppStrings.getString('providerDashboard', languageService.currentLanguage),
                         style: GoogleFonts.cairo(
-                          fontSize: screenWidth > 1400 ? 16 : 14,
-                          color: AppColors.grey,
+                          fontSize: screenWidth > 1400 ? 14 : 12,
+                          color: AppColors.textLight,
                         ),
                       ),
                     ],
@@ -369,8 +321,8 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
               ),
             ),
           ),
-
-          // Provider info and actions - more compact
+          
+          // Header Actions - Updated to match Admin Dashboard order
           Padding(
             padding: EdgeInsets.symmetric(horizontal: screenWidth > 1400 ? 32 : 24),
             child: Row(
@@ -409,7 +361,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
                       radius: screenWidth > 1400 ? 24 : 20,
                       backgroundColor: AppColors.primary,
                       child: Text(
-                        'P',
+                        'P', // Provider initial
                         style: GoogleFonts.cairo(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -423,18 +375,18 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Provider Name',
+                          'Provider Name', // Replace with actual provider name
                           style: GoogleFonts.cairo(
                             fontSize: screenWidth > 1400 ? 16 : 14,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.greyDark,
+                            color: AppColors.textDark,
                           ),
                         ),
                         Text(
                           AppStrings.getString('serviceProvider', languageService.currentLanguage),
                           style: GoogleFonts.cairo(
                             fontSize: screenWidth > 1400 ? 12 : 10,
-                            color: AppColors.grey,
+                            color: AppColors.textLight,
                           ),
                         ),
                       ],
@@ -446,9 +398,33 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
 
                 // Logout button
                 IconButton(
-                  onPressed: () => Navigator.of(context).pushReplacementNamed('/home'),
-                  icon: Icon(Icons.logout, 
-                            size: screenWidth > 1400 ? 26 : 24),
+                  onPressed: () async {
+                    try {
+                      final authService = Provider.of<AuthService>(context, listen: false);
+                      await authService.logout();
+                      if (mounted) {
+                        // Navigate to home screen and clear all routes
+                        Navigator.of(context).pushNamedAndRemoveUntil(
+                          '/home',
+                          (route) => false,
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Logout failed: ${e.toString()}'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  icon: Icon(
+                    Icons.logout,
+                    color: AppColors.textSecondary,
+                    size: 24.0,
+                  ),
                   tooltip: AppStrings.getString('logout', languageService.currentLanguage),
                 ),
               ],
@@ -700,6 +676,204 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
           },
         );
       },
+    );
+  }
+
+  Widget _buildSidebarLanguageToggle(LanguageService languageService) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: _isSidebarExpanded
+          ? ElevatedButton.icon(
+              onPressed: () => languageService.toggleLanguage(),
+              icon: Icon(
+                Icons.language,
+                size: 18,
+                color: AppColors.white,
+              ),
+              label: Text(
+                languageService.isEnglish ? 'العربية' : 'English',
+                style: GoogleFonts.cairo(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.white,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            )
+          : IconButton(
+              onPressed: () => languageService.toggleLanguage(),
+              icon: Icon(
+                Icons.language,
+                color: AppColors.primary,
+                size: 24,
+              ),
+            ),
+    );
+  }
+
+  Widget _buildMobileDrawer(LanguageService languageService) {
+    return Drawer(
+      child: Container(
+        color: AppColors.white,
+        child: Column(
+          children: [
+            // Drawer header
+            Container(
+              height: 120,
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
+                ),
+              ),
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: AppColors.white,
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: Icon(
+                          Icons.work,
+                          color: AppColors.primary,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Provider Name',
+                              style: GoogleFonts.cairo(
+                                fontSize: 16,
+                                color: AppColors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              AppStrings.getString('serviceProvider', languageService.currentLanguage),
+                              style: GoogleFonts.cairo(
+                                fontSize: 12,
+                                color: AppColors.white.withOpacity(0.8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            
+            // Menu items
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                itemCount: _menuItems.length,
+                itemBuilder: (context, index) {
+                  final item = _menuItems[index];
+                  final isSelected = _selectedIndex == index;
+                  
+                  return ListTile(
+                    leading: Icon(
+                      item['icon'],
+                      color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                    ),
+                    title: Text(
+                      AppStrings.getString(item['title'], languageService.currentLanguage),
+                      style: GoogleFonts.cairo(
+                        color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      ),
+                    ),
+                    selected: isSelected,
+                    onTap: () {
+                      setState(() => _selectedIndex = index);
+                      Navigator.pop(context);
+                    },
+                  );
+                },
+              ),
+            ),
+            
+            // Language toggle and logout
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.greyLight,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                ),
+              ),
+              child: Column(
+                children: [
+                  // Language toggle - Updated to match Admin dashboard design
+                  LanguageToggleWidget(
+                    isCollapsed: false,
+                    screenWidth: MediaQuery.of(context).size.width,
+                  ),
+                  const SizedBox(height: 12),
+                  const Divider(),
+                  ListTile(
+                    leading: Icon(
+                      Icons.logout,
+                      color: AppColors.error,
+                      size: 20,
+                    ),
+                    title: Text(
+                      AppStrings.getString('logout', languageService.currentLanguage),
+                      style: GoogleFonts.cairo(
+                        fontSize: 14,
+                        color: AppColors.error,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    onTap: () async {
+                      try {
+                        final authService = Provider.of<AuthService>(context, listen: false);
+                        await authService.logout();
+                        if (mounted) {
+                          // Navigate to home screen and clear all routes
+                          Navigator.of(context).pushNamedAndRemoveUntil(
+                            '/home',
+                            (route) => false,
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Logout failed: ${e.toString()}'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

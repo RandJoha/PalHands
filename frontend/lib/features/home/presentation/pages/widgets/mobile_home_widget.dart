@@ -1063,35 +1063,7 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
           return Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Go to Dashboard button
-              ElevatedButton(
-                onPressed: () {
-                  if (authService.isAdmin) {
-                    Navigator.pushNamed(context, '/admin');
-                  } else {
-                    Navigator.pushNamed(context, '/user');
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                child: Text(
-                  AppStrings.getString('goToDashboard', languageService.currentLanguage),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              
-              const SizedBox(width: 4),
+
               
               // User menu
               PopupMenuButton<String>(
@@ -1140,10 +1112,34 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
                   ),
                 ],
                 onSelected: (value) async {
-                  if (value == 'logout') {
-                    await authService.logout();
-                    if (mounted) {
-                      Navigator.of(context).pushReplacementNamed('/home');
+                  if (value == 'profile') {
+                    // Navigate to appropriate dashboard based on user role
+                    if (authService.isAdmin) {
+                      Navigator.pushNamed(context, '/admin');
+                    } else if (authService.isProvider) {
+                      Navigator.pushNamed(context, '/provider');
+                    } else {
+                      Navigator.pushNamed(context, '/user');
+                    }
+                  } else if (value == 'logout') {
+                    try {
+                      await authService.logout();
+                      if (mounted) {
+                        // Navigate to home screen and clear all routes
+                        Navigator.of(context).pushNamedAndRemoveUntil(
+                          '/home',
+                          (route) => false,
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Logout failed: ${e.toString()}'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
                     }
                   }
                 },

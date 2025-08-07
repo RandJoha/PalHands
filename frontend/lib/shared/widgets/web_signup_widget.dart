@@ -10,6 +10,7 @@ import '../../core/constants/app_strings.dart';
 // Services
 import '../services/language_service.dart';
 import '../services/auth_service.dart';
+import '../services/base_api_service.dart';
 
 // Widget imports
 import 'tatreez_pattern.dart';
@@ -114,6 +115,62 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
         return AppStrings.getString('miscellaneousErrands', languageService.currentLanguage);
       default:
         return categoryKey;
+    }
+  }
+
+  // Enhanced error handling for signup with specific messages
+  String _getSignupErrorMessage(dynamic error, Map<String, dynamic>? response) {
+    if (error is ApiException) {
+      // Handle specific API errors with user-friendly messages
+      if (error.statusCode == 400) {
+        // Check for specific validation errors
+        if (error.responseBody.contains('Email already registered')) {
+          return 'This email address is already registered. Please use a different email or try logging in.';
+        } else if (error.responseBody.contains('Phone number already registered')) {
+          return 'This phone number is already registered. Please use a different phone number.';
+        } else if (error.responseBody.contains('Missing required fields')) {
+          return 'Please fill in all required fields.';
+        } else if (error.responseBody.contains('Invalid role')) {
+          return 'Invalid user type selected. Please try again.';
+        } else if (error.responseBody.contains('password')) {
+          return 'Password must be at least 6 characters long.';
+        } else if (error.responseBody.contains('email')) {
+          return 'Please enter a valid email address.';
+        } else if (error.responseBody.contains('phone')) {
+          return 'Please enter a valid phone number.';
+        } else {
+          return 'Please check your information and try again.';
+        }
+      } else if (error.statusCode == 422) {
+        return 'Please check your information and try again.';
+      } else if (error.statusCode >= 500) {
+        return 'Server error. Please try again later.';
+      } else {
+        return 'Registration failed. Please try again.';
+      }
+    } else if (error.toString().contains('SocketException') || 
+               error.toString().contains('Connection refused')) {
+      return 'Unable to connect to server. Please check your internet connection and try again.';
+    } else if (error.toString().contains('TimeoutException')) {
+      return 'Connection timeout. Please check your internet connection and try again.';
+    } else if (response != null && response['message'] != null) {
+      // Handle backend-specific error messages
+      String message = response['message'];
+      if (message.contains('Email already registered')) {
+        return 'This email address is already registered. Please use a different email or try logging in.';
+      } else if (message.contains('Phone number already registered')) {
+        return 'This phone number is already registered. Please use a different phone number.';
+      } else if (message.contains('password')) {
+        return 'Password must be at least 6 characters long.';
+      } else if (message.contains('email')) {
+        return 'Please enter a valid email address.';
+      } else if (message.contains('phone')) {
+        return 'Please enter a valid phone number.';
+      } else {
+        return message;
+      }
+    } else {
+      return 'Registration failed. Please try again.';
     }
   }
 
@@ -419,11 +476,19 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                response['message'] ?? 'Registration failed. Please try again.',
+                _getSignupErrorMessage(null, response),
                 style: GoogleFonts.cairo(color: AppColors.white),
               ),
-              backgroundColor: Colors.red,
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
               duration: const Duration(seconds: 4),
+              action: SnackBarAction(
+                label: 'Dismiss',
+                textColor: AppColors.white,
+                onPressed: () {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                },
+              ),
             ),
           );
         }
@@ -437,11 +502,19 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Connection error. Please check your internet connection and try again.',
+              _getSignupErrorMessage(e, null),
               style: GoogleFonts.cairo(color: AppColors.white),
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Dismiss',
+              textColor: AppColors.white,
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              },
+            ),
           ),
         );
       }

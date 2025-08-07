@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'dart:convert'; // Added for json.decode
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Core imports
 import '../../core/constants/api_config.dart';
@@ -8,11 +10,71 @@ class AuthService extends ChangeNotifier with BaseApiService {
   String? _token;
   Map<String, dynamic>? _currentUser;
   bool _isAuthenticated = false;
+  
+  // Storage keys
+  static const String _tokenKey = 'auth_token';
+  static const String _userKey = 'auth_user';
 
   // Getters
   String? get token => _token;
   Map<String, dynamic>? get currentUser => _currentUser;
   bool get isAuthenticated => _isAuthenticated;
+
+  // Initialize auth service and load persisted data
+  Future<void> initialize() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedToken = prefs.getString(_tokenKey);
+      final savedUser = prefs.getString(_userKey);
+      
+      if (savedToken != null && savedUser != null) {
+        _token = savedToken;
+        _currentUser = Map<String, dynamic>.from(json.decode(savedUser));
+        _isAuthenticated = true;
+        notifyListeners();
+        
+        if (kDebugMode) {
+          print('✅ Auth service initialized with persisted data');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Failed to initialize auth service: $e');
+      }
+      // Clear any corrupted data
+      await _clearPersistedData();
+    }
+  }
+
+  // Save token and user data to persistent storage
+  Future<void> _savePersistedData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (_token != null) {
+        await prefs.setString(_tokenKey, _token!);
+      }
+      if (_currentUser != null) {
+        await prefs.setString(_userKey, json.encode(_currentUser));
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Failed to save persisted data: $e');
+      }
+    }
+  }
+
+  // Clear persisted data
+  Future<void> _clearPersistedData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_tokenKey);
+      await prefs.remove(_userKey);
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Failed to clear persisted data: $e');
+      }
+    }
+  }
 
   // Login user
   Future<Map<String, dynamic>> login({
@@ -32,6 +94,9 @@ class AuthService extends ChangeNotifier with BaseApiService {
         _token = response['token'];
         _currentUser = response['user'];
         _isAuthenticated = true;
+        
+        // Save to persistent storage
+        await _savePersistedData();
         notifyListeners();
         
         if (kDebugMode) {
@@ -74,6 +139,9 @@ class AuthService extends ChangeNotifier with BaseApiService {
         _token = response['token'];
         _currentUser = response['user'];
         _isAuthenticated = true;
+        
+        // Save to persistent storage
+        await _savePersistedData();
         notifyListeners();
         
         if (kDebugMode) {
@@ -93,25 +161,45 @@ class AuthService extends ChangeNotifier with BaseApiService {
   // Logout user
   Future<void> logout() async {
     try {
+      // Attempt to notify backend about logout
       if (_token != null) {
-        await post(
-          '${ApiConfig.authEndpoint}/logout',
-          headers: {'Authorization': 'Bearer $_token'},
-        );
+        try {
+          await post(
+            '${ApiConfig.authEndpoint}/logout',
+            headers: {'Authorization': 'Bearer $_token'},
+          );
+        } catch (e) {
+          // Don't fail logout if backend request fails
+          if (kDebugMode) {
+            print('⚠️ Backend logout request failed: $e');
+          }
+        }
       }
     } catch (e) {
       if (kDebugMode) {
         print('❌ Logout request failed: $e');
       }
     } finally {
-      _token = null;
-      _currentUser = null;
-      _isAuthenticated = false;
-      notifyListeners();
-      
-      if (kDebugMode) {
-        print('✅ User logged out');
-      }
+      // Always clear local data regardless of backend response
+      await _clearAllData();
+    }
+  }
+
+  // Clear all data (local and persisted)
+  Future<void> _clearAllData() async {
+    // Clear in-memory data
+    _token = null;
+    _currentUser = null;
+    _isAuthenticated = false;
+    
+    // Clear persisted data
+    await _clearPersistedData();
+    
+    // Notify listeners
+    notifyListeners();
+    
+    if (kDebugMode) {
+      print('✅ User logged out - all data cleared');
     }
   }
 
@@ -125,6 +213,7 @@ class AuthService extends ChangeNotifier with BaseApiService {
 
       if (response['success'] == true) {
         _currentUser = response['user'];
+        await _savePersistedData();
         notifyListeners();
       }
 
@@ -161,6 +250,7 @@ class AuthService extends ChangeNotifier with BaseApiService {
 
       if (response['success'] == true) {
         _currentUser = response['user'];
+        await _savePersistedData();
         notifyListeners();
       }
 
@@ -188,6 +278,8 @@ class AuthService extends ChangeNotifier with BaseApiService {
       if (kDebugMode) {
         print('❌ Token validation failed: $e');
       }
+      // If token validation fails, clear the data
+      await _clearAllData();
       return false;
     }
   }
@@ -196,15 +288,13 @@ class AuthService extends ChangeNotifier with BaseApiService {
   void setToken(String token) {
     _token = token;
     _isAuthenticated = true;
+    _savePersistedData();
     notifyListeners();
   }
 
   // Clear all data
   void clear() {
-    _token = null;
-    _currentUser = null;
-    _isAuthenticated = false;
-    notifyListeners();
+    _clearAllData();
   }
 
   // Get user role

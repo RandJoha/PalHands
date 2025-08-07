@@ -59,7 +59,9 @@ class PalHandsApp extends StatelessWidget {
           providers: [
             ChangeNotifierProvider(create: (context) => LanguageService()..initializeLanguage()),
             ChangeNotifierProvider(create: (context) => HealthService()),
-            ChangeNotifierProvider(create: (context) => AuthService()),
+            ChangeNotifierProvider(
+              create: (context) => AuthService()..initialize(),
+            ),
           ],
           child: Consumer<LanguageService>(
             builder: (context, languageService, child) {

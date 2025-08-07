@@ -50,51 +50,46 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
   List<UserMenuItem> _getMenuItems(String languageCode) {
     return [
       UserMenuItem(
-        title: AppStrings.getString('dashboardHome', languageCode),
-        icon: Icons.dashboard,
-        index: 0,
-      ),
-      UserMenuItem(
         title: AppStrings.getString('myBookings', languageCode),
         icon: Icons.calendar_today,
-        index: 1,
+        index: 0,
         badge: '3',
       ),
       UserMenuItem(
         title: AppStrings.getString('chatMessages', languageCode),
         icon: Icons.chat,
-        index: 2,
+        index: 1,
         badge: '2',
       ),
       UserMenuItem(
         title: AppStrings.getString('payments', languageCode),
         icon: Icons.payment,
-        index: 3,
+        index: 2,
       ),
       UserMenuItem(
         title: AppStrings.getString('myReviews', languageCode),
         icon: Icons.star,
-        index: 4,
+        index: 3,
       ),
       UserMenuItem(
         title: AppStrings.getString('profileSettings', languageCode),
         icon: Icons.person,
-        index: 5,
+        index: 4,
       ),
       UserMenuItem(
         title: AppStrings.getString('savedProviders', languageCode),
         icon: Icons.favorite,
-        index: 6,
+        index: 5,
       ),
       UserMenuItem(
         title: AppStrings.getString('supportHelp', languageCode),
         icon: Icons.help,
-        index: 7,
+        index: 6,
       ),
       UserMenuItem(
         title: AppStrings.getString('security', languageCode),
         icon: Icons.security,
-        index: 8,
+        index: 7,
       ),
     ];
   }
@@ -306,13 +301,27 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
                       ),
                     ),
                     onTap: () async {
-                      // Handle logout
-                      final authService = Provider.of<AuthService>(context, listen: false);
-                      await authService.logout();
-                      
-                      // Navigate to home page
-                      if (mounted) {
-                        Navigator.of(context).pushReplacementNamed('/home');
+                      try {
+                        // Handle logout
+                        final authService = Provider.of<AuthService>(context, listen: false);
+                        await authService.logout();
+                        
+                        // Navigate to home screen and clear all routes
+                        if (mounted) {
+                          Navigator.of(context).pushNamedAndRemoveUntil(
+                            '/home',
+                            (route) => false,
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Logout failed: ${e.toString()}'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
                       }
                     },
                   ),
@@ -406,14 +415,10 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
       },
       items: [
         BottomNavigationBarItem(
-          icon: Icon(Icons.dashboard, size: 20),
-          label: AppStrings.getString('dashboardHome', languageService.currentLanguage),
-        ),
-        BottomNavigationBarItem(
           icon: Stack(
             children: [
               Icon(Icons.calendar_today, size: 20),
-              if (_selectedIndex != 1)
+              if (_selectedIndex != 0)
                 Positioned(
                   right: 0,
                   top: 0,
@@ -434,7 +439,7 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
           icon: Stack(
             children: [
               Icon(Icons.chat, size: 20),
-              if (_selectedIndex != 2)
+              if (_selectedIndex != 1)
                 Positioned(
                   right: 0,
                   top: 0,
@@ -456,8 +461,8 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
           label: AppStrings.getString('payments', languageService.currentLanguage),
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.person, size: 20),
-          label: AppStrings.getString('profile', languageService.currentLanguage),
+          icon: Icon(Icons.star, size: 20),
+          label: AppStrings.getString('myReviews', languageService.currentLanguage),
         ),
       ],
     );
@@ -466,25 +471,23 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
   Widget _buildContent() {
     switch (_selectedIndex) {
       case 0:
-        return const MobileDashboardHomeWidget();
-      case 1:
         return const MobileMyBookingsWidget();
-      case 2:
+      case 1:
         return const MobileChatMessagesWidget();
-      case 3:
+      case 2:
         return const MobilePaymentsWidget();
-      case 4:
+      case 3:
         return const MobileMyReviewsWidget();
-      case 5:
+      case 4:
         return const MobileProfileSettingsWidget();
-      case 6:
+      case 5:
         return const MobileSavedProvidersWidget();
-      case 7:
+      case 6:
         return const MobileSupportHelpWidget();
-      case 8:
+      case 7:
         return const MobileSecurityWidget();
       default:
-        return const MobileDashboardHomeWidget();
+        return const MobileMyBookingsWidget();
     }
   }
 } 

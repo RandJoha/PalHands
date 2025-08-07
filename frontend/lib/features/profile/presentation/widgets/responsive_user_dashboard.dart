@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -10,8 +11,31 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/services/language_service.dart';
 import '../../../../shared/services/auth_service.dart';
 
+// Widget imports
+import 'my_bookings_widget.dart';
+import 'chat_messages_widget.dart';
+import 'payments_widget.dart';
+import 'my_reviews_widget.dart';
+import 'profile_settings_widget.dart';
+import 'saved_providers_widget.dart';
+import 'support_help_widget.dart';
+import 'security_widget.dart';
+import '../../../admin/presentation/widgets/language_toggle_widget.dart';
+
 // User models
-import '../../domain/models/user_menu_item.dart';
+class UserMenuItem {
+  final String title;
+  final IconData icon;
+  final int index;
+  final String? badge;
+
+  UserMenuItem({
+    required this.title,
+    required this.icon,
+    required this.index,
+    this.badge,
+  });
+}
 
 class ResponsiveUserDashboard extends StatefulWidget {
   const ResponsiveUserDashboard({super.key});
@@ -33,15 +57,14 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   // Menu items - will be localized
   List<UserMenuItem> _getMenuItems() {
     return [
-      UserMenuItem(title: _getLocalizedString('dashboard_home'), icon: Icons.home, index: 0),
-      UserMenuItem(title: _getLocalizedString('my_bookings'), icon: Icons.calendar_today, index: 1, badge: '3'),
-      UserMenuItem(title: _getLocalizedString('chat_messages'), icon: Icons.chat, index: 2, badge: '2'),
-      UserMenuItem(title: _getLocalizedString('payments'), icon: Icons.payment, index: 3),
-      UserMenuItem(title: _getLocalizedString('my_reviews'), icon: Icons.star, index: 4),
-      UserMenuItem(title: _getLocalizedString('profile_settings'), icon: Icons.person, index: 5),
-      UserMenuItem(title: _getLocalizedString('saved_providers'), icon: Icons.favorite, index: 6),
-      UserMenuItem(title: _getLocalizedString('support_help'), icon: Icons.help, index: 7),
-      UserMenuItem(title: _getLocalizedString('security'), icon: Icons.security, index: 8),
+      UserMenuItem(title: _getLocalizedString('my_bookings'), icon: Icons.calendar_today, index: 0, badge: '3'),
+      UserMenuItem(title: _getLocalizedString('chat_messages'), icon: Icons.chat, index: 1, badge: '2'),
+      UserMenuItem(title: _getLocalizedString('payments'), icon: Icons.payment, index: 2),
+      UserMenuItem(title: _getLocalizedString('my_reviews'), icon: Icons.star, index: 3),
+      UserMenuItem(title: _getLocalizedString('profile_settings'), icon: Icons.person, index: 4),
+      UserMenuItem(title: _getLocalizedString('saved_providers'), icon: Icons.favorite, index: 5),
+      UserMenuItem(title: _getLocalizedString('support_help'), icon: Icons.help, index: 6),
+      UserMenuItem(title: _getLocalizedString('security'), icon: Icons.security, index: 7),
     ];
   }
 
@@ -899,42 +922,130 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               },
             ),
           ),
-          // Language toggle for mobile
-          if (isMobile) ...[
-            _buildMobileLanguageToggle(),
-            SizedBox(width: 8.0),
-          ],
-          // User profile section
-          _buildUserProfile(isMobile, isTablet),
+          // Header Actions - Updated to match Admin Dashboard order
+          _buildHeaderActions(isMobile, isTablet),
         ],
       ),
     );
   }
 
-  Widget _buildUserProfile(bool isMobile, bool isTablet) {
+  Widget _buildHeaderActions(bool isMobile, bool isTablet) {
+    return Consumer<LanguageService>(
+      builder: (context, languageService, child) {
     return Row(
       children: [
-        if (!isMobile) ...[
+            // Notifications
+            IconButton(
+              onPressed: () {
+                // TODO: Show notifications
+              },
+              icon: Stack(
+                children: [
           Icon(
             Icons.notifications_outlined,
             color: AppColors.textSecondary,
             size: isTablet ? 22.0 : 24.0,
           ),
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
           SizedBox(width: isTablet ? 16.0 : 20.0),
-        ],
-        Container(
-          padding: EdgeInsets.all(isMobile ? 8.0 : 12.0),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(isMobile ? 20.0 : 24.0),
-          ),
-          child: Icon(
-            Icons.person,
-            color: AppColors.primary,
-            size: isMobile ? 20.0 : 24.0,
-          ),
-        ),
-      ],
+
+            // User profile
+            Consumer<AuthService>(
+              builder: (context, authService, child) {
+                return Row(
+                  children: [
+                    CircleAvatar(
+                      radius: isTablet ? 20.0 : 24.0,
+                      backgroundColor: AppColors.primary,
+                      child: Text(
+                        authService.currentUser?['firstName']?.substring(0, 1).toUpperCase() ?? 'U',
+                        style: GoogleFonts.cairo(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: isTablet ? 16.0 : 18.0,
+                        ),
+                      ),
+                    ),
+                    if (!isMobile) ...[
+                      SizedBox(width: isTablet ? 10.0 : 12.0),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '${authService.currentUser?['firstName'] ?? 'User'} ${authService.currentUser?['lastName'] ?? ''}',
+                            style: GoogleFonts.cairo(
+                              fontSize: isTablet ? 14.0 : 16.0,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            AppStrings.getString('client', languageService.currentLanguage),
+                            style: GoogleFonts.cairo(
+                              fontSize: isTablet ? 10.0 : 12.0,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                );
+              },
+            ),
+
+            SizedBox(width: isTablet ? 16.0 : 20.0),
+
+            // Logout button
+            IconButton(
+              onPressed: () async {
+                try {
+                  final authService = Provider.of<AuthService>(context, listen: false);
+                  await authService.logout();
+                  if (mounted) {
+                    // Navigate to home screen and clear all routes
+                    Navigator.of(context).pushNamedAndRemoveUntil(
+                      '/home',
+                      (route) => false,
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Logout failed: ${e.toString()}'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              icon: Icon(
+                Icons.logout,
+                color: AppColors.textSecondary,
+                size: isTablet ? 22.0 : 24.0,
+              ),
+              tooltip: AppStrings.getString('logout', languageService.currentLanguage),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -960,155 +1071,30 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   Widget _buildContent() {
     switch (_selectedIndex) {
       case 0:
-        return _buildDashboardHome();
-      case 1:
         return _buildMyBookings();
-      case 2:
+      case 1:
         return _buildChatMessages();
-      case 3:
+      case 2:
         return _buildPayments();
-      case 4:
+      case 3:
         return _buildMyReviews();
-      case 5:
+      case 4:
         return _buildProfileSettings();
-      case 6:
+      case 5:
         return _buildSavedProviders();
-      case 7:
+      case 6:
         return _buildSupportHelp();
-      case 8:
+      case 7:
         return _buildSecurity();
       default:
-        return _buildDashboardHome();
+        return _buildMyBookings();
     }
   }
 
   Widget _buildLanguageToggle(bool isDesktop, bool isTablet) {
-    return Consumer<LanguageService>(
-      builder: (context, languageService, child) {
-        final isArabic = languageService.isArabic;
-        
-        if (_isSidebarCollapsed) {
-          return _buildCollapsedLanguageToggle(context, languageService, isArabic, isDesktop, isTablet);
-        } else {
-          return _buildExpandedLanguageToggle(context, languageService, isArabic, isDesktop, isTablet);
-        }
-      },
-    );
-  }
-
-  Widget _buildCollapsedLanguageToggle(BuildContext context, LanguageService languageService, bool isArabic, bool isDesktop, bool isTablet) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 3, vertical: 2),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => languageService.toggleLanguage(),
-          borderRadius: BorderRadius.circular(6),
-          child: Container(
-            padding: EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(
-                color: AppColors.primary.withOpacity(0.3),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Language flag/icon
-                Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: isArabic ? AppColors.primary : AppColors.secondary,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Center(
-                    child: Text(
-                      isArabic ? 'ع' : 'EN',
-                      style: GoogleFonts.cairo(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildExpandedLanguageToggle(BuildContext context, LanguageService languageService, bool isArabic, bool isDesktop, bool isTablet) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => languageService.toggleLanguage(),
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: AppColors.primary.withOpacity(0.3),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              children: [
-                // Language flag/icon
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: isArabic ? AppColors.primary : AppColors.secondary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Center(
-                    child: Text(
-                      isArabic ? 'ع' : 'EN',
-                      style: GoogleFonts.cairo(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                
-                SizedBox(width: 10),
-                
-                // Language text
-                Expanded(
-                  child: Text(
-                    isArabic ? 'العربية' : 'English',
-                    style: GoogleFonts.cairo(
-                      fontSize: isDesktop ? 14 : 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-                
-                // Toggle icon
-                Icon(
-                  Icons.language,
-                  color: AppColors.primary,
-                  size: isDesktop ? 18 : 16,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    return LanguageToggleWidget(
+      isCollapsed: _isSidebarCollapsed,
+      screenWidth: MediaQuery.of(context).size.width,
     );
   }
 
@@ -1145,14 +1131,10 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           },
           items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home, size: 20),
-              label: _getLocalizedString('dashboard_home'),
-            ),
-            BottomNavigationBarItem(
               icon: Stack(
                 children: [
                   Icon(Icons.calendar_today, size: 20),
-                  if (_selectedIndex != 1)
+                  if (_selectedIndex != 0)
                     Positioned(
                       right: 0,
                       top: 0,
@@ -1173,7 +1155,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               icon: Stack(
                 children: [
                   Icon(Icons.chat, size: 20),
-                  if (_selectedIndex != 2)
+                  if (_selectedIndex != 1)
                     Positioned(
                       right: 0,
                       top: 0,
@@ -1204,468 +1186,9 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     );
   }
 
-  // Content sections with responsive layouts
-  Widget _buildDashboardHome() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isMobile = constraints.maxWidth <= 768;
-        final isTablet = constraints.maxWidth > 768 && constraints.maxWidth <= 1200;
-        
-        return SingleChildScrollView(
-          padding: EdgeInsets.all(isMobile ? 16.0 : 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Welcome Section
-              _buildWelcomeSection(isMobile, isTablet),
-              SizedBox(height: isMobile ? 20.0 : 32.0),
-              
-              // Stats Cards
-              _buildStatsCards(isMobile, isTablet, constraints.maxWidth),
-              SizedBox(height: isMobile ? 20.0 : 32.0),
-              
-              // Alerts Section
-              _buildAlertsSection(isMobile, isTablet),
-              SizedBox(height: isMobile ? 20.0 : 32.0),
-              
-              // Upcoming Bookings
-              _buildUpcomingBookings(isMobile, isTablet),
-              SizedBox(height: isMobile ? 20.0 : 32.0),
-              
-              // Quick Actions
-              _buildQuickActions(isMobile, isTablet, constraints.maxWidth),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
-  Widget _buildWelcomeSection(bool isMobile, bool isTablet) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(isMobile ? 20.0 : 32.0),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(isMobile ? 16.0 : 20.0),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _getLocalizedString('welcome_back'),
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 18.0 : 24.0,
-                    color: AppColors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                SizedBox(height: 4.0),
-                Text(
-                  'Ahmed Hassan',
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 24.0 : 32.0,
-                    color: AppColors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                SizedBox(height: 8.0),
-                Text(
-                  _getLocalizedString('upcoming_bookings_this_week'),
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 14.0 : 16.0,
-                    color: AppColors.white.withOpacity(0.9),
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Icon(
-            Icons.person,
-            color: AppColors.white,
-            size: isMobile ? 48.0 : 64.0,
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildStatsCards(bool isMobile, bool isTablet, double screenWidth) {
-    final stats = [
-      {'icon': Icons.calendar_today, 'value': '3', 'label': _getLocalizedString('upcoming_bookings'), 'color': AppColors.primary},
-      {'icon': Icons.check_circle, 'value': '12', 'label': _getLocalizedString('completed'), 'color': AppColors.success},
-      {'icon': Icons.star, 'value': '8', 'label': _getLocalizedString('reviews'), 'color': AppColors.warning},
-      {'icon': Icons.favorite, 'value': '5', 'label': _getLocalizedString('favorites'), 'color': AppColors.error},
-    ];
 
-    return Wrap(
-      spacing: isMobile ? 12.0 : 16.0,
-      runSpacing: isMobile ? 12.0 : 16.0,
-      children: stats.map((stat) {
-        final cardWidth = isMobile 
-            ? (screenWidth - 48) / 2 
-            : isTablet 
-                ? (screenWidth - 96) / 4 
-                : (screenWidth - 144) / 4;
-        
-        return Container(
-          width: cardWidth,
-          padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(isMobile ? 12.0 : 16.0),
-            border: Border.all(color: AppColors.border, width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.shadow.withOpacity(0.1),
-                blurRadius: 8,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Icon(
-                stat['icon'] as IconData,
-                color: stat['color'] as Color,
-                size: isMobile ? 32.0 : 40.0,
-              ),
-              SizedBox(height: isMobile ? 8.0 : 12.0),
-              Text(
-                stat['value'] as String,
-                style: GoogleFonts.cairo(
-                  fontSize: isMobile ? 24.0 : 32.0,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              SizedBox(height: 4.0),
-              Text(
-                stat['label'] as String,
-                style: GoogleFonts.cairo(
-                  fontSize: isMobile ? 14.0 : 16.0,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildAlertsSection(bool isMobile, bool isTablet) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
-      decoration: BoxDecoration(
-        color: AppColors.warning.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(isMobile ? 12.0 : 16.0),
-        border: Border.all(
-          color: AppColors.warning.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            _getLocalizedString('alerts_notifications'),
-            style: GoogleFonts.cairo(
-              fontSize: isMobile ? 18.0 : 20.0,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          SizedBox(height: isMobile ? 12.0 : 16.0),
-          _buildAlertItem(
-            Icons.payment,
-            _getLocalizedString('payment_pending'),
-            _getLocalizedString('payment_pending_desc'),
-            AppColors.warning,
-            isMobile,
-          ),
-          SizedBox(height: 8.0),
-          _buildAlertItem(
-            Icons.access_time,
-            _getLocalizedString('booking_reminder'),
-            _getLocalizedString('booking_reminder_desc'),
-            AppColors.info,
-            isMobile,
-          ),
-          SizedBox(height: 8.0),
-          _buildAlertItem(
-            Icons.message,
-            _getLocalizedString('unread_messages'),
-            _getLocalizedString('unread_messages_desc'),
-            AppColors.primary,
-            isMobile,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAlertItem(IconData icon, String title, String message, Color color, bool isMobile) {
-    return Row(
-      children: [
-        Icon(
-          icon,
-          color: color,
-          size: isMobile ? 20.0 : 24.0,
-        ),
-        SizedBox(width: 12.0),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: GoogleFonts.cairo(
-                  fontSize: isMobile ? 14.0 : 16.0,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              Text(
-                message,
-                style: GoogleFonts.cairo(
-                  fontSize: isMobile ? 12.0 : 14.0,
-                  fontWeight: FontWeight.w400,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildUpcomingBookings(bool isMobile, bool isTablet) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              _getLocalizedString('upcoming_bookings'),
-              style: GoogleFonts.cairo(
-                fontSize: isMobile ? 18.0 : 20.0,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            TextButton(
-              onPressed: () {},
-              child: Text(
-                _getLocalizedString('view_all'),
-                style: GoogleFonts.cairo(
-                  fontSize: isMobile ? 14.0 : 16.0,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
-                ),
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: isMobile ? 12.0 : 16.0),
-        _buildBookingCard(
-          _getLocalizedString('home_cleaning'),
-          _getLocalizedString('fatima_al_zahra'),
-          _getLocalizedString('tomorrow_10am'),
-          _getLocalizedString('confirmed'),
-          AppColors.success,
-          isMobile,
-        ),
-        SizedBox(height: 12.0),
-        _buildBookingCard(
-          _getLocalizedString('elderly_care'),
-          _getLocalizedString('mariam_hassan'),
-          _getLocalizedString('friday_2pm'),
-          _getLocalizedString('pending'),
-          AppColors.warning,
-          isMobile,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBookingCard(String service, String provider, String time, String status, Color statusColor, bool isMobile) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(isMobile ? 12.0 : 16.0),
-        border: Border.all(color: AppColors.border, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadow.withOpacity(0.1),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: isMobile ? 48.0 : 56.0,
-            height: isMobile ? 48.0 : 56.0,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(isMobile ? 24.0 : 28.0),
-            ),
-            child: Icon(
-              Icons.person,
-              color: AppColors.primary,
-              size: isMobile ? 24.0 : 28.0,
-            ),
-          ),
-          SizedBox(width: isMobile ? 12.0 : 16.0),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  service,
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 16.0 : 18.0,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                SizedBox(height: 4.0),
-                Text(
-                  provider,
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 14.0 : 16.0,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                SizedBox(height: 4.0),
-                Text(
-                  time,
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 12.0 : 14.0,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 8.0 : 12.0,
-              vertical: isMobile ? 4.0 : 6.0,
-            ),
-            decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(isMobile ? 8.0 : 12.0),
-            ),
-            child: Text(
-              status,
-              style: GoogleFonts.cairo(
-                fontSize: isMobile ? 12.0 : 14.0,
-                fontWeight: FontWeight.w600,
-                color: statusColor,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickActions(bool isMobile, bool isTablet, double screenWidth) {
-    final actions = [
-      {'icon': Icons.calendar_today, 'title': _getLocalizedString('book_again'), 'subtitle': _getLocalizedString('schedule_new_service'), 'color': AppColors.primary},
-      {'icon': Icons.calendar_month, 'title': _getLocalizedString('view_calendar'), 'subtitle': _getLocalizedString('check_availability'), 'color': AppColors.info},
-      {'icon': Icons.star, 'title': _getLocalizedString('rate_provider'), 'subtitle': _getLocalizedString('share_experience'), 'color': AppColors.warning},
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          _getLocalizedString('quick_actions'),
-          style: GoogleFonts.cairo(
-            fontSize: isMobile ? 18.0 : 20.0,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        SizedBox(height: isMobile ? 12.0 : 16.0),
-        Wrap(
-          spacing: isMobile ? 12.0 : 16.0,
-          runSpacing: isMobile ? 12.0 : 16.0,
-          children: actions.map((action) {
-            final cardWidth = isMobile 
-                ? (screenWidth - 48) / 2 
-                : (screenWidth - 96) / 3;
-            
-            return Container(
-              width: cardWidth,
-              padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(isMobile ? 12.0 : 16.0),
-                border: Border.all(color: AppColors.border, width: 1),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.shadow.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Icon(
-                    action['icon'] as IconData,
-                    color: action['color'] as Color,
-                    size: isMobile ? 32.0 : 40.0,
-                  ),
-                  SizedBox(height: isMobile ? 8.0 : 12.0),
-                  Text(
-                    action['title'] as String,
-                    style: GoogleFonts.cairo(
-                      fontSize: isMobile ? 16.0 : 18.0,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 4.0),
-                  Text(
-                    action['subtitle'] as String,
-                    style: GoogleFonts.cairo(
-                      fontSize: isMobile ? 12.0 : 14.0,
-                      fontWeight: FontWeight.w400,
-                      color: AppColors.textSecondary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
 
   // Content sections with responsive layouts
   Widget _buildMyBookings() => _buildMyBookingsContent();
@@ -4337,40 +3860,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     );
   }
 
-  Widget _buildMobileLanguageToggle() {
-    return Consumer<LanguageService>(
-      builder: (context, languageService, child) {
-        final isArabic = languageService.isArabic;
-        
-        return Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => languageService.toggleLanguage(),
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              padding: EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: AppColors.primary.withOpacity(0.3),
-                  width: 1,
-                ),
-              ),
-              child: Text(
-                isArabic ? 'ع' : 'EN',
-                style: GoogleFonts.cairo(
-                  color: AppColors.primary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
+
 
   Widget _buildMobileDrawer() {
     return Consumer<LanguageService>(
@@ -4455,7 +3945,25 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 // Language toggle in drawer
                 Container(
                   padding: const EdgeInsets.all(16),
-                  child: _buildMobileLanguageToggle(),
+                  child: ListTile(
+                    leading: Icon(
+                      Icons.language,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
+                    title: Text(
+                      languageService.isEnglish ? 'العربية' : 'English',
+                      style: GoogleFonts.cairo(
+                        fontSize: 14,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    onTap: () {
+                      languageService.toggleLanguage();
+                      Navigator.pop(context);
+                    },
+                  ),
                 ),
                 
                 // Drawer footer

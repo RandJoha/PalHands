@@ -37,39 +37,34 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
   List<AdminMenuItem> _getMenuItems(String languageCode) {
     return [
       AdminMenuItem(
-        title: AppStrings.getString('overview', languageCode),
-        icon: Icons.dashboard,
-        index: 0,
-      ),
-      AdminMenuItem(
         title: AppStrings.getString('userManagement', languageCode),
         icon: Icons.people,
-        index: 1,
+        index: 0,
       ),
       AdminMenuItem(
         title: AppStrings.getString('serviceManagement', languageCode),
         icon: Icons.business_center,
-        index: 2,
+        index: 1,
       ),
       AdminMenuItem(
         title: AppStrings.getString('bookingManagement', languageCode),
         icon: Icons.calendar_today,
-        index: 3,
+        index: 2,
       ),
       AdminMenuItem(
         title: AppStrings.getString('reportsDisputes', languageCode),
         icon: Icons.report_problem,
-        index: 4,
+        index: 3,
       ),
       AdminMenuItem(
         title: AppStrings.getString('analytics', languageCode),
         icon: Icons.analytics,
-        index: 5,
+        index: 4,
       ),
       AdminMenuItem(
         title: AppStrings.getString('systemSettings', languageCode),
         icon: Icons.settings,
-        index: 6,
+        index: 5,
       ),
     ];
   }
@@ -418,10 +413,25 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () async {
-                      final authService = Provider.of<AuthService>(context, listen: false);
-                      await authService.logout();
-                      if (mounted) {
-                        Navigator.of(context).pushReplacementNamed('/home');
+                      try {
+                        final authService = Provider.of<AuthService>(context, listen: false);
+                        await authService.logout();
+                        if (mounted) {
+                          // Navigate to home screen and clear all routes
+                          Navigator.of(context).pushNamedAndRemoveUntil(
+                            '/home',
+                            (route) => false,
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Logout failed: ${e.toString()}'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
                       }
                     },
                     icon: const Icon(Icons.logout, size: 16),
@@ -466,17 +476,13 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
       unselectedLabelStyle: GoogleFonts.cairo(
         fontSize: 10,
       ),
-      currentIndex: _selectedIndex.clamp(0, 6), // Updated to support 7 items (0-6)
+      currentIndex: _selectedIndex.clamp(0, 5), // Updated to support 6 items (0-5)
       onTap: (index) {
         setState(() {
           _selectedIndex = index;
         });
       },
       items: [
-        BottomNavigationBarItem(
-          icon: const Icon(Icons.dashboard, size: 20),
-          label: AppStrings.getString('overview', languageService.currentLanguage),
-        ),
         BottomNavigationBarItem(
           icon: const Icon(Icons.people, size: 20),
           label: AppStrings.getString('userManagement', languageService.currentLanguage),
@@ -508,21 +514,19 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
   Widget _buildContent() {
     switch (_selectedIndex) {
       case 0:
-        return const DashboardOverview();
-      case 1:
         return const UserManagementWidget();
-      case 2:
+      case 1:
         return const ServiceManagementWidget();
-      case 3:
+      case 2:
         return const BookingManagementWidget();
-      case 4:
+      case 3:
         return const ReportsWidget();
-      case 5:
+      case 4:
         return const AnalyticsWidget();
-      case 6:
+      case 5:
         return const SystemSettingsWidget();
       default:
-        return const DashboardOverview();
+        return const UserManagementWidget();
     }
   }
 } 
