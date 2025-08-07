@@ -17,6 +17,57 @@ class BookingsWidget extends StatefulWidget {
 }
 
 class _BookingsWidgetState extends State<BookingsWidget> {
+  bool _isMultiEditMode = false;
+  Set<int> _selectedBookings = {};
+
+  final List<Map<String, dynamic>> _bookings = [
+    {
+      'id': 1,
+      'clientName': 'Ahmad Ali',
+      'service': 'Home Cleaning',
+      'date': '2024-01-15',
+      'time': '10:00 AM',
+      'status': 'pending',
+      'amount': '\$50',
+    },
+    {
+      'id': 2,
+      'clientName': 'Fatima Hassan',
+      'service': 'Elderly Care',
+      'date': '2024-01-16',
+      'time': '2:00 PM',
+      'status': 'confirmed',
+      'amount': '\$60',
+    },
+    {
+      'id': 3,
+      'clientName': 'Omar Khalil',
+      'service': 'Home Cooking',
+      'date': '2024-01-14',
+      'time': '6:00 PM',
+      'status': 'completed',
+      'amount': '\$40',
+    },
+    {
+      'id': 4,
+      'clientName': 'Layla Ahmed',
+      'service': 'Babysitting',
+      'date': '2024-01-17',
+      'time': '9:00 AM',
+      'status': 'pending',
+      'amount': '\$35',
+    },
+    {
+      'id': 5,
+      'clientName': 'Youssef Ibrahim',
+      'service': 'Home Cleaning',
+      'date': '2024-01-13',
+      'time': '11:00 AM',
+      'status': 'cancelled',
+      'amount': '\$50',
+    },
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Consumer<LanguageService>(
@@ -32,24 +83,15 @@ class _BookingsWidgetState extends State<BookingsWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
-          Text(
-            AppStrings.getString('bookings', languageService.currentLanguage),
-            style: GoogleFonts.cairo(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: AppColors.greyDark,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            AppStrings.getString('manageBookingsAppointments', languageService.currentLanguage),
-            style: GoogleFonts.cairo(
-              fontSize: 16,
-              color: AppColors.grey,
-            ),
-          ),
-          const SizedBox(height: 32),
+          // Header with multi-edit controls
+          _buildHeader(languageService),
+          
+          const SizedBox(height: 24),
+          
+          // Multi-edit action bar
+          if (_isMultiEditMode) _buildMultiEditActionBar(languageService),
+          
+          if (_isMultiEditMode) const SizedBox(height: 16),
           
           // Stats Cards
           _buildStatsCards(languageService),
@@ -59,6 +101,175 @@ class _BookingsWidgetState extends State<BookingsWidget> {
           // Recent Bookings
           _buildBookingsList(languageService),
         ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(LanguageService languageService) {
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                AppStrings.getString('bookings', languageService.currentLanguage),
+                style: GoogleFonts.cairo(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.greyDark,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                AppStrings.getString('manageBookingsAppointments', languageService.currentLanguage),
+                style: GoogleFonts.cairo(
+                  fontSize: 16,
+                  color: AppColors.grey,
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Multi-edit toggle button
+        Container(
+          decoration: BoxDecoration(
+            color: _isMultiEditMode ? AppColors.primary : AppColors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: _isMultiEditMode ? AppColors.primary : AppColors.grey.withValues(alpha: 0.3),
+            ),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () {
+                setState(() {
+                  _isMultiEditMode = !_isMultiEditMode;
+                  if (!_isMultiEditMode) {
+                    _selectedBookings.clear();
+                  }
+                });
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _isMultiEditMode ? Icons.close : Icons.edit,
+                      size: 20,
+                      color: _isMultiEditMode ? AppColors.white : AppColors.grey,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _isMultiEditMode 
+                          ? AppStrings.getString('cancel', languageService.currentLanguage)
+                          : AppStrings.getString('multiEdit', languageService.currentLanguage),
+                      style: GoogleFonts.cairo(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: _isMultiEditMode ? AppColors.white : AppColors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMultiEditActionBar(LanguageService languageService) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Selection info
+          Expanded(
+            child: Text(
+              '${_selectedBookings.length} ${AppStrings.getString('selected', languageService.currentLanguage)}',
+              style: GoogleFonts.cairo(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+          // Bulk actions
+          Row(
+            children: [
+              _buildBulkActionButton(
+                icon: Icons.check_circle,
+                label: AppStrings.getString('confirm', languageService.currentLanguage),
+                onTap: _confirmSelectedBookings,
+                languageService: languageService,
+              ),
+              const SizedBox(width: 8),
+              _buildBulkActionButton(
+                icon: Icons.cancel,
+                label: AppStrings.getString('cancel', languageService.currentLanguage),
+                onTap: _cancelSelectedBookings,
+                languageService: languageService,
+                isDestructive: true,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBulkActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    required LanguageService languageService,
+    bool isDestructive = false,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDestructive ? AppColors.error : AppColors.primary,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 16,
+                  color: AppColors.white,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  label,
+                  style: GoogleFonts.cairo(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -155,45 +366,6 @@ class _BookingsWidgetState extends State<BookingsWidget> {
   }
 
   Widget _buildBookingsList(LanguageService languageService) {
-    final bookings = [
-      {
-        'id': '#BK001',
-        'clientName': 'أحمد محمد',
-        'service': 'homeCleaning',
-        'date': '2024-12-15',
-        'time': '10:00 AM',
-        'status': 'pending',
-        'amount': '\$50',
-      },
-      {
-        'id': '#BK002',
-        'clientName': 'Sarah Johnson',
-        'service': 'homeBabysitting',
-        'date': '2024-12-16',
-        'time': '2:00 PM',
-        'status': 'confirmed',
-        'amount': '\$40',
-      },
-      {
-        'id': '#BK003',
-        'clientName': 'فاطمة علي',
-        'service': 'homeElderlyCare',
-        'date': '2024-12-14',
-        'time': '9:00 AM',
-        'status': 'completed',
-        'amount': '\$60',
-      },
-      {
-        'id': '#BK004',
-        'clientName': 'Michael Brown',
-        'service': 'homeCookingServices',
-        'date': '2024-12-17',
-        'time': '6:00 PM',
-        'status': 'cancelled',
-        'amount': '\$70',
-      },
-    ];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -209,23 +381,27 @@ class _BookingsWidgetState extends State<BookingsWidget> {
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: bookings.length,
+          itemCount: _bookings.length,
           itemBuilder: (context, index) {
-            return _buildBookingCard(bookings[index], languageService);
+            return _buildBookingCard(_bookings[index], index, languageService);
           },
         ),
       ],
     );
   }
 
-  Widget _buildBookingCard(Map<String, dynamic> booking, LanguageService languageService) {
+  Widget _buildBookingCard(Map<String, dynamic> booking, int index, LanguageService languageService) {
     final statusColor = _getStatusColor(booking['status']);
+    final isSelected = _selectedBookings.contains(index);
     
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(12),
+        border: isSelected 
+            ? Border.all(color: AppColors.primary, width: 2)
+            : Border.all(color: AppColors.grey.withValues(alpha: 0.1)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -234,143 +410,180 @@ class _BookingsWidgetState extends State<BookingsWidget> {
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            // Service icon
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                Icons.work,
-                color: AppColors.primary,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 16),
-            
-            // Booking details
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            if (_isMultiEditMode) {
+              setState(() {
+                if (isSelected) {
+                  _selectedBookings.remove(index);
+                } else {
+                  _selectedBookings.add(index);
+                }
+              });
+            } else {
+              // TODO: Navigate to booking details
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // Checkbox for multi-edit mode
+                if (_isMultiEditMode) ...[
+                  Checkbox(
+                    value: isSelected,
+                    onChanged: (value) {
+                      setState(() {
+                        if (value == true) {
+                          _selectedBookings.add(index);
+                        } else {
+                          _selectedBookings.remove(index);
+                        }
+                      });
+                    },
+                    activeColor: AppColors.primary,
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                
+                // Service icon
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.work,
+                    color: AppColors.primary,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                
+                // Booking details
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Row(
+                        children: [
+                          Text(
+                            '#${booking['id']}',
+                            style: GoogleFonts.cairo(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: statusColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              AppStrings.getString(booking['status'], languageService.currentLanguage),
+                              style: GoogleFonts.cairo(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: statusColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
                       Text(
-                        booking['id'],
+                        booking['clientName'],
+                        style: GoogleFonts.cairo(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.greyDark,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        booking['service'],
                         style: GoogleFonts.cairo(
                           fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: statusColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          AppStrings.getString(booking['status'], languageService.currentLanguage),
-                          style: GoogleFonts.cairo(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: statusColor,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    booking['clientName'],
-                    style: GoogleFonts.cairo(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.greyDark,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    AppStrings.getString(booking['service'], languageService.currentLanguage),
-                    style: GoogleFonts.cairo(
-                      fontSize: 14,
-                      color: AppColors.grey,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.calendar_today,
-                        size: 14,
-                        color: AppColors.grey,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${AppStrings.getString('scheduledFor', languageService.currentLanguage)} ${booking['date']} at ${booking['time']}',
-                        style: GoogleFonts.cairo(
-                          fontSize: 12,
                           color: AppColors.grey,
                         ),
                       ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: 14,
+                            color: AppColors.grey,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${booking['date']} at ${booking['time']}',
+                            style: GoogleFonts.cairo(
+                              fontSize: 12,
+                              color: AppColors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
-            ),
-            
-            // Amount and actions
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  booking['amount'],
-                  style: GoogleFonts.cairo(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
-                  ),
                 ),
-                const SizedBox(height: 8),
-                Row(
+                
+                // Amount and actions
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    if (booking['status'] == 'pending') ...[
-                      ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.success,
-                          foregroundColor: AppColors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                        ),
-                        child: Text(
-                          AppStrings.getString('acceptBooking', languageService.currentLanguage),
-                          style: GoogleFonts.cairo(fontSize: 12),
-                        ),
+                    Text(
+                      booking['amount'],
+                      style: GoogleFonts.cairo(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
                       ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.error,
-                          foregroundColor: AppColors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(6),
+                    ),
+                    const SizedBox(height: 8),
+                    if (booking['status'] == 'pending') ...[
+                      Row(
+                        children: [
+                          ElevatedButton(
+                            onPressed: () {},
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.success,
+                              foregroundColor: AppColors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                            child: Text(
+                              AppStrings.getString('accept', languageService.currentLanguage),
+                              style: GoogleFonts.cairo(fontSize: 12),
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          AppStrings.getString('rejectBooking', languageService.currentLanguage),
-                          style: GoogleFonts.cairo(fontSize: 12),
-                        ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: () {},
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.error,
+                              foregroundColor: AppColors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                            child: Text(
+                              AppStrings.getString('reject', languageService.currentLanguage),
+                              style: GoogleFonts.cairo(fontSize: 12),
+                            ),
+                          ),
+                        ],
                       ),
                     ] else ...[
                       IconButton(
@@ -386,7 +599,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -405,5 +618,21 @@ class _BookingsWidgetState extends State<BookingsWidget> {
       default:
         return AppColors.grey;
     }
+  }
+
+  void _confirmSelectedBookings() {
+    // TODO: Implement bulk confirm
+    setState(() {
+      _isMultiEditMode = false;
+      _selectedBookings.clear();
+    });
+  }
+
+  void _cancelSelectedBookings() {
+    // TODO: Implement bulk cancel
+    setState(() {
+      _isMultiEditMode = false;
+      _selectedBookings.clear();
+    });
   }
 }

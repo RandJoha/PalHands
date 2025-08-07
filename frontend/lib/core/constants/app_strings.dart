@@ -4461,6 +4461,58 @@ class AppStrings {
         'en': 'Service has been completed successfully',
         'ar': 'تم إنجاز الخدمة بنجاح',
       },
+      'earnings': {
+        'en': 'Earnings',
+        'ar': 'الأرباح',
+      },
+      'providing': {
+        'en': 'Providing',
+        'ar': 'تقديم',
+      },
+      'multiEdit': {
+        'en': 'Multi-Edit',
+        'ar': 'تعديل متعدد',
+      },
+      'selected': {
+        'en': 'Selected',
+        'ar': 'محدد',
+      },
+      'activate': {
+        'en': 'Activate',
+        'ar': 'تفعيل',
+      },
+      'deactivate': {
+        'en': 'Deactivate',
+        'ar': 'إلغاء التفعيل',
+      },
+      'delete': {
+        'en': 'Delete',
+        'ar': 'حذف',
+      },
+      'cancel': {
+        'en': 'Cancel',
+        'ar': 'إلغاء',
+      },
+      'addService': {
+        'en': 'Add Service',
+        'ar': 'إضافة خدمة',
+      },
+      'manageYourServices': {
+        'en': 'Manage your service offerings',
+        'ar': 'إدارة خدماتك',
+      },
+      'confirm': {
+        'en': 'Confirm',
+        'ar': 'تأكيد',
+      },
+      'accept': {
+        'en': 'Accept',
+        'ar': 'قبول',
+      },
+      'reject': {
+        'en': 'Reject',
+        'ar': 'رفض',
+      },
     };
 
     return allStrings[key]?[languageCode] ?? allStrings[key]?['en'] ?? key;

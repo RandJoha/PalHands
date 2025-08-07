@@ -29,11 +29,6 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
 
   final List<Map<String, dynamic>> _menuItems = [
     {
-      'title': 'dashboard',
-      'icon': Icons.dashboard,
-      'widget': DashboardOverviewWidget(),
-    },
-    {
       'title': 'myServices',
       'icon': Icons.work,
       'widget': MyServicesWidget(),
@@ -82,16 +77,29 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
 
   Widget _buildMobileLayout(bool isMobile, LanguageService languageService) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         elevation: 0,
-        title: Text(
-          AppStrings.getString(_menuItems[_selectedIndex]['title'], languageService.currentLanguage),
-          style: GoogleFonts.cairo(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: AppColors.white,
-          ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              AppStrings.getString(_menuItems[_selectedIndex]['title'], languageService.currentLanguage),
+              style: GoogleFonts.cairo(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.white,
+              ),
+            ),
+            Text(
+              AppStrings.getString('providerDashboard', languageService.currentLanguage),
+              style: GoogleFonts.cairo(
+                fontSize: 12,
+                color: AppColors.white.withValues(alpha: 0.8),
+              ),
+            ),
+          ],
         ),
         actions: [
           // Language toggle button
@@ -170,7 +178,10 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
           ),
         ],
       ),
-      body: _buildContent(languageService),
+      body: Container(
+        margin: const EdgeInsets.all(16),
+        child: _buildContent(languageService),
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
@@ -193,7 +204,10 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
   }
 
   Widget _buildWebLayout(bool isTablet, LanguageService languageService) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: Row(
         children: [
           // Sidebar
@@ -269,7 +283,176 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
           ),
           // Main content
           Expanded(
-            child: _buildContent(languageService),
+            child: Column(
+              children: [
+                // Header - matching admin dashboard design
+                _buildHeader(screenWidth, languageService),
+                
+                // Content with proper padding
+                Expanded(
+                  child: Container(
+                    margin: EdgeInsets.all(screenWidth > 1400 ? 24 : 16),
+                    child: _buildContent(languageService),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(double screenWidth, LanguageService languageService) {
+    return Container(
+      height: screenWidth > 1400 ? 80 : 70,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Title with better proportions
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: screenWidth > 1400 ? 32 : 24),
+              child: Row(
+                children: [
+                  // Palestinian flag colors accent - smaller
+                  Container(
+                    width: 4,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.primary, // Palestinian red
+                          AppColors.secondary, // Golden
+                          const Color(0xFF2E8B57), // Sea green
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  SizedBox(width: screenWidth > 1400 ? 20 : 16),
+                  
+                  // Title text - better sizing
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        AppStrings.getString(_menuItems[_selectedIndex]['title'], languageService.currentLanguage),
+                        style: GoogleFonts.cairo(
+                          fontSize: screenWidth > 1400 ? 28 : 24,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.greyDark,
+                        ),
+                      ),
+                      Text(
+                        AppStrings.getString('providerDashboard', languageService.currentLanguage),
+                        style: GoogleFonts.cairo(
+                          fontSize: screenWidth > 1400 ? 16 : 14,
+                          color: AppColors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Provider info and actions - more compact
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: screenWidth > 1400 ? 32 : 24),
+            child: Row(
+              children: [
+                // Notifications
+                IconButton(
+                  onPressed: () {
+                    // TODO: Show notifications
+                  },
+                  icon: Stack(
+                    children: [
+                      Icon(Icons.notifications_outlined, 
+                           size: screenWidth > 1400 ? 26 : 24),
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(width: screenWidth > 1400 ? 20 : 16),
+
+                // Provider profile - more compact
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: screenWidth > 1400 ? 24 : 20,
+                      backgroundColor: AppColors.primary,
+                      child: Text(
+                        'P',
+                        style: GoogleFonts.cairo(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: screenWidth > 1400 ? 18 : 16,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: screenWidth > 1400 ? 12 : 10),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Provider Name',
+                          style: GoogleFonts.cairo(
+                            fontSize: screenWidth > 1400 ? 16 : 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.greyDark,
+                          ),
+                        ),
+                        Text(
+                          AppStrings.getString('serviceProvider', languageService.currentLanguage),
+                          style: GoogleFonts.cairo(
+                            fontSize: screenWidth > 1400 ? 12 : 10,
+                            color: AppColors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+
+                SizedBox(width: screenWidth > 1400 ? 20 : 16),
+
+                // Logout button
+                IconButton(
+                  onPressed: () => Navigator.of(context).pushReplacementNamed('/home'),
+                  icon: Icon(Icons.logout, 
+                            size: screenWidth > 1400 ? 26 : 24),
+                  tooltip: AppStrings.getString('logout', languageService.currentLanguage),
+                ),
+              ],
+            ),
           ),
         ],
       ),
