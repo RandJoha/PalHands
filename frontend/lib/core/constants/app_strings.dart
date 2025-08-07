@@ -4284,6 +4284,183 @@ class AppStrings {
       'months': months,
       'year': year,
       'years': years,
+      // Provider Dashboard strings
+      'providerDashboard': {
+        'en': 'Provider Dashboard',
+        'ar': 'لوحة تحكم مقدم الخدمة',
+      },
+      'serviceProvider': {
+        'en': 'Service Provider',
+        'ar': 'مقدم الخدمة',
+      },
+      'myServices': {
+        'en': 'My Services',
+        'ar': 'خدماتي',
+      },
+      'manageServiceOfferings': {
+        'en': 'Manage your service offerings',
+        'ar': 'إدارة عروض خدماتك',
+      },
+      'addNewService': {
+        'en': 'Add New Service',
+        'ar': 'إضافة خدمة جديدة',
+      },
+      'createNewServiceDescription': {
+        'en': 'Create a new service offering for your clients',
+        'ar': 'إنشاء عرض خدمة جديد لعملائك',
+      },
+      'manageBookingsAppointments': {
+        'en': 'Manage bookings and appointments',
+        'ar': 'إدارة الحجوزات والمواعيد',
+      },
+      'acceptBooking': {
+        'en': 'Accept',
+        'ar': 'قبول',
+      },
+      'rejectBooking': {
+        'en': 'Reject',
+        'ar': 'رفض',
+      },
+      'scheduledFor': {
+        'en': 'Scheduled for',
+        'ar': 'مجدول لـ',
+      },
+      'manageEarningsRevenue': {
+        'en': 'Manage earnings and revenue',
+        'ar': 'إدارة الأرباح والإيرادات',
+      },
+      'earningsOverview': {
+        'en': 'Earnings Overview',
+        'ar': 'نظرة عامة على الأرباح',
+      },
+      'chartComingSoon': {
+        'en': 'Chart coming soon',
+        'ar': 'الرسم البياني قريباً',
+      },
+      'commission': {
+        'en': 'Commission',
+        'ar': 'العمولة',
+      },
+      'completedOn': {
+        'en': 'Completed on',
+        'ar': 'مكتمل في',
+      },
+      'manageReviewsRatings': {
+        'en': 'Manage reviews and ratings',
+        'ar': 'إدارة التقييمات والمراجعات',
+      },
+      'respondToReview': {
+        'en': 'Respond',
+        'ar': 'رد',
+      },
+      'reportReview': {
+        'en': 'Report',
+        'ar': 'إبلاغ',
+      },
+      'responded': {
+        'en': 'Responded',
+        'ar': 'تم الرد',
+      },
+      'recentBookings': {
+        'en': 'Recent Bookings',
+        'ar': 'الحجوزات الحديثة',
+      },
+      'recentTransactions': {
+        'en': 'Recent Transactions',
+        'ar': 'المعاملات الحديثة',
+      },
+      'recentReviews': {
+        'en': 'Recent Reviews',
+        'ar': 'المراجعات الحديثة',
+      },
+      'recentActivity': {
+        'en': 'Recent Activity',
+        'ar': 'النشاط الحديث',
+      },
+      'quickStats': {
+        'en': 'Quick Stats',
+        'ar': 'إحصائيات سريعة',
+      },
+      'thisWeek': {
+        'en': 'This Week',
+        'ar': 'هذا الأسبوع',
+      },
+      'manageAccountSettings': {
+        'en': 'Manage Account Settings',
+        'ar': 'إدارة إعدادات الحساب',
+      },
+      'comingSoon': {
+        'en': 'Coming Soon',
+        'ar': 'قريباً',
+      },
+      'totalEarnings': {
+        'en': 'Total Earnings',
+        'ar': 'إجمالي الأرباح',
+      },
+      'monthlyEarnings': {
+        'en': 'Monthly Earnings',
+        'ar': 'الأرباح الشهرية',
+      },
+      'weeklyEarnings': {
+        'en': 'Weekly Earnings',
+        'ar': 'الأرباح الأسبوعية',
+      },
+      'dailyEarnings': {
+        'en': 'Daily Earnings',
+        'ar': 'الأرباح اليومية',
+      },
+      'averageRating': {
+        'en': 'Average Rating',
+        'ar': 'متوسط التقييم',
+      },
+      'totalReviews': {
+        'en': 'Total Reviews',
+        'ar': 'إجمالي المراجعات',
+      },
+      'positiveReviews': {
+        'en': 'Positive Reviews',
+        'ar': 'المراجعات الإيجابية',
+      },
+      'responseRate': {
+        'en': 'Response Rate',
+        'ar': 'معدل الاستجابة',
+      },
+      'outOf': {
+        'en': 'out of',
+        'ar': 'من',
+      },
+      'satisfied': {
+        'en': 'satisfied',
+        'ar': 'راضٍ',
+      },
+      'newBooking': {
+        'en': 'New Booking',
+        'ar': 'حجز جديد',
+      },
+      'newBookingDescription': {
+        'en': 'You have received a new booking request',
+        'ar': 'لديك طلب حجز جديد',
+      },
+      'newReview': {
+        'en': 'New Review',
+        'ar': 'مراجعة جديدة',
+      },
+      'newReviewDescription': {
+        'en': 'A client has left you a new review',
+        'ar': 'ترك عميل مراجعة جديدة لك',
+      },
+      'paymentReceived': {
+        'en': 'Payment Received',
+        'ar': 'تم استلام الدفع',
+      },
+      'paymentReceivedDescription': {
+        'en': 'Payment has been processed successfully',
+        'ar': 'تم معالجة الدفع بنجاح',
+      },
+      'serviceCompletedDescription': {
+        'en': 'Service has been completed successfully',
+        'ar': 'تم إنجاز الخدمة بنجاح',
+      },
     };
 
     return allStrings[key]?[languageCode] ?? allStrings[key]?['en'] ?? key;

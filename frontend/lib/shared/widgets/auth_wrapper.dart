@@ -4,6 +4,7 @@ import '../services/auth_service.dart';
 import '../../features/home/presentation/pages/home_screen.dart';
 import '../../features/profile/presentation/pages/user_dashboard_screen.dart';
 import '../../features/admin/presentation/pages/admin_dashboard_screen.dart';
+import '../../features/provider/presentation/pages/provider_dashboard_screen.dart';
 
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({Key? key}) : super(key: key);
@@ -17,6 +18,8 @@ class AuthWrapper extends StatelessWidget {
           // Route based on user role
           if (authService.isAdmin) {
             return const AdminDashboardScreen();
+          } else if (authService.isProvider) {
+            return const ProviderDashboardScreen();
           } else {
             return const UserDashboardScreen();
           }

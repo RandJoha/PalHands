@@ -407,8 +407,8 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
             ),
           );
           
-          // Navigate to home page after successful registration
-          Navigator.of(context).pushReplacementNamed('/home');
+                  // Navigate to root to trigger AuthWrapper routing after successful registration
+        Navigator.of(context).pushReplacementNamed('/');
         }
       } else {
         setState(() {

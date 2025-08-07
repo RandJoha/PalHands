@@ -53,8 +53,8 @@ class _LoginScreenState extends State<LoginScreen> {
         );
 
         if (response['success'] == true) {
-          // Login successful - navigate to home page
-          Navigator.of(context).pushReplacementNamed('/home');
+          // Login successful - navigate to root to trigger AuthWrapper routing
+          Navigator.of(context).pushReplacementNamed('/');
         } else {
           // Login failed - show error message
           ScaffoldMessenger.of(context).showSnackBar(
