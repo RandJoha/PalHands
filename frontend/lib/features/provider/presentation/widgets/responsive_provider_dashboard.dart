@@ -106,6 +106,69 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
           ],
         ),
         actions: [
+          // Language toggle button
+          Container(
+            margin: const EdgeInsets.only(right: 4),
+            child: Consumer<LanguageService>(
+              builder: (context, languageService, child) {
+                return Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => languageService.toggleLanguage(),
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: AppColors.primary.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Language flag/icon
+                          Container(
+                            width: 16,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              color: languageService.isArabic ? AppColors.primary : AppColors.secondary,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Center(
+                              child: Text(
+                                languageService.isArabic ? 'ع' : 'EN',
+                                style: GoogleFonts.cairo(
+                                  color: Colors.white,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          // Language text
+                          Text(
+                            languageService.isArabic
+                              ? AppStrings.getString('arabicLanguage', 'ar')
+                              : AppStrings.getString('englishLanguage', 'en'),
+                            style: GoogleFonts.cairo(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          
           // Notifications
           IconButton(
             onPressed: () {
@@ -680,40 +743,10 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
   }
 
   Widget _buildSidebarLanguageToggle(LanguageService languageService) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: _isSidebarExpanded
-          ? ElevatedButton.icon(
-              onPressed: () => languageService.toggleLanguage(),
-              icon: Icon(
-                Icons.language,
-                size: 18,
-                color: AppColors.white,
-              ),
-              label: Text(
-                languageService.isEnglish ? 'العربية' : 'English',
-                style: GoogleFonts.cairo(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.white,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            )
-          : IconButton(
-              onPressed: () => languageService.toggleLanguage(),
-              icon: Icon(
-                Icons.language,
-                color: AppColors.primary,
-                size: 24,
-              ),
-            ),
+    final screenWidth = MediaQuery.of(context).size.width;
+    return LanguageToggleWidget(
+      isCollapsed: !_isSidebarExpanded,
+      screenWidth: screenWidth,
     );
   }
 
