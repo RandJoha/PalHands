@@ -1152,15 +1152,19 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
             mainAxisSize: MainAxisSize.min,
             children: [
               // Login button
-              TextButton(
+              ElevatedButton(
                 onPressed: () {
                   Navigator.pushNamed(context, '/login');
                 },
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primary,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
                 ),
                 child: Text(
                   AppStrings.getString('login', languageService.currentLanguage),

@@ -4513,6 +4513,323 @@ class AppStrings {
         'en': 'Reject',
         'ar': 'رفض',
       },
+      // Missing provider dashboard translations
+      'trackYourEarningsTransactions': {
+        'en': 'Track your earnings and transactions',
+        'ar': 'تتبع أرباحك ومعاملاتك',
+      },
+      'manageClientReviewsFeedback': {
+        'en': 'Manage client reviews and feedback',
+        'ar': 'إدارة تقييمات العملاء والتعليقات',
+      },
+      'earningsChart': {
+        'en': 'Earnings Chart',
+        'ar': 'رسم بياني للأرباح',
+      },
+      'exportReport': {
+        'en': 'Export Report',
+        'ar': 'تصدير التقرير',
+      },
+      'replyToAll': {
+        'en': 'Reply to All',
+        'ar': 'الرد على الكل',
+      },
+      'pendingReplies': {
+        'en': 'Pending Replies',
+        'ar': 'ردود معلقة',
+      },
+      'thisMonth': {
+        'en': 'This Month',
+        'ar': 'هذا الشهر',
+      },
+      'pendingPayments': {
+        'en': 'Pending Payments',
+        'ar': 'مدفوعات معلقة',
+      },
+      'averagePerBooking': {
+        'en': 'Average Per Booking',
+        'ar': 'المتوسط لكل حجز',
+      },
+      'payments': {
+        'en': 'payments',
+        'ar': 'مدفوعات',
+      },
+      'providerName': {
+        'en': 'Provider Name',
+        'ar': 'اسم مقدم الخدمة',
+      },
+      'homeCleaning': {
+        'en': 'Home Cleaning',
+        'ar': 'تنظيف المنزل',
+      },
+      'elderlyCare': {
+        'en': 'Elderly Care',
+        'ar': 'رعاية المسنين',
+      },
+      'homeCooking': {
+        'en': 'Home Cooking',
+        'ar': 'طهي منزلي',
+      },
+      'babysitting': {
+        'en': 'Babysitting',
+        'ar': 'رعاية الأطفال',
+      },
+      'babysittingService': {
+        'en': 'Babysitting Service',
+        'ar': 'خدمة رعاية الأطفال',
+      },
+      'elderlyCareService': {
+        'en': 'Elderly Care Service',
+        'ar': 'خدمة رعاية المسنين',
+      },
+      'homeCleaningService': {
+        'en': 'Home Cleaning Service',
+        'ar': 'خدمة تنظيف المنزل',
+      },
+      'homeCookingService': {
+        'en': 'Home Cooking Service',
+        'ar': 'خدمة الطهي المنزلي',
+      },
+      'responded': {
+        'en': 'Responded',
+        'ar': 'تم الرد',
+      },
+      'pending': {
+        'en': 'Pending',
+        'ar': 'معلق',
+      },
+      'respond': {
+        'en': 'Respond',
+        'ar': 'رد',
+      },
+      'report': {
+        'en': 'Report',
+        'ar': 'إبلاغ',
+      },
+      'edit': {
+        'en': 'Edit',
+        'ar': 'تعديل',
+      },
+      'close': {
+        'en': 'Close',
+        'ar': 'إغلاق',
+      },
+      'settings': {
+        'en': 'Settings',
+        'ar': 'الإعدادات',
+      },
+      'bookings': {
+        'en': 'Bookings',
+        'ar': 'الحجوزات',
+      },
+      'reviews': {
+        'en': 'Reviews',
+        'ar': 'التقييمات',
+      },
+      'dashboard': {
+        'en': 'Dashboard',
+        'ar': 'لوحة التحكم',
+      },
+      'logout': {
+        'en': 'Logout',
+        'ar': 'تسجيل الخروج',
+      },
+      'notifications': {
+        'en': 'Notifications',
+        'ar': 'الإشعارات',
+      },
+      'profile': {
+        'en': 'Profile',
+        'ar': 'الملف الشخصي',
+      },
+      'search': {
+        'en': 'Search',
+        'ar': 'بحث',
+      },
+      'filter': {
+        'en': 'Filter',
+        'ar': 'تصفية',
+      },
+      'sort': {
+        'en': 'Sort',
+        'ar': 'ترتيب',
+      },
+      'view': {
+        'en': 'View',
+        'ar': 'عرض',
+      },
+      'details': {
+        'en': 'Details',
+        'ar': 'التفاصيل',
+      },
+      'status': {
+        'en': 'Status',
+        'ar': 'الحالة',
+      },
+      'date': {
+        'en': 'Date',
+        'ar': 'التاريخ',
+      },
+      'time': {
+        'en': 'Time',
+        'ar': 'الوقت',
+      },
+      'amount': {
+        'en': 'Amount',
+        'ar': 'المبلغ',
+      },
+      'client': {
+        'en': 'Client',
+        'ar': 'العميل',
+      },
+      'service': {
+        'en': 'Service',
+        'ar': 'الخدمة',
+      },
+      'rating': {
+        'en': 'Rating',
+        'ar': 'التقييم',
+      },
+      'comment': {
+        'en': 'Comment',
+        'ar': 'تعليق',
+      },
+      'description': {
+        'en': 'Description',
+        'ar': 'الوصف',
+      },
+      'price': {
+        'en': 'Price',
+        'ar': 'السعر',
+      },
+      'category': {
+        'en': 'Category',
+        'ar': 'الفئة',
+      },
+      'active': {
+        'en': 'Active',
+        'ar': 'نشط',
+      },
+      'inactive': {
+        'en': 'Inactive',
+        'ar': 'غير نشط',
+      },
+      'enabled': {
+        'en': 'Enabled',
+        'ar': 'مفعل',
+      },
+      'disabled': {
+        'en': 'Disabled',
+        'ar': 'معطل',
+      },
+      'yes': {
+        'en': 'Yes',
+        'ar': 'نعم',
+      },
+      'no': {
+        'en': 'No',
+        'ar': 'لا',
+      },
+      'ok': {
+        'en': 'OK',
+        'ar': 'موافق',
+      },
+      'save': {
+        'en': 'Save',
+        'ar': 'حفظ',
+      },
+      'update': {
+        'en': 'Update',
+        'ar': 'تحديث',
+      },
+      'create': {
+        'en': 'Create',
+        'ar': 'إنشاء',
+      },
+      'remove': {
+        'en': 'Remove',
+        'ar': 'إزالة',
+      },
+      'clear': {
+        'en': 'Clear',
+        'ar': 'مسح',
+      },
+      'reset': {
+        'en': 'Reset',
+        'ar': 'إعادة تعيين',
+      },
+      'back': {
+        'en': 'Back',
+        'ar': 'رجوع',
+      },
+      'next': {
+        'en': 'Next',
+        'ar': 'التالي',
+      },
+      'previous': {
+        'en': 'Previous',
+        'ar': 'السابق',
+      },
+      'finish': {
+        'en': 'Finish',
+        'ar': 'إنهاء',
+      },
+      'continue': {
+        'en': 'Continue',
+        'ar': 'متابعة',
+      },
+      'skip': {
+        'en': 'Skip',
+        'ar': 'تخطي',
+      },
+      'loading': {
+        'en': 'Loading...',
+        'ar': 'جاري التحميل...',
+      },
+      'error': {
+        'en': 'Error',
+        'ar': 'خطأ',
+      },
+      'success': {
+        'en': 'Success',
+        'ar': 'نجح',
+      },
+      'warning': {
+        'en': 'Warning',
+        'ar': 'تحذير',
+      },
+      'info': {
+        'en': 'Information',
+        'ar': 'معلومات',
+      },
+      'help': {
+        'en': 'Help',
+        'ar': 'مساعدة',
+      },
+      'support': {
+        'en': 'Support',
+        'ar': 'الدعم',
+      },
+      'contact': {
+        'en': 'Contact',
+        'ar': 'اتصال',
+      },
+      'about': {
+        'en': 'About',
+        'ar': 'حول',
+      },
+      'privacy': {
+        'en': 'Privacy',
+        'ar': 'الخصوصية',
+      },
+      'terms': {
+        'en': 'Terms',
+        'ar': 'الشروط',
+      },
+      'faq': {
+        'en': 'FAQ',
+        'ar': 'الأسئلة الشائعة',
+      },
     };
 
     return allStrings[key]?[languageCode] ?? allStrings[key]?['en'] ?? key;

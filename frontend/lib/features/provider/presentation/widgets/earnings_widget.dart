@@ -21,168 +21,290 @@ class _EarningsWidgetState extends State<EarningsWidget> {
   Widget build(BuildContext context) {
     return Consumer<LanguageService>(
       builder: (context, languageService, child) {
-        return _buildEarningsWidget(languageService);
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final screenWidth = constraints.maxWidth;
+            final screenHeight = constraints.maxHeight;
+            
+            // Responsive breakpoints
+            final isDesktop = screenWidth > 1200;
+            final isTablet = screenWidth > 768 && screenWidth <= 1200;
+            final isMobile = screenWidth <= 768;
+            
+            return _buildEarningsWidget(languageService, isMobile, isTablet, isDesktop, screenWidth);
+          },
+        );
       },
     );
   }
 
-  Widget _buildEarningsWidget(LanguageService languageService) {
+  Widget _buildEarningsWidget(LanguageService languageService, bool isMobile, bool isTablet, bool isDesktop, double screenWidth) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
+      padding: EdgeInsets.all(isMobile ? 8.0 : (isTablet ? 12.0 : 16.0)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
-          Text(
-            AppStrings.getString('earnings', languageService.currentLanguage),
-            style: GoogleFonts.cairo(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: AppColors.greyDark,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            AppStrings.getString('manageEarningsRevenue', languageService.currentLanguage),
-            style: GoogleFonts.cairo(
-              fontSize: 16,
-              color: AppColors.grey,
-            ),
-          ),
-          const SizedBox(height: 32),
+          _buildHeader(languageService, isMobile, isTablet, isDesktop),
+          
+          SizedBox(height: isMobile ? 12.0 : (isTablet ? 16.0 : 20.0)),
           
           // Earnings Overview
-          _buildEarningsOverview(languageService),
+          _buildEarningsOverview(languageService, isMobile, isTablet, isDesktop, screenWidth),
           
-          const SizedBox(height: 32),
+          SizedBox(height: isMobile ? 20.0 : (isTablet ? 24.0 : 28.0)),
           
           // Earnings Chart
-          _buildEarningsChart(languageService),
+          _buildEarningsChart(languageService, isMobile, isTablet, isDesktop),
           
-          const SizedBox(height: 32),
+          SizedBox(height: isMobile ? 20.0 : (isTablet ? 24.0 : 28.0)),
           
           // Recent Transactions
-          _buildRecentTransactions(languageService),
+          _buildRecentTransactions(languageService, isMobile, isTablet, isDesktop),
         ],
       ),
     );
   }
 
-  Widget _buildEarningsOverview(LanguageService languageService) {
+  Widget _buildHeader(LanguageService languageService, bool isMobile, bool isTablet, bool isDesktop) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Title and subtitle
+        Text(
+          AppStrings.getString('earnings', languageService.currentLanguage),
+          style: GoogleFonts.cairo(
+            fontSize: isMobile ? 20.0 : (isTablet ? 24.0 : 28.0),
+            fontWeight: FontWeight.bold,
+            color: AppColors.greyDark,
+          ),
+        ),
+        SizedBox(height: isMobile ? 2.0 : (isTablet ? 4.0 : 6.0)),
+        Text(
+          AppStrings.getString('trackYourEarningsTransactions', languageService.currentLanguage),
+          style: GoogleFonts.cairo(
+            fontSize: isMobile ? 12.0 : (isTablet ? 14.0 : 16.0),
+            color: AppColors.grey,
+          ),
+        ),
+        SizedBox(height: isMobile ? 12.0 : (isTablet ? 16.0 : 20.0)),
+        
+        // Action buttons
+        Row(
+          children: [
+            // Export button
+            Expanded(
+              child: Container(
+                height: isMobile ? 32 : (isTablet ? 36 : 40), // Reduced height
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.2),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () {
+                      // TODO: Export earnings report
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.download,
+                          size: isMobile ? 14 : (isTablet ? 16 : 18), // Smaller icon
+                          color: AppColors.white,
+                        ),
+                        SizedBox(width: isMobile ? 4.0 : (isTablet ? 6.0 : 8.0)), // Reduced spacing
+                        Text(
+                          AppStrings.getString('exportReport', languageService.currentLanguage),
+                          style: GoogleFonts.cairo(
+                            fontSize: isMobile ? 11.0 : (isTablet ? 12.0 : 13.0), // Smaller font
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEarningsOverview(LanguageService languageService, bool isMobile, bool isTablet, bool isDesktop, double screenWidth) {
     final earnings = [
       {
         'title': 'totalEarnings',
         'amount': '\$2,450',
         'change': '+12.5%',
         'isPositive': true,
-        'icon': Icons.attach_money,
+        'color': AppColors.success,
+        'icon': Icons.trending_up,
       },
       {
-        'title': 'monthlyEarnings',
+        'title': 'thisMonth',
         'amount': '\$850',
         'change': '+8.2%',
         'isPositive': true,
+        'color': AppColors.primary,
         'icon': Icons.calendar_month,
       },
       {
-        'title': 'weeklyEarnings',
+        'title': 'pendingPayments',
         'amount': '\$320',
-        'change': '+15.3%',
+        'change': '3 payments',
         'isPositive': true,
-        'icon': Icons.date_range,
+        'color': AppColors.warning,
+        'icon': Icons.pending,
       },
       {
-        'title': 'dailyEarnings',
+        'title': 'averagePerBooking',
         'amount': '\$45',
-        'change': '-2.1%',
-        'isPositive': false,
-        'icon': Icons.today,
+        'change': '+5.1%',
+        'isPositive': true,
+        'color': AppColors.secondary,
+        'icon': Icons.analytics,
       },
     ];
+
+    // Responsive grid configuration for earnings cards - More compact design
+    int crossAxisCount;
+    double childAspectRatio;
+    double crossAxisSpacing;
+    double mainAxisSpacing;
+    
+    if (isMobile) {
+      crossAxisCount = 2; // 2x2 grid on mobile
+      childAspectRatio = 2.5; // More compact cards on mobile
+      crossAxisSpacing = 8.0;
+      mainAxisSpacing = 8.0;
+    } else if (isTablet) {
+      crossAxisCount = 2; // 2x2 grid on tablet
+      childAspectRatio = 2.2; // More compact cards on tablet
+      crossAxisSpacing = 12.0;
+      mainAxisSpacing = 12.0;
+    } else {
+      crossAxisCount = 4; // 4 columns on desktop
+      childAspectRatio = 2.0; // More compact cards on desktop
+      crossAxisSpacing = 16.0;
+      mainAxisSpacing = 16.0;
+    }
 
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 1.5,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        crossAxisSpacing: crossAxisSpacing,
+        mainAxisSpacing: mainAxisSpacing,
+        childAspectRatio: childAspectRatio,
       ),
       itemCount: earnings.length,
       itemBuilder: (context, index) {
-        return _buildEarningCard(earnings[index], languageService);
+        return _buildEarningCard(earnings[index], languageService, isMobile, isTablet, isDesktop);
       },
     );
   }
 
-  Widget _buildEarningCard(Map<String, dynamic> earning, LanguageService languageService) {
+  Widget _buildEarningCard(Map<String, dynamic> earning, LanguageService languageService, bool isMobile, bool isTablet, bool isDesktop) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(isMobile ? 8.0 : (isTablet ? 10.0 : 12.0)), // Reduced padding
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header with icon and change indicator
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: EdgeInsets.all(isMobile ? 4.0 : (isTablet ? 6.0 : 8.0)), // Reduced icon container padding
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
+                    color: earning['color'].withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     earning['icon'],
-                    color: AppColors.primary,
-                    size: 20,
+                    size: isMobile ? 16 : (isTablet ? 18 : 20), // Slightly smaller icons
+                    color: earning['color'],
                   ),
                 ),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 3.0 : (isTablet ? 4.0 : 6.0), // Reduced padding
+                    vertical: isMobile ? 1.0 : (isTablet ? 2.0 : 3.0) // Reduced padding
+                  ),
                   decoration: BoxDecoration(
                     color: earning['isPositive'] 
-                        ? AppColors.success.withValues(alpha: 0.1)
-                        : AppColors.error.withValues(alpha: 0.1),
+                        ? AppColors.success.withValues(alpha: 0.12)
+                        : AppColors.error.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
-                    earning['change'],
-                    style: GoogleFonts.cairo(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: earning['isPositive'] ? AppColors.success : AppColors.error,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        earning['isPositive'] ? Icons.trending_up : Icons.trending_down,
+                        size: isMobile ? 8 : (isTablet ? 10 : 12), // Smaller icons
+                        color: earning['isPositive'] ? AppColors.success : AppColors.error,
+                      ),
+                      SizedBox(width: isMobile ? 1.0 : (isTablet ? 1.5 : 2.0)), // Reduced spacing
+                      Text(
+                        earning['change'],
+                        style: GoogleFonts.cairo(
+                          fontSize: isMobile ? 8.0 : (isTablet ? 9.0 : 10.0), // Smaller font
+                          fontWeight: FontWeight.w600,
+                          color: earning['isPositive'] ? AppColors.success : AppColors.error,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: isMobile ? 6.0 : (isTablet ? 8.0 : 10.0)), // Reduced spacing
+            
+            // Amount
             Text(
               earning['amount'],
               style: GoogleFonts.cairo(
-                fontSize: 24,
+                fontSize: isMobile ? 16.0 : (isTablet ? 20.0 : 24.0), // Slightly smaller font
                 fontWeight: FontWeight.bold,
                 color: AppColors.greyDark,
               ),
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: isMobile ? 1.0 : (isTablet ? 2.0 : 3.0)), // Reduced spacing
+            
+            // Title
             Text(
               AppStrings.getString(earning['title'], languageService.currentLanguage),
               style: GoogleFonts.cairo(
-                fontSize: 12,
+                fontSize: isMobile ? 10.0 : (isTablet ? 11.0 : 12.0), // Slightly smaller font
                 color: AppColors.grey,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -191,66 +313,59 @@ class _EarningsWidgetState extends State<EarningsWidget> {
     );
   }
 
-  Widget _buildEarningsChart(LanguageService languageService) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+  Widget _buildEarningsChart(LanguageService languageService, bool isMobile, bool isTablet, bool isDesktop) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          AppStrings.getString('earningsChart', languageService.currentLanguage),
+          style: GoogleFonts.cairo(
+            fontSize: isMobile ? 18.0 : (isTablet ? 20.0 : 22.0),
+            fontWeight: FontWeight.bold,
+            color: AppColors.greyDark,
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            AppStrings.getString('earningsOverview', languageService.currentLanguage),
-            style: GoogleFonts.cairo(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppColors.greyDark,
-            ),
+        ),
+        SizedBox(height: isMobile ? 12.0 : (isTablet ? 16.0 : 20.0)),
+        Container(
+          height: isMobile ? 160 : (isTablet ? 200 : 240),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.06),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          Container(
-            height: 200,
-            decoration: BoxDecoration(
-              color: AppColors.grey.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.bar_chart,
-                    size: 48,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.bar_chart,
+                  size: isMobile ? 40 : (isTablet ? 48 : 56),
+                  color: AppColors.grey.withValues(alpha: 0.5),
+                ),
+                SizedBox(height: isMobile ? 8.0 : (isTablet ? 12.0 : 16.0)),
+                Text(
+                  AppStrings.getString('chartPlaceholder', languageService.currentLanguage),
+                  style: GoogleFonts.cairo(
+                    fontSize: isMobile ? 12.0 : (isTablet ? 14.0 : 16.0),
                     color: AppColors.grey,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    AppStrings.getString('chartComingSoon', languageService.currentLanguage),
-                    style: GoogleFonts.cairo(
-                      fontSize: 16,
-                      color: AppColors.grey,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _buildRecentTransactions(LanguageService languageService) {
-    final transactions = [
+  Widget _buildRecentTransactions(LanguageService languageService, bool isMobile, bool isTablet, bool isDesktop) {
+    final _transactions = [
       {
         'id': '#TR001',
         'clientName': 'أحمد محمد',
@@ -259,6 +374,8 @@ class _EarningsWidgetState extends State<EarningsWidget> {
         'commission': '\$5',
         'status': 'completed',
         'date': '2024-12-15',
+        'type': 'credit',
+        'description': 'Cleaning Service',
       },
       {
         'id': '#TR002',
@@ -268,6 +385,8 @@ class _EarningsWidgetState extends State<EarningsWidget> {
         'commission': '\$4',
         'status': 'completed',
         'date': '2024-12-14',
+        'type': 'credit',
+        'description': 'babysittingService',
       },
       {
         'id': '#TR003',
@@ -277,6 +396,8 @@ class _EarningsWidgetState extends State<EarningsWidget> {
         'commission': '\$6',
         'status': 'pending',
         'date': '2024-12-13',
+        'type': 'debit',
+        'description': 'elderlyCareService',
       },
       {
         'id': '#TR004',
@@ -286,6 +407,8 @@ class _EarningsWidgetState extends State<EarningsWidget> {
         'commission': '\$7',
         'status': 'completed',
         'date': '2024-12-12',
+        'type': 'credit',
+        'description': 'Cooking Services',
       },
     ];
 
@@ -295,128 +418,81 @@ class _EarningsWidgetState extends State<EarningsWidget> {
         Text(
           AppStrings.getString('recentTransactions', languageService.currentLanguage),
           style: GoogleFonts.cairo(
-            fontSize: 20,
+            fontSize: isMobile ? 18.0 : (isTablet ? 20.0 : 22.0),
             fontWeight: FontWeight.bold,
             color: AppColors.greyDark,
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: isMobile ? 12.0 : (isTablet ? 16.0 : 20.0)),
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: transactions.length,
+          itemCount: _transactions.length,
           itemBuilder: (context, index) {
-            return _buildTransactionCard(transactions[index], languageService);
+            return _buildTransactionCard(_transactions[index], languageService, isMobile, isTablet, isDesktop);
           },
         ),
       ],
     );
   }
 
-  Widget _buildTransactionCard(Map<String, dynamic> transaction, LanguageService languageService) {
-    final statusColor = transaction['status'] == 'completed' ? AppColors.success : AppColors.warning;
+  Widget _buildTransactionCard(Map<String, dynamic> transaction, LanguageService languageService, bool isMobile, bool isTablet, bool isDesktop) {
+    final isCredit = transaction['type'] == 'credit';
     
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: isMobile ? 8.0 : (isTablet ? 12.0 : 16.0)),
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(isMobile ? 12.0 : (isTablet ? 14.0 : 16.0)),
         child: Row(
           children: [
             // Transaction icon
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(isMobile ? 8.0 : (isTablet ? 10.0 : 12.0)),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
+                color: isCredit 
+                    ? AppColors.success.withValues(alpha: 0.08)
+                    : AppColors.error.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
-                Icons.payment,
-                color: AppColors.primary,
-                size: 24,
+                isCredit ? Icons.add : Icons.remove,
+                color: isCredit ? AppColors.success : AppColors.error,
+                size: isMobile ? 18 : (isTablet ? 20 : 24),
               ),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: isMobile ? 10.0 : (isTablet ? 12.0 : 14.0)),
             
             // Transaction details
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Text(
-                        transaction['id'],
-                        style: GoogleFonts.cairo(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: statusColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          AppStrings.getString(transaction['status'], languageService.currentLanguage),
-                          style: GoogleFonts.cairo(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: statusColor,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
                   Text(
-                    transaction['clientName'],
+                    AppStrings.getString(transaction['description'], languageService.currentLanguage),
                     style: GoogleFonts.cairo(
-                      fontSize: 16,
+                      fontSize: isMobile ? 14.0 : (isTablet ? 16.0 : 18.0),
                       fontWeight: FontWeight.w600,
                       color: AppColors.greyDark,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: isMobile ? 2.0 : (isTablet ? 3.0 : 4.0)),
                   Text(
-                    AppStrings.getString(transaction['service'], languageService.currentLanguage),
+                    transaction['date'],
                     style: GoogleFonts.cairo(
-                      fontSize: 14,
+                      fontSize: isMobile ? 11.0 : (isTablet ? 12.0 : 13.0),
                       color: AppColors.grey,
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Text(
-                        '${AppStrings.getString('commission', languageService.currentLanguage)}: ${transaction['commission']}',
-                        style: GoogleFonts.cairo(
-                          fontSize: 12,
-                          color: AppColors.grey,
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        transaction['date'],
-                        style: GoogleFonts.cairo(
-                          fontSize: 12,
-                          color: AppColors.grey,
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               ),
@@ -429,17 +505,30 @@ class _EarningsWidgetState extends State<EarningsWidget> {
                 Text(
                   transaction['amount'],
                   style: GoogleFonts.cairo(
-                    fontSize: 18,
+                    fontSize: isMobile ? 14.0 : (isTablet ? 16.0 : 18.0),
                     fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
+                    color: isCredit ? AppColors.success : AppColors.error,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  AppStrings.getString('completedOn', languageService.currentLanguage),
-                  style: GoogleFonts.cairo(
-                    fontSize: 10,
-                    color: AppColors.grey,
+                SizedBox(height: isMobile ? 2.0 : (isTablet ? 3.0 : 4.0)),
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 6.0 : (isTablet ? 8.0 : 10.0), 
+                    vertical: isMobile ? 3.0 : (isTablet ? 4.0 : 6.0)
+                  ),
+                  decoration: BoxDecoration(
+                    color: isCredit 
+                        ? AppColors.success.withValues(alpha: 0.12)
+                        : AppColors.error.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    AppStrings.getString(transaction['type'], languageService.currentLanguage),
+                    style: GoogleFonts.cairo(
+                      fontSize: isMobile ? 10.0 : (isTablet ? 11.0 : 12.0),
+                      fontWeight: FontWeight.w600,
+                      color: isCredit ? AppColors.success : AppColors.error,
+                    ),
                   ),
                 ),
               ],
@@ -450,3 +539,5 @@ class _EarningsWidgetState extends State<EarningsWidget> {
     );
   }
 }
+
+

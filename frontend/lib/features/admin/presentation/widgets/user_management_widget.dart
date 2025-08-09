@@ -189,6 +189,39 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
           ),
         ),
         
+        // Palestine identity element
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(20.r),
+            border: Border.all(
+              color: AppColors.primary.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '🇵🇸',
+                style: TextStyle(fontSize: 16.sp),
+              ),
+              SizedBox(width: 6.w),
+              Text(
+                AppStrings.getString('palestine', languageService.currentLanguage),
+                style: GoogleFonts.cairo(
+                  fontSize: 12.sp,
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+        
+        SizedBox(width: 12.w),
+        
         // Add user button - More compact
         ElevatedButton.icon(
           onPressed: () {

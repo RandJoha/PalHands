@@ -1212,6 +1212,54 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header with Palestine element
+              Row(
+                children: [
+                  Text(
+                    _getLocalizedString('my_bookings'),
+                    style: GoogleFonts.cairo(
+                      fontSize: isMobile ? 20.0 : (isTablet ? 24.0 : 28.0),
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isMobile ? 8.0 : (isTablet ? 10.0 : 12.0), 
+                      vertical: isMobile ? 4.0 : (isTablet ? 5.0 : 6.0)
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppColors.primary.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '🇵🇸',
+                          style: TextStyle(fontSize: isMobile ? 14.0 : (isTablet ? 15.0 : 16.0)),
+                        ),
+                        SizedBox(width: isMobile ? 4.0 : (isTablet ? 5.0 : 6.0)),
+                        Text(
+                          _getLocalizedString('palestine'),
+                          style: GoogleFonts.cairo(
+                            fontSize: isMobile ? 10.0 : (isTablet ? 11.0 : 12.0),
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: isMobile ? 16.0 : 20.0),
+              
               // Filter Tabs
               _buildBookingFilters(isMobile, isTablet),
               SizedBox(height: isMobile ? 20.0 : 32.0),

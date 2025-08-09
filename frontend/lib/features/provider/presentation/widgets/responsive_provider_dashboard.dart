@@ -438,7 +438,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Provider Name', // Replace with actual provider name
+                          AppStrings.getString('providerName', languageService.currentLanguage),
                           style: GoogleFonts.cairo(
                             fontSize: screenWidth > 1400 ? 16 : 14,
                             fontWeight: FontWeight.w600,
@@ -535,7 +535,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Provider Name',
+                    AppStrings.getString('providerName', languageService.currentLanguage),
                     style: GoogleFonts.cairo(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -791,7 +791,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'Provider Name',
+                              AppStrings.getString('providerName', languageService.currentLanguage),
                               style: GoogleFonts.cairo(
                                 fontSize: 16,
                                 color: AppColors.white,

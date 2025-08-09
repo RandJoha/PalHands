@@ -22,7 +22,7 @@ class WebAboutWidget extends StatelessWidget {
               _buildMissionSection(languageService),
               _buildValuesSection(languageService),
               _buildWhoWeServeSection(languageService),
-              _buildCulturalIdentitySection(languageService),
+
               _buildHowItWorksSection(languageService),
               _buildOurStorySection(languageService),
               _buildContactSection(languageService),
@@ -236,7 +236,11 @@ class WebAboutWidget extends StatelessWidget {
 
   Widget _buildMissionSection(LanguageService languageService) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 80),
+      decoration: BoxDecoration(
+        color: Colors.white,
+      ),
       child: Column(
         children: [
           Text(
@@ -273,11 +277,8 @@ class WebAboutWidget extends StatelessWidget {
     ];
 
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 80),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-      ),
       child: Column(
         children: [
           Text(
@@ -365,7 +366,11 @@ class WebAboutWidget extends StatelessWidget {
 
   Widget _buildWhoWeServeSection(LanguageService languageService) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 80),
+      decoration: BoxDecoration(
+        color: Colors.white,
+      ),
       child: Row(
         children: [
           Expanded(
@@ -416,64 +421,15 @@ class WebAboutWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildCulturalIdentitySection(LanguageService languageService) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 80),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        children: [
-          Text(
-            AppStrings.getString('culturalIdentity', languageService.currentLanguage),
-            style: GoogleFonts.cairo(
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primary,
-            ),
-          ),
-          const SizedBox(height: 40),
-          Row(
-            children: [
-              Expanded(
-                flex: 1,
-                child: Container(
-                  height: 200,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Center(
-                    child: TatreezPattern(
-                      size: 100,
-                      opacity: 0.8,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 40),
-              Expanded(
-                flex: 2,
-                child: Text(
-                  AppStrings.getString('culturalIdentityDescription', languageService.currentLanguage),
-                  style: GoogleFonts.cairo(
-                    fontSize: 18,
-                    color: Colors.black87,
-                    height: 1.6,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildHowItWorksSection(LanguageService languageService) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 80),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.05),
+      ),
       child: Column(
         children: [
           Text(
@@ -501,10 +457,10 @@ class WebAboutWidget extends StatelessWidget {
 
   Widget _buildOurStorySection(LanguageService languageService) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 80),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         children: [

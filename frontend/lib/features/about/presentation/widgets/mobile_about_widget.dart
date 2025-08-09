@@ -31,7 +31,7 @@ class _MobileAboutWidgetState extends State<MobileAboutWidget> {
                 _buildMissionSection(languageService),
                 _buildValuesSection(languageService),
                 _buildWhoWeServeSection(languageService),
-                _buildCulturalIdentitySection(languageService),
+  
                 _buildHowItWorksSection(languageService),
                 _buildOurStorySection(languageService),
                 _buildContactSection(languageService),
@@ -314,7 +314,11 @@ class _MobileAboutWidgetState extends State<MobileAboutWidget> {
 
   Widget _buildMissionSection(LanguageService languageService) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
+      decoration: BoxDecoration(
+        color: Colors.white,
+      ),
       child: Column(
         children: [
           Text(
@@ -351,11 +355,8 @@ class _MobileAboutWidgetState extends State<MobileAboutWidget> {
     ];
 
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
       child: Column(
         children: [
           Text(
@@ -425,7 +426,11 @@ class _MobileAboutWidgetState extends State<MobileAboutWidget> {
 
   Widget _buildWhoWeServeSection(LanguageService languageService) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
+      decoration: BoxDecoration(
+        color: Colors.white,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -466,55 +471,15 @@ class _MobileAboutWidgetState extends State<MobileAboutWidget> {
     );
   }
 
-  Widget _buildCulturalIdentitySection(LanguageService languageService) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          Text(
-            AppStrings.getString('culturalIdentity', languageService.currentLanguage),
-            style: GoogleFonts.cairo(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primary,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Container(
-            height: 120,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Center(
-              child: TatreezPattern(
-                size: 80,
-                opacity: 0.8,
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            AppStrings.getString('culturalIdentityDescription', languageService.currentLanguage),
-            style: GoogleFonts.cairo(
-              fontSize: 16,
-              color: Colors.black87,
-              height: 1.6,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildHowItWorksSection(LanguageService languageService) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.05),
+      ),
       child: Column(
         children: [
           Text(
@@ -542,10 +507,10 @@ class _MobileAboutWidgetState extends State<MobileAboutWidget> {
 
   Widget _buildOurStorySection(LanguageService languageService) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         children: [

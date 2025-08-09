@@ -978,13 +978,17 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
           return Row(
             children: [
               // Login button
-              TextButton(
+              ElevatedButton(
                 onPressed: () {
                   Navigator.pushNamed(context, '/login');
                 },
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primary,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
                 ),
                 child: Text(
                   AppStrings.getString('login', languageService.currentLanguage),

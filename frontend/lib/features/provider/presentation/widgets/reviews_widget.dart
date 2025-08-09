@@ -21,155 +21,246 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
   Widget build(BuildContext context) {
     return Consumer<LanguageService>(
       builder: (context, languageService, child) {
-        return _buildReviewsWidget(languageService);
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final screenWidth = constraints.maxWidth;
+            final screenHeight = constraints.maxHeight;
+            
+            // Responsive breakpoints
+            final isDesktop = screenWidth > 1200;
+            final isTablet = screenWidth > 768 && screenWidth <= 1200;
+            final isMobile = screenWidth <= 768;
+            
+            return _buildReviewsWidget(languageService, isMobile, isTablet, isDesktop, screenWidth);
+          },
+        );
       },
     );
   }
 
-  Widget _buildReviewsWidget(LanguageService languageService) {
+  Widget _buildReviewsWidget(LanguageService languageService, bool isMobile, bool isTablet, bool isDesktop, double screenWidth) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
+      padding: EdgeInsets.all(isMobile ? 8.0 : (isTablet ? 12.0 : 16.0)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
-          Text(
-            AppStrings.getString('reviews', languageService.currentLanguage),
-            style: GoogleFonts.cairo(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: AppColors.greyDark,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            AppStrings.getString('manageReviewsRatings', languageService.currentLanguage),
-            style: GoogleFonts.cairo(
-              fontSize: 16,
-              color: AppColors.grey,
-            ),
-          ),
-          const SizedBox(height: 32),
+          _buildHeader(languageService, isMobile, isTablet, isDesktop),
+          
+          SizedBox(height: isMobile ? 12.0 : (isTablet ? 16.0 : 20.0)),
           
           // Reviews Overview
-          _buildReviewsOverview(languageService),
+          _buildReviewsOverview(languageService, isMobile, isTablet, isDesktop, screenWidth),
           
-          const SizedBox(height: 32),
+          SizedBox(height: isMobile ? 20.0 : (isTablet ? 24.0 : 28.0)),
           
           // Reviews List
-          _buildReviewsList(languageService),
+          _buildReviewsList(languageService, isMobile, isTablet, isDesktop),
         ],
       ),
     );
   }
 
-  Widget _buildReviewsOverview(LanguageService languageService) {
+  Widget _buildHeader(LanguageService languageService, bool isMobile, bool isTablet, bool isDesktop) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Title and subtitle
+        Text(
+          AppStrings.getString('reviews', languageService.currentLanguage),
+          style: GoogleFonts.cairo(
+            fontSize: isMobile ? 20.0 : (isTablet ? 24.0 : 28.0),
+            fontWeight: FontWeight.bold,
+            color: AppColors.greyDark,
+          ),
+        ),
+        SizedBox(height: isMobile ? 2.0 : (isTablet ? 4.0 : 6.0)),
+        Text(
+          AppStrings.getString('manageClientReviewsFeedback', languageService.currentLanguage),
+          style: GoogleFonts.cairo(
+            fontSize: isMobile ? 12.0 : (isTablet ? 14.0 : 16.0),
+            color: AppColors.grey,
+          ),
+        ),
+        SizedBox(height: isMobile ? 12.0 : (isTablet ? 16.0 : 20.0)),
+        
+        // Action buttons
+        Row(
+          children: [
+            // Reply to all button
+            Expanded(
+              child: Container(
+                height: isMobile ? 32 : (isTablet ? 36 : 40), // Reduced height
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.2),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () {
+                      // TODO: Reply to all reviews
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.reply_all,
+                          size: isMobile ? 14 : (isTablet ? 16 : 18), // Smaller icon
+                          color: AppColors.white,
+                        ),
+                        SizedBox(width: isMobile ? 4.0 : (isTablet ? 6.0 : 8.0)), // Reduced spacing
+                        Text(
+                          AppStrings.getString('replyToAll', languageService.currentLanguage),
+                          style: GoogleFonts.cairo(
+                            fontSize: isMobile ? 11.0 : (isTablet ? 12.0 : 13.0), // Smaller font
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReviewsOverview(LanguageService languageService, bool isMobile, bool isTablet, bool isDesktop, double screenWidth) {
     final stats = [
       {
         'title': 'averageRating',
         'value': '4.8',
-        'subtitle': 'outOf',
-        'color': AppColors.primary,
+        'color': AppColors.success,
         'icon': Icons.star,
       },
       {
         'title': 'totalReviews',
         'value': '156',
-        'subtitle': '',
-        'color': AppColors.success,
+        'color': AppColors.primary,
         'icon': Icons.rate_review,
       },
       {
         'title': 'positiveReviews',
         'value': '142',
-        'subtitle': 'satisfied',
         'color': AppColors.success,
         'icon': Icons.thumb_up,
       },
       {
-        'title': 'responseRate',
-        'value': '95%',
-        'subtitle': 'responded',
+        'title': 'pendingReplies',
+        'value': '8',
         'color': AppColors.warning,
-        'icon': Icons.reply,
+        'icon': Icons.pending_actions,
       },
     ];
+
+    // Responsive grid configuration for stats cards - More compact design
+    int crossAxisCount;
+    double childAspectRatio;
+    double crossAxisSpacing;
+    double mainAxisSpacing;
+    
+    if (isMobile) {
+      crossAxisCount = 2; // 2x2 grid on mobile
+      childAspectRatio = 2.5; // More compact cards on mobile
+      crossAxisSpacing = 8.0;
+      mainAxisSpacing = 8.0;
+    } else if (isTablet) {
+      crossAxisCount = 2; // 2x2 grid on tablet
+      childAspectRatio = 2.2; // More compact cards on tablet
+      crossAxisSpacing = 12.0;
+      mainAxisSpacing = 12.0;
+    } else {
+      crossAxisCount = 4; // 4 columns on desktop
+      childAspectRatio = 2.0; // More compact cards on desktop
+      crossAxisSpacing = 16.0;
+      mainAxisSpacing = 16.0;
+    }
 
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 1.5,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        crossAxisSpacing: crossAxisSpacing,
+        mainAxisSpacing: mainAxisSpacing,
+        childAspectRatio: childAspectRatio,
       ),
       itemCount: stats.length,
       itemBuilder: (context, index) {
-        return _buildStatCard(stats[index], languageService);
+        return _buildStatCard(stats[index], languageService, isMobile, isTablet, isDesktop);
       },
     );
   }
 
-  Widget _buildStatCard(Map<String, dynamic> stat, LanguageService languageService) {
+  Widget _buildStatCard(Map<String, dynamic> stat, LanguageService languageService, bool isMobile, bool isTablet, bool isDesktop) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(isMobile ? 8.0 : (isTablet ? 10.0 : 12.0)), // Reduced padding
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              stat['icon'],
-              size: 32,
-              color: stat['color'],
+            Container(
+              padding: EdgeInsets.all(isMobile ? 4.0 : (isTablet ? 6.0 : 8.0)), // Reduced icon container padding
+              decoration: BoxDecoration(
+                color: stat['color'].withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                stat['icon'],
+                size: isMobile ? 18 : (isTablet ? 20 : 24), // Slightly smaller icons
+                color: stat['color'],
+              ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: isMobile ? 4.0 : (isTablet ? 6.0 : 8.0)), // Reduced spacing
             Text(
               stat['value'],
               style: GoogleFonts.cairo(
-                fontSize: 24,
+                fontSize: isMobile ? 16.0 : (isTablet ? 20.0 : 24.0), // Slightly smaller font
                 fontWeight: FontWeight.bold,
                 color: AppColors.greyDark,
               ),
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: isMobile ? 1.0 : (isTablet ? 2.0 : 3.0)), // Reduced spacing
             Text(
               AppStrings.getString(stat['title'], languageService.currentLanguage),
               style: GoogleFonts.cairo(
-                fontSize: 12,
+                fontSize: isMobile ? 9.0 : (isTablet ? 10.0 : 11.0), // Slightly smaller font
                 color: AppColors.grey,
+                fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.center,
             ),
-            if (stat['subtitle'].isNotEmpty) ...[
-              const SizedBox(height: 2),
-              Text(
-                AppStrings.getString(stat['subtitle'], languageService.currentLanguage),
-                style: GoogleFonts.cairo(
-                  fontSize: 10,
-                  color: AppColors.grey,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildReviewsList(LanguageService languageService) {
+  Widget _buildReviewsList(LanguageService languageService, bool isMobile, bool isTablet, bool isDesktop) {
     final reviews = [
       {
         'id': '#RV001',
@@ -185,7 +276,7 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
       {
         'id': '#RV002',
         'clientName': 'Sarah Johnson',
-        'service': 'homeBabysitting',
+        'service': 'babysitting',
         'rating': 4,
         'comment': languageService.isArabic
             ? 'مربية أطفال رائعة. أطفالي أحبوها وكانت صبورة جداً.'
@@ -196,7 +287,7 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
       {
         'id': '#RV003',
         'clientName': 'فاطمة علي',
-        'service': 'homeElderlyCare',
+        'service': 'elderlyCare',
         'rating': 5,
         'comment': languageService.isArabic
             ? 'رعاية ممتازة لوالدتي. كانت الممرضة مهنية ومتعاطفة.'
@@ -207,7 +298,7 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
       {
         'id': '#RV004',
         'clientName': 'Michael Brown',
-        'service': 'homeCookingServices',
+        'service': 'homeCooking',
         'rating': 4,
         'comment': languageService.isArabic
             ? 'طعام لذيذ وطازج. الشيف كان مهنياً ومهتماً بالتفاصيل.'
@@ -223,67 +314,62 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
         Text(
           AppStrings.getString('recentReviews', languageService.currentLanguage),
           style: GoogleFonts.cairo(
-            fontSize: 20,
+            fontSize: isMobile ? 18.0 : (isTablet ? 20.0 : 22.0),
             fontWeight: FontWeight.bold,
             color: AppColors.greyDark,
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: isMobile ? 12.0 : (isTablet ? 16.0 : 20.0)),
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: reviews.length,
           itemBuilder: (context, index) {
-            return _buildReviewCard(reviews[index], languageService);
+            return _buildReviewCard(reviews[index], languageService, isMobile, isTablet, isDesktop);
           },
         ),
       ],
     );
   }
 
-  Widget _buildReviewCard(Map<String, dynamic> review, LanguageService languageService) {
+  Widget _buildReviewCard(Map<String, dynamic> review, LanguageService languageService, bool isMobile, bool isTablet, bool isDesktop) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: EdgeInsets.only(bottom: isMobile ? 8.0 : (isTablet ? 12.0 : 16.0)),
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(isMobile ? 12.0 : (isTablet ? 14.0 : 16.0)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header with client info and rating
             Row(
               children: [
                 // Client avatar
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Center(
-                    child: Text(
-                      review['clientName'][0],
-                      style: GoogleFonts.cairo(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
+                CircleAvatar(
+                  radius: isMobile ? 18 : (isTablet ? 20 : 24),
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.08),
+                  child: Text(
+                    review['clientName'][0].toUpperCase(),
+                    style: GoogleFonts.cairo(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: isMobile ? 14 : (isTablet ? 16 : 18),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: isMobile ? 10.0 : (isTablet ? 12.0 : 14.0)),
                 
-                // Client info
+                // Client details
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -291,15 +377,16 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
                       Text(
                         review['clientName'],
                         style: GoogleFonts.cairo(
-                          fontSize: 16,
+                          fontSize: isMobile ? 14.0 : (isTablet ? 16.0 : 18.0),
                           fontWeight: FontWeight.w600,
                           color: AppColors.greyDark,
                         ),
                       ),
+                      SizedBox(height: isMobile ? 2.0 : (isTablet ? 3.0 : 4.0)),
                       Text(
                         AppStrings.getString(review['service'], languageService.currentLanguage),
                         style: GoogleFonts.cairo(
-                          fontSize: 12,
+                          fontSize: isMobile ? 11.0 : (isTablet ? 12.0 : 13.0),
                           color: AppColors.grey,
                         ),
                       ),
@@ -308,92 +395,111 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
                 ),
                 
                 // Rating
-                Row(
-                  children: List.generate(5, (index) {
-                    return Icon(
-                      index < review['rating'] ? Icons.star : Icons.star_border,
-                      size: 16,
-                      color: index < review['rating'] ? AppColors.warning : AppColors.grey,
-                    );
-                  }),
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 6.0 : (isTablet ? 8.0 : 10.0), 
+                    vertical: isMobile ? 4.0 : (isTablet ? 6.0 : 8.0)
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.star,
+                        size: isMobile ? 14 : (isTablet ? 16 : 18),
+                        color: AppColors.warning,
+                      ),
+                      SizedBox(width: isMobile ? 3.0 : (isTablet ? 4.0 : 6.0)),
+                      Text(
+                        review['rating'].toString(),
+                        style: GoogleFonts.cairo(
+                          fontSize: isMobile ? 12.0 : (isTablet ? 14.0 : 16.0),
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.greyDark,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
+            SizedBox(height: isMobile ? 8.0 : (isTablet ? 10.0 : 12.0)),
             
-            const SizedBox(height: 12),
-            
-            // Review comment
+            // Review text
             Text(
               review['comment'],
               style: GoogleFonts.cairo(
-                fontSize: 14,
+                fontSize: isMobile ? 12.0 : (isTablet ? 13.0 : 14.0),
                 color: AppColors.greyDark,
                 height: 1.4,
               ),
             ),
+            SizedBox(height: isMobile ? 8.0 : (isTablet ? 10.0 : 12.0)),
             
-            const SizedBox(height: 12),
-            
-            // Review actions
+            // Footer with date and actions
             Row(
               children: [
+                Icon(
+                  Icons.calendar_today,
+                  size: isMobile ? 12 : (isTablet ? 14 : 16),
+                  color: AppColors.grey,
+                ),
+                SizedBox(width: isMobile ? 4.0 : (isTablet ? 6.0 : 8.0)),
                 Text(
                   review['date'],
                   style: GoogleFonts.cairo(
-                    fontSize: 12,
+                    fontSize: isMobile ? 10.0 : (isTablet ? 11.0 : 12.0),
                     color: AppColors.grey,
                   ),
                 ),
                 const Spacer(),
-                if (review['status'] == 'pending') ...[
-                  ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                    ),
-                    child: Text(
-                      AppStrings.getString('respondToReview', languageService.currentLanguage),
-                      style: GoogleFonts.cairo(fontSize: 12),
+                
+                // Reply button
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 8.0 : (isTablet ? 10.0 : 12.0), 
+                    vertical: isMobile ? 6.0 : (isTablet ? 8.0 : 10.0)
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      width: 1,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.error,
-                      foregroundColor: AppColors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                    ),
-                    child: Text(
-                      AppStrings.getString('reportReview', languageService.currentLanguage),
-                      style: GoogleFonts.cairo(fontSize: 12),
-                    ),
-                  ),
-                ] else ...[
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      AppStrings.getString('responded', languageService.currentLanguage),
-                      style: GoogleFonts.cairo(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.success,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () {
+                        // TODO: Reply to review
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.reply,
+                            size: isMobile ? 14 : (isTablet ? 16 : 18),
+                            color: AppColors.primary,
+                          ),
+                          SizedBox(width: isMobile ? 4.0 : (isTablet ? 6.0 : 8.0)),
+                          Text(
+                            AppStrings.getString('reply', languageService.currentLanguage),
+                            style: GoogleFonts.cairo(
+                              fontSize: isMobile ? 10.0 : (isTablet ? 11.0 : 12.0),
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ],
+                ),
               ],
             ),
           ],
