@@ -4,8 +4,11 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/services/language_service.dart';
+import '../../../../shared/services/responsive_service.dart';
 import '../../../../shared/widgets/animated_handshake.dart';
 import '../../../../shared/widgets/tatreez_pattern.dart';
+import '../../../../shared/widgets/shared_navigation.dart';
+import '../../../../shared/widgets/shared_hero_section.dart';
 
 class MobileAboutWidget extends StatefulWidget {
   const MobileAboutWidget({super.key});
@@ -14,24 +17,76 @@ class MobileAboutWidget extends StatefulWidget {
   State<MobileAboutWidget> createState() => _MobileAboutWidgetState();
 }
 
-class _MobileAboutWidgetState extends State<MobileAboutWidget> {
+class _MobileAboutWidgetState extends State<MobileAboutWidget> with TickerProviderStateMixin {
+  late AnimationController _bannerController;
+  late AnimationController _cardController;
+  late Animation<double> _bannerAnimation;
+  late Animation<double> _cardAnimation;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _bannerController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+    _cardController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    
+    _bannerAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _bannerController,
+      curve: Curves.easeInOut,
+    ));
+    
+    _cardAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _cardController,
+      curve: Curves.easeOutBack,
+    ));
+    
+    _bannerController.forward();
+    _cardController.forward();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageService>(
-      builder: (context, languageService, child) {
+    return Consumer2<LanguageService, ResponsiveService>(
+      builder: (context, languageService, responsiveService, child) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final shouldUseMobileLayout = responsiveService.shouldUseMobileLayout(screenWidth);
+        
         return Scaffold(
+          key: _scaffoldKey,
           backgroundColor: const Color(0xFFFDF5EC),
-          drawer: _buildDrawer(languageService),
+          drawer: shouldUseMobileLayout ? SharedMobileDrawer(currentPage: 'aboutUs') : null,
           body: SingleChildScrollView(
             child: Column(
               children: [
-                _buildHeader(languageService),
-                _buildHeroSection(languageService),
+                // Shared Navigation
+                SharedNavigation(
+                  currentPage: 'aboutUs',
+                  showAuthButtons: false,
+                  onMenuTap: shouldUseMobileLayout ? () {
+                    _scaffoldKey.currentState?.openDrawer();
+                  } : null,
+                  isMobile: shouldUseMobileLayout,
+                ),
+                // Shared Hero Section
+                SharedHeroSections.aboutHero(
+                  languageService: languageService,
+                  isMobile: shouldUseMobileLayout,
+                ),
                 _buildMissionSection(languageService),
                 _buildValuesSection(languageService),
                 _buildWhoWeServeSection(languageService),
-  
                 _buildHowItWorksSection(languageService),
                 _buildOurStorySection(languageService),
                 _buildContactSection(languageService),
@@ -42,273 +97,6 @@ class _MobileAboutWidgetState extends State<MobileAboutWidget> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildHeader(LanguageService languageService) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Hamburger menu
-          Builder(
-            builder: (context) => GestureDetector(
-              onTap: () {
-                Scaffold.of(context).openDrawer();
-              },
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                child: Icon(
-                  Icons.menu,
-                  color: AppColors.primary,
-                  size: 24,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          // Logo and app name
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const AnimatedHandshake(
-                    size: 20,
-                    color: Colors.white,
-                    animationDuration: Duration(milliseconds: 2000),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  AppStrings.getString('appName', languageService.currentLanguage),
-                  style: GoogleFonts.cairo(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Language toggle
-          _buildLanguageToggle(languageService),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLanguageToggle(LanguageService languageService) {
-    return GestureDetector(
-      onTap: () {
-        languageService.toggleLanguage();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          border: Border.all(color: AppColors.primary),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(
-          languageService.currentLanguage == 'ar' ? 'EN' : 'العربية',
-          style: const TextStyle(
-            color: AppColors.primary,
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDrawer(LanguageService languageService) {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: const BoxDecoration(
-              color: AppColors.primary,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const AnimatedHandshake(
-                    size: 30,
-                    color: AppColors.primary,
-                    animationDuration: Duration(milliseconds: 2000),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  AppStrings.getString('appName', languageService.currentLanguage),
-                  style: GoogleFonts.cairo(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          _buildDrawerItem(
-            icon: Icons.home,
-            title: AppStrings.getString('home', languageService.currentLanguage),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushReplacementNamed(context, '/home');
-            },
-            languageService: languageService,
-          ),
-          _buildDrawerItem(
-            icon: Icons.info,
-            title: AppStrings.getString('aboutUs', languageService.currentLanguage),
-            onTap: () {
-              Navigator.pop(context);
-            },
-            isSelected: true,
-            languageService: languageService,
-          ),
-          _buildDrawerItem(
-            icon: Icons.cleaning_services,
-            title: AppStrings.getString('ourServices', languageService.currentLanguage),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, '/categories');
-            },
-            languageService: languageService,
-          ),
-          _buildDrawerItem(
-            icon: Icons.question_answer,
-            title: AppStrings.getString('faqs', languageService.currentLanguage),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, '/faqs');
-            },
-            languageService: languageService,
-          ),
-          _buildDrawerItem(
-            icon: Icons.contact_support,
-            title: AppStrings.getString('contactUs', languageService.currentLanguage),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, '/contact');
-            },
-            languageService: languageService,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDrawerItem({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-    bool isSelected = false,
-    required LanguageService languageService,
-  }) {
-    return Directionality(
-      textDirection: languageService.textDirection,
-      child: ListTile(
-        leading: Icon(
-          icon,
-          color: isSelected ? AppColors.primary : Colors.black87,
-        ),
-        title: Text(
-          title,
-          textAlign: languageService.currentLanguage == 'ar' ? TextAlign.center : TextAlign.start,
-          style: TextStyle(
-            color: isSelected ? AppColors.primary : Colors.black87,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-        onTap: onTap,
-        selected: isSelected,
-      ),
-    );
-  }
-
-  Widget _buildHeroSection(LanguageService languageService) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary.withOpacity(0.1),
-            AppColors.primary.withOpacity(0.05),
-          ],
-        ),
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 200,
-            height: 200,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: const AnimatedHandshake(
-              size: 100,
-              color: AppColors.primary,
-              animationDuration: Duration(milliseconds: 3000),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            AppStrings.getString('aboutUs', languageService.currentLanguage),
-            style: GoogleFonts.cairo(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            AppStrings.getString('appTagline', languageService.currentLanguage),
-            style: GoogleFonts.cairo(
-              fontSize: 16,
-              color: Colors.black87,
-              height: 1.4,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
     );
   }
 

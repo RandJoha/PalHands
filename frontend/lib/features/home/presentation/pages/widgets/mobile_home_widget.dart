@@ -4,8 +4,11 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_strings.dart';
 import '../../../../../shared/services/language_service.dart';
 import '../../../../../shared/services/auth_service.dart';
+import '../../../../../shared/services/responsive_service.dart';
 import '../../../../../shared/widgets/animated_handshake.dart';
 import '../../../../../shared/widgets/tatreez_pattern.dart';
+import '../../../../../shared/widgets/shared_navigation.dart';
+import '../../../../../shared/widgets/shared_hero_section.dart';
 
 class MobileHomeWidget extends StatefulWidget {
   const MobileHomeWidget({Key? key}) : super(key: key);
@@ -20,6 +23,7 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
   late AnimationController _cardController;
   late Animation<double> _bannerAnimation;
   late Animation<double> _cardAnimation; // For bottom navigation
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -62,23 +66,38 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageService>(
-      builder: (context, languageService, child) {
+    return Consumer2<LanguageService, ResponsiveService>(
+      builder: (context, languageService, responsiveService, child) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final shouldUseMobileLayout = responsiveService.shouldUseMobileLayout(screenWidth);
+        
         return Scaffold(
+          key: _scaffoldKey,
           backgroundColor: const Color(0xFFFDF5EC), // Soft off-white beige
-          drawer: _buildDrawer(languageService),
+          drawer: shouldUseMobileLayout ? SharedMobileDrawer(currentPage: 'home') : null,
           body: Stack(
             children: [
-              
               // Main content
               Column(
                 children: [
-                  _buildHeader(languageService),
+                  // Shared Navigation
+                  SharedNavigation(
+                    currentPage: 'home',
+                    showAuthButtons: false,
+                    onMenuTap: shouldUseMobileLayout ? () {
+                      _scaffoldKey.currentState?.openDrawer();
+                    } : null,
+                    isMobile: shouldUseMobileLayout,
+                  ),
                   Expanded(
                     child: SingleChildScrollView(
                       child: Column(
                         children: [
-                          _buildHeroBanner(languageService),
+                          // Shared Hero Section
+                          SharedHeroSections.homeHero(
+                            languageService: languageService,
+                            isMobile: shouldUseMobileLayout,
+                          ),
                           _buildCategoriesSection(languageService),
                           _buildPopularServicesSection(languageService),
                           _buildWhyPalHandsSection(languageService),
@@ -94,337 +113,7 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
               ),
             ],
           ),
-          bottomNavigationBar: _buildBottomNavigationBar(languageService),
-        );
-      },
-    );
-  }
-
-  Widget _buildHeader(LanguageService languageService) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Directionality(
-        textDirection: languageService.textDirection,
-        child: Row(
-          children: [
-            // Hamburger menu
-            Builder(
-              builder: (context) => GestureDetector(
-                onTap: () {
-                  Scaffold.of(context).openDrawer();
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  child: Icon(
-                    Icons.menu,
-                    color: AppColors.primary,
-                    size: 24,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Logo with hand icon and text
-            Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.handshake,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    AppStrings.getString('appName', languageService.currentLanguage),
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Language toggle
-            GestureDetector(
-              onTap: () {
-                languageService.toggleLanguage();
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.primary),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  languageService.currentLanguage == 'ar' ? 'EN' : 'العربية',
-                  style: const TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-            
-            // Authentication buttons
-            const SizedBox(width: 8),
-            _buildMobileAuthButtons(languageService),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDrawer(LanguageService languageService) {
-    return Drawer(
-      child: Directionality(
-        textDirection: languageService.textDirection,
-        child: Column(
-          children: [
-            // Drawer header
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(20),
-                  bottomRight: Radius.circular(20),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      Icons.handshake,
-                      color: AppColors.primary,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    AppStrings.getString('appName', languageService.currentLanguage),
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Navigation items
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  _buildDrawerItem(
-                    icon: Icons.home,
-                    title: AppStrings.getString('home', languageService.currentLanguage),
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.info,
-                    title: AppStrings.getString('aboutUs', languageService.currentLanguage),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/about');
-                    },
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.cleaning_services,
-                    title: AppStrings.getString('ourServices', languageService.currentLanguage),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/categories');
-                    },
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.question_answer,
-                    title: AppStrings.getString('faqs', languageService.currentLanguage),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/faqs');
-                    },
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.contact_support,
-                    title: AppStrings.getString('contactUs', languageService.currentLanguage),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/contact');
-                    },
-                  ),
-                  const Divider(),
-                  _buildDrawerItem(
-                    icon: Icons.privacy_tip,
-                    title: AppStrings.getString('privacyPolicy', languageService.currentLanguage),
-                    onTap: () {
-                      Navigator.pop(context);
-                      // TODO: Navigate to privacy policy
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDrawerItem({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: AppColors.primary),
-      title: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-        ),
-        textAlign: TextAlign.start,
-      ),
-      onTap: onTap,
-    );
-  }
-
-  Widget _buildHeroBanner(LanguageService languageService) {
-    return AnimatedBuilder(
-      animation: _bannerAnimation,
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(0, 50 * (1 - _bannerAnimation.value.clamp(0.0, 1.0))),
-          child: Opacity(
-            opacity: _bannerAnimation.value.clamp(0.0, 1.0),
-            child: Container(
-              margin: const EdgeInsets.all(16),
-              height: 220,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    const Color(0xFFFDF5EC),
-                    const Color(0xFFF5F5DC),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    // Hijab girl image - placeholder for now
-                    Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(60),
-                        border: Border.all(
-                          color: AppColors.primary.withOpacity(0.3),
-                          width: 2,
-                        ),
-                      ),
-                      child: Icon(
-                        Icons.person,
-                        size: 60,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(width: 20),
-                    // Text content
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // Hero title
-                          Text(
-                            AppStrings.getString('heroTitle', languageService.currentLanguage),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          // Description
-                          Text(
-                            AppStrings.getString('professionalCleaningDescription', languageService.currentLanguage),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                              height: 1.3,
-                            ),
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 12),
-                          // Book Now button
-                          ElevatedButton(
-                            onPressed: () {
-                              // TODO: Navigate to booking
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            child: Text(
-                              AppStrings.getString('bookNow', languageService.currentLanguage),
-                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          bottomNavigationBar: shouldUseMobileLayout ? _buildBottomNavigationBar(languageService) : null,
         );
       },
     );
@@ -1052,156 +741,6 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildMobileAuthButtons(LanguageService languageService) {
-    return Consumer<AuthService>(
-      builder: (context, authService, child) {
-        if (authService.isAuthenticated) {
-          // User is logged in - show dashboard button and user menu
-          return Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-
-              
-              // User menu
-              PopupMenuButton<String>(
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Icon(
-                    Icons.person,
-                    size: 14,
-                    color: AppColors.primary,
-                  ),
-                ),
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'profile',
-                    child: Row(
-                      children: [
-                        Icon(Icons.person, size: 14, color: AppColors.textSecondary),
-                        const SizedBox(width: 6),
-                        Text(
-                          authService.userFullName,
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuDivider(),
-                  PopupMenuItem(
-                    value: 'logout',
-                    child: Row(
-                      children: [
-                        Icon(Icons.logout, size: 14, color: AppColors.error),
-                        const SizedBox(width: 6),
-                        Text(
-                          AppStrings.getString('logout', languageService.currentLanguage),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.error,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                onSelected: (value) async {
-                  if (value == 'profile') {
-                    // Navigate to appropriate dashboard based on user role
-                    if (authService.isAdmin) {
-                      Navigator.pushNamed(context, '/admin');
-                    } else if (authService.isProvider) {
-                      Navigator.pushNamed(context, '/provider');
-                    } else {
-                      Navigator.pushNamed(context, '/user');
-                    }
-                  } else if (value == 'logout') {
-                    try {
-                      await authService.logout();
-                      if (mounted) {
-                        // Navigate to home screen and clear all routes
-                        Navigator.of(context).pushNamedAndRemoveUntil(
-                          '/home',
-                          (route) => false,
-                        );
-                      }
-                    } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Logout failed: ${e.toString()}'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    }
-                  }
-                },
-              ),
-            ],
-          );
-        } else {
-          // User is not logged in - show login/register buttons
-          return Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Login button
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/login');
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                child: Text(
-                  AppStrings.getString('login', languageService.currentLanguage),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              
-              // Register button
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/signup');
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                child: Text(
-                  AppStrings.getString('signUp', languageService.currentLanguage),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          );
-        }
-      },
     );
   }
 } 

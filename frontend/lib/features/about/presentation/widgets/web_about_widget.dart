@@ -6,6 +6,8 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/services/language_service.dart';
 import '../../../../shared/widgets/animated_handshake.dart';
 import '../../../../shared/widgets/tatreez_pattern.dart';
+import '../../../../shared/widgets/shared_navigation.dart';
+import '../../../../shared/widgets/shared_hero_section.dart';
 
 class WebAboutWidget extends StatelessWidget {
   const WebAboutWidget({super.key});
@@ -17,12 +19,20 @@ class WebAboutWidget extends StatelessWidget {
         return SingleChildScrollView(
           child: Column(
             children: [
-              _buildHeader(languageService),
-              _buildHeroSection(languageService),
+              // Shared Navigation
+              SharedNavigation(
+                currentPage: 'aboutUs',
+                showAuthButtons: true,
+                isMobile: false,
+              ),
+              // Shared Hero Section
+              SharedHeroSections.aboutHero(
+                languageService: languageService,
+                isMobile: false,
+              ),
               _buildMissionSection(languageService),
               _buildValuesSection(languageService),
               _buildWhoWeServeSection(languageService),
-
               _buildHowItWorksSection(languageService),
               _buildOurStorySection(languageService),
               _buildContactSection(languageService),
@@ -31,206 +41,6 @@ class WebAboutWidget extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildHeader(LanguageService languageService) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Logo and app name
-          Row(
-            children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const AnimatedHandshake(
-                  size: 25,
-                  color: Colors.white,
-                  animationDuration: Duration(milliseconds: 2000),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Text(
-                AppStrings.getString('appName', languageService.currentLanguage),
-                style: GoogleFonts.cairo(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
-          ),
-          // Navigation - centered for Arabic
-          if (languageService.currentLanguage == 'ar')
-            Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildNavLink('home', languageService),
-                  _buildNavLink('aboutUs', languageService, isSelected: true),
-                  _buildNavLink('ourServices', languageService),
-                  _buildNavLink('contactUs', languageService),
-                ],
-              ),
-            )
-          else ...[
-            const Spacer(),
-            Row(
-              children: [
-                _buildNavLink('home', languageService),
-                _buildNavLink('aboutUs', languageService, isSelected: true),
-                _buildNavLink('ourServices', languageService),
-                _buildNavLink('contactUs', languageService),
-              ],
-            ),
-          ],
-          const SizedBox(width: 24),
-          // Language toggle
-          _buildLanguageToggle(languageService),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavLink(String key, LanguageService languageService, {bool isSelected = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Builder(
-        builder: (context) => Directionality(
-          textDirection: languageService.textDirection,
-          child: TextButton(
-            onPressed: () {
-              if (key == 'home') {
-                Navigator.pushReplacementNamed(context, '/home');
-              } else if (key == 'ourServices') {
-                Navigator.pushNamed(context, '/categories');
-              } else if (key == 'contactUs') {
-                Navigator.pushNamed(context, '/contact');
-              }
-            },
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            ),
-            child: Text(
-              AppStrings.getString(key, languageService.currentLanguage),
-              style: TextStyle(
-                color: isSelected ? AppColors.primary : Colors.black87,
-                fontSize: 16,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLanguageToggle(LanguageService languageService) {
-    return GestureDetector(
-      onTap: () {
-        languageService.toggleLanguage();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          border: Border.all(color: AppColors.primary),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          languageService.currentLanguage == 'ar' ? 'EN' : 'العربية',
-          style: const TextStyle(
-            color: AppColors.primary,
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeroSection(LanguageService languageService) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 80),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary.withOpacity(0.1),
-            AppColors.primary.withOpacity(0.05),
-          ],
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 1,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  AppStrings.getString('aboutUs', languageService.currentLanguage),
-                  style: GoogleFonts.cairo(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  AppStrings.getString('appTagline', languageService.currentLanguage),
-                  style: GoogleFonts.cairo(
-                    fontSize: 24,
-                    color: Colors.black87,
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Center(
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: const AnimatedHandshake(
-                  size: 150,
-                  color: AppColors.primary,
-                  animationDuration: Duration(milliseconds: 3000),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 

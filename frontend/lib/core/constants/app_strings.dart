@@ -52,6 +52,11 @@ class AppStrings {
     'ar': 'إنشاء حساب كمقدم خدمة',
   };
 
+  static const Map<String, String> registerAsServiceProvider = {
+    'en': 'Register as Service Provider',
+    'ar': 'سجل كمقدم خدمة',
+  };
+
   static const Map<String, String> fullName = {
     'en': 'Full Name',
     'ar': 'الاسم الكامل',
@@ -3554,6 +3559,7 @@ class AppStrings {
       'signUp': signUp,
       'signUpAsClient': signUpAsClient,
       'signUpAsServiceProvider': signUpAsServiceProvider,
+      'registerAsServiceProvider': registerAsServiceProvider,
       'fullName': fullName,
       'email': email,
       'password': password,

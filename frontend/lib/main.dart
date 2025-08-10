@@ -27,6 +27,7 @@ import 'features/provider/presentation/pages/provider_dashboard_screen.dart';
 import 'shared/services/language_service.dart';
 import 'shared/services/health_service.dart';
 import 'shared/services/auth_service.dart';
+import 'shared/services/responsive_service.dart';
 
 // Feature imports (to be implemented)
 // import 'features/auth/presentation/bloc/auth_bloc.dart';
@@ -62,6 +63,7 @@ class PalHandsApp extends StatelessWidget {
             ChangeNotifierProvider(
               create: (context) => AuthService()..initialize(),
             ),
+            ChangeNotifierProvider(create: (context) => ResponsiveService()),
           ],
           child: Consumer<LanguageService>(
             builder: (context, languageService, child) {

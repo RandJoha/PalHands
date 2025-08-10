@@ -1511,6 +1511,108 @@ Widget _buildSidebarMenu(bool isDesktop, bool isTablet) {
 - **Testing**: 10% complete (manual testing only)
 - **Documentation**: 95% complete (comprehensive documentation, Provider Dashboard updated)
 
+## 🚨 **Current Issues & Known Problems**
+
+### **Navigation & Responsive Design Issues**
+
+#### **1. Mobile Menu Clickability Problem** ❌
+- **Issue**: The small burger menu (three lines) is not clickable on all pages
+- **Affected Pages**: Multiple pages across the application
+- **Symptoms**: 
+  - Menu button appears but doesn't respond to taps/clicks
+  - Users cannot access mobile navigation
+  - Mobile experience is broken
+- **Priority**: **HIGH** - Critical for mobile usability
+- **Status**: **IN PROGRESS** - Being investigated and fixed
+
+#### **2. Responsive Layout Overlap Issues** ❌
+- **Issue**: UI elements are overlapping each other on different screen sizes
+- **Symptoms**:
+  - Text overlapping with buttons
+  - Navigation items running into each other
+  - Layout breaking on medium screen sizes
+  - Elements not properly adapting to screen width changes
+- **Priority**: **HIGH** - Affects user experience across all devices
+- **Status**: **IN PROGRESS** - Layout system being reviewed
+
+#### **3. Inconsistent Responsive Behavior** ❌
+- **Issue**: Responsive design is not working consistently across all pages
+- **Symptoms**:
+  - Some pages show desktop layout on mobile
+  - Others show mobile layout on desktop
+  - Navigation state not persisting between page changes
+  - Inconsistent breakpoint behavior
+- **Priority**: **MEDIUM** - Affects user experience consistency
+- **Status**: **IN PROGRESS** - Responsive system being standardized
+
+### **Technical Details of Current Issues**
+
+#### **Mobile Menu Implementation**
+- **Current State**: `SharedNavigation` widget with `onMenuTap` callback
+- **Problem**: Callback not properly wired in some page implementations
+- **Affected Files**: Multiple mobile widget files
+- **Root Cause**: Inconsistent integration of `SharedNavigation` across pages
+
+#### **Responsive System**
+- **Current State**: `ResponsiveService` with screen-width based detection
+- **Problem**: Service not properly integrated in all page widgets
+- **Affected Files**: Multiple feature widgets
+- **Root Cause**: Incomplete migration to shared responsive components
+
+#### **Layout System**
+- **Current State**: Mix of old and new layout implementations
+- **Problem**: Some pages still use deprecated layout methods
+- **Affected Files**: Various page widgets
+- **Root Cause**: Incomplete standardization of layout components
+
+### **Impact Assessment**
+
+#### **User Experience Impact**
+- **Mobile Users**: Cannot access navigation menu (critical)
+- **All Users**: Inconsistent layout behavior across pages
+- **Navigation**: Confusing and unreliable user experience
+- **Professional Appearance**: Damaged by layout inconsistencies
+
+#### **Development Impact**
+- **Maintenance**: Difficult to maintain multiple layout systems
+- **Testing**: Hard to test responsive behavior consistently
+- **Code Quality**: Mixed implementation patterns
+- **Future Development**: Blocked by inconsistent foundation
+
+### **Immediate Action Plan**
+
+#### **Phase 1: Fix Mobile Menu Clickability** (Priority: HIGH)
+1. **Audit**: Review all mobile widget implementations
+2. **Fix**: Ensure `onMenuTap` callback is properly wired
+3. **Test**: Verify menu functionality on all pages
+4. **Validate**: Confirm mobile navigation works consistently
+
+#### **Phase 2: Standardize Responsive Behavior** (Priority: HIGH)
+1. **Audit**: Review all page widgets for responsive implementation
+2. **Standardize**: Ensure all pages use `ResponsiveService` consistently
+3. **Test**: Verify responsive behavior across all screen sizes
+4. **Validate**: Confirm consistent breakpoint behavior
+
+#### **Phase 3: Fix Layout Overlaps** (Priority: MEDIUM)
+1. **Audit**: Identify all layout overlap issues
+2. **Fix**: Resolve spacing and positioning problems
+3. **Test**: Verify layout integrity across all screen sizes
+4. **Validate**: Confirm no overlapping elements
+
+### **Files Requiring Immediate Attention**
+1. **Mobile Widgets**: All mobile widget files need menu integration review
+2. **Responsive Implementation**: All page widgets need responsive service integration
+3. **Layout Components**: All layout-related widgets need overlap resolution
+4. **Navigation Components**: `SharedNavigation` and related components need testing
+
+### **Testing Requirements**
+- **Mobile Testing**: Test on actual mobile devices
+- **Responsive Testing**: Test across all breakpoints (320px to 1920px+)
+- **Cross-Page Testing**: Verify consistency across all pages
+- **Navigation Testing**: Test all navigation paths and states
+
+---
+
 ## 🆕 **Recent Updates - December 2024**
 
 ### **UI/UX Improvements & Palestine Identity Integration**

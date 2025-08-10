@@ -4,6 +4,8 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_strings.dart';
 import '../../../../../shared/services/language_service.dart';
 import '../../../../../shared/widgets/tatreez_pattern.dart';
+import '../../../../../shared/widgets/shared_navigation.dart';
+import '../../../../../shared/widgets/shared_hero_section.dart';
 
 class WebCategoryWidget extends StatefulWidget {
   const WebCategoryWidget({Key? key}) : super(key: key);
@@ -14,6 +16,7 @@ class WebCategoryWidget extends StatefulWidget {
 
 class _WebCategoryWidgetState extends State<WebCategoryWidget> {
   Map<String, Set<String>> _selectedServices = {}; // Track selected services by category
+  
   @override
   Widget build(BuildContext context) {
     return Consumer<LanguageService>(
@@ -23,8 +26,17 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
           body: SingleChildScrollView(
             child: Column(
               children: [
-                _buildHeader(languageService),
-                _buildHeroSection(languageService),
+                // Shared Navigation
+                SharedNavigation(
+                  currentPage: 'ourServices',
+                  showAuthButtons: true,
+                  isMobile: false,
+                ),
+                // Shared Hero Section
+                SharedHeroSections.servicesHero(
+                  languageService: languageService,
+                  isMobile: false,
+                ),
                 _buildCategoriesGrid(languageService),
                 const SizedBox(height: 40),
               ],
@@ -32,268 +44,6 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildHeader(LanguageService languageService) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Directionality(
-        textDirection: languageService.textDirection,
-        child: Row(
-          children: [
-            // Back button
-            GestureDetector(
-              onTap: () {
-                Navigator.pop(context);
-              },
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                child: Icon(
-                  Icons.arrow_back,
-                  color: AppColors.primary,
-                  size: 24,
-                ),
-              ),
-            ),
-            const SizedBox(width: 20),
-            // Logo
-            Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.handshake,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  AppStrings.getString('appName', languageService.currentLanguage),
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ],
-            ),
-            const Spacer(),
-            // Centered Title
-            Expanded(
-              child: Center(
-                child: Text(
-                  AppStrings.getString('categories', languageService.currentLanguage),
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
-            const Spacer(),
-            // Centered Navigation
-            Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildNavLink('home', languageService),
-                  _buildNavLink('aboutUs', languageService),
-                  _buildNavLink('ourServices', languageService),
-                  _buildNavLink('faqs', languageService),
-                  _buildNavLink('contactUs', languageService),
-                ],
-              ),
-            ),
-            const Spacer(),
-            // Language toggle
-            GestureDetector(
-              onTap: () {
-                languageService.toggleLanguage();
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.primary),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  languageService.currentLanguage == 'ar' ? 'EN' : 'العربية',
-                  style: const TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavLink(String key, LanguageService languageService) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: TextButton(
-        onPressed: () {
-          if (key == 'home') {
-            Navigator.pushReplacementNamed(context, '/home');
-          } else if (key == 'aboutUs') {
-            Navigator.pushNamed(context, '/about');
-          } else if (key == 'ourServices') {
-            Navigator.pushNamed(context, '/categories');
-          } else if (key == 'faqs') {
-            Navigator.pushNamed(context, '/faqs');
-          } else if (key == 'contactUs') {
-            Navigator.pushNamed(context, '/contact');
-          }
-        },
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        ),
-        child: Text(
-          AppStrings.getString(key, languageService.currentLanguage),
-          style: const TextStyle(
-            color: AppColors.primary,
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeroSection(LanguageService languageService) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 40),
-      padding: const EdgeInsets.all(40),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.primary.withOpacity(0.1),
-            const Color(0xFF6B8E23).withOpacity(0.1),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: AppColors.primary.withOpacity(0.3),
-          width: 2,
-        ),
-      ),
-      child: Directionality(
-        textDirection: languageService.textDirection,
-        child: Row(
-          children: [
-            // Icon section
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Icon(
-                Icons.category,
-                size: 60,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(width: 40),
-            // Text section
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Text(
-                      AppStrings.getString('allServices', languageService.currentLanguage),
-                      style: const TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    AppStrings.getString('connectWithTrustedServiceProvider', languageService.currentLanguage),
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey[600],
-                      height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          // TODO: Navigate to booking
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          AppStrings.getString('bookNow', languageService.currentLanguage),
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      OutlinedButton(
-                        onPressed: () {
-                          // TODO: Navigate to provider registration
-                        },
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.primary,
-                          side: BorderSide(color: AppColors.primary),
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          AppStrings.getString('registerAsProvider', languageService.currentLanguage),
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

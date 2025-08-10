@@ -6,6 +6,8 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/services/language_service.dart';
 import '../../../../shared/widgets/animated_handshake.dart';
 import '../../../../shared/widgets/tatreez_pattern.dart';
+import '../../../../shared/widgets/shared_navigation.dart';
+import '../../../../shared/widgets/shared_hero_section.dart';
 import '../../data/faq_data.dart';
 import 'faq_item_widget.dart';
 import 'faq_search_widget.dart';
@@ -72,8 +74,17 @@ class _WebFAQsWidgetState extends State<WebFAQsWidget> {
           body: SingleChildScrollView(
             child: Column(
               children: [
-                _buildHeader(languageService),
-                _buildHeroSection(languageService),
+                // Shared Navigation
+                SharedNavigation(
+                  currentPage: 'faqs',
+                  showAuthButtons: true,
+                  isMobile: false,
+                ),
+                // Shared Hero Section
+                SharedHeroSections.faqsHero(
+                  languageService: languageService,
+                  isMobile: false,
+                ),
                 _buildSearchSection(languageService),
                 _buildContentSection(languageService),
                 _buildContactSection(languageService),
@@ -84,196 +95,6 @@ class _WebFAQsWidgetState extends State<WebFAQsWidget> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildHeader(LanguageService languageService) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Logo and app name
-          Row(
-            children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const AnimatedHandshake(
-                  size: 25,
-                  color: Colors.white,
-                  animationDuration: Duration(milliseconds: 2000),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Text(
-                AppStrings.getString('appName', languageService.currentLanguage),
-                style: GoogleFonts.cairo(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
-          ),
-          const Spacer(),
-          // Navigation menu
-          Row(
-            children: [
-              _buildNavItem(
-                AppStrings.getString('home', languageService.currentLanguage),
-                () => Navigator.pushReplacementNamed(context, '/home'),
-                languageService,
-              ),
-              _buildNavItem(
-                AppStrings.getString('aboutUs', languageService.currentLanguage),
-                () => Navigator.pushNamed(context, '/about'),
-                languageService,
-              ),
-              _buildNavItem(
-                AppStrings.getString('ourServices', languageService.currentLanguage),
-                () => Navigator.pushNamed(context, '/categories'),
-                languageService,
-              ),
-              _buildNavItem(
-                AppStrings.getString('faqs', languageService.currentLanguage),
-                () {},
-                languageService,
-                isSelected: true,
-              ),
-            ],
-          ),
-          const SizedBox(width: 24),
-          // Language toggle
-          _buildLanguageToggle(languageService),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(String title, VoidCallback onTap, LanguageService languageService, {bool isSelected = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: TextButton(
-        onPressed: onTap,
-        child: Text(
-          title,
-          style: GoogleFonts.cairo(
-            fontSize: 16,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected ? AppColors.primary : AppColors.textSecondary,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLanguageToggle(LanguageService languageService) {
-    return GestureDetector(
-      onTap: () {
-        languageService.toggleLanguage();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          border: Border.all(color: AppColors.primary),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          languageService.currentLanguage == 'ar' ? 'EN' : 'العربية',
-          style: const TextStyle(
-            color: AppColors.primary,
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeroSection(LanguageService languageService) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 60),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary.withOpacity(0.1),
-            AppColors.primary.withOpacity(0.05),
-          ],
-        ),
-      ),
-      child: Stack(
-        children: [
-          // Background Tatreez patterns
-          Positioned(
-            top: 40,
-            right: 40,
-            child: Opacity(
-              opacity: 0.08,
-              child: const TatreezPattern(
-                size: 120,
-                opacity: 0.3,
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 40,
-            left: 40,
-            child: Opacity(
-              opacity: 0.08,
-              child: const TatreezPattern(
-                size: 100,
-                opacity: 0.3,
-              ),
-            ),
-          ),
-          // Content
-          Row(
-            children: [
-              Expanded(
-                flex: 1,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppStrings.getString('faqPageTitle', languageService.currentLanguage),
-                      style: GoogleFonts.cairo(
-                        fontSize: 48,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      AppStrings.getString('faqPageDescription', languageService.currentLanguage),
-                      style: GoogleFonts.cairo(
-                        fontSize: 18,
-                        color: Colors.black87,
-                        height: 1.6,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 

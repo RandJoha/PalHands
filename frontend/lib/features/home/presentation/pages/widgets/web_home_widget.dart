@@ -5,8 +5,11 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_strings.dart';
 import '../../../../../shared/services/language_service.dart';
 import '../../../../../shared/services/auth_service.dart';
+import '../../../../../shared/services/responsive_service.dart';
 import '../../../../../shared/widgets/animated_handshake.dart';
 import '../../../../../shared/widgets/tatreez_pattern.dart';
+import '../../../../../shared/widgets/shared_navigation.dart';
+import '../../../../../shared/widgets/shared_hero_section.dart';
 
 class WebHomeWidget extends StatefulWidget {
   const WebHomeWidget({Key? key}) : super(key: key);
@@ -18,330 +21,54 @@ class WebHomeWidget extends StatefulWidget {
 class _WebHomeWidgetState extends State<WebHomeWidget> {
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageService>(
-      builder: (context, languageService, child) {
+    return Consumer2<LanguageService, ResponsiveService>(
+      builder: (context, languageService, responsiveService, child) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final shouldUseMobileLayout = responsiveService.shouldUseMobileLayout(screenWidth);
+        
         return Scaffold(
           backgroundColor: const Color(0xFFFDF5EC), // Soft off-white beige
-                    body: ConstrainedBox(
+          body: ConstrainedBox(
             constraints: BoxConstraints(
               maxWidth: MediaQuery.of(context).size.width,
             ),
             child: Stack(
               children: [
-              
-              // Main content
-              SingleChildScrollView(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width,
-                  ),
-                  child: Column(
-                    children: [
-                      _buildHeader(languageService),
-                      _buildHeroBanner(languageService),
-                      _buildCategoriesSection(languageService),
-                      _buildPopularServicesSection(languageService),
-                      _buildWhyPalHandsSection(languageService),
-                      _buildOffersSection(languageService),
-                      _buildContactSection(languageService),
-                      _buildFooter(languageService),
-                      const SizedBox(height: 40),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-      },
-    );
-  }
-
-  Widget _buildHeader(LanguageService languageService) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return Directionality(
-            textDirection: languageService.textDirection,
-            child: Row(
-              children: [
-                // Logo section - fixed width
-                SizedBox(
-                  width: 120,
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(6),
+                // Main content
+                SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width,
+                    ),
+                    child: Column(
+                      children: [
+                        // Shared Navigation
+                        SharedNavigation(
+                          currentPage: 'home',
+                          showAuthButtons: true,
+                          isMobile: shouldUseMobileLayout,
                         ),
-                        child: const Icon(
-                          Icons.handshake,
-                          color: Colors.white,
-                          size: 16,
+                        // Shared Hero Section
+                        SharedHeroSections.homeHero(
+                          languageService: languageService,
+                          isMobile: shouldUseMobileLayout,
                         ),
-                      ),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          AppStrings.getString('appName', languageService.currentLanguage),
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                // Navigation section - takes remaining space
-                Expanded(
-                  child: _buildResponsiveNavigation(languageService, constraints.maxWidth),
-                ),
-                
-                // Language toggle - fixed width
-                SizedBox(
-                  width: 60,
-                  child: GestureDetector(
-                    onTap: () {
-                      languageService.toggleLanguage();
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.primary),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        languageService.currentLanguage == 'ar' ? 'EN' : 'العربية',
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
+                        _buildCategoriesSection(languageService),
+                        _buildPopularServicesSection(languageService),
+                        _buildWhyPalHandsSection(languageService),
+                        _buildOffersSection(languageService),
+                        _buildContactSection(languageService),
+                        _buildFooter(languageService),
+                        const SizedBox(height: 40),
+                      ],
                     ),
                   ),
                 ),
-                
-                // Authentication buttons
-                const SizedBox(width: 16),
-                _buildAuthButtons(languageService),
               ],
             ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildResponsiveNavigation(LanguageService languageService, double availableWidth) {
-    // Calculate how many navigation items we can fit
-    int totalItems = 5;
-    double itemWidth = availableWidth / totalItems;
-    
-    // Determine font size based on available width per item
-    double fontSize = 10.0;
-    if (itemWidth > 120) {
-      fontSize = 14.0;
-    } else if (itemWidth > 80) {
-      fontSize = 12.0;
-    } else if (itemWidth > 60) {
-      fontSize = 11.0;
-    } else {
-      fontSize = 9.0;
-    }
-    
-    // Get navigation items with appropriate text
-    List<Map<String, String>> navItems = [
-      {'key': 'home', 'text': AppStrings.getString('home', languageService.currentLanguage)},
-      {'key': 'aboutUs', 'text': AppStrings.getString('aboutUs', languageService.currentLanguage)},
-      {'key': 'ourServices', 'text': AppStrings.getString('ourServices', languageService.currentLanguage)},
-      {'key': 'faqs', 'text': AppStrings.getString('faqs', languageService.currentLanguage)},
-      {'key': 'contactUs', 'text': AppStrings.getString('contactUs', languageService.currentLanguage)},
-    ];
-    
-    // Use shorter text for narrow screens
-    if (itemWidth < 70) {
-      for (int i = 0; i < navItems.length; i++) {
-        if (navItems[i]['key'] == 'ourServices') {
-          navItems[i]['text'] = languageService.currentLanguage == 'ar' ? 'الخدمات' : 'Services';
-        } else if (navItems[i]['key'] == 'contactUs') {
-          navItems[i]['text'] = languageService.currentLanguage == 'ar' ? 'تواصل' : 'Contact';
-        } else if (navItems[i]['key'] == 'aboutUs') {
-          navItems[i]['text'] = languageService.currentLanguage == 'ar' ? 'من نحن' : 'About';
-        }
-      }
-    }
-    
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: navItems.map((item) => _buildCompactNavLink(
-        item['text']!,
-        fontSize,
-        languageService,
-      )).toList(),
-    );
-  }
-
-  Widget _buildCompactNavLink(String text, double fontSize, LanguageService languageService) {
-    return Expanded(
-      child: TextButton(
-        onPressed: () {
-          // Navigate based on text content
-          if (text == AppStrings.getString('ourServices', languageService.currentLanguage) ||
-              text == 'الخدمات' ||
-              text == 'Services') {
-            Navigator.pushNamed(context, '/categories');
-          } else if (text == AppStrings.getString('aboutUs', languageService.currentLanguage) ||
-                     text == 'من نحن' ||
-                     text == 'About') {
-            Navigator.pushNamed(context, '/about');
-          } else if (text == AppStrings.getString('faqs', languageService.currentLanguage)) {
-            Navigator.pushNamed(context, '/faqs');
-          } else if (text == AppStrings.getString('contactUs', languageService.currentLanguage) ||
-                     text == 'تواصل' ||
-                     text == 'Contact') {
-            Navigator.pushNamed(context, '/contact');
-          }
-        },
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
-          minimumSize: Size.zero,
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: AppColors.primary,
-            fontSize: fontSize,
-            fontWeight: FontWeight.w500,
           ),
-          textAlign: TextAlign.center,
-          overflow: TextOverflow.ellipsis,
-          maxLines: 1,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeroBanner(LanguageService languageService) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 40),
-      height: 400,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFFFDF5EC),
-            const Color(0xFFF5F5DC),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: Row(
-          children: [
-            // Hijab girl image - placeholder for now
-            Container(
-              width: 280,
-              height: 280,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(140),
-                border: Border.all(
-                  color: AppColors.primary.withOpacity(0.3),
-                  width: 3,
-                ),
-              ),
-              child: Icon(
-                Icons.person,
-                size: 120,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(width: 50),
-            // Text content
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Hero title
-                  Text(
-                    AppStrings.getString('heroTitle', languageService.currentLanguage),
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Description
-                  Text(
-                    AppStrings.getString('professionalCleaningDescription', languageService.currentLanguage),
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey[600],
-                      height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  // Book Now button
-                  ElevatedButton(
-                    onPressed: () {
-                      // TODO: Navigate to booking
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text(
-                      AppStrings.getString('bookNow', languageService.currentLanguage),
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -880,150 +607,6 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildAuthButtons(LanguageService languageService) {
-    return Consumer<AuthService>(
-      builder: (context, authService, child) {
-        if (authService.isAuthenticated) {
-          // User is logged in - show dashboard button and user menu
-          return Row(
-            children: [
-
-              
-              // User menu
-              PopupMenuButton<String>(
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Icon(
-                    Icons.person,
-                    size: 16,
-                    color: AppColors.primary,
-                  ),
-                ),
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'profile',
-                    child: Row(
-                      children: [
-                        Icon(Icons.person, size: 16, color: AppColors.textSecondary),
-                        const SizedBox(width: 8),
-                        Text(
-                          authService.userFullName,
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuDivider(),
-                  PopupMenuItem(
-                    value: 'logout',
-                    child: Row(
-                      children: [
-                        Icon(Icons.logout, size: 16, color: AppColors.error),
-                        const SizedBox(width: 8),
-                        Text(
-                          AppStrings.getString('logout', languageService.currentLanguage),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: AppColors.error,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                onSelected: (value) async {
-                  if (value == 'profile') {
-                    // Navigate to appropriate dashboard based on user role
-                    if (authService.isAdmin) {
-                      Navigator.pushNamed(context, '/admin');
-                    } else if (authService.isProvider) {
-                      Navigator.pushNamed(context, '/provider');
-                    } else {
-                      Navigator.pushNamed(context, '/user');
-                    }
-                  } else if (value == 'logout') {
-                    try {
-                      await authService.logout();
-                      if (mounted) {
-                        // Navigate to home screen and clear all routes
-                        Navigator.of(context).pushNamedAndRemoveUntil(
-                          '/home',
-                          (route) => false,
-                        );
-                      }
-                    } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Logout failed: ${e.toString()}'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    }
-                  }
-                },
-              ),
-            ],
-          );
-        } else {
-          // User is not logged in - show login/register buttons
-          return Row(
-            children: [
-              // Login button
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/login');
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                ),
-                child: Text(
-                  AppStrings.getString('login', languageService.currentLanguage),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              
-              // Register button
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/signup');
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                ),
-                child: Text(
-                  AppStrings.getString('signUp', languageService.currentLanguage),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          );
-        }
-      },
     );
   }
 } 

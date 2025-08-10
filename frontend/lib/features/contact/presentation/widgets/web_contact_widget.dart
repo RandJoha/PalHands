@@ -6,6 +6,8 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/services/language_service.dart';
 import '../../../../shared/widgets/animated_handshake.dart';
 import '../../../../shared/widgets/tatreez_pattern.dart';
+import '../../../../shared/widgets/shared_navigation.dart';
+import '../../../../shared/widgets/shared_hero_section.dart';
 import '../../data/contact_data.dart';
 import 'contact_purpose_selector.dart';
 import 'contact_form.dart';
@@ -72,295 +74,27 @@ class _WebContactWidgetState extends State<WebContactWidget> {
       builder: (context, languageService, child) {
         return Scaffold(
           backgroundColor: const Color(0xFFFDF5EC),
-          body: Row(
-            children: [
-              // Sidebar Navigation
-              _buildSidebar(languageService),
-              
-              // Main Content
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      _buildHeader(languageService),
-                      _buildHeroSection(languageService),
-                      _buildContentSection(languageService),
-                      _buildFooter(languageService),
-                    ],
-                  ),
+          body: SingleChildScrollView(
+            child: Column(
+              children: [
+                // Shared Navigation
+                SharedNavigation(
+                  currentPage: 'contactUs',
+                  showAuthButtons: true,
+                  isMobile: false,
                 ),
-              ),
-            ],
+                // Shared Hero Section
+                SharedHeroSections.contactHero(
+                  languageService: languageService,
+                  isMobile: false,
+                ),
+                _buildContentSection(languageService),
+                _buildFooter(languageService),
+              ],
+            ),
           ),
         );
       },
-    );
-  }
-
-  Widget _buildSidebar(LanguageService languageService) {
-    return Container(
-      width: 200,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(2, 0),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Logo and app name
-          Container(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const AnimatedHandshake(
-                    size: 16,
-                    color: Colors.white,
-                    animationDuration: Duration(milliseconds: 2000),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  AppStrings.getString('appName', languageService.currentLanguage),
-                  style: GoogleFonts.cairo(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          // Navigation items
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              children: [
-                _buildNavItem(
-                  icon: Icons.home,
-                  title: AppStrings.getString('home', languageService.currentLanguage),
-                  onTap: () => Navigator.pushReplacementNamed(context, '/home'),
-                  languageService: languageService,
-                ),
-                _buildNavItem(
-                  icon: Icons.info,
-                  title: AppStrings.getString('aboutUs', languageService.currentLanguage),
-                  onTap: () => Navigator.pushNamed(context, '/about'),
-                  languageService: languageService,
-                ),
-                _buildNavItem(
-                  icon: Icons.cleaning_services,
-                  title: AppStrings.getString('ourServices', languageService.currentLanguage),
-                  onTap: () => Navigator.pushNamed(context, '/categories'),
-                  languageService: languageService,
-                ),
-                _buildNavItem(
-                  icon: Icons.question_answer,
-                  title: AppStrings.getString('faqs', languageService.currentLanguage),
-                  onTap: () => Navigator.pushNamed(context, '/faqs'),
-                  languageService: languageService,
-                ),
-                _buildNavItem(
-                  icon: Icons.contact_support,
-                  title: AppStrings.getString('contactUs', languageService.currentLanguage),
-                  onTap: () {},
-                  isSelected: true,
-                  languageService: languageService,
-                ),
-              ],
-            ),
-          ),
-          
-          // Language toggle
-          Container(
-            padding: const EdgeInsets.all(8),
-            child: _buildLanguageToggle(languageService),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-    bool isSelected = false,
-    required LanguageService languageService,
-  }) {
-    return Directionality(
-      textDirection: languageService.textDirection,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 2),
-        child: ListTile(
-          leading: Icon(
-            icon,
-            color: isSelected ? AppColors.primary : Colors.black87,
-            size: 18,
-          ),
-          title: Text(
-            title,
-            style: TextStyle(
-              color: isSelected ? AppColors.primary : Colors.black87,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              fontSize: 12,
-            ),
-          ),
-          onTap: onTap,
-          selected: isSelected,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4),
-          ),
-          selectedTileColor: AppColors.primary.withOpacity(0.1),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLanguageToggle(LanguageService languageService) {
-    return GestureDetector(
-      onTap: () {
-        languageService.toggleLanguage();
-      },
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        decoration: BoxDecoration(
-          border: Border.all(color: AppColors.primary),
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: Text(
-          languageService.currentLanguage == 'ar' ? 'EN' : 'العربية',
-          style: const TextStyle(
-            color: AppColors.primary,
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader(LanguageService languageService) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              AppStrings.getString('contactPageTitle', languageService.currentLanguage),
-              style: GoogleFonts.cairo(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeroSection(LanguageService languageService) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary.withOpacity(0.1),
-            AppColors.primary.withOpacity(0.05),
-          ],
-        ),
-      ),
-      child: Stack(
-        children: [
-          // Background Tatreez pattern
-          Positioned(
-            top: 40,
-            right: 40,
-            child: Opacity(
-              opacity: 0.1,
-              child: const TatreezPattern(
-                size: 120,
-                opacity: 0.3,
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 40,
-            left: 40,
-            child: Opacity(
-              opacity: 0.1,
-              child: const TatreezPattern(
-                size: 100,
-                opacity: 0.3,
-              ),
-            ),
-          ),
-          // Content
-          Column(
-            children: [
-              Text(
-                AppStrings.getString('contactPageDescription', languageService.currentLanguage),
-                style: GoogleFonts.cairo(
-                  fontSize: 18,
-                  color: Colors.black87,
-                  height: 1.4,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.9),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: AppColors.primary.withOpacity(0.2),
-                    width: 1,
-                  ),
-                ),
-                child: Text(
-                  AppStrings.getString('communityQuote', languageService.currentLanguage),
-                  style: GoogleFonts.cairo(
-                    fontSize: 15,
-                    fontStyle: FontStyle.italic,
-                    color: AppColors.primary,
-                    height: 1.3,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 

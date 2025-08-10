@@ -4,11 +4,13 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/services/language_service.dart';
-import '../../../../shared/widgets/animated_handshake.dart';
-import '../../../../shared/widgets/tatreez_pattern.dart';
+import '../../../../shared/widgets/shared_navigation.dart';
+import '../../../../shared/widgets/shared_hero_section.dart';
 import '../../data/faq_data.dart';
 import 'faq_item_widget.dart';
 import 'faq_search_widget.dart';
+import '../../../../shared/services/responsive_service.dart';
+
 
 class MobileFAQsWidget extends StatefulWidget {
   const MobileFAQsWidget({super.key});
@@ -22,10 +24,13 @@ class _MobileFAQsWidgetState extends State<MobileFAQsWidget> {
   Set<int> _expandedItems = {};
   List<FAQItem> _filteredItems = [];
   String? _selectedCategory;
+  int _selectedIndex = 2; // FAQ tab is selected by default
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
     super.initState();
+    _selectedCategory = null; // This represents "All Questions"
     _filteredItems = FAQData.getAllFAQItems();
   }
 
@@ -51,19 +56,22 @@ class _MobileFAQsWidgetState extends State<MobileFAQsWidget> {
           return question.contains(searchLower) || answer.contains(searchLower);
         }).toList();
       }
-      // Close all expanded items when searching
+      // Close all expanded items when searching to avoid index mismatches
       _expandedItems.clear();
     });
   }
 
   void _toggleItem(int index) {
-    setState(() {
-      if (_expandedItems.contains(index)) {
-        _expandedItems.remove(index);
-      } else {
-        _expandedItems.add(index);
-      }
-    });
+    // Only toggle if the index is valid for the current filtered items
+    if (index >= 0 && index < _filteredItems.length) {
+      setState(() {
+        if (_expandedItems.contains(index)) {
+          _expandedItems.remove(index);
+        } else {
+          _expandedItems.add(index);
+        }
+      });
+    }
   }
 
   void _selectCategory(String? categoryKey) {
@@ -75,311 +83,64 @@ class _MobileFAQsWidgetState extends State<MobileFAQsWidget> {
       } else {
         _filteredItems = FAQData.getAllFAQItems().where((item) => item.categoryKey == categoryKey).toList();
       }
-      _expandedItems.clear();
+      _expandedItems.clear(); // Clear expanded items when category changes
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageService>(
-      builder: (context, languageService, child) {
+    return Consumer2<LanguageService, ResponsiveService>(
+      builder: (context, languageService, responsiveService, child) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final shouldUseMobileLayout = responsiveService.shouldUseMobileLayout(screenWidth);
+        
         return Scaffold(
+          key: _scaffoldKey,
           backgroundColor: const Color(0xFFFDF5EC),
-          drawer: _buildDrawer(languageService),
-          body: SingleChildScrollView(
-            child: Column(
-              children: [
-                _buildHeader(languageService),
-                _buildHeroSection(languageService),
-                FAQSearchWidget(
-                  searchQuery: _searchQuery,
-                  onSearchChanged: _onSearchChanged,
-                ),
-                _buildCategoryNavigation(languageService),
-                _buildFAQContent(languageService),
-                _buildContactSection(languageService),
-                _buildFooter(languageService),
-                const SizedBox(height: 20),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildHeader(LanguageService languageService) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Hamburger menu
-          Builder(
-            builder: (context) => GestureDetector(
-              onTap: () {
-                Scaffold.of(context).openDrawer();
-              },
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                child: Icon(
-                  Icons.menu,
-                  color: AppColors.primary,
-                  size: 24,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          // Logo and app name
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const AnimatedHandshake(
-                    size: 20,
-                    color: Colors.white,
-                    animationDuration: Duration(milliseconds: 2000),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  AppStrings.getString('appName', languageService.currentLanguage),
-                  style: GoogleFonts.cairo(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Language toggle
-          _buildLanguageToggle(languageService),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLanguageToggle(LanguageService languageService) {
-    return GestureDetector(
-      onTap: () {
-        languageService.toggleLanguage();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          border: Border.all(color: AppColors.primary),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(
-          languageService.currentLanguage == 'ar' ? 'EN' : 'العربية',
-          style: const TextStyle(
-            color: AppColors.primary,
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDrawer(LanguageService languageService) {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: const BoxDecoration(
-              color: AppColors.primary,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const AnimatedHandshake(
-                    size: 30,
-                    color: AppColors.primary,
-                    animationDuration: Duration(milliseconds: 2000),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  AppStrings.getString('appName', languageService.currentLanguage),
-                  style: GoogleFonts.cairo(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          _buildDrawerItem(
-            icon: Icons.home,
-            title: AppStrings.getString('home', languageService.currentLanguage),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushReplacementNamed(context, '/home');
-            },
-            languageService: languageService,
-          ),
-          _buildDrawerItem(
-            icon: Icons.info,
-            title: AppStrings.getString('aboutUs', languageService.currentLanguage),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, '/about');
-            },
-            languageService: languageService,
-          ),
-          _buildDrawerItem(
-            icon: Icons.cleaning_services,
-            title: AppStrings.getString('ourServices', languageService.currentLanguage),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, '/categories');
-            },
-            languageService: languageService,
-          ),
-          _buildDrawerItem(
-            icon: Icons.question_answer,
-            title: AppStrings.getString('faqs', languageService.currentLanguage),
-            onTap: () {
-              Navigator.pop(context);
-            },
-            isSelected: true,
-            languageService: languageService,
-          ),
-          _buildDrawerItem(
-            icon: Icons.contact_support,
-            title: AppStrings.getString('contactUs', languageService.currentLanguage),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, '/contact');
-            },
-            languageService: languageService,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDrawerItem({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-    bool isSelected = false,
-    required LanguageService languageService,
-  }) {
-    return Directionality(
-      textDirection: languageService.textDirection,
-      child: ListTile(
-        leading: Icon(
-          icon,
-          color: isSelected ? AppColors.primary : Colors.black87,
-        ),
-        title: Text(
-          title,
-          textAlign: languageService.currentLanguage == 'ar' ? TextAlign.center : TextAlign.start,
-          style: TextStyle(
-            color: isSelected ? AppColors.primary : Colors.black87,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-        onTap: onTap,
-        selected: isSelected,
-      ),
-    );
-  }
-
-  Widget _buildHeroSection(LanguageService languageService) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary.withOpacity(0.1),
-            AppColors.primary.withOpacity(0.05),
-          ],
-        ),
-      ),
-      child: Stack(
-        children: [
-          // Background Tatreez pattern
-          Positioned(
-            top: 20,
-            right: 20,
-            child: Opacity(
-              opacity: 0.1,
-              child: const TatreezPattern(
-                size: 80,
-                opacity: 0.3,
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 20,
-            left: 20,
-            child: Opacity(
-              opacity: 0.1,
-              child: const TatreezPattern(
-                size: 60,
-                opacity: 0.3,
-              ),
-            ),
-          ),
-          // Content
-          Column(
+          drawer: shouldUseMobileLayout ? SharedMobileDrawer(currentPage: 'faqs') : null,
+          body: Stack(
             children: [
-              const SizedBox(height: 24),
-              Text(
-                AppStrings.getString('faqPageTitle', languageService.currentLanguage),
-                style: GoogleFonts.cairo(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                AppStrings.getString('faqPageDescription', languageService.currentLanguage),
-                style: GoogleFonts.cairo(
-                  fontSize: 16,
-                  color: Colors.black87,
-                  height: 1.4,
-                ),
-                textAlign: TextAlign.center,
+              // Main content
+              Column(
+                children: [
+                  // Shared Navigation
+                  SharedNavigation(
+                    currentPage: 'faqs',
+                    showAuthButtons: false,
+                    onMenuTap: shouldUseMobileLayout ? () {
+                      _scaffoldKey.currentState?.openDrawer();
+                    } : null,
+                    isMobile: shouldUseMobileLayout,
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          // Shared Hero Section
+                          SharedHeroSections.faqsHero(
+                            languageService: languageService,
+                            isMobile: shouldUseMobileLayout,
+                          ),
+                          FAQSearchWidget(
+                            searchQuery: _searchQuery,
+                            onSearchChanged: _onSearchChanged,
+                          ),
+                          _buildCategoryNavigation(languageService),
+                          _buildFAQContent(languageService),
+                          _buildContactSection(languageService),
+                          _buildFooter(languageService),
+                          const SizedBox(height: 80), // Space for bottom nav
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+          bottomNavigationBar: shouldUseMobileLayout ? _buildBottomNavigationBar(languageService) : null,
+        );
+      },
     );
   }
 
@@ -662,4 +423,84 @@ class _MobileFAQsWidgetState extends State<MobileFAQsWidget> {
       ),
     );
   }
+
+  Widget _buildBottomNavigationBar(LanguageService languageService) {
+    final items = [
+      {'icon': Icons.home, 'label': 'home'},
+      {'icon': Icons.info, 'label': 'aboutUs'},
+      {'icon': Icons.contact_support, 'label': 'faqs'},
+      {'icon': Icons.settings, 'label': 'settings'},
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: items.asMap().entries.map((entry) {
+              final index = entry.key;
+              final item = entry.value;
+              final isSelected = index == _selectedIndex;
+              
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedIndex = index;
+                  });
+                  
+                  // Navigate to respective screens
+                  switch (index) {
+                    case 0: // Home
+                      Navigator.pushReplacementNamed(context, '/home');
+                      break;
+                    case 1: // About Us
+                      Navigator.pushNamed(context, '/about');
+                      break;
+                    case 2: // FAQs (current page)
+                      // Already on FAQs page
+                      break;
+                    case 3: // Settings
+                      // TODO: Navigate to settings page
+                      break;
+                  }
+                },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      item['icon'] as IconData,
+                      color: isSelected ? AppColors.primary : Colors.grey[600],
+                      size: 24,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      AppStrings.getString(item['label'] as String, languageService.currentLanguage),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isSelected ? AppColors.primary : Colors.grey[600],
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+
 } 

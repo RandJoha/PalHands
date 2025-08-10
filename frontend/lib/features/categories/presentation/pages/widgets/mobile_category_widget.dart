@@ -4,6 +4,9 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_strings.dart';
 import '../../../../../shared/services/language_service.dart';
 import '../../../../../shared/widgets/tatreez_pattern.dart';
+import '../../../../../shared/widgets/shared_navigation.dart';
+import '../../../../../shared/widgets/shared_hero_section.dart';
+import '../../../../../shared/services/responsive_service.dart';
 
 class MobileCategoryWidget extends StatefulWidget {
   const MobileCategoryWidget({Key? key}) : super(key: key);
@@ -12,28 +15,77 @@ class MobileCategoryWidget extends StatefulWidget {
   State<MobileCategoryWidget> createState() => _MobileCategoryWidgetState();
 }
 
-class _MobileCategoryWidgetState extends State<MobileCategoryWidget> {
+class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with TickerProviderStateMixin {
   int _selectedIndex = 1; // Categories tab selected
   Map<String, Set<String>> _selectedServices = {}; // Track selected services by category
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  @override
+  void initState() {
+    super.initState();
+    // _bannerController = AnimationController(
+    //   duration: const Duration(milliseconds: 1500),
+    //   vsync: this,
+    // );
+    // _cardController = AnimationController(
+    //   duration: const Duration(milliseconds: 800),
+    //   vsync: this,
+    // );
+    
+    // _bannerAnimation = Tween<double>(
+    //   begin: 0.0,
+    //   end: 1.0,
+    // ).animate(CurvedAnimation(
+    //   parent: _bannerController,
+    //   curve: Curves.easeInOut,
+    // ));
+    
+    // _cardAnimation = Tween<double>(
+    //   begin: 0.0,
+    //   end: 1.0,
+    // ).animate(CurvedAnimation(
+    //   parent: _cardController,
+    //   curve: Curves.easeOutBack,
+    // ));
+    
+    // _bannerController.forward();
+    // _cardController.forward();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageService>(
-      builder: (context, languageService, child) {
+    return Consumer2<LanguageService, ResponsiveService>(
+      builder: (context, languageService, responsiveService, child) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final shouldUseMobileLayout = responsiveService.shouldUseMobileLayout(screenWidth);
+        
         return Scaffold(
+          key: _scaffoldKey,
           backgroundColor: const Color(0xFFFDF5EC),
-          drawer: _buildDrawer(languageService),
+          drawer: shouldUseMobileLayout ? SharedMobileDrawer(currentPage: 'ourServices') : null,
           body: Stack(
             children: [
               // Main content
               Column(
                 children: [
-                  _buildHeader(languageService),
+                  // Shared Navigation
+                  SharedNavigation(
+                    currentPage: 'ourServices',
+                    showAuthButtons: false,
+                    onMenuTap: shouldUseMobileLayout ? () {
+                      _scaffoldKey.currentState?.openDrawer();
+                    } : null,
+                    isMobile: shouldUseMobileLayout,
+                  ),
                   Expanded(
                     child: SingleChildScrollView(
                       child: Column(
                         children: [
-                          _buildHeroSection(languageService),
+                          // Shared Hero Section
+                          SharedHeroSections.servicesHero(
+                            languageService: languageService,
+                            isMobile: shouldUseMobileLayout,
+                          ),
                           _buildCategoriesGrid(languageService),
                           const SizedBox(height: 80), // Space for bottom nav
                         ],
@@ -44,278 +96,9 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> {
               ),
             ],
           ),
-          bottomNavigationBar: _buildBottomNavigationBar(languageService),
+          bottomNavigationBar: shouldUseMobileLayout ? _buildBottomNavigationBar(languageService) : null,
         );
       },
-    );
-  }
-
-  Widget _buildHeader(LanguageService languageService) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Directionality(
-        textDirection: languageService.textDirection,
-        child: Row(
-          children: [
-            // Hamburger menu
-            Builder(
-              builder: (context) => GestureDetector(
-                onTap: () {
-                  Scaffold.of(context).openDrawer();
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  child: Icon(
-                    Icons.menu,
-                    color: AppColors.primary,
-                    size: 24,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Title
-            Expanded(
-              child: Center(
-                child: Text(
-                  AppStrings.getString('categories', languageService.currentLanguage),
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
-            // Language toggle
-            GestureDetector(
-              onTap: () {
-                languageService.toggleLanguage();
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.primary),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  languageService.currentLanguage == 'ar' ? 'EN' : 'العربية',
-                  style: const TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDrawer(LanguageService languageService) {
-    return Drawer(
-      child: Directionality(
-        textDirection: languageService.textDirection,
-        child: Column(
-          children: [
-            // Drawer header
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(20),
-                  bottomRight: Radius.circular(20),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      Icons.handshake,
-                      color: AppColors.primary,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    AppStrings.getString('appName', languageService.currentLanguage),
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Navigation items
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  _buildDrawerItem(
-                    icon: Icons.home,
-                    title: AppStrings.getString('home', languageService.currentLanguage),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushReplacementNamed(context, '/home');
-                    },
-                    languageService: languageService,
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.category,
-                    title: AppStrings.getString('categories', languageService.currentLanguage),
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                    isSelected: true,
-                    languageService: languageService,
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.info,
-                    title: AppStrings.getString('aboutUs', languageService.currentLanguage),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/about');
-                    },
-                    languageService: languageService,
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.cleaning_services,
-                    title: AppStrings.getString('ourServices', languageService.currentLanguage),
-                    onTap: () {
-                      Navigator.pop(context);
-                      // Already on services/categories page
-                    },
-                    languageService: languageService,
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.question_answer,
-                    title: AppStrings.getString('faqs', languageService.currentLanguage),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/faqs');
-                    },
-                    languageService: languageService,
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.contact_support,
-                    title: AppStrings.getString('contactUs', languageService.currentLanguage),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/contact');
-                    },
-                    languageService: languageService,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDrawerItem({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-    bool isSelected = false,
-    required LanguageService languageService,
-  }) {
-    return Directionality(
-      textDirection: languageService.textDirection,
-      child: ListTile(
-        leading: Icon(
-          icon, 
-          color: isSelected ? AppColors.primary : Colors.grey[600],
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            color: isSelected ? AppColors.primary : Colors.black,
-          ),
-          textAlign: languageService.currentLanguage == 'ar' ? TextAlign.center : TextAlign.start,
-        ),
-        onTap: onTap,
-        tileColor: isSelected ? AppColors.primary.withOpacity(0.1) : null,
-      ),
-    );
-  }
-
-  Widget _buildHeroSection(LanguageService languageService) {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.primary.withOpacity(0.1),
-            const Color(0xFF6B8E23).withOpacity(0.1),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.primary.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Directionality(
-        textDirection: languageService.textDirection,
-        child: Column(
-          children: [
-            Icon(
-              Icons.category,
-              size: 48,
-              color: AppColors.primary,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              AppStrings.getString('allServices', languageService.currentLanguage),
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              AppStrings.getString('connectWithTrustedServiceProvider', languageService.currentLanguage),
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-                height: 1.3,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
     );
   }
 
