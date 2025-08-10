@@ -1,17 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 
 // Core imports
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_strings.dart';
 
 // Shared imports
-import '../../../../shared/services/language_service.dart';
-import '../../../../shared/services/auth_service.dart';
 
 // User models
-import '../../domain/models/user_menu_item.dart';
 
 // Responsive dashboard widget
 import '../widgets/responsive_user_dashboard.dart';

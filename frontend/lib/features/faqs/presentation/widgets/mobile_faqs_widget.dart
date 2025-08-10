@@ -9,7 +9,6 @@ import '../../../../shared/widgets/shared_hero_section.dart';
 import '../../data/faq_data.dart';
 import 'faq_item_widget.dart';
 import 'faq_search_widget.dart';
-import '../../../../shared/services/responsive_service.dart';
 
 
 class MobileFAQsWidget extends StatefulWidget {
@@ -21,7 +20,7 @@ class MobileFAQsWidget extends StatefulWidget {
 
 class _MobileFAQsWidgetState extends State<MobileFAQsWidget> {
   String _searchQuery = '';
-  Set<int> _expandedItems = {};
+  final Set<int> _expandedItems = {};
   List<FAQItem> _filteredItems = [];
   String? _selectedCategory;
   int _selectedIndex = 2; // FAQ tab is selected by default
@@ -89,37 +88,36 @@ class _MobileFAQsWidgetState extends State<MobileFAQsWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<LanguageService, ResponsiveService>(
-      builder: (context, languageService, responsiveService, child) {
-        final screenWidth = MediaQuery.of(context).size.width;
-        final shouldUseMobileLayout = responsiveService.shouldUseMobileLayout(screenWidth);
-        
+    return Consumer<LanguageService>(
+      builder: (context, languageService, child) {
+        // Since this widget is only shown when the parent screen decides it's mobile,
+        // we don't need to check responsive logic again - this eliminates the circular dependency
         return Scaffold(
           key: _scaffoldKey,
           backgroundColor: const Color(0xFFFDF5EC),
-          drawer: shouldUseMobileLayout ? SharedMobileDrawer(currentPage: 'faqs') : null,
+          drawer: const SharedMobileDrawer(currentPage: 'faqs'), // Always show drawer for mobile
           body: Stack(
             children: [
               // Main content
               Column(
                 children: [
-                  // Shared Navigation
+                  // Shared Navigation - Always mobile for this widget
                   SharedNavigation(
                     currentPage: 'faqs',
                     showAuthButtons: false,
-                    onMenuTap: shouldUseMobileLayout ? () {
+                    onMenuTap: () {
                       _scaffoldKey.currentState?.openDrawer();
-                    } : null,
-                    isMobile: shouldUseMobileLayout,
+                    },
+                    isMobile: true, // Always true since this is the mobile widget
                   ),
                   Expanded(
                     child: SingleChildScrollView(
                       child: Column(
                         children: [
-                          // Shared Hero Section
+                          // Shared Hero Section - Always mobile for this widget
                           SharedHeroSections.faqsHero(
                             languageService: languageService,
-                            isMobile: shouldUseMobileLayout,
+                            isMobile: true, // Always true since this is the mobile widget
                           ),
                           FAQSearchWidget(
                             searchQuery: _searchQuery,
@@ -138,7 +136,7 @@ class _MobileFAQsWidgetState extends State<MobileFAQsWidget> {
               ),
             ],
           ),
-          bottomNavigationBar: shouldUseMobileLayout ? _buildBottomNavigationBar(languageService) : null,
+          bottomNavigationBar: _buildBottomNavigationBar(languageService), // Always show for mobile
         );
       },
     );
@@ -268,13 +266,13 @@ class _MobileFAQsWidgetState extends State<MobileFAQsWidget> {
           color: isSelected ? AppColors.primary : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.primary.withOpacity(0.3),
+            color: isSelected ? AppColors.primary : AppColors.primary.withValues(alpha: 0.3),
             width: 1,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
+                    color: AppColors.primary.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -299,7 +297,7 @@ class _MobileFAQsWidgetState extends State<MobileFAQsWidget> {
         padding: const EdgeInsets.all(32),
         child: Column(
           children: [
-            Icon(
+            const Icon(
               Icons.search_off,
               size: 64,
               color: AppColors.grey,
@@ -409,18 +407,7 @@ class _MobileFAQsWidgetState extends State<MobileFAQsWidget> {
           topRight: Radius.circular(20),
         ),
       ),
-      child: Column(
-        children: [
-          Text(
-            AppStrings.getString('copyright', languageService.currentLanguage),
-            style: GoogleFonts.cairo(
-              fontSize: 12,
-              color: Colors.black54,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+  child: const SizedBox.shrink(),
     );
   }
 
@@ -437,7 +424,7 @@ class _MobileFAQsWidgetState extends State<MobileFAQsWidget> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),

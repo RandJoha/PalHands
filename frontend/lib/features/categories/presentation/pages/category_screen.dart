@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/services/language_service.dart';
 import '../../../../shared/services/responsive_service.dart';
 import '../../../../shared/widgets/tatreez_pattern.dart';
@@ -9,7 +7,7 @@ import 'widgets/mobile_category_widget.dart';
 import 'widgets/web_category_widget.dart';
 
 class CategoryScreen extends StatelessWidget {
-  const CategoryScreen({Key? key}) : super(key: key);
+  const CategoryScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +23,7 @@ class CategoryScreen extends StatelessWidget {
                 left: 20,
                 child: TatreezPattern(
                   size: 80,
-                  color: const Color(0xFFC43F20).withOpacity(0.3),
+                  color: const Color(0xFFC43F20).withValues(alpha: 0.3),
                 ),
               ),
               Positioned(
@@ -33,7 +31,7 @@ class CategoryScreen extends StatelessWidget {
                 right: 30,
                 child: TatreezPattern(
                   size: 60,
-                  color: const Color(0xFFC43F20).withOpacity(0.25),
+                  color: const Color(0xFFC43F20).withValues(alpha: 0.25),
                 ),
               ),
               Positioned(
@@ -41,7 +39,7 @@ class CategoryScreen extends StatelessWidget {
                 left: 50,
                 child: TatreezPattern(
                   size: 70,
-                  color: const Color(0xFFC43F20).withOpacity(0.2),
+                  color: const Color(0xFFC43F20).withValues(alpha: 0.2),
                 ),
               ),
               Positioned(
@@ -49,7 +47,7 @@ class CategoryScreen extends StatelessWidget {
                 right: 80,
                 child: TatreezPattern(
                   size: 50,
-                  color: const Color(0xFFC43F20).withOpacity(0.3),
+                  color: const Color(0xFFC43F20).withValues(alpha: 0.3),
                 ),
               ),
               

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -12,14 +11,12 @@ import '../../../../shared/services/auth_service.dart';
 import '../../../../shared/services/language_service.dart';
 
 // Admin widgets
-import 'dashboard_overview.dart';
 import 'user_management_widget.dart';
 import 'service_management_widget.dart';
 import 'booking_management_widget.dart';
 import 'reports_widget.dart';
 import 'analytics_widget.dart';
 import 'system_settings_widget.dart';
-import 'language_toggle_widget.dart';
 
 // Admin models
 import '../../domain/models/admin_menu_item.dart';
@@ -92,7 +89,7 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 2,
-      shadowColor: Colors.black.withOpacity(0.1),
+      shadowColor: Colors.black.withValues(alpha: 0.1),
       titleSpacing: 0,
       title: Row(
         children: [
@@ -101,11 +98,11 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
             width: 3,
             height: 24,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
+              gradient: const LinearGradient(
                 colors: [
                   AppColors.primary, // Palestinian red
                   AppColors.secondary, // Golden
-                  const Color(0xFF2E8B57), // Sea green
+                  Color(0xFF2E8B57), // Sea green
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -156,10 +153,10 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.08),
+                      color: AppColors.primary.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
-                        color: AppColors.primary.withOpacity(0.3),
+                        color: AppColors.primary.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -220,7 +217,7 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
                 child: Container(
                   width: 6,
                   height: 6,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: AppColors.primary,
                     shape: BoxShape.circle,
                   ),
@@ -260,7 +257,7 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
         children: [
           // Drawer header - More compact
           DrawerHeader(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
                   AppColors.primary,
@@ -279,7 +276,7 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: const Icon(
@@ -305,7 +302,7 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
                             AppStrings.getString('adminPanel', languageService.currentLanguage),
                             style: GoogleFonts.cairo(
                               fontSize: 12,
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                             ),
                           ),
                         ],
@@ -322,7 +319,7 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
                       children: [
                         CircleAvatar(
                           radius: 16,
-                          backgroundColor: Colors.white.withOpacity(0.2),
+                          backgroundColor: Colors.white.withValues(alpha: 0.2),
                           child: Text(
                             authService.currentUser?['firstName']?.substring(0, 1).toUpperCase() ?? 'A',
                             style: GoogleFonts.cairo(
@@ -349,7 +346,7 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
                                 AppStrings.getString('administrator', languageService.currentLanguage),
                                 style: GoogleFonts.cairo(
                                   fontSize: 10,
-                                  color: Colors.white.withOpacity(0.8),
+                                  color: Colors.white.withValues(alpha: 0.8),
                                 ),
                               ),
                             ],
@@ -388,7 +385,7 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
                     ),
                   ),
                   selected: isSelected,
-                  selectedTileColor: AppColors.primary.withOpacity(0.08),
+                  selectedTileColor: AppColors.primary.withValues(alpha: 0.08),
                   onTap: () {
                     setState(() {
                       _selectedIndex = index;
@@ -404,7 +401,7 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.05),
+              color: Colors.grey.withValues(alpha: 0.05),
             ),
             child: Column(
               children: [

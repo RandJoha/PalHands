@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -132,7 +131,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
         gradient: LinearGradient(
           colors: [
             AppColors.primary,
-            AppColors.primary.withOpacity(0.8),
+            AppColors.primary.withValues(alpha: 0.8),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -140,7 +139,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
         borderRadius: BorderRadius.circular(screenWidth > 1400 ? 16 : screenWidth > 1024 ? 14 : 12),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.25),
+            color: AppColors.primary.withValues(alpha: 0.25),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -153,7 +152,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
             width: screenWidth > 1400 ? 60 : screenWidth > 1024 ? 50 : 40,
             height: screenWidth > 1400 ? 60 : screenWidth > 1024 ? 50 : 40,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(screenWidth > 1400 ? 12 : screenWidth > 1024 ? 10 : 8),
             ),
             child: Icon(
@@ -183,7 +182,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
                   AppStrings.getString('platformOverview', languageService.currentLanguage),
                   style: GoogleFonts.cairo(
                     fontSize: screenWidth > 1400 ? 16 : screenWidth > 1024 ? 14 : 12,
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
               ],
@@ -197,7 +196,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(screenWidth > 1400 ? 10 : screenWidth > 1024 ? 8 : 6),
               border: Border.all(
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withValues(alpha: 0.3),
                 width: 2,
               ),
             ),
@@ -402,7 +401,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 3,
             offset: const Offset(0, 1),
           ),
@@ -419,7 +418,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
                 width: 20,
                 height: 20,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Icon(
@@ -433,15 +432,15 @@ class _DashboardOverviewState extends State<DashboardOverview> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: trendUp ? Colors.green.withOpacity(0.2) : Colors.red.withOpacity(0.2),
+                  color: trendUp ? Colors.green.withValues(alpha: 0.2) : Colors.red.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
-                    color: trendUp ? Colors.green.withOpacity(0.6) : Colors.red.withOpacity(0.6),
+                    color: trendUp ? Colors.green.withValues(alpha: 0.6) : Colors.red.withValues(alpha: 0.6),
                     width: 1.5,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: (trendUp ? Colors.green : Colors.red).withOpacity(0.3),
+                      color: (trendUp ? Colors.green : Colors.red).withValues(alpha: 0.3),
                       blurRadius: 3,
                       offset: const Offset(0, 1),
                     ),
@@ -549,7 +548,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
         borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -566,7 +565,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
                 width: iconSize,
                 height: iconSize,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(borderRadius * 0.6),
                 ),
                 child: Icon(
@@ -584,16 +583,16 @@ class _DashboardOverviewState extends State<DashboardOverview> {
                 ),
                 decoration: BoxDecoration(
                   color: trendUp 
-                    ? Colors.green.withOpacity(0.2)
-                    : Colors.red.withOpacity(0.2),
+                    ? Colors.green.withValues(alpha: 0.2)
+                    : Colors.red.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(borderRadius * 1.0),
                   border: Border.all(
-                    color: trendUp ? Colors.green.withOpacity(0.5) : Colors.red.withOpacity(0.5),
+                    color: trendUp ? Colors.green.withValues(alpha: 0.5) : Colors.red.withValues(alpha: 0.5),
                     width: 1.5,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: (trendUp ? Colors.green : Colors.red).withOpacity(0.2),
+                      color: (trendUp ? Colors.green : Colors.red).withValues(alpha: 0.2),
                       blurRadius: 4,
                       offset: const Offset(0, 1),
                     ),
@@ -716,7 +715,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
               child: Container(
                 height: screenWidth > 1400 ? 300 : screenWidth > 1200 ? 280 : 250,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.05),
+                  color: Colors.grey.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
@@ -743,7 +742,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
               child: Container(
                 height: screenWidth > 1400 ? 300 : screenWidth > 1200 ? 280 : 250,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.05),
+                  color: Colors.grey.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
@@ -771,7 +770,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
             child: Container(
               height: 180, // Reduced height for mobile
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.05),
+                color: Colors.grey.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(
@@ -786,7 +785,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
             ),
           ),
           
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           
           // Revenue chart
           _buildChartCard(
@@ -795,7 +794,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
             child: Container(
               height: 180, // Reduced height for mobile
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.05),
+                color: Colors.grey.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(
@@ -849,7 +848,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
         borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -892,7 +891,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
         borderRadius: BorderRadius.circular(screenWidth > 1400 ? 16 : screenWidth > 1024 ? 14 : 12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -968,7 +967,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
             width: screenWidth > 1400 ? 40 : screenWidth > 1024 ? 36 : 32,
             height: screenWidth > 1400 ? 40 : screenWidth > 1024 ? 36 : 32,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(screenWidth > 1400 ? 8 : screenWidth > 1024 ? 6 : 4),
             ),
             child: Icon(

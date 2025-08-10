@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -34,22 +33,22 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
     {
       'title': 'myServices',
       'icon': Icons.work,
-      'widget': MyServicesWidget(),
+      'widget': const MyServicesWidget(),
     },
     {
       'title': 'bookings',
       'icon': Icons.calendar_today,
-      'widget': BookingsWidget(),
+      'widget': const BookingsWidget(),
     },
     {
       'title': 'earnings',
       'icon': Icons.attach_money,
-      'widget': EarningsWidget(),
+      'widget': const EarningsWidget(),
     },
     {
       'title': 'reviews',
       'icon': Icons.star,
-      'widget': ReviewsWidget(),
+      'widget': const ReviewsWidget(),
     },
     {
       'title': 'settings',
@@ -100,7 +99,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
               AppStrings.getString('providerDashboard', languageService.currentLanguage),
               style: GoogleFonts.cairo(
                 fontSize: 12,
-                color: AppColors.white.withOpacity(0.8),
+                color: AppColors.white.withValues(alpha: 0.8),
               ),
             ),
           ],
@@ -119,10 +118,10 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.08),
+                        color: AppColors.primary.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(
-                          color: AppColors.primary.withOpacity(0.3),
+                          color: AppColors.primary.withValues(alpha: 0.3),
                           width: 1,
                         ),
                       ),
@@ -183,7 +182,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
                   child: Container(
                     width: 6,
                     height: 6,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: AppColors.white,
                       shape: BoxShape.circle,
                     ),
@@ -249,7 +248,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
               color: AppColors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 4,
                   offset: const Offset(2, 0),
                 ),
@@ -325,7 +324,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -344,11 +343,11 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
                     width: 4,
                     height: 40,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
+                      gradient: const LinearGradient(
                         colors: [
                           AppColors.primary,
                           AppColors.secondary,
-                          const Color(0xFF2E8B57),
+                          Color(0xFF2E8B57),
                         ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
@@ -405,7 +404,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
                         child: Container(
                           width: 10,
                           height: 10,
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: AppColors.primary,
                             shape: BoxShape.circle,
                           ),
@@ -483,7 +482,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
                       }
                     }
                   },
-                  icon: Icon(
+                  icon: const Icon(
                     Icons.logout,
                     color: AppColors.textSecondary,
                     size: 24.0,
@@ -501,7 +500,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
   Widget _buildSidebarHeader(LanguageService languageService) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -522,7 +521,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
                 color: AppColors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.person,
                 color: AppColors.white,
                 size: 24,
@@ -562,7 +561,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
                   color: AppColors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.person,
                   color: AppColors.white,
                   size: 24,
@@ -705,7 +704,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 5,
                           offset: const Offset(0, 2),
                         ),
@@ -759,9 +758,9 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
             // Drawer header
             Container(
               height: 120,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.primary,
-                borderRadius: const BorderRadius.only(
+                borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(16),
                   bottomRight: Radius.circular(16),
                 ),
@@ -778,7 +777,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
                           color: AppColors.white,
                           borderRadius: BorderRadius.circular(25),
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.work,
                           color: AppColors.primary,
                           size: 24,
@@ -802,7 +801,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
                               AppStrings.getString('serviceProvider', languageService.currentLanguage),
                               style: GoogleFonts.cairo(
                                 fontSize: 12,
-                                color: AppColors.white.withOpacity(0.8),
+                                color: AppColors.white.withValues(alpha: 0.8),
                               ),
                             ),
                           ],
@@ -848,9 +847,9 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
             // Language toggle and logout
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.greyLight,
-                borderRadius: const BorderRadius.only(
+                borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),
                 ),
@@ -865,7 +864,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
                   const SizedBox(height: 12),
                   const Divider(),
                   ListTile(
-                    leading: Icon(
+                    leading: const Icon(
                       Icons.logout,
                       color: AppColors.error,
                       size: 20,

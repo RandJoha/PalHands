@@ -16,10 +16,10 @@ class TimeTranslationExampleWidget extends StatelessWidget {
       builder: (context, languageService, child) {
         return Scaffold(
           appBar: AppBar(
-            title: Text('Time Translation Examples'),
+            title: const Text('Time Translation Examples'),
           ),
           body: SingleChildScrollView(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -30,7 +30,7 @@ class TimeTranslationExampleWidget extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 
                 // Example 1: Using the efficient system
                 _buildExampleCard(
@@ -46,7 +46,7 @@ class TimeTranslationExampleWidget extends StatelessWidget {
                   ],
                 ),
                 
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 
                 // Example 2: Month translations
                 _buildExampleCard(
@@ -58,7 +58,7 @@ class TimeTranslationExampleWidget extends StatelessWidget {
                   ],
                 ),
                 
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 
                 // Example 3: Date formatting
                 _buildExampleCard(
@@ -69,21 +69,21 @@ class TimeTranslationExampleWidget extends StatelessWidget {
                   ],
                 ),
                 
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 
                 // Example 4: Relative time from DateTime
                 _buildExampleCard(
                   'Relative Time from DateTime',
                   [
                     'Now: ${TimeTranslationUtils.getRelativeTime(DateTime.now(), languageService.currentLanguage)}',
-                    '1 hour ago: ${TimeTranslationUtils.getRelativeTime(DateTime.now().subtract(Duration(hours: 1)), languageService.currentLanguage)}',
-                    '2 days ago: ${TimeTranslationUtils.getRelativeTime(DateTime.now().subtract(Duration(days: 2)), languageService.currentLanguage)}',
-                    '1 week ago: ${TimeTranslationUtils.getRelativeTime(DateTime.now().subtract(Duration(days: 7)), languageService.currentLanguage)}',
-                    '1 month ago: ${TimeTranslationUtils.getRelativeTime(DateTime.now().subtract(Duration(days: 30)), languageService.currentLanguage)}',
+                    '1 hour ago: ${TimeTranslationUtils.getRelativeTime(DateTime.now().subtract(const Duration(hours: 1)), languageService.currentLanguage)}',
+                    '2 days ago: ${TimeTranslationUtils.getRelativeTime(DateTime.now().subtract(const Duration(days: 2)), languageService.currentLanguage)}',
+                    '1 week ago: ${TimeTranslationUtils.getRelativeTime(DateTime.now().subtract(const Duration(days: 7)), languageService.currentLanguage)}',
+                    '1 month ago: ${TimeTranslationUtils.getRelativeTime(DateTime.now().subtract(const Duration(days: 30)), languageService.currentLanguage)}',
                   ],
                 ),
                 
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 
                 // Benefits explanation
                 _buildExampleCard(
@@ -109,7 +109,7 @@ class TimeTranslationExampleWidget extends StatelessWidget {
     return Card(
       elevation: 2,
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -120,14 +120,14 @@ class TimeTranslationExampleWidget extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             ...examples.map((example) => Padding(
-              padding: EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: 8),
               child: Text(
                 example,
                 style: GoogleFonts.cairo(fontSize: 14),
               ),
-            )).toList(),
+            )),
           ],
         ),
       ),

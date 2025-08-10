@@ -238,7 +238,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
         borderRadius: BorderRadius.circular(screenWidth > 1400 ? 10 : 8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 3,
             offset: const Offset(0, 1),
           ),
@@ -474,7 +474,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.business_center_outlined,
               size: 48,
               color: AppColors.textLight,
@@ -500,7 +500,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
         borderRadius: BorderRadius.circular(screenWidth > 1400 ? 10 : 8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 3,
             offset: const Offset(0, 1),
           ),
@@ -569,7 +569,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: Colors.grey.withOpacity(0.08),
+            color: Colors.grey.withValues(alpha: 0.08),
             width: 1,
           ),
         ),
@@ -585,7 +585,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                   width: screenWidth > 1400 ? 40 : screenWidth > 1024 ? 36 : 32,
                   height: screenWidth > 1400 ? 40 : screenWidth > 1024 ? 36 : 32,
                   decoration: BoxDecoration(
-                    color: _getCategoryColor(service['category']).withOpacity(0.1),
+                    color: _getCategoryColor(service['category']).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Icon(
@@ -648,7 +648,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                   vertical: screenWidth > 1400 ? 4 : 3,
                 ),
                 decoration: BoxDecoration(
-                  color: _getCategoryColor(service['category']).withOpacity(0.1),
+                  color: _getCategoryColor(service['category']).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -689,7 +689,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                     size: screenWidth > 1400 ? 14 : screenWidth > 1024 ? 12 : 11,
                     color: Colors.amber,
                   ),
-                  SizedBox(width: 4),
+                  const SizedBox(width: 4),
                   Text(
                     '${service['rating']['average']} (${service['rating']['count']})',
                     style: GoogleFonts.cairo(
@@ -712,8 +712,8 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
               ),
               decoration: BoxDecoration(
                 color: service['isActive'] 
-                  ? Colors.green.withOpacity(0.1)
-                  : Colors.red.withOpacity(0.1),
+                  ? Colors.green.withValues(alpha: 0.1)
+                  : Colors.red.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(

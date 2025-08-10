@@ -107,10 +107,10 @@ class _MobileSavedProvidersWidgetState extends State<MobileSavedProvidersWidget>
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(25),
             ),
-            child: Icon(
+            child: const Icon(
               Icons.person,
               color: AppColors.primary,
               size: 24,
@@ -141,7 +141,7 @@ class _MobileSavedProvidersWidgetState extends State<MobileSavedProvidersWidget>
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.star,
                       color: AppColors.ratingFilled,
                       size: 16,
@@ -159,7 +159,7 @@ class _MobileSavedProvidersWidgetState extends State<MobileSavedProvidersWidget>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: isAvailable ? AppColors.success.withOpacity(0.1) : AppColors.error.withOpacity(0.1),
+                        color: isAvailable ? AppColors.success.withValues(alpha: 0.1) : AppColors.error.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(

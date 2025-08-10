@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -11,9 +10,9 @@ import '../../core/constants/app_strings.dart';
 // Services
 import '../services/language_service.dart';
 import '../services/auth_service.dart';
+import '../services/responsive_service.dart';
 
 // Widget imports
-import 'tatreez_pattern.dart';
 import 'animated_handshake.dart';
 import 'signup_screen.dart';
 
@@ -120,159 +119,29 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Get screen dimensions
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final isWeb = screenWidth > 600;
-    
-    return Scaffold(
-      backgroundColor: AppColors.loginBackground, // Warm beige background
-      body: Stack(
-        children: [
-          // Background tatreez patterns - random placement (away from form)
-          if (isWeb) ...[
-            // Web layout - more patterns, darker, positioned away from center
-            Positioned(
-              top: screenHeight * 0.05,
-              left: screenWidth * 0.02,
-              child: TatreezPattern(
-                size: 80,
-                opacity: 0.15,
-              ),
-            ),
-            Positioned(
-              top: screenHeight * 0.12,
-              right: screenWidth * 0.03,
-              child: TatreezPattern(
-                size: 65,
-                opacity: 0.12,
-              ),
-            ),
-            Positioned(
-              top: screenHeight * 0.25,
-              left: screenWidth * 0.08,
-              child: TatreezPattern(
-                size: 95,
-                opacity: 0.18,
-              ),
-            ),
-            Positioned(
-              top: screenHeight * 0.35,
-              right: screenWidth * 0.06,
-              child: TatreezPattern(
-                size: 70,
-                opacity: 0.14,
-              ),
-            ),
-            Positioned(
-              top: screenHeight * 0.55,
-              left: screenWidth * 0.15,
-              child: TatreezPattern(
-                size: 85,
-                opacity: 0.16,
-              ),
-            ),
-            Positioned(
-              top: screenHeight * 0.65,
-              right: screenWidth * 0.12,
-              child: TatreezPattern(
-                size: 75,
-                opacity: 0.13,
-              ),
-            ),
-            Positioned(
-              top: screenHeight * 0.75,
-              left: screenWidth * 0.05,
-              child: TatreezPattern(
-                size: 90,
-                opacity: 0.17,
-              ),
-            ),
-            Positioned(
-              top: screenHeight * 0.85,
-              right: screenWidth * 0.08,
-              child: TatreezPattern(
-                size: 60,
-                opacity: 0.11,
-              ),
-            ),
-            Positioned(
-              top: screenHeight * 0.18,
-              left: screenWidth * 0.85,
-              child: TatreezPattern(
-                size: 70,
-                opacity: 0.15,
-              ),
-            ),
-            Positioned(
-              top: screenHeight * 0.45,
-              right: screenWidth * 0.85,
-              child: TatreezPattern(
-                size: 80,
-                opacity: 0.14,
-              ),
-            ),
-            Positioned(
-              top: screenHeight * 0.72,
-              left: screenWidth * 0.9,
-              child: TatreezPattern(
-                size: 65,
-                opacity: 0.12,
-              ),
-            ),
-          ] else ...[
-            // Mobile layout - fewer patterns, positioned away from form
-            Positioned(
-              top: screenHeight * 0.08,
-              left: screenWidth * 0.05,
-              child: TatreezPattern(
-                size: 70,
-                opacity: 0.12,
-              ),
-            ),
-            Positioned(
-              top: screenHeight * 0.25,
-              right: screenWidth * 0.08,
-              child: TatreezPattern(
-                size: 85,
-                opacity: 0.15,
-              ),
-            ),
-            Positioned(
-              top: screenHeight * 0.45,
-              left: screenWidth * 0.12,
-              child: TatreezPattern(
-                size: 60,
-                opacity: 0.13,
-              ),
-            ),
-            Positioned(
-              top: screenHeight * 0.65,
-              right: screenWidth * 0.15,
-              child: TatreezPattern(
-                size: 75,
-                opacity: 0.14,
-              ),
-            ),
-            Positioned(
-              top: screenHeight * 0.8,
-              left: screenWidth * 0.03,
-              child: TatreezPattern(
-                size: 80,
-                opacity: 0.11,
-              ),
-            ),
-          ],
-          // Main content
-          isWeb ? _buildWebLayout(screenWidth, screenHeight) : _buildMobileLayout(screenWidth, screenHeight),
-        ],
-      ),
+    return Consumer2<LanguageService, ResponsiveService>(
+      builder: (context, languageService, responsiveService, child) {
+        // Use the unified ResponsiveService instead of hardcoded breakpoints
+        // This eliminates the circular responsive logic that was causing conflicts
+        final screenWidth = MediaQuery.of(context).size.width;
+        final shouldUseMobileLayout = responsiveService.shouldUseMobileLayout(screenWidth);
+
+        return Scaffold(
+          backgroundColor: const Color(0xFFFDF5EC),
+          body: shouldUseMobileLayout
+            ? _buildMobileLayout(languageService)
+            : _buildWebLayout(languageService),
+        );
+      },
     );
   }
 
-  Widget _buildWebLayout(double screenWidth, double screenHeight) {
-    return Consumer<LanguageService>(
-      builder: (context, languageService, child) {
+  Widget _buildWebLayout(LanguageService languageService) {
+    return Consumer<ResponsiveService>(
+      builder: (context, responsiveService, child) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final screenHeight = MediaQuery.of(context).size.height;
+        
         return Stack(
           children: [
             Row(
@@ -316,15 +185,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ],
                               ),
-                              child: Stack(
+                              child: const Stack(
                                 children: [
-
                                   // Main animated icon
                                   Center(
                                     child: AnimatedHandshake(
-                                size: 100.0, // Fixed size
-                                color: AppColors.primary,
-                                      animationDuration: const Duration(milliseconds: 2500),
+                                      size: 100.0, // Fixed size
+                                      color: AppColors.primary,
+                                      animationDuration: Duration(milliseconds: 2500),
                                     ),
                                   ),
                                 ],
@@ -361,8 +229,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   flex: 1,
                   child: Center(
                     child: Container(
-                      constraints: BoxConstraints(maxWidth: 400.w),
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 32.w),
+                      constraints: const BoxConstraints(maxWidth: 400),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -370,13 +238,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           Text(
                             AppStrings.getString('login', languageService.currentLanguage),
                             style: GoogleFonts.cairo(
-                              fontSize: 32.sp,
+                              fontSize: 32,
                               fontWeight: FontWeight.bold,
                               color: AppColors.primary, // Palestinian red
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          SizedBox(height: 48.h),
+                          const SizedBox(height: 48),
                           Focus(
                             onKey: (node, event) {
                               // Handle Enter key press anywhere in the form
@@ -416,8 +284,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(20),
                     onTap: () => languageService.toggleLanguage(),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -426,10 +294,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             size: 20,
                             color: AppColors.primary,
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8),
                           Text(
-                            languageService.isEnglish ? 'العربية' : 'English',
-                            style: GoogleFonts.cairo(
+                            'العربية',
+                            style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: AppColors.primary,
@@ -448,10 +316,12 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildMobileLayout(double screenWidth, double screenHeight) {
-    return Consumer<LanguageService>(
-      builder: (context, languageService, child) {
+  Widget _buildMobileLayout(LanguageService languageService) {
+    return Consumer<ResponsiveService>(
+      builder: (context, responsiveService, child) {
         // Mobile responsive sizing for login
+        final screenWidth = MediaQuery.of(context).size.width;
+        final screenHeight = MediaQuery.of(context).size.height;
         final logoSize = screenWidth * 0.25; // 25% of screen width for logo
         final titleSize = screenWidth * 0.065; // 6.5% of screen width
         final subtitleSize = screenWidth * 0.04; // 4% of screen width
@@ -559,7 +429,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.language,
                               size: 16,
                               color: AppColors.primary,
@@ -653,21 +523,21 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(borderRadius),
-                    borderSide: BorderSide(
+                    borderSide: const BorderSide(
                       color: AppColors.inputBorder, // Normal red border
                       width: 1.0,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(borderRadius),
-                    borderSide: BorderSide(
+                    borderSide: const BorderSide(
                       color: AppColors.inputBorderFocused, // Focused red border
                       width: 2.0,
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(borderRadius),
-                    borderSide: BorderSide(
+                    borderSide: const BorderSide(
                       color: AppColors.inputBorder, // Normal red border
                       width: 1.0,
                     ),
@@ -740,21 +610,21 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(borderRadius),
-                    borderSide: BorderSide(
+                    borderSide: const BorderSide(
                       color: AppColors.inputBorder, // Normal red border
                       width: 1.0,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(borderRadius),
-                    borderSide: BorderSide(
+                    borderSide: const BorderSide(
                       color: AppColors.inputBorderFocused, // Focused red border
                       width: 2.0,
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(borderRadius),
-                    borderSide: BorderSide(
+                    borderSide: const BorderSide(
                       color: AppColors.inputBorder, // Normal red border
                       width: 1.0,
                     ),

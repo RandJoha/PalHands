@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -13,7 +12,6 @@ import '../services/auth_service.dart';
 import '../services/base_api_service.dart';
 
 // Widget imports
-import 'tatreez_pattern.dart';
 import 'animated_handshake.dart';
 
 // Web-specific signup widget
@@ -214,8 +212,8 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
                   ),
                   title: Row(
                     children: [
-                      Icon(Icons.warning, color: AppColors.primary, size: 24),
-                      SizedBox(width: 8),
+                      const Icon(Icons.warning, color: AppColors.primary, size: 24),
+                      const SizedBox(width: 8),
                       Text(
                         languageService.currentLanguage == 'ar' ? 'الفئة مطلوبة' : 'Category Required',
                         style: GoogleFonts.cairo(
@@ -274,8 +272,8 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
                   ),
                   title: Row(
                     children: [
-                      Icon(Icons.warning, color: AppColors.primary, size: 24),
-                      SizedBox(width: 8),
+                      const Icon(Icons.warning, color: AppColors.primary, size: 24),
+                      const SizedBox(width: 8),
                       Text(
                         languageService.currentLanguage == 'ar' ? 'الفئة الفرعية مطلوبة' : 'Sub-Category Required',
                         style: GoogleFonts.cairo(
@@ -377,8 +375,8 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
                 ),
                 title: Row(
                   children: [
-                    Icon(Icons.warning, color: AppColors.primary, size: 24),
-                    SizedBox(width: 8),
+                    const Icon(Icons.warning, color: AppColors.primary, size: 24),
+                    const SizedBox(width: 8),
                     Text(
                       languageService.currentLanguage == 'ar' ? 'الفئة الفرعية مطلوبة' : 'Sub-Category Required',
                       style: GoogleFonts.cairo(
@@ -562,10 +560,10 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
                               ),
                             ],
                           ),
-                          child: AnimatedHandshake(
+                          child: const AnimatedHandshake(
                             size: 100,
                             color: AppColors.primary,
-                            animationDuration: const Duration(milliseconds: 2500),
+                            animationDuration: Duration(milliseconds: 2500),
                           ),
                         ),
                         SizedBox(height: widget.screenHeight * 0.05),
@@ -659,7 +657,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
     return Column(
       children: [
         Text(
-          AppStrings.getString('signUpAsClient', languageService.currentLanguage) + ' / ' + AppStrings.getString('signUpAsServiceProvider', languageService.currentLanguage),
+          '${AppStrings.getString('signUpAsClient', languageService.currentLanguage)} / ${AppStrings.getString('signUpAsServiceProvider', languageService.currentLanguage)}',
           style: GoogleFonts.cairo(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -680,7 +678,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
               foregroundColor: AppColors.primary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15),
-                side: BorderSide(color: AppColors.primary, width: 2),
+                side: const BorderSide(color: AppColors.primary, width: 2),
               ),
               elevation: 4,
               shadowColor: AppColors.primary.withValues(alpha: 0.3),
@@ -688,8 +686,8 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('👤', style: TextStyle(fontSize: 24)),
-                SizedBox(width: 12),
+                const Text('👤', style: TextStyle(fontSize: 24)),
+                const SizedBox(width: 12),
                 Text(
                   AppStrings.getString('signUpAsClient', languageService.currentLanguage),
                   style: GoogleFonts.cairo(
@@ -722,8 +720,8 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('🛠', style: TextStyle(fontSize: 24)),
-                SizedBox(width: 12),
+                const Text('🛠', style: TextStyle(fontSize: 24)),
+                const SizedBox(width: 12),
                 Text(
                   AppStrings.getString('signUpAsServiceProvider', languageService.currentLanguage),
                   style: GoogleFonts.cairo(
@@ -753,7 +751,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
                 height: 40,
                 decoration: BoxDecoration(
                   color: isCompleted ? AppColors.primary : 
-                         isActive ? AppColors.primary.withOpacity(0.3) : AppColors.gray,
+                         isActive ? AppColors.primary.withValues(alpha: 0.3) : AppColors.gray,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -804,7 +802,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
                 },
               ),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             Expanded(
               child: _buildTextField(
                 controller: _lastNameController,
@@ -889,7 +887,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
               return AppStrings.getString('pleaseEnterPhoneNumber', languageService.currentLanguage);
             }
             // More flexible phone number validation
-            final pattern = r'^[\+]?[0-9\s\-\(\)]{8,15}$';
+            const pattern = r'^[\+]?[0-9\s\-\(\)]{8,15}$';
             final regExp = RegExp(pattern);
             if (!regExp.hasMatch(value)) {
               return 'Please enter a valid phone number';
@@ -954,9 +952,9 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
                   children: [
                     Text(
                       category['icon'],
-                      style: TextStyle(fontSize: 32),
+                      style: const TextStyle(fontSize: 32),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
                       _getCategoryName(categoryKey, languageService),
                       style: GoogleFonts.cairo(
@@ -1154,7 +1152,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
               ),
             ),
           ),
-          SizedBox(width: 16),
+          const SizedBox(width: 16),
         ],
         Expanded(
           flex: 2,
@@ -1175,7 +1173,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
             child: _isLoading
-              ? SizedBox(
+              ? const SizedBox(
                   width: 20,
                   height: 20,
                   child: CircularProgressIndicator(
@@ -1206,8 +1204,8 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
       ),
       child: Row(
         children: [
-          Icon(Icons.contact_support, color: AppColors.primary, size: 28),
-          SizedBox(width: 16),
+          const Icon(Icons.contact_support, color: AppColors.primary, size: 28),
+          const SizedBox(width: 16),
           Expanded(
             child: Text(
               AppStrings.getString('wantToOfferNewService', languageService.currentLanguage),
@@ -1229,11 +1227,11 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
         Container(
           width: 150,
           height: 150,
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: AppColors.primary,
             shape: BoxShape.circle,
           ),
-          child: Icon(
+          child: const Icon(
             Icons.check,
             size: 80,
             color: AppColors.white,
@@ -1393,7 +1391,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
                 fontSize: 16,
                 color: AppColors.placeholderText,
               ),
-              prefixIcon: Icon(Icons.location_on, color: AppColors.primary),
+              prefixIcon: const Icon(Icons.location_on, color: AppColors.primary),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             ),

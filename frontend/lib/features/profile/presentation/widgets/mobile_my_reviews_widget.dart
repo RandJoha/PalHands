@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 // Core imports
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_strings.dart';
 
 // Shared imports
 import '../../../../shared/services/language_service.dart';
@@ -98,10 +97,10 @@ class _MobileMyReviewsWidgetState extends State<MobileMyReviewsWidget> {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(25),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.person,
                   color: AppColors.primary,
                   size: 24,

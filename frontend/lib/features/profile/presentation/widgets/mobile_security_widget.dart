@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 // Core imports
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_strings.dart';
 
 // Shared imports
 import '../../../../shared/services/language_service.dart';
@@ -42,17 +41,17 @@ class _MobileSecurityWidgetState extends State<MobileSecurityWidget> {
           ),
           const SizedBox(height: 20),
           ListTile(
-            leading: Icon(Icons.lock, color: AppColors.primary),
+            leading: const Icon(Icons.lock, color: AppColors.primary),
             title: Text('Change Password', style: GoogleFonts.cairo(fontSize: 16)),
             onTap: () {},
           ),
           ListTile(
-            leading: Icon(Icons.delete_forever, color: AppColors.error),
+            leading: const Icon(Icons.delete_forever, color: AppColors.error),
             title: Text('Delete Account', style: GoogleFonts.cairo(fontSize: 16)),
             onTap: () {},
           ),
           ListTile(
-            leading: Icon(Icons.history, color: AppColors.primary),
+            leading: const Icon(Icons.history, color: AppColors.primary),
             title: Text('Login History', style: GoogleFonts.cairo(fontSize: 16)),
             onTap: () {},
           ),

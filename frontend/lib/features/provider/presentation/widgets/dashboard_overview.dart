@@ -53,7 +53,7 @@ class _DashboardOverviewWidgetState extends State<DashboardOverviewWidget> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
@@ -121,7 +121,7 @@ class _DashboardOverviewWidgetState extends State<DashboardOverviewWidget> {
               color: AppColors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(40),
             ),
-            child: Icon(
+            child: const Icon(
               Icons.dashboard,
               size: 40,
               color: AppColors.white,

@@ -53,44 +53,44 @@ enum FieldType {
 class ContactData {
   static List<ContactPurposeData> getAllContactPurposes() {
     return [
-      ContactPurposeData(
+      const ContactPurposeData(
         purpose: ContactPurpose.reportServiceProvider,
         titleKey: 'reportServiceProvider',
         descriptionKey: 'reportServiceProvider',
         icon: Icons.report_problem,
         formFields: [
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'serviceName',
             hintKey: 'serviceName',
             type: FieldType.text,
             required: true,
           ),
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'whatWentWrong',
             hintKey: 'whatWentWrong',
             type: FieldType.textarea,
             required: true,
           ),
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'issueType',
             hintKey: 'issueType',
             type: FieldType.dropdown,
             required: true,
             options: ['unsafe', 'misleading', 'otherIssue'],
           ),
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'attachScreenshot',
             hintKey: 'attachScreenshot',
             type: FieldType.file,
             required: false,
           ),
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'yourName',
             hintKey: 'yourName',
             type: FieldType.text,
             required: true,
           ),
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'contactEmail',
             hintKey: 'contactEmail',
             type: FieldType.email,
@@ -98,37 +98,37 @@ class ContactData {
           ),
         ],
       ),
-      ContactPurposeData(
+      const ContactPurposeData(
         purpose: ContactPurpose.suggestFeature,
         titleKey: 'suggestFeature',
         descriptionKey: 'suggestFeature',
         icon: Icons.lightbulb,
         formFields: [
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'ideaTitle',
             hintKey: 'ideaTitle',
             type: FieldType.text,
             required: true,
           ),
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'ideaDescription',
             hintKey: 'ideaDescription',
             type: FieldType.textarea,
             required: true,
           ),
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'howItHelpsCommunity',
             hintKey: 'howItHelpsCommunity',
             type: FieldType.textarea,
             required: true,
           ),
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'yourName',
             hintKey: 'yourName',
             type: FieldType.text,
             required: true,
           ),
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'contactEmail',
             hintKey: 'contactEmail',
             type: FieldType.email,
@@ -136,37 +136,37 @@ class ContactData {
           ),
         ],
       ),
-      ContactPurposeData(
+      const ContactPurposeData(
         purpose: ContactPurpose.requestServiceCategory,
         titleKey: 'requestServiceCategory',
         descriptionKey: 'requestServiceCategory',
         icon: Icons.add_business,
         formFields: [
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'newServiceName',
             hintKey: 'newServiceName',
             type: FieldType.text,
             required: true,
           ),
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'whichCategory',
             hintKey: 'whichCategory',
             type: FieldType.text,
             required: true,
           ),
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'whyImportant',
             hintKey: 'whyImportant',
             type: FieldType.textarea,
             required: true,
           ),
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'yourName',
             hintKey: 'yourName',
             type: FieldType.text,
             required: true,
           ),
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'contactEmail',
             hintKey: 'contactEmail',
             type: FieldType.email,
@@ -174,31 +174,31 @@ class ContactData {
           ),
         ],
       ),
-      ContactPurposeData(
+      const ContactPurposeData(
         purpose: ContactPurpose.technicalProblem,
         titleKey: 'technicalProblem',
         descriptionKey: 'technicalProblem',
         icon: Icons.bug_report,
         formFields: [
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'problemDescription',
             hintKey: 'problemDescription',
             type: FieldType.textarea,
             required: true,
           ),
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'attachScreenshot',
             hintKey: 'attachScreenshot',
             type: FieldType.file,
             required: false,
           ),
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'yourName',
             hintKey: 'yourName',
             type: FieldType.text,
             required: true,
           ),
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'contactEmail',
             hintKey: 'contactEmail',
             type: FieldType.email,
@@ -206,25 +206,25 @@ class ContactData {
           ),
         ],
       ),
-      ContactPurposeData(
+      const ContactPurposeData(
         purpose: ContactPurpose.businessInquiry,
         titleKey: 'businessInquiry',
         descriptionKey: 'businessInquiry',
         icon: Icons.business,
         formFields: [
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'businessInquiryDetails',
             hintKey: 'businessInquiryDetails',
             type: FieldType.textarea,
             required: true,
           ),
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'yourName',
             hintKey: 'yourName',
             type: FieldType.text,
             required: true,
           ),
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'contactEmail',
             hintKey: 'contactEmail',
             type: FieldType.email,
@@ -232,25 +232,25 @@ class ContactData {
           ),
         ],
       ),
-      ContactPurposeData(
+      const ContactPurposeData(
         purpose: ContactPurpose.other,
         titleKey: 'otherInquiry',
         descriptionKey: 'otherInquiry',
         icon: Icons.help,
         formFields: [
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'otherDetails',
             hintKey: 'otherDetails',
             type: FieldType.textarea,
             required: true,
           ),
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'yourName',
             hintKey: 'yourName',
             type: FieldType.text,
             required: true,
           ),
-          const ContactFormField(
+          ContactFormField(
             labelKey: 'contactEmail',
             hintKey: 'contactEmail',
             type: FieldType.email,

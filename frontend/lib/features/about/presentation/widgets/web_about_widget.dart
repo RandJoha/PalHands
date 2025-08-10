@@ -4,9 +4,8 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/services/language_service.dart';
-import '../../../../shared/widgets/animated_handshake.dart';
-import '../../../../shared/widgets/tatreez_pattern.dart';
 import '../../../../shared/widgets/shared_navigation.dart';
+import '../../../../shared/services/responsive_service.dart';
 import '../../../../shared/widgets/shared_hero_section.dart';
 
 class WebAboutWidget extends StatelessWidget {
@@ -16,19 +15,24 @@ class WebAboutWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<LanguageService>(
       builder: (context, languageService, child) {
-        return SingleChildScrollView(
-          child: Column(
-            children: [
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isCollapsed = context.read<ResponsiveService>().shouldCollapseNavigation(screenWidth);
+  return Scaffold(
+          backgroundColor: const Color(0xFFFDF5EC),
+          drawer: isCollapsed ? const SharedMobileDrawer(currentPage: 'aboutUs') : null,
+          body: SingleChildScrollView(
+            child: Column(
+              children: [
               // Shared Navigation
               SharedNavigation(
                 currentPage: 'aboutUs',
                 showAuthButtons: true,
-                isMobile: false,
+                isMobile: isCollapsed,
               ),
               // Shared Hero Section
               SharedHeroSections.aboutHero(
                 languageService: languageService,
-                isMobile: false,
+                isMobile: isCollapsed,
               ),
               _buildMissionSection(languageService),
               _buildValuesSection(languageService),
@@ -39,7 +43,9 @@ class WebAboutWidget extends StatelessWidget {
               _buildFooter(languageService),
             ],
           ),
-        );
+  ));
+        
+        
       },
     );
   }
@@ -48,7 +54,7 @@ class WebAboutWidget extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 80),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
       ),
       child: Column(
@@ -142,10 +148,10 @@ class WebAboutWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.05),
+        color: AppColors.primary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.primary.withOpacity(0.2),
+          color: AppColors.primary.withValues(alpha: 0.2),
           width: 2,
         ),
       ),
@@ -178,7 +184,7 @@ class WebAboutWidget extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 80),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
       ),
       child: Row(
@@ -214,7 +220,7 @@ class WebAboutWidget extends StatelessWidget {
             child: Container(
               height: 300,
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Center(
@@ -238,7 +244,7 @@ class WebAboutWidget extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 80),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.05),
+        color: AppColors.primary.withValues(alpha: 0.05),
       ),
       child: Column(
         children: [
@@ -269,7 +275,7 @@ class WebAboutWidget extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 80),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
       ),
       child: Column(
@@ -373,13 +379,7 @@ class WebAboutWidget extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(
-            AppStrings.getString('copyright', languageService.currentLanguage),
-            style: GoogleFonts.cairo(
-              fontSize: 14,
-              color: Colors.black54,
-            ),
-          ),
+          const SizedBox.shrink(),
         ],
       ),
     );

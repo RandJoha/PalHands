@@ -5,8 +5,6 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/services/language_service.dart';
 import '../../../../shared/services/responsive_service.dart';
-import '../../../../shared/widgets/animated_handshake.dart';
-import '../../../../shared/widgets/tatreez_pattern.dart';
 import '../../../../shared/widgets/shared_navigation.dart';
 import '../../../../shared/widgets/shared_hero_section.dart';
 import '../../data/contact_data.dart';
@@ -38,7 +36,6 @@ class _MobileContactWidgetState extends State<MobileContactWidget> {
   }
 
   void _onFormSubmitted(Map<String, dynamic> formData) {
-    // TODO: Implement form submission logic
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -74,12 +71,13 @@ class _MobileContactWidgetState extends State<MobileContactWidget> {
     return Consumer2<LanguageService, ResponsiveService>(
       builder: (context, languageService, responsiveService, child) {
         final screenWidth = MediaQuery.of(context).size.width;
-        final shouldUseMobileLayout = responsiveService.shouldUseMobileLayout(screenWidth);
+  final shouldUseMobileLayout = responsiveService.shouldUseMobileLayout(screenWidth);
+  final isCollapsed = responsiveService.shouldCollapseNavigation(screenWidth);
         
         return Scaffold(
           key: _scaffoldKey,
           backgroundColor: const Color(0xFFFDF5EC),
-          drawer: shouldUseMobileLayout ? SharedMobileDrawer(currentPage: 'contactUs') : null,
+          drawer: (shouldUseMobileLayout || isCollapsed) ? const SharedMobileDrawer(currentPage: 'contactUs') : null,
           body: SingleChildScrollView(
             child: Column(
               children: [
@@ -87,10 +85,10 @@ class _MobileContactWidgetState extends State<MobileContactWidget> {
                 SharedNavigation(
                   currentPage: 'contactUs',
                   showAuthButtons: false,
-                  onMenuTap: shouldUseMobileLayout ? () {
+                  onMenuTap: (shouldUseMobileLayout || isCollapsed) ? () {
                     _scaffoldKey.currentState?.openDrawer();
                   } : null,
-                  isMobile: shouldUseMobileLayout,
+                  isMobile: shouldUseMobileLayout || isCollapsed,
                 ),
                 // Shared Hero Section
                 SharedHeroSections.contactHero(
@@ -134,16 +132,16 @@ class _MobileContactWidgetState extends State<MobileContactWidget> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: AppColors.primary.withOpacity(0.2),
+                color: AppColors.primary.withValues(alpha: 0.2),
                 width: 1,
               ),
             ),
             child: Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.info_outline,
                   color: AppColors.primary,
                   size: 20,
@@ -171,7 +169,7 @@ class _MobileContactWidgetState extends State<MobileContactWidget> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.05),
+        color: AppColors.primary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -186,7 +184,7 @@ class _MobileContactWidgetState extends State<MobileContactWidget> {
             ),
           ),
           const SizedBox(height: 16),
-          QuickAccessWidgets(),
+          const QuickAccessWidgets(),
         ],
       ),
     );
@@ -204,14 +202,8 @@ class _MobileContactWidgetState extends State<MobileContactWidget> {
       ),
       child: Column(
         children: [
-          Text(
-            AppStrings.getString('copyright', languageService.currentLanguage),
-            style: GoogleFonts.cairo(
-              fontSize: 12,
-              color: Colors.black54,
-            ),
-            textAlign: TextAlign.center,
-          ),
+          // Removed copyright
+          const SizedBox.shrink(),
         ],
       ),
     );

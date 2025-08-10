@@ -4,15 +4,12 @@ import 'package:provider/provider.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_strings.dart';
 import '../../../../../shared/services/language_service.dart';
-import '../../../../../shared/services/auth_service.dart';
 import '../../../../../shared/services/responsive_service.dart';
-import '../../../../../shared/widgets/animated_handshake.dart';
-import '../../../../../shared/widgets/tatreez_pattern.dart';
 import '../../../../../shared/widgets/shared_navigation.dart';
 import '../../../../../shared/widgets/shared_hero_section.dart';
 
 class WebHomeWidget extends StatefulWidget {
-  const WebHomeWidget({Key? key}) : super(key: key);
+  const WebHomeWidget({super.key});
 
   @override
   State<WebHomeWidget> createState() => _WebHomeWidgetState();
@@ -24,10 +21,12 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
     return Consumer2<LanguageService, ResponsiveService>(
       builder: (context, languageService, responsiveService, child) {
         final screenWidth = MediaQuery.of(context).size.width;
-        final shouldUseMobileLayout = responsiveService.shouldUseMobileLayout(screenWidth);
+  final shouldUseMobileLayout = responsiveService.shouldUseMobileLayout(screenWidth);
+  final isCollapsed = responsiveService.shouldCollapseNavigation(screenWidth);
         
         return Scaffold(
           backgroundColor: const Color(0xFFFDF5EC), // Soft off-white beige
+          drawer: (shouldUseMobileLayout || isCollapsed) ? const SharedMobileDrawer(currentPage: 'home') : null,
           body: ConstrainedBox(
             constraints: BoxConstraints(
               maxWidth: MediaQuery.of(context).size.width,
@@ -46,7 +45,7 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
                         SharedNavigation(
                           currentPage: 'home',
                           showAuthButtons: true,
-                          isMobile: shouldUseMobileLayout,
+                          isMobile: shouldUseMobileLayout || isCollapsed,
                         ),
                         // Shared Hero Section
                         SharedHeroSections.homeHero(
@@ -90,7 +89,7 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
             children: [
                         Text(
             AppStrings.getString('categories', languageService.currentLanguage),
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.bold,
               color: Colors.black,
@@ -102,7 +101,7 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
                 },
                 child: Text(
                   AppStrings.getString('viewAll', languageService.currentLanguage),
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppColors.primary,
                     decoration: TextDecoration.underline,
                     fontWeight: FontWeight.w600,
@@ -149,7 +148,7 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
           onTap: () {
             Navigator.pushNamed(context, '/categories');
           },
-          child: Container(
+          child: SizedBox(
             width: 200,
             height: 200,
             child: Stack(
@@ -171,7 +170,7 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       // Category image - responsive size
-                      Container(
+                      SizedBox(
                         width: iconSize,
                         height: iconSize,
                         child: Image.asset(
@@ -234,7 +233,7 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
         children: [
           Text(
             AppStrings.getString('popularServices', languageService.currentLanguage),
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
               color: Colors.black,
@@ -285,14 +284,14 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
 
         // Calculate responsive sizes based on available space
         final containerWidth = constraints.maxWidth;
-        final containerHeight = 320.0; // Fixed height for service cards
+        const containerHeight = 320.0; // Fixed height for service cards
         final framePadding = (containerWidth * 0.03).clamp(8.0, 15.0);
         
         return GestureDetector(
           onTap: () {
             Navigator.pushNamed(context, '/categories');
           },
-          child: Container(
+          child: SizedBox(
             height: containerHeight,
             child: Stack(
               children: [
@@ -313,7 +312,7 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       // Service icon
-                      Container(
+                      SizedBox(
                         width: (containerWidth * 0.35).clamp(40.0, 80.0), // 35% with limits
                         height: (containerWidth * 0.35).clamp(40.0, 80.0), // 35% with limits
                         child: Image.asset(
@@ -412,7 +411,7 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -450,7 +449,7 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
       margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
+        color: AppColors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: AppColors.primary,
@@ -461,7 +460,7 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
         textDirection: languageService.textDirection,
         child: Row(
           children: [
-            Icon(
+            const Icon(
               Icons.local_offer,
               color: AppColors.primary,
               size: 32,
@@ -512,7 +511,7 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
             },
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.primary,
-              side: BorderSide(color: AppColors.primary),
+              side: const BorderSide(color: AppColors.primary),
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -548,7 +547,7 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
                 onPressed: () {},
                 child: Text(
                   AppStrings.getString('home', languageService.currentLanguage),
-                  style: TextStyle(color: AppColors.primary, fontSize: 16),
+                  style: const TextStyle(color: AppColors.primary, fontSize: 16),
                 ),
               ),
               TextButton(
@@ -557,21 +556,21 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
                 },
                 child: Text(
                   AppStrings.getString('aboutUs', languageService.currentLanguage),
-                  style: TextStyle(color: AppColors.primary, fontSize: 16),
+                  style: const TextStyle(color: AppColors.primary, fontSize: 16),
                 ),
               ),
               TextButton(
                 onPressed: () {},
                 child: Text(
                   AppStrings.getString('ourServices', languageService.currentLanguage),
-                  style: TextStyle(color: AppColors.primary, fontSize: 16),
+                  style: const TextStyle(color: AppColors.primary, fontSize: 16),
                 ),
               ),
               TextButton(
                 onPressed: () {},
                 child: Text(
                   AppStrings.getString('privacyPolicy', languageService.currentLanguage),
-                  style: TextStyle(color: AppColors.primary, fontSize: 16),
+                  style: const TextStyle(color: AppColors.primary, fontSize: 16),
                 ),
               ),
             ],
@@ -583,28 +582,19 @@ class _WebHomeWidgetState extends State<WebHomeWidget> {
             children: [
               IconButton(
                 onPressed: () {},
-                icon: Icon(Icons.facebook, color: AppColors.primary, size: 32),
+                icon: const Icon(Icons.facebook, color: AppColors.primary, size: 32),
               ),
               IconButton(
                 onPressed: () {},
-                icon: Icon(Icons.message, color: AppColors.primary, size: 32),
+                icon: const Icon(Icons.message, color: AppColors.primary, size: 32),
               ),
               IconButton(
                 onPressed: () {},
-                icon: Icon(Icons.camera_alt, color: AppColors.primary, size: 32),
+                icon: const Icon(Icons.camera_alt, color: AppColors.primary, size: 32),
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          // Copyright
-          Text(
-            AppStrings.getString('copyright', languageService.currentLanguage),
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
-            textAlign: TextAlign.center,
-          ),
+          const SizedBox(height: 8),
         ],
       ),
     );

@@ -73,7 +73,7 @@ class _DashboardHomeWidgetState extends State<DashboardHomeWidget> {
                   AppStrings.getString('welcomeBack', languageService.currentLanguage),
                   style: GoogleFonts.cairo(
                     fontSize: 16.sp,
-                    color: AppColors.white.withOpacity(0.9),
+                    color: AppColors.white.withValues(alpha: 0.9),
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -91,7 +91,7 @@ class _DashboardHomeWidgetState extends State<DashboardHomeWidget> {
                   'You have 3 upcoming bookings this week',
                   style: GoogleFonts.cairo(
                     fontSize: 14.sp,
-                    color: AppColors.white.withOpacity(0.8),
+                    color: AppColors.white.withValues(alpha: 0.8),
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -102,7 +102,7 @@ class _DashboardHomeWidgetState extends State<DashboardHomeWidget> {
             width: 80.w,
             height: 80.w,
             decoration: BoxDecoration(
-              color: AppColors.white.withOpacity(0.2),
+              color: AppColors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(40.r),
             ),
             child: Icon(
@@ -169,11 +169,11 @@ class _DashboardHomeWidgetState extends State<DashboardHomeWidget> {
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: AppColors.shadow,
             blurRadius: 8,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -183,7 +183,7 @@ class _DashboardHomeWidgetState extends State<DashboardHomeWidget> {
             width: 50.w,
             height: 50.w,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(25.r),
             ),
             child: Icon(
@@ -219,10 +219,10 @@ class _DashboardHomeWidgetState extends State<DashboardHomeWidget> {
     return Container(
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        color: AppColors.warning.withOpacity(0.1),
+        color: AppColors.warning.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
-          color: AppColors.warning.withOpacity(0.3),
+          color: AppColors.warning.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -286,7 +286,7 @@ class _DashboardHomeWidgetState extends State<DashboardHomeWidget> {
           width: 32.w,
           height: 32.w,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(16.r),
           ),
           child: Icon(
@@ -397,7 +397,7 @@ class _DashboardHomeWidgetState extends State<DashboardHomeWidget> {
             width: 50.w,
             height: 50.w,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(25.r),
             ),
             child: Icon(
@@ -443,7 +443,7 @@ class _DashboardHomeWidgetState extends State<DashboardHomeWidget> {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
+              color: statusColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Text(
@@ -541,7 +541,7 @@ class _DashboardHomeWidgetState extends State<DashboardHomeWidget> {
               width: 50.w,
               height: 50.w,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(25.r),
               ),
               child: Icon(

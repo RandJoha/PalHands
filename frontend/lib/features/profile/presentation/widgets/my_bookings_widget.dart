@@ -47,10 +47,10 @@ class _MyBookingsWidgetState extends State<MyBookingsWidget> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20.r),
                   border: Border.all(
-                    color: AppColors.primary.withOpacity(0.3),
+                    color: AppColors.primary.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -194,7 +194,7 @@ class _MyBookingsWidgetState extends State<MyBookingsWidget> {
                 width: 50.w,
                 height: 50.w,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(25.r),
                 ),
                 child: Icon(
@@ -243,7 +243,7 @@ class _MyBookingsWidgetState extends State<MyBookingsWidget> {
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: Text(
@@ -283,7 +283,7 @@ class _MyBookingsWidgetState extends State<MyBookingsWidget> {
                   ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.primary,
-                    side: BorderSide(color: AppColors.primary),
+                    side: const BorderSide(color: AppColors.primary),
                   ),
                 ),
               ),

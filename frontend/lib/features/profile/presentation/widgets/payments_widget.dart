@@ -95,7 +95,7 @@ class _PaymentsWidgetState extends State<PaymentsWidget> {
             width: 50.w,
             height: 50.w,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(25.r),
             ),
             child: Icon(
@@ -153,7 +153,7 @@ class _PaymentsWidgetState extends State<PaymentsWidget> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.1),
+                  color: AppColors.success.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Text(

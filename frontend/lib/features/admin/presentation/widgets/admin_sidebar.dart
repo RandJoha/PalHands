@@ -65,7 +65,7 @@ class _AdminSidebarState extends State<AdminSidebar> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 6,
             offset: const Offset(2, 0),
           ),
@@ -101,7 +101,7 @@ class _AdminSidebarState extends State<AdminSidebar> {
         color: AppColors.primary,
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.2),
+            color: AppColors.primary.withValues(alpha: 0.2),
             blurRadius: 3,
             offset: const Offset(0, 1),
           ),
@@ -145,7 +145,7 @@ class _AdminSidebarState extends State<AdminSidebar> {
                     AppStrings.getString('adminPanel', languageService.currentLanguage),
                     style: GoogleFonts.cairo(
                       fontSize: screenWidth > 1400 ? 10 : 9,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                     ),
                   ),
                 ],
@@ -219,12 +219,12 @@ class _AdminSidebarState extends State<AdminSidebar> {
             padding: EdgeInsets.all(padding),
             decoration: BoxDecoration(
               color: isSelected 
-                ? AppColors.primary.withOpacity(0.08)
+                ? AppColors.primary.withValues(alpha: 0.08)
                 : Colors.transparent,
               borderRadius: BorderRadius.circular(widget.isCollapsed ? 6 : 8),
               border: isSelected
                 ? Border.all(
-                    color: AppColors.primary.withOpacity(0.3),
+                    color: AppColors.primary.withValues(alpha: 0.3),
                     width: 1,
                   )
                 : null,
@@ -245,7 +245,7 @@ class _AdminSidebarState extends State<AdminSidebar> {
       decoration: BoxDecoration(
         color: isSelected 
           ? AppColors.primary
-          : AppColors.textLight.withOpacity(0.08),
+          : AppColors.textLight.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Icon(
@@ -268,7 +268,7 @@ class _AdminSidebarState extends State<AdminSidebar> {
           decoration: BoxDecoration(
             color: isSelected 
               ? AppColors.primary
-              : AppColors.textLight.withOpacity(0.08),
+              : AppColors.textLight.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(6),
           ),
           child: Icon(
@@ -280,7 +280,7 @@ class _AdminSidebarState extends State<AdminSidebar> {
           ),
         ),
         
-        SizedBox(width: 10),
+        const SizedBox(width: 10),
         
         // Title - More compact
         Expanded(
@@ -325,7 +325,7 @@ class _AdminSidebarState extends State<AdminSidebar> {
         color: AppColors.background,
         border: Border(
           top: BorderSide(
-            color: Colors.grey.withOpacity(0.15),
+            color: Colors.grey.withValues(alpha: 0.15),
             width: 1,
           ),
         ),
@@ -337,11 +337,11 @@ class _AdminSidebarState extends State<AdminSidebar> {
             Container(
               height: 1.5.h,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
+                gradient: const LinearGradient(
                   colors: [
                     AppColors.primary, // Palestinian red
                     AppColors.secondary, // Golden
-                    const Color(0xFF2E8B57), // Sea green
+                    Color(0xFF2E8B57), // Sea green
                   ],
                 ),
                 borderRadius: BorderRadius.circular(0.75.r),

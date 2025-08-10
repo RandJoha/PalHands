@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -12,21 +11,11 @@ import '../../../../shared/services/auth_service.dart';
 import '../../../../shared/services/language_service.dart';
 
 // User dashboard widgets
-import 'dashboard_home_widget.dart';
-import 'my_bookings_widget.dart';
-import 'chat_messages_widget.dart';
-import 'payments_widget.dart';
-import 'my_reviews_widget.dart';
-import 'profile_settings_widget.dart';
-import 'saved_providers_widget.dart';
-import 'support_help_widget.dart';
-import 'security_widget.dart';
 
 // User models
 import '../../domain/models/user_menu_item.dart';
 
 // Mobile-specific widgets
-import 'mobile_dashboard_home_widget.dart';
 import 'mobile_my_bookings_widget.dart';
 import 'mobile_chat_messages_widget.dart';
 import 'mobile_payments_widget.dart';
@@ -117,10 +106,10 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
     return AppBar(
       backgroundColor: AppColors.white,
       elevation: 2,
-      shadowColor: Colors.black.withOpacity(0.1),
+      shadowColor: Colors.black.withValues(alpha: 0.1),
       title: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.handshake,
             color: AppColors.primary,
             size: 24,
@@ -144,7 +133,7 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
           },
           icon: Stack(
             children: [
-              Icon(
+              const Icon(
                 Icons.notifications_outlined,
                 color: AppColors.textSecondary,
                 size: 24,
@@ -167,7 +156,7 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
         
         // Language toggle
         PopupMenuButton<String>(
-          icon: Icon(
+          icon: const Icon(
             Icons.language,
             color: AppColors.textSecondary,
             size: 24,
@@ -207,9 +196,9 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
             // Drawer header
             Container(
               height: 120,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.primary,
-                borderRadius: const BorderRadius.only(
+                borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(16),
                   bottomRight: Radius.circular(16),
                 ),
@@ -226,7 +215,7 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
                           color: AppColors.white,
                           borderRadius: BorderRadius.circular(25),
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.person,
                           color: AppColors.primary,
                           size: 24,
@@ -250,7 +239,7 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
                               'Premium User',
                               style: GoogleFonts.cairo(
                                 fontSize: 12,
-                                color: AppColors.white.withOpacity(0.8),
+                                color: AppColors.white.withValues(alpha: 0.8),
                               ),
                             ),
                           ],
@@ -277,9 +266,9 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
             // Drawer footer
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.greyLight,
-                borderRadius: const BorderRadius.only(
+                borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),
                 ),
@@ -287,7 +276,7 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
               child: Column(
                 children: [
                   ListTile(
-                    leading: Icon(
+                    leading: const Icon(
                       Icons.logout,
                       color: AppColors.error,
                       size: 20,
@@ -376,7 +365,7 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
         ),
       ),
       selected: isSelected,
-      selectedTileColor: AppColors.primary.withOpacity(0.1),
+      selectedTileColor: AppColors.primary.withValues(alpha: 0.1),
       onTap: () {
         if (mounted) {
           setState(() {
@@ -417,7 +406,7 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
         BottomNavigationBarItem(
           icon: Stack(
             children: [
-              Icon(Icons.calendar_today, size: 20),
+              const Icon(Icons.calendar_today, size: 20),
               if (_selectedIndex != 0)
                 Positioned(
                   right: 0,
@@ -438,7 +427,7 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
         BottomNavigationBarItem(
           icon: Stack(
             children: [
-              Icon(Icons.chat, size: 20),
+              const Icon(Icons.chat, size: 20),
               if (_selectedIndex != 1)
                 Positioned(
                   right: 0,
@@ -457,11 +446,11 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
           label: AppStrings.getString('chatMessages', languageService.currentLanguage),
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.payment, size: 20),
+          icon: const Icon(Icons.payment, size: 20),
           label: AppStrings.getString('payments', languageService.currentLanguage),
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.star, size: 20),
+          icon: const Icon(Icons.star, size: 20),
           label: AppStrings.getString('myReviews', languageService.currentLanguage),
         ),
       ],

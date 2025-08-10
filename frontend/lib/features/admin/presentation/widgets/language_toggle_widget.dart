@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -37,19 +36,19 @@ class LanguageToggleWidget extends StatelessWidget {
 
   Widget _buildCollapsedToggle(BuildContext context, LanguageService languageService, bool isArabic) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 3, vertical: 2),
+      margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () => languageService.toggleLanguage(),
           borderRadius: BorderRadius.circular(6),
           child: Container(
-            padding: EdgeInsets.all(8),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.08),
+              color: AppColors.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
-                color: AppColors.primary.withOpacity(0.3),
+                color: AppColors.primary.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
@@ -85,19 +84,19 @@ class LanguageToggleWidget extends StatelessWidget {
 
   Widget _buildExpandedToggle(BuildContext context, LanguageService languageService, bool isArabic) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () => languageService.toggleLanguage(),
           borderRadius: BorderRadius.circular(8),
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.08),
+              color: AppColors.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: AppColors.primary.withOpacity(0.3),
+                color: AppColors.primary.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
@@ -123,7 +122,7 @@ class LanguageToggleWidget extends StatelessWidget {
                   ),
                 ),
                 
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 
                 // Language text
                 Expanded(

@@ -101,7 +101,7 @@ class _EarningsWidgetState extends State<EarningsWidget> {
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.2),
+                      color: AppColors.primary.withValues(alpha: 0.2),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -365,7 +365,7 @@ class _EarningsWidgetState extends State<EarningsWidget> {
   }
 
   Widget _buildRecentTransactions(LanguageService languageService, bool isMobile, bool isTablet, bool isDesktop) {
-    final _transactions = [
+    final transactions = [
       {
         'id': '#TR001',
         'clientName': 'أحمد محمد',
@@ -427,9 +427,9 @@ class _EarningsWidgetState extends State<EarningsWidget> {
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: _transactions.length,
+          itemCount: transactions.length,
           itemBuilder: (context, index) {
-            return _buildTransactionCard(_transactions[index], languageService, isMobile, isTablet, isDesktop);
+            return _buildTransactionCard(transactions[index], languageService, isMobile, isTablet, isDesktop);
           },
         ),
       ],

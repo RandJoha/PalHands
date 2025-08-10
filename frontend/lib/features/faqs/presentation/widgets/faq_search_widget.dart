@@ -68,7 +68,7 @@ class _FAQSearchWidgetState extends State<FAQSearchWidget> {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -91,14 +91,14 @@ class _FAQSearchWidgetState extends State<FAQSearchWidget> {
                 fontSize: 14,
                 color: AppColors.placeholderText,
               ),
-              prefixIcon: Icon(
+              prefixIcon: const Icon(
                 Icons.search,
                 color: AppColors.primary,
                 size: 20,
               ),
               suffixIcon: widget.searchQuery.isNotEmpty
                 ? IconButton(
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.clear,
                       color: AppColors.grey,
                       size: 20,

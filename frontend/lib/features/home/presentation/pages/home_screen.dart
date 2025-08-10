@@ -7,7 +7,7 @@ import 'widgets/mobile_home_widget.dart';
 import 'widgets/web_home_widget.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +23,7 @@ class HomeScreen extends StatelessWidget {
                 left: 20,
                 child: TatreezPattern(
                   size: 80,
-                  color: const Color(0xFFC43F20).withOpacity(0.3),
+                  color: const Color(0xFFC43F20).withValues(alpha: 0.3),
                 ),
               ),
               Positioned(
@@ -31,7 +31,7 @@ class HomeScreen extends StatelessWidget {
                 right: 30,
                 child: TatreezPattern(
                   size: 60,
-                  color: const Color(0xFFC43F20).withOpacity(0.25),
+                  color: const Color(0xFFC43F20).withValues(alpha: 0.25),
                 ),
               ),
               Positioned(
@@ -39,7 +39,7 @@ class HomeScreen extends StatelessWidget {
                 left: 50,
                 child: TatreezPattern(
                   size: 70,
-                  color: const Color(0xFFC43F20).withOpacity(0.2),
+                  color: const Color(0xFFC43F20).withValues(alpha: 0.2),
                 ),
               ),
               Positioned(
@@ -47,7 +47,7 @@ class HomeScreen extends StatelessWidget {
                 right: 80,
                 child: TatreezPattern(
                   size: 50,
-                  color: const Color(0xFFC43F20).withOpacity(0.3),
+                  color: const Color(0xFFC43F20).withValues(alpha: 0.3),
                 ),
               ),
               

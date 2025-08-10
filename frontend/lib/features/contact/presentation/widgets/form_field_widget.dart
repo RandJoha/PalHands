@@ -74,11 +74,11 @@ class FormFieldWidget extends StatelessWidget {
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.primary.withOpacity(0.3)),
+              borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.primary.withOpacity(0.3)),
+              borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
@@ -137,11 +137,11 @@ class FormFieldWidget extends StatelessWidget {
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.primary.withOpacity(0.3)),
+              borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.primary.withOpacity(0.3)),
+              borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
@@ -190,11 +190,11 @@ class FormFieldWidget extends StatelessWidget {
           decoration: InputDecoration(
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.primary.withOpacity(0.3)),
+              borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.primary.withOpacity(0.3)),
+              borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
@@ -243,13 +243,13 @@ class FormFieldWidget extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+              border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
               borderRadius: BorderRadius.circular(8),
               color: Colors.grey[50],
             ),
             child: Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.attach_file,
                   color: AppColors.primary,
                   size: 24,
@@ -265,7 +265,6 @@ class FormFieldWidget extends StatelessWidget {
                 ),
                 TextButton(
                   onPressed: () {
-                    // TODO: Implement file picker
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(

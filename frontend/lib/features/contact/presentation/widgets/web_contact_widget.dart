@@ -4,9 +4,8 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/services/language_service.dart';
-import '../../../../shared/widgets/animated_handshake.dart';
-import '../../../../shared/widgets/tatreez_pattern.dart';
 import '../../../../shared/widgets/shared_navigation.dart';
+import '../../../../shared/services/responsive_service.dart';
 import '../../../../shared/widgets/shared_hero_section.dart';
 import '../../data/contact_data.dart';
 import 'contact_purpose_selector.dart';
@@ -37,7 +36,6 @@ class _WebContactWidgetState extends State<WebContactWidget> {
   }
 
   void _onFormSubmitted(Map<String, dynamic> formData) {
-    // TODO: Implement form submission logic
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -72,8 +70,11 @@ class _WebContactWidgetState extends State<WebContactWidget> {
   Widget build(BuildContext context) {
     return Consumer<LanguageService>(
       builder: (context, languageService, child) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isCollapsed = context.read<ResponsiveService>().shouldCollapseNavigation(screenWidth);
         return Scaffold(
           backgroundColor: const Color(0xFFFDF5EC),
+          drawer: isCollapsed ? const SharedMobileDrawer(currentPage: 'contactUs') : null,
           body: SingleChildScrollView(
             child: Column(
               children: [
@@ -81,7 +82,7 @@ class _WebContactWidgetState extends State<WebContactWidget> {
                 SharedNavigation(
                   currentPage: 'contactUs',
                   showAuthButtons: true,
-                  isMobile: false,
+                  isMobile: isCollapsed,
                 ),
                 // Shared Hero Section
                 SharedHeroSections.contactHero(
@@ -136,7 +137,7 @@ class _WebContactWidgetState extends State<WebContactWidget> {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 60),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.05),
+            color: AppColors.primary.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Column(
@@ -151,7 +152,7 @@ class _WebContactWidgetState extends State<WebContactWidget> {
                 ),
               ),
               const SizedBox(height: 20),
-              QuickAccessWidgets(),
+              const QuickAccessWidgets(),
             ],
           ),
         ),
@@ -179,16 +180,16 @@ class _WebContactWidgetState extends State<WebContactWidget> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: AppColors.primary.withOpacity(0.2),
+                      color: AppColors.primary.withValues(alpha: 0.2),
                       width: 1,
                     ),
                   ),
                   child: Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.info_outline,
                         color: AppColors.primary,
                         size: 20,
@@ -220,14 +221,7 @@ class _WebContactWidgetState extends State<WebContactWidget> {
       decoration: BoxDecoration(
         color: Colors.grey[100],
       ),
-      child: Text(
-        AppStrings.getString('copyright', languageService.currentLanguage),
-        style: GoogleFonts.cairo(
-          fontSize: 14,
-          color: Colors.black54,
-        ),
-        textAlign: TextAlign.center,
-      ),
+  child: const SizedBox.shrink(),
     );
   }
 } 

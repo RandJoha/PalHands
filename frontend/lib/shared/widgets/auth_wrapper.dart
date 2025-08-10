@@ -7,7 +7,7 @@ import '../../features/admin/presentation/pages/admin_dashboard_screen.dart';
 import '../../features/provider/presentation/pages/provider_dashboard_screen.dart';
 
 class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({Key? key}) : super(key: key);
+  const AuthWrapper({super.key});
 
   @override
   Widget build(BuildContext context) {

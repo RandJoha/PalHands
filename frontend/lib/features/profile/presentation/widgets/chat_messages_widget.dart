@@ -105,7 +105,7 @@ class _ChatMessagesWidgetState extends State<ChatMessagesWidget> {
                 width: 50.w,
                 height: 50.w,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(25.r),
                 ),
                 child: Icon(

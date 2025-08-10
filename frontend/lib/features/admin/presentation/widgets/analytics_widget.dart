@@ -47,10 +47,10 @@ class AnalyticsWidget extends StatelessWidget {
                 vertical: screenWidth > 1400 ? 12 : screenWidth > 1024 ? 10 : 8,
               ),
               decoration: BoxDecoration(
-                color: AppColors.secondary.withOpacity(0.1),
+                color: AppColors.secondary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: AppColors.secondary.withOpacity(0.3),
+                  color: AppColors.secondary.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),

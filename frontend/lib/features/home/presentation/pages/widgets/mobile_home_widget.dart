@@ -3,15 +3,12 @@ import 'package:provider/provider.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_strings.dart';
 import '../../../../../shared/services/language_service.dart';
-import '../../../../../shared/services/auth_service.dart';
 import '../../../../../shared/services/responsive_service.dart';
-import '../../../../../shared/widgets/animated_handshake.dart';
-import '../../../../../shared/widgets/tatreez_pattern.dart';
 import '../../../../../shared/widgets/shared_navigation.dart';
 import '../../../../../shared/widgets/shared_hero_section.dart';
 
 class MobileHomeWidget extends StatefulWidget {
-  const MobileHomeWidget({Key? key}) : super(key: key);
+  const MobileHomeWidget({super.key});
 
   @override
   State<MobileHomeWidget> createState() => _MobileHomeWidgetState();
@@ -69,12 +66,13 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
     return Consumer2<LanguageService, ResponsiveService>(
       builder: (context, languageService, responsiveService, child) {
         final screenWidth = MediaQuery.of(context).size.width;
-        final shouldUseMobileLayout = responsiveService.shouldUseMobileLayout(screenWidth);
+  final shouldUseMobileLayout = responsiveService.shouldUseMobileLayout(screenWidth);
+  final isCollapsed = responsiveService.shouldCollapseNavigation(screenWidth);
         
         return Scaffold(
           key: _scaffoldKey,
           backgroundColor: const Color(0xFFFDF5EC), // Soft off-white beige
-          drawer: shouldUseMobileLayout ? SharedMobileDrawer(currentPage: 'home') : null,
+          drawer: (shouldUseMobileLayout || isCollapsed) ? const SharedMobileDrawer(currentPage: 'home') : null,
           body: Stack(
             children: [
               // Main content
@@ -84,10 +82,10 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
                   SharedNavigation(
                     currentPage: 'home',
                     showAuthButtons: false,
-                    onMenuTap: shouldUseMobileLayout ? () {
+                    onMenuTap: (shouldUseMobileLayout || isCollapsed) ? () {
                       _scaffoldKey.currentState?.openDrawer();
                     } : null,
-                    isMobile: shouldUseMobileLayout,
+                    isMobile: shouldUseMobileLayout || isCollapsed,
                   ),
                   Expanded(
                     child: SingleChildScrollView(
@@ -137,7 +135,7 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
             children: [
                         Text(
             AppStrings.getString('categories', languageService.currentLanguage),
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Colors.black,
@@ -149,7 +147,7 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
                 },
                 child: Text(
                   AppStrings.getString('viewAll', languageService.currentLanguage),
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppColors.primary,
                     decoration: TextDecoration.underline,
                     fontWeight: FontWeight.w600,
@@ -230,7 +228,7 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       // Category image - responsive size
-                      Container(
+                      SizedBox(
                         width: iconSize,
                         height: iconSize,
                         child: Image.asset(
@@ -293,7 +291,7 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
         children: [
           Text(
             AppStrings.getString('popularServices', languageService.currentLanguage),
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.black,
@@ -302,8 +300,6 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
           const SizedBox(height: 16),
           LayoutBuilder(
             builder: (context, constraints) {
-              final screenWidth = MediaQuery.of(context).size.width;
-              
               // All mobile sizes - Rectangular frames in three rows
               return Column(
                 children: services.asMap().entries.map((entry) {
@@ -339,14 +335,14 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
 
         // Calculate responsive sizes based on available space
         final containerWidth = constraints.maxWidth;
-        final containerHeight = 200.0; // Fixed height for mobile service cards
+        const containerHeight = 200.0; // Fixed height for mobile service cards
         final framePadding = (containerWidth * 0.04).clamp(8.0, 16.0);
         
         return GestureDetector(
           onTap: () {
             Navigator.pushNamed(context, '/categories');
           },
-          child: Container(
+          child: SizedBox(
             height: containerHeight,
             child: Stack(
               children: [
@@ -367,7 +363,7 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       // Service icon
-                      Container(
+                      SizedBox(
                         width: (containerWidth * 0.25).clamp(40.0, 80.0), // 25% with larger limits
                         height: (containerWidth * 0.25).clamp(40.0, 80.0), // 25% with larger limits
                         child: Image.asset(
@@ -432,7 +428,7 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -545,7 +541,7 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -584,7 +580,7 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
+        color: AppColors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: AppColors.primary,
@@ -595,7 +591,7 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
         textDirection: languageService.textDirection,
         child: Row(
           children: [
-            Icon(
+            const Icon(
               Icons.local_offer,
               color: AppColors.primary,
               size: 24,
@@ -646,7 +642,7 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
             },
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.primary,
-              side: BorderSide(color: AppColors.primary),
+              side: const BorderSide(color: AppColors.primary),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -682,7 +678,7 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
                 onPressed: () {},
                 child: Text(
                   AppStrings.getString('home', languageService.currentLanguage),
-                  style: TextStyle(color: AppColors.primary),
+                  style: const TextStyle(color: AppColors.primary),
                 ),
               ),
               TextButton(
@@ -691,21 +687,21 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
                 },
                 child: Text(
                   AppStrings.getString('aboutUs', languageService.currentLanguage),
-                  style: TextStyle(color: AppColors.primary),
+                  style: const TextStyle(color: AppColors.primary),
                 ),
               ),
               TextButton(
                 onPressed: () {},
                 child: Text(
                   AppStrings.getString('ourServices', languageService.currentLanguage),
-                  style: TextStyle(color: AppColors.primary),
+                  style: const TextStyle(color: AppColors.primary),
                 ),
               ),
               TextButton(
                 onPressed: () {},
                 child: Text(
                   AppStrings.getString('privacyPolicy', languageService.currentLanguage),
-                  style: TextStyle(color: AppColors.primary),
+                  style: const TextStyle(color: AppColors.primary),
                 ),
               ),
             ],
@@ -717,28 +713,19 @@ class _MobileHomeWidgetState extends State<MobileHomeWidget> with TickerProvider
             children: [
               IconButton(
                 onPressed: () {},
-                icon: Icon(Icons.facebook, color: AppColors.primary),
+                icon: const Icon(Icons.facebook, color: AppColors.primary),
               ),
               IconButton(
                 onPressed: () {},
-                icon: Icon(Icons.message, color: AppColors.primary),
+                icon: const Icon(Icons.message, color: AppColors.primary),
               ),
               IconButton(
                 onPressed: () {},
-                icon: Icon(Icons.camera_alt, color: AppColors.primary),
+                icon: const Icon(Icons.camera_alt, color: AppColors.primary),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          // Copyright
-          Text(
-            AppStrings.getString('copyright', languageService.currentLanguage),
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
-            textAlign: TextAlign.center,
-          ),
+          const SizedBox(height: 8),
         ],
       ),
     );

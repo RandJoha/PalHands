@@ -5,8 +5,6 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/services/language_service.dart';
 import '../../../../shared/services/responsive_service.dart';
-import '../../../../shared/widgets/animated_handshake.dart';
-import '../../../../shared/widgets/tatreez_pattern.dart';
 import '../../../../shared/widgets/shared_navigation.dart';
 import '../../../../shared/widgets/shared_hero_section.dart';
 
@@ -61,12 +59,13 @@ class _MobileAboutWidgetState extends State<MobileAboutWidget> with TickerProvid
     return Consumer2<LanguageService, ResponsiveService>(
       builder: (context, languageService, responsiveService, child) {
         final screenWidth = MediaQuery.of(context).size.width;
-        final shouldUseMobileLayout = responsiveService.shouldUseMobileLayout(screenWidth);
+  final shouldUseMobileLayout = responsiveService.shouldUseMobileLayout(screenWidth);
+  final isCollapsed = responsiveService.shouldCollapseNavigation(screenWidth);
         
         return Scaffold(
           key: _scaffoldKey,
           backgroundColor: const Color(0xFFFDF5EC),
-          drawer: shouldUseMobileLayout ? SharedMobileDrawer(currentPage: 'aboutUs') : null,
+          drawer: (shouldUseMobileLayout || isCollapsed) ? const SharedMobileDrawer(currentPage: 'aboutUs') : null,
           body: SingleChildScrollView(
             child: Column(
               children: [
@@ -74,15 +73,15 @@ class _MobileAboutWidgetState extends State<MobileAboutWidget> with TickerProvid
                 SharedNavigation(
                   currentPage: 'aboutUs',
                   showAuthButtons: false,
-                  onMenuTap: shouldUseMobileLayout ? () {
+                  onMenuTap: (shouldUseMobileLayout || isCollapsed) ? () {
                     _scaffoldKey.currentState?.openDrawer();
                   } : null,
-                  isMobile: shouldUseMobileLayout,
+                  isMobile: shouldUseMobileLayout || isCollapsed,
                 ),
                 // Shared Hero Section
                 SharedHeroSections.aboutHero(
                   languageService: languageService,
-                  isMobile: shouldUseMobileLayout,
+                  isMobile: shouldUseMobileLayout || isCollapsed,
                 ),
                 _buildMissionSection(languageService),
                 _buildValuesSection(languageService),
@@ -104,7 +103,7 @@ class _MobileAboutWidgetState extends State<MobileAboutWidget> with TickerProvid
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
       ),
       child: Column(
@@ -182,10 +181,10 @@ class _MobileAboutWidgetState extends State<MobileAboutWidget> with TickerProvid
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.05),
+        color: AppColors.primary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.primary.withOpacity(0.2),
+          color: AppColors.primary.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -216,7 +215,7 @@ class _MobileAboutWidgetState extends State<MobileAboutWidget> with TickerProvid
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
       ),
       child: Column(
@@ -243,7 +242,7 @@ class _MobileAboutWidgetState extends State<MobileAboutWidget> with TickerProvid
           Container(
             height: 150,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
             ),
             child: const Center(
@@ -266,7 +265,7 @@ class _MobileAboutWidgetState extends State<MobileAboutWidget> with TickerProvid
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.05),
+        color: AppColors.primary.withValues(alpha: 0.05),
       ),
       child: Column(
         children: [
@@ -297,7 +296,7 @@ class _MobileAboutWidgetState extends State<MobileAboutWidget> with TickerProvid
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
       ),
       child: Column(
@@ -403,14 +402,7 @@ class _MobileAboutWidgetState extends State<MobileAboutWidget> with TickerProvid
       ),
       child: Column(
         children: [
-          Text(
-            AppStrings.getString('copyright', languageService.currentLanguage),
-            style: GoogleFonts.cairo(
-              fontSize: 12,
-              color: Colors.black54,
-            ),
-            textAlign: TextAlign.center,
-          ),
+          const SizedBox.shrink(),
         ],
       ),
     );

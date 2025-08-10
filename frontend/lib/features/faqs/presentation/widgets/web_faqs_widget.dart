@@ -4,9 +4,8 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/services/language_service.dart';
-import '../../../../shared/widgets/animated_handshake.dart';
-import '../../../../shared/widgets/tatreez_pattern.dart';
 import '../../../../shared/widgets/shared_navigation.dart';
+import '../../../../shared/services/responsive_service.dart';
 import '../../../../shared/widgets/shared_hero_section.dart';
 import '../../data/faq_data.dart';
 import 'faq_item_widget.dart';
@@ -21,7 +20,7 @@ class WebFAQsWidget extends StatefulWidget {
 
 class _WebFAQsWidgetState extends State<WebFAQsWidget> {
   String _searchQuery = '';
-  Set<int> _expandedItems = {};
+  final Set<int> _expandedItems = {};
   List<FAQItem> _filteredItems = [];
   String? _selectedCategory;
 
@@ -69,8 +68,11 @@ class _WebFAQsWidgetState extends State<WebFAQsWidget> {
   Widget build(BuildContext context) {
     return Consumer<LanguageService>(
       builder: (context, languageService, child) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isCollapsed = context.read<ResponsiveService>().shouldCollapseNavigation(screenWidth);
         return Scaffold(
           backgroundColor: const Color(0xFFFDF5EC),
+          drawer: isCollapsed ? const SharedMobileDrawer(currentPage: 'faqs') : null,
           body: SingleChildScrollView(
             child: Column(
               children: [
@@ -78,12 +80,12 @@ class _WebFAQsWidgetState extends State<WebFAQsWidget> {
                 SharedNavigation(
                   currentPage: 'faqs',
                   showAuthButtons: true,
-                  isMobile: false,
+                  isMobile: isCollapsed,
                 ),
                 // Shared Hero Section
                 SharedHeroSections.faqsHero(
                   languageService: languageService,
-                  isMobile: false,
+                  isMobile: false, // Always false since this is the web widget
                 ),
                 _buildSearchSection(languageService),
                 _buildContentSection(languageService),
@@ -140,7 +142,7 @@ class _WebFAQsWidgetState extends State<WebFAQsWidget> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -190,7 +192,7 @@ class _WebFAQsWidgetState extends State<WebFAQsWidget> {
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+            color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: isSelected ? AppColors.primary : Colors.transparent,
@@ -234,7 +236,7 @@ class _WebFAQsWidgetState extends State<WebFAQsWidget> {
         ),
         child: Column(
           children: [
-            Icon(
+            const Icon(
               Icons.search_off,
               size: 80,
               color: AppColors.grey,
@@ -260,7 +262,7 @@ class _WebFAQsWidgetState extends State<WebFAQsWidget> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -379,15 +381,7 @@ class _WebFAQsWidgetState extends State<WebFAQsWidget> {
       ),
       child: Row(
         children: [
-          Expanded(
-            child: Text(
-              AppStrings.getString('copyright', languageService.currentLanguage),
-              style: GoogleFonts.cairo(
-                fontSize: 14,
-                color: Colors.black54,
-              ),
-            ),
-          ),
+          const Spacer(),
           Row(
             children: [
               _buildFooterLink('Privacy Policy'),

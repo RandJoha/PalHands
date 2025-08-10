@@ -72,10 +72,10 @@ class _MobileProfileSettingsWidgetState extends State<MobileProfileSettingsWidge
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(50),
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.person,
                     color: AppColors.primary,
                     size: 50,

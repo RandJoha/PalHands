@@ -28,15 +28,18 @@ class SharedNavigation extends StatelessWidget {
         final screenWidth = MediaQuery.of(context).size.width;
         
         // Determine responsive layout based on service and screen size
-        final shouldUseMobileLayout = responsiveService.shouldUseMobileLayout(screenWidth) || isMobile;
+  final shouldUseMobileLayout = responsiveService.shouldUseMobileLayout(screenWidth) || isMobile;
         final shouldUseCompactNavigation = responsiveService.shouldUseCompactNavigation(screenWidth);
-        final shouldStackButtons = responsiveService.shouldStackButtons(screenWidth);
+        final shouldUseVeryCompactNavigation = responsiveService.shouldUseVeryCompactNavigation(screenWidth);
+  // Unified collapsed behavior to avoid switchback flicker around ~770-840px
+  final isCollapsed = responsiveService.shouldCollapseNavigation(screenWidth);
+  final forceMobileLayout = shouldUseMobileLayout || isCollapsed;
         
         return Container(
           width: double.infinity,
           padding: EdgeInsets.symmetric(
-            horizontal: shouldUseMobileLayout ? 16 : (shouldUseCompactNavigation ? 20 : 32),
-            vertical: shouldUseMobileLayout ? 12 : 16,
+            horizontal: forceMobileLayout ? 16 : (shouldUseCompactNavigation ? 24 : 32),
+            vertical: forceMobileLayout ? 16 : 20,
           ),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -51,82 +54,22 @@ class SharedNavigation extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Logo - Made smaller
-              Row(
-                children: [
-                  SizedBox(
-                    width: shouldUseMobileLayout ? 24 : 32,
-                    height: shouldUseMobileLayout ? 24 : 32,
-                    child: const AnimatedHandshake(
-                      size: 24,
-                      color: AppColors.primary,
-                      animationDuration: Duration(milliseconds: 2000),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'PalHands',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontSize: shouldUseMobileLayout ? 16 : 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
+              // Logo Section - Fixed size, never wraps
+              _buildLogoSection(forceMobileLayout),
               
-              // Desktop/Tablet Navigation
-              if (!shouldUseMobileLayout) ...[
+              // Desktop/Tablet Navigation - Only show when not mobile
+              if (!forceMobileLayout) ...[
                 Expanded(
-                  child: _buildDesktopNavigation(context, languageService, shouldUseCompactNavigation),
+                  child: _buildDesktopNavigation(context, languageService, shouldUseCompactNavigation, shouldUseVeryCompactNavigation),
                 ),
                 
-                // Language toggle - Made smaller
-                _buildLanguageToggle(languageService, shouldUseCompactNavigation),
-                
-                // Authentication buttons
-                if (showAuthButtons && !shouldUseMobileLayout) ...[
-                  const SizedBox(width: 16),
-                  _buildAuthButtons(context, languageService, shouldStackButtons, shouldUseCompactNavigation),
-                ],
+                // Right side elements - Fixed layout, never wraps
+                _buildRightSection(context, languageService, shouldUseCompactNavigation),
               ],
               
-              // Mobile menu button
-              if (shouldUseMobileLayout) ...[
-                Row(
-                  children: [
-                    _buildLanguageToggle(languageService, true),
-                    const SizedBox(width: 12),
-                    // Enhanced mobile menu button - More reliable and clickable
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: onMenuTap,
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
-                                blurRadius: 2,
-                                offset: const Offset(0, 1),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.menu,
-                            color: AppColors.primary,
-                            size: 24,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              // Mobile menu button - Only show when mobile
+              if (forceMobileLayout) ...[
+                _buildMobileMenuSection(context, languageService),
               ],
             ],
           ),
@@ -135,7 +78,33 @@ class SharedNavigation extends StatelessWidget {
     );
   }
 
-  Widget _buildDesktopNavigation(BuildContext context, LanguageService languageService, bool isCompact) {
+  Widget _buildLogoSection(bool isMobile) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: isMobile ? 28 : 32,
+          height: isMobile ? 28 : 32,
+          child: const AnimatedHandshake(
+            size: 28,
+            color: AppColors.primary,
+            animationDuration: Duration(milliseconds: 2000),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          'PalHands',
+          style: TextStyle(
+            color: AppColors.primary,
+            fontSize: isMobile ? 18 : 22,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopNavigation(BuildContext context, LanguageService languageService, bool isCompact, bool isVeryCompact) {
     final navItems = [
       {'key': 'home', 'route': '/home'},
       {'key': 'aboutUs', 'route': '/about'},
@@ -146,6 +115,7 @@ class SharedNavigation extends StatelessWidget {
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: navItems.map((item) => _buildNavItem(
         context,
         item['key']!,
@@ -153,15 +123,16 @@ class SharedNavigation extends StatelessWidget {
         languageService,
         currentPage == item['key'],
         isCompact,
+        isVeryCompact,
       )).toList(),
     );
   }
 
-  Widget _buildNavItem(BuildContext context, String key, String route, LanguageService languageService, bool isSelected, bool isCompact) {
+  Widget _buildNavItem(BuildContext context, String key, String route, LanguageService languageService, bool isSelected, bool isCompact, bool isVeryCompact) {
     return Padding(
       padding: EdgeInsets.symmetric(
-        horizontal: isCompact ? 8 : 16,
-        vertical: 4,
+        horizontal: isVeryCompact ? 6 : (isCompact ? 8 : 12),
+        vertical: 8,
       ),
       child: TextButton(
         onPressed: () {
@@ -173,134 +144,147 @@ class SharedNavigation extends StatelessWidget {
         },
         style: TextButton.styleFrom(
           padding: EdgeInsets.symmetric(
-            horizontal: isCompact ? 8 : 16,
-            vertical: 6,
+            horizontal: isVeryCompact ? 6 : (isCompact ? 8 : 12),
+            vertical: 8,
           ),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
         child: Text(
           AppStrings.getString(key, languageService.currentLanguage),
           style: TextStyle(
             color: isSelected ? AppColors.primary : Colors.black87,
-            fontSize: isCompact ? 14 : 16,
+            fontSize: isVeryCompact ? 13 : (isCompact ? 14 : 15),
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
           ),
+          overflow: TextOverflow.visible,
+          softWrap: true,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRightSection(BuildContext context, LanguageService languageService, bool isCompact) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        // Language toggle
+        _buildLanguageToggle(languageService, isCompact),
+        
+        // Authentication buttons
+        if (showAuthButtons) ...[
+          const SizedBox(width: 8),
+          _buildAuthButtons(context, languageService, isCompact),
+        ],
+      ],
+    );
+  }
+
+  // Unify button look & feel: language/login/signup share same style
+  Widget _buildPillButton(String label, VoidCallback onTap, {bool isCompact = false}) {
+    return ElevatedButton(
+      onPressed: onTap,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        padding: EdgeInsets.symmetric(
+          horizontal: isCompact ? 12 : 16,
+          vertical: isCompact ? 8 : 10,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        elevation: 0,
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: isCompact ? 12 : 13,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
   }
 
   Widget _buildLanguageToggle(LanguageService languageService, bool isCompact) {
-    return GestureDetector(
-      onTap: () {
-        languageService.toggleLanguage();
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: isCompact ? 6 : 12,
-          vertical: isCompact ? 3 : 6,
-        ),
-        decoration: BoxDecoration(
-          border: Border.all(color: AppColors.primary),
-          borderRadius: BorderRadius.circular(isCompact ? 4 : 6),
-        ),
-        child: Text(
-          languageService.currentLanguage == 'ar' ? 'EN' : 'العربية',
-          style: TextStyle(
-            color: AppColors.primary,
-            fontSize: isCompact ? 9 : 12,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
+    final label = languageService.currentLanguage == 'ar' ? 'EN' : 'العربية';
+    return _buildPillButton(label, languageService.toggleLanguage, isCompact: isCompact);
   }
 
-  Widget _buildAuthButtons(BuildContext context, LanguageService languageService, bool shouldStack, bool isCompact) {
-    // If buttons should be stacked, use Column layout to prevent overlap
-    if (shouldStack) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildLoginButton(context, languageService, isCompact),
-          const SizedBox(height: 8),
-          _buildSignupButton(context, languageService, isCompact),
-        ],
-      );
-    }
-    
-    // Otherwise, use Row layout for side-by-side buttons
+  Widget _buildAuthButtons(BuildContext context, LanguageService languageService, bool isCompact) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _buildLoginButton(context, languageService, isCompact),
+        _buildPillButton(
+          AppStrings.getString('login', languageService.currentLanguage),
+          () => Navigator.pushNamed(context, '/login'),
+          isCompact: isCompact,
+        ),
         const SizedBox(width: 8),
-        _buildSignupButton(context, languageService, isCompact),
+        _buildPillButton(
+          AppStrings.getString('signup', languageService.currentLanguage),
+          () => Navigator.pushNamed(context, '/signup'),
+          isCompact: isCompact,
+        ),
       ],
     );
   }
 
-  Widget _buildLoginButton(BuildContext context, LanguageService languageService, bool isCompact) {
-    return ElevatedButton(
-      onPressed: () {
-        Navigator.pushNamed(context, '/login');
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        padding: EdgeInsets.symmetric(
-          horizontal: isCompact ? 12 : 16,
-          vertical: isCompact ? 6 : 8,
+  Widget _buildMobileMenuSection(BuildContext context, LanguageService languageService) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildLanguageToggle(languageService, true),
+        const SizedBox(width: 12),
+        // Enhanced mobile menu button with better touch target
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onMenuTap ?? () {
+              final scaffold = Scaffold.maybeOf(context);
+              if (scaffold != null) {
+                // Always open the primary drawer for reliability across layouts
+                scaffold.openDrawer();
+              }
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 2,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.menu,
+                color: AppColors.primary,
+                size: 22,
+              ),
+            ),
+          ),
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        elevation: 0,
-      ),
-      child: Text(
-        AppStrings.getString('login', languageService.currentLanguage),
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: isCompact ? 12 : 14,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSignupButton(BuildContext context, LanguageService languageService, bool isCompact) {
-    return ElevatedButton(
-      onPressed: () {
-        Navigator.pushNamed(context, '/signup');
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        padding: EdgeInsets.symmetric(
-          horizontal: isCompact ? 12 : 16,
-          vertical: isCompact ? 6 : 8,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        elevation: 0,
-      ),
-      child: Text(
-        AppStrings.getString('signUp', languageService.currentLanguage),
-        style: TextStyle(
-          fontSize: isCompact ? 12 : 14,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
+      ],
     );
   }
 }
 
 class SharedMobileDrawer extends StatelessWidget {
   final String? currentPage;
+  final bool showAuthButtons;
 
   const SharedMobileDrawer({
     super.key,
     this.currentPage,
+    this.showAuthButtons = true,
   });
 
   @override
@@ -418,9 +402,24 @@ class SharedMobileDrawer extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    Expanded(
-                      child: _buildDrawerLanguageToggle(languageService),
-                    ),
+                    Expanded(child: _buildDrawerLanguageToggle(languageService)),
+                  ],
+                ),
+              ),
+              // Auth actions in collapsed mode (match drawer language button style)
+              if (showAuthButtons) Container(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                child: Row(
+                  children: [
+                    Expanded(child: _buildDrawerOutlinedButton(
+                      AppStrings.getString('login', languageService.currentLanguage),
+                      () => Navigator.pushNamed(context, '/login'),
+                    )),
+                    const SizedBox(width: 12),
+                    Expanded(child: _buildDrawerOutlinedButton(
+                      AppStrings.getString('signup', languageService.currentLanguage),
+                      () => Navigator.pushNamed(context, '/signup'),
+                    )),
                   ],
                 ),
               ),
@@ -492,6 +491,19 @@ class SharedMobileDrawer extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildDrawerOutlinedButton(String label, VoidCallback onPressed) {
+    return OutlinedButton(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        side: const BorderSide(color: AppColors.primary),
+        foregroundColor: AppColors.primary,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
     );
   }
 }

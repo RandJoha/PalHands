@@ -28,13 +28,13 @@ class UserSidebar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: isCollapsed ? 80.w : 280.w,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.white,
         boxShadow: [
           BoxShadow(
             color: AppColors.shadow,
             blurRadius: 4,
-            offset: const Offset(2, 0),
+            offset: Offset(2, 0),
           ),
         ],
       ),
@@ -128,7 +128,7 @@ class UserSidebar extends StatelessWidget {
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+              color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
               borderRadius: BorderRadius.circular(12.r),
               border: isSelected
                   ? Border.all(color: AppColors.primary, width: 1)

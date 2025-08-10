@@ -15,9 +15,9 @@ class ProviderDashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<LanguageService>(
       builder: (context, languageService, child) {
-        return Scaffold(
+        return const Scaffold(
           backgroundColor: AppColors.background,
-          body: const ResponsiveProviderDashboard(),
+          body: ResponsiveProviderDashboard(),
         );
       },
     );

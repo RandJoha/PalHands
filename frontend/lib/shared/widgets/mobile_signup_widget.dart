@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -13,7 +12,6 @@ import '../services/auth_service.dart';
 import '../services/base_api_service.dart';
 
 // Widget imports
-import 'tatreez_pattern.dart';
 import 'animated_handshake.dart';
 
 // Mobile-specific signup widget
@@ -214,8 +212,8 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
                   ),
                   title: Row(
                     children: [
-                      Icon(Icons.warning, color: AppColors.primary, size: 24),
-                      SizedBox(width: 8),
+                      const Icon(Icons.warning, color: AppColors.primary, size: 24),
+                      const SizedBox(width: 8),
                       Text(
                         languageService.currentLanguage == 'ar' ? 'الفئة مطلوبة' : 'Category Required',
                         style: GoogleFonts.cairo(
@@ -274,8 +272,8 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
                   ),
                   title: Row(
                     children: [
-                      Icon(Icons.warning, color: AppColors.primary, size: 24),
-                      SizedBox(width: 8),
+                      const Icon(Icons.warning, color: AppColors.primary, size: 24),
+                      const SizedBox(width: 8),
                       Text(
                         languageService.currentLanguage == 'ar' ? 'الفئة الفرعية مطلوبة' : 'Sub-Category Required',
                         style: GoogleFonts.cairo(
@@ -377,8 +375,8 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
                 ),
                 title: Row(
                   children: [
-                    Icon(Icons.warning, color: AppColors.primary, size: 24),
-                    SizedBox(width: 8),
+                    const Icon(Icons.warning, color: AppColors.primary, size: 24),
+                    const SizedBox(width: 8),
                     Text(
                       languageService.currentLanguage == 'ar' ? 'الفئة الفرعية مطلوبة' : 'Sub-Category Required',
                       style: GoogleFonts.cairo(
@@ -544,10 +542,10 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
                 ),
               ],
             ),
-            child: AnimatedHandshake(
+            child: const AnimatedHandshake(
               size: 60,
               color: AppColors.white,
-              animationDuration: const Duration(milliseconds: 2500),
+              animationDuration: Duration(milliseconds: 2500),
             ),
           ),
           SizedBox(height: widget.screenHeight * 0.03),
@@ -650,7 +648,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
               foregroundColor: AppColors.primary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15),
-                side: BorderSide(color: AppColors.primary, width: 2),
+                side: const BorderSide(color: AppColors.primary, width: 2),
               ),
               elevation: 4,
               shadowColor: AppColors.primary.withValues(alpha: 0.3),
@@ -658,8 +656,8 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('👤', style: TextStyle(fontSize: 24)),
-                SizedBox(width: 12),
+                const Text('👤', style: TextStyle(fontSize: 24)),
+                const SizedBox(width: 12),
                 Text(
                   AppStrings.getString('signUpAsClient', languageService.currentLanguage),
                   style: GoogleFonts.cairo(
@@ -692,8 +690,8 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('🛠', style: TextStyle(fontSize: 24)),
-                SizedBox(width: 12),
+                const Text('🛠', style: TextStyle(fontSize: 24)),
+                const SizedBox(width: 12),
                 Text(
                   AppStrings.getString('signUpAsServiceProvider', languageService.currentLanguage),
                   style: GoogleFonts.cairo(
@@ -776,7 +774,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
                 },
               ),
             ),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Expanded(
               child: _buildTextField(
                 controller: _lastNameController,
@@ -867,7 +865,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
               return AppStrings.getString('pleaseEnterPhoneNumber', languageService.currentLanguage);
             }
             // More flexible phone number validation
-            final pattern = r'^[\+]?[0-9\s\-\(\)]{8,15}$';
+            const pattern = r'^[\+]?[0-9\s\-\(\)]{8,15}$';
             final regExp = RegExp(pattern);
             if (!regExp.hasMatch(value)) {
               return 'Please enter a valid phone number';
@@ -942,9 +940,9 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
                   children: [
                     Text(
                       category['icon'],
-                      style: TextStyle(fontSize: 32),
+                      style: const TextStyle(fontSize: 32),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
                       _getCategoryName(categoryKey, languageService),
                       style: GoogleFonts.cairo(
@@ -1018,7 +1016,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
                     _selectedSubCategory == subCategory ? Icons.check_circle : Icons.circle_outlined,
                     color: _selectedSubCategory == subCategory ? AppColors.white : AppColors.primary,
                   ),
-                  SizedBox(width: 12),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       AppStrings.getString(subCategory, languageService.currentLanguage),
@@ -1033,7 +1031,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
               ),
             ),
           ),
-        )).toList(),
+        )),
       ],
     );
   }
@@ -1144,7 +1142,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
             child: OutlinedButton(
               onPressed: _previousStep,
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: AppColors.primary),
+                side: const BorderSide(color: AppColors.primary),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -1160,7 +1158,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
               ),
             ),
           ),
-          SizedBox(width: 16),
+          const SizedBox(width: 16),
         ],
         
         Expanded(
@@ -1183,7 +1181,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
               shadowColor: AppColors.primary.withValues(alpha: 0.3),
             ),
             child: _isLoading
-                ? SizedBox(
+                ? const SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
@@ -1214,8 +1212,8 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
       ),
       child: Row(
         children: [
-          Icon(Icons.contact_support, color: AppColors.primary, size: 24),
-          SizedBox(width: 12),
+          const Icon(Icons.contact_support, color: AppColors.primary, size: 24),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               AppStrings.getString('wantToOfferNewService', languageService.currentLanguage),
@@ -1239,11 +1237,11 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
           Container(
             width: 120,
             height: 120,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.primary,
               shape: BoxShape.circle,
             ),
-            child: Icon(
+            child: const Icon(
               Icons.check,
               size: 60,
               color: AppColors.white,
@@ -1404,7 +1402,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
                 fontSize: 16,
                 color: AppColors.placeholderText,
               ),
-              prefixIcon: Icon(Icons.location_on, color: AppColors.primary),
+              prefixIcon: const Icon(Icons.location_on, color: AppColors.primary),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             ),

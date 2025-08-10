@@ -1,14 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 
 // Core imports
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_strings.dart';
 
 // Shared imports
-import '../../../../shared/services/auth_service.dart';
 
 // Admin widgets
 import '../widgets/web_admin_dashboard.dart';

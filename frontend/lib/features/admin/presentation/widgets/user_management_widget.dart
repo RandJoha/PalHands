@@ -23,8 +23,8 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
   String _searchQuery = '';
   String _selectedRole = 'all';
   String _selectedStatus = 'all';
-  int _currentPage = 1;
-  int _totalPages = 1;
+  final int _currentPage = 1;
+  final int _totalPages = 1;
 
   @override
   void initState() {
@@ -193,10 +193,10 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(20.r),
             border: Border.all(
-              color: AppColors.primary.withOpacity(0.3),
+              color: AppColors.primary.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -261,7 +261,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
         borderRadius: BorderRadius.circular(screenWidth > 1400 ? 10 : 8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 3,
             offset: const Offset(0, 1),
           ),
@@ -497,7 +497,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.people_outline,
               size: 48,
               color: AppColors.textLight,
@@ -523,7 +523,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
         borderRadius: BorderRadius.circular(screenWidth > 1400 ? 10 : 8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 3,
             offset: const Offset(0, 1),
           ),
@@ -591,7 +591,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: Colors.grey.withOpacity(0.08),
+            color: Colors.grey.withValues(alpha: 0.08),
             width: 1,
           ),
         ),
@@ -655,7 +655,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                 vertical: screenWidth > 1400 ? 4 : 3,
               ),
               decoration: BoxDecoration(
-                color: _getRoleColor(user['role']).withOpacity(0.1),
+                color: _getRoleColor(user['role']).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -680,8 +680,8 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
               ),
               decoration: BoxDecoration(
                 color: user['isActive'] 
-                  ? Colors.green.withOpacity(0.1)
-                  : Colors.red.withOpacity(0.1),
+                  ? Colors.green.withValues(alpha: 0.1)
+                  : Colors.red.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -709,7 +709,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                     size: screenWidth > 1400 ? 14 : 12,
                     color: Colors.amber,
                   ),
-                  SizedBox(width: 4),
+                  const SizedBox(width: 4),
                   Text(
                     user['rating']['average'].toString(),
                     style: GoogleFonts.cairo(

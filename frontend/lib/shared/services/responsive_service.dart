@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
 class ResponsiveService extends ChangeNotifier {
-  // Enhanced responsive service with multiple breakpoints
-  // Prevents button overlap and provides smooth transitions
+  // Fixed responsive service with proper breakpoints
+  // Ensures consistent navigation behavior across all screen sizes
 
-  // Breakpoint constants
-  static const double mobileBreakpoint = 600;      // Mobile layout
-  static const double tabletBreakpoint = 900;      // Tablet layout  
+  // Breakpoint constants - Properly aligned for smooth transitions
+  static const double mobileBreakpoint = 768;      // Mobile layout - Standard mobile breakpoint
+  static const double tabletBreakpoint = 1024;     // Tablet layout - Standard tablet breakpoint
   static const double desktopBreakpoint = 1200;    // Desktop layout
-  static const double largeDesktopBreakpoint = 1600; // Large desktop layout
+  static const double largeDesktopBreakpoint = 1440; // Large desktop layout
 
   // Check if current screen should use mobile layout based on screen width
   bool shouldUseMobileLayout(double screenWidth) {
@@ -43,17 +43,24 @@ class ResponsiveService extends ChangeNotifier {
     return 'large-desktop';
   }
 
-  // Check if buttons should be stacked to prevent overlap
-  bool shouldStackButtons(double screenWidth) {
-    // Stack buttons when there's not enough space for them to be side by side
-    // This prevents overlap issues in the intermediate range
-    return screenWidth <= 700;
+  // Check if navigation should be compact (for medium screens)
+  bool shouldUseCompactNavigation(double screenWidth) {
+    // Use compact navigation only on medium screens to prevent overflow
+    // This provides a smooth transition between mobile and full desktop
+    return screenWidth > mobileBreakpoint && screenWidth <= 1100;
   }
 
-  // Check if navigation should be compact
-  bool shouldUseCompactNavigation(double screenWidth) {
-    // Use compact navigation when space is limited but not quite mobile
-    return screenWidth > mobileBreakpoint && screenWidth <= 800;
+  // Check if we should use very compact navigation (for small tablets)
+  bool shouldUseVeryCompactNavigation(double screenWidth) {
+    // Use very compact navigation only on small tablets
+    // This prevents the need to hide navigation items
+    return screenWidth > mobileBreakpoint && screenWidth <= 950;
+  }
+
+  // Unified collapsed navigation breakpoint for small/medium widths
+  // This ensures the menu switches once and stays collapsed consistently
+  bool shouldCollapseNavigation(double screenWidth) {
+    return screenWidth <= 950; // collapsed at 950px and below
   }
 
   // Get all responsive states for debugging and testing
@@ -63,8 +70,8 @@ class ResponsiveService extends ChangeNotifier {
       'isTablet': shouldUseTabletLayout(screenWidth),
       'isDesktop': shouldUseDesktopLayout(screenWidth),
       'isLargeDesktop': shouldUseLargeDesktopLayout(screenWidth),
-      'shouldStackButtons': shouldStackButtons(screenWidth),
       'shouldUseCompactNavigation': shouldUseCompactNavigation(screenWidth),
+      'shouldUseVeryCompactNavigation': shouldUseVeryCompactNavigation(screenWidth),
       'responsiveMode': getResponsiveMode(screenWidth),
     };
   }

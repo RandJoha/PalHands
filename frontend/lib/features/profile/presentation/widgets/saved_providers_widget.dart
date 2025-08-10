@@ -107,7 +107,7 @@ class _SavedProvidersWidgetState extends State<SavedProvidersWidget> {
             width: 60.w,
             height: 60.w,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(30.r),
             ),
             child: Icon(
@@ -159,7 +159,7 @@ class _SavedProvidersWidgetState extends State<SavedProvidersWidget> {
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                       decoration: BoxDecoration(
-                        color: isAvailable ? AppColors.success.withOpacity(0.1) : AppColors.error.withOpacity(0.1),
+                        color: isAvailable ? AppColors.success.withValues(alpha: 0.1) : AppColors.error.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Text(

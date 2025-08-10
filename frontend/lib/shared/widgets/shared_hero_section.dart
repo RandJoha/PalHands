@@ -17,7 +17,7 @@ class SharedHeroSection extends StatelessWidget {
   final VoidCallback? onRegisterPressed;
 
   const SharedHeroSection({
-    Key? key,
+    super.key,
     required this.title,
     required this.description,
     this.actionButtons,
@@ -27,7 +27,7 @@ class SharedHeroSection extends StatelessWidget {
     this.padding,
     this.onBookNowPressed,
     this.onRegisterPressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -42,15 +42,15 @@ class SharedHeroSection extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                AppColors.primary.withOpacity(0.1),
-                AppColors.primary.withOpacity(0.05),
+                AppColors.primary.withValues(alpha: 0.1),
+                AppColors.primary.withValues(alpha: 0.05),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(isMobile ? 16 : 24),
             border: Border.all(
-              color: AppColors.primary.withOpacity(0.3),
+              color: AppColors.primary.withValues(alpha: 0.3),
               width: isMobile ? 1 : 2,
             ),
           ),
@@ -187,11 +187,10 @@ class SharedHeroSection extends StatelessWidget {
               // Action buttons
               if (actionButtons != null && actionButtons!.isNotEmpty) ...[
                 const SizedBox(height: 24),
-                Row(
-                  children: actionButtons!.map((button) => Padding(
-                    padding: const EdgeInsets.only(right: 12),
-                    child: button,
-                  )).toList(),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  children: actionButtons!.map((button) => button).toList(),
                 ),
               ],
             ],
@@ -216,10 +215,10 @@ class SharedHeroSections {
         width: isMobile ? 200 : 280,
         height: isMobile ? 200 : 280,
         decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.1),
+          color: AppColors.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(isMobile ? 100 : 140),
           border: Border.all(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             width: isMobile ? 2 : 3,
           ),
         ),
@@ -274,7 +273,7 @@ class SharedHeroSections {
           borderRadius: BorderRadius.circular(isMobile ? 15 : 20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -305,7 +304,7 @@ class SharedHeroSections {
         width: isMobile ? 80 : 120,
         height: isMobile ? 80 : 120,
         decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.1),
+          color: AppColors.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(isMobile ? 15 : 20),
         ),
         child: Icon(

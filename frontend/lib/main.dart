@@ -10,7 +10,6 @@ import 'core/constants/app_colors.dart';
 import 'core/constants/app_strings.dart';
 
 // Widget imports
-import 'shared/widgets/splash_screen.dart';
 import 'shared/widgets/auth_wrapper.dart';
 import 'shared/widgets/login_screen.dart';
 import 'shared/widgets/signup_screen.dart';

@@ -3,13 +3,12 @@ import 'package:provider/provider.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_strings.dart';
 import '../../../../../shared/services/language_service.dart';
-import '../../../../../shared/widgets/tatreez_pattern.dart';
 import '../../../../../shared/widgets/shared_navigation.dart';
 import '../../../../../shared/widgets/shared_hero_section.dart';
 import '../../../../../shared/services/responsive_service.dart';
 
 class MobileCategoryWidget extends StatefulWidget {
-  const MobileCategoryWidget({Key? key}) : super(key: key);
+  const MobileCategoryWidget({super.key});
 
   @override
   State<MobileCategoryWidget> createState() => _MobileCategoryWidgetState();
@@ -17,7 +16,7 @@ class MobileCategoryWidget extends StatefulWidget {
 
 class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with TickerProviderStateMixin {
   int _selectedIndex = 1; // Categories tab selected
-  Map<String, Set<String>> _selectedServices = {}; // Track selected services by category
+  final Map<String, Set<String>> _selectedServices = {}; // Track selected services by category
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -57,12 +56,13 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
     return Consumer2<LanguageService, ResponsiveService>(
       builder: (context, languageService, responsiveService, child) {
         final screenWidth = MediaQuery.of(context).size.width;
-        final shouldUseMobileLayout = responsiveService.shouldUseMobileLayout(screenWidth);
+  final shouldUseMobileLayout = responsiveService.shouldUseMobileLayout(screenWidth);
+  final isCollapsed = responsiveService.shouldCollapseNavigation(screenWidth);
         
         return Scaffold(
           key: _scaffoldKey,
           backgroundColor: const Color(0xFFFDF5EC),
-          drawer: shouldUseMobileLayout ? SharedMobileDrawer(currentPage: 'ourServices') : null,
+          drawer: (shouldUseMobileLayout || isCollapsed) ? const SharedMobileDrawer(currentPage: 'ourServices') : null,
           body: Stack(
             children: [
               // Main content
@@ -72,10 +72,10 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                   SharedNavigation(
                     currentPage: 'ourServices',
                     showAuthButtons: false,
-                    onMenuTap: shouldUseMobileLayout ? () {
+                    onMenuTap: (shouldUseMobileLayout || isCollapsed) ? () {
                       _scaffoldKey.currentState?.openDrawer();
                     } : null,
-                    isMobile: shouldUseMobileLayout,
+                    isMobile: shouldUseMobileLayout || isCollapsed,
                   ),
                   Expanded(
                     child: SingleChildScrollView(
@@ -301,13 +301,13 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
           ],
           border: Border.all(
-            color: (category['color'] as Color).withOpacity(0.3),
+            color: (category['color'] as Color).withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -318,7 +318,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
               width: double.infinity,
               height: 80,
               decoration: BoxDecoration(
-                color: (category['color'] as Color).withOpacity(0.1),
+                color: (category['color'] as Color).withValues(alpha: 0.1),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),
@@ -421,7 +421,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: (category['color'] as Color).withOpacity(0.1),
+              color: (category['color'] as Color).withValues(alpha: 0.1),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(20),
                 topRight: Radius.circular(20),
@@ -482,10 +482,10 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: isSelected ? (category['color'] as Color).withOpacity(0.1) : Colors.grey[50],
+                      color: isSelected ? (category['color'] as Color).withValues(alpha: 0.1) : Colors.grey[50],
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isSelected ? (category['color'] as Color) : (category['color'] as Color).withOpacity(0.2),
+                        color: isSelected ? (category['color'] as Color) : (category['color'] as Color).withValues(alpha: 0.2),
                         width: isSelected ? 2 : 1,
                       ),
                     ),
@@ -517,7 +517,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: isSelected
-                                ? Icon(
+                                ? const Icon(
                                     Icons.check,
                                     color: Colors.white,
                                     size: 16,
@@ -571,10 +571,10 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                     padding: const EdgeInsets.all(12),
                     margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
-                      color: (category['color'] as Color).withOpacity(0.1),
+                      color: (category['color'] as Color).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: (category['color'] as Color).withOpacity(0.3),
+                        color: (category['color'] as Color).withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -739,7 +739,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),

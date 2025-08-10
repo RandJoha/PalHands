@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -12,14 +11,6 @@ import '../../../../shared/services/language_service.dart';
 import '../../../../shared/services/auth_service.dart';
 
 // Widget imports
-import 'my_bookings_widget.dart';
-import 'chat_messages_widget.dart';
-import 'payments_widget.dart';
-import 'my_reviews_widget.dart';
-import 'profile_settings_widget.dart';
-import 'saved_providers_widget.dart';
-import 'support_help_widget.dart';
-import 'security_widget.dart';
 import '../../../admin/presentation/widgets/language_toggle_widget.dart';
 
 // User models
@@ -728,13 +719,13 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
 
   Widget _buildResponsiveSidebar(bool isDesktop, bool isTablet) {
     final sidebarWidth = isDesktop ? 280.0 : 240.0;
-    final collapsedWidth = 70.0;
+    const collapsedWidth = 70.0;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       width: _isSidebarCollapsed ? collapsedWidth : sidebarWidth,
       child: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: AppColors.white,
           border: Border(
             right: BorderSide(
@@ -765,8 +756,8 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     return Container(
       padding: EdgeInsets.all(isDesktop ? 24.0 : 20.0),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.05),
-        border: Border(
+        color: AppColors.primary.withValues(alpha: 0.05),
+        border: const Border(
           bottom: BorderSide(
             color: AppColors.border,
             width: 1,
@@ -793,7 +784,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               ),
             ),
           ] else ...[
-            Icon(
+            const Icon(
               Icons.handshake,
               color: AppColors.primary,
               size: 28.0,
@@ -835,10 +826,10 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               duration: const Duration(milliseconds: 200),
               margin: EdgeInsets.only(bottom: isDesktop ? 8.0 : 6.0),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+                color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
                 borderRadius: BorderRadius.circular(isDesktop ? 12.0 : 10.0),
                 border: isSelected ? Border.all(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   width: 1,
                 ) : null,
               ),
@@ -883,7 +874,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         horizontal: isMobile ? 16.0 : 24.0,
         vertical: isMobile ? 12.0 : 16.0,
       ),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.white,
         border: Border(
           bottom: BorderSide(
@@ -899,13 +890,13 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               onPressed: () {
                 _scaffoldKey.currentState?.openDrawer();
               },
-              icon: Icon(
+              icon: const Icon(
                 Icons.menu,
                 color: AppColors.textPrimary,
                 size: 24.0,
               ),
             ),
-            SizedBox(width: 12.0),
+            const SizedBox(width: 12.0),
           ],
           Expanded(
             child: Consumer<LanguageService>(
@@ -952,7 +943,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     child: Container(
                       width: 8,
                       height: 8,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: AppColors.primary,
                         shape: BoxShape.circle,
                       ),
@@ -1133,7 +1124,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             BottomNavigationBarItem(
               icon: Stack(
                 children: [
-                  Icon(Icons.calendar_today, size: 20),
+                  const Icon(Icons.calendar_today, size: 20),
                   if (_selectedIndex != 0)
                     Positioned(
                       right: 0,
@@ -1154,7 +1145,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             BottomNavigationBarItem(
               icon: Stack(
                 children: [
-                  Icon(Icons.chat, size: 20),
+                  const Icon(Icons.chat, size: 20),
                   if (_selectedIndex != 1)
                     Positioned(
                       right: 0,
@@ -1173,11 +1164,11 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               label: _getLocalizedString('chat_messages'),
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.payment, size: 20),
+              icon: const Icon(Icons.payment, size: 20),
               label: _getLocalizedString('payments'),
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.star, size: 20),
+              icon: const Icon(Icons.star, size: 20),
               label: _getLocalizedString('my_reviews'),
             ),
           ],
@@ -1230,10 +1221,10 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                       vertical: isMobile ? 4.0 : (isTablet ? 5.0 : 6.0)
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: AppColors.primary.withOpacity(0.3),
+                        color: AppColors.primary.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -1368,9 +1359,9 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         border: Border.all(color: AppColors.border, width: 1),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadow.withOpacity(0.1),
+            color: AppColors.shadow.withValues(alpha: 0.1),
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -1396,7 +1387,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                   vertical: isMobile ? 4.0 : 6.0,
                 ),
                 decoration: BoxDecoration(
-                  color: booking['statusColor'].withOpacity(0.1),
+                  color: booking['statusColor'].withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(isMobile ? 8.0 : 12.0),
                 ),
                 child: Text(
@@ -1419,21 +1410,21 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             booking['provider'],
             isMobile,
           ),
-          SizedBox(height: 8.0),
+          const SizedBox(height: 8.0),
           _buildBookingDetailRow(
             Icons.calendar_today,
             AppStrings.getString('dateTime', languageService.currentLanguage),
             booking['date'],
             isMobile,
           ),
-          SizedBox(height: 8.0),
+          const SizedBox(height: 8.0),
           _buildBookingDetailRow(
             Icons.location_on,
             AppStrings.getString('address', languageService.currentLanguage),
             booking['address'],
             isMobile,
           ),
-          SizedBox(height: 8.0),
+          const SizedBox(height: 8.0),
           _buildBookingDetailRow(
             Icons.attach_money,
             AppStrings.getString('price', languageService.currentLanguage),
@@ -1458,7 +1449,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           color: AppColors.textSecondary,
           size: isMobile ? 16.0 : 18.0,
         ),
-        SizedBox(width: 8.0),
+        const SizedBox(width: 8.0),
         Text(
           '$label: ',
           style: GoogleFonts.cairo(
@@ -1536,7 +1527,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             if (!isMobile) ...[
               Container(
                 width: isTablet ? 300.0 : 350.0,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppColors.white,
                   border: Border(
                     right: BorderSide(color: AppColors.border, width: 1),
@@ -1591,8 +1582,8 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         Container(
           padding: EdgeInsets.all(isTablet ? 16.0 : 20.0),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.05),
-            border: Border(
+            color: AppColors.primary.withValues(alpha: 0.05),
+            border: const Border(
               bottom: BorderSide(color: AppColors.border, width: 1),
             ),
           ),
@@ -1603,7 +1594,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 color: AppColors.primary,
                 size: isTablet ? 24.0 : 28.0,
               ),
-              SizedBox(width: 12.0),
+              const SizedBox(width: 12.0),
               Text(
                 _getLocalizedString('messages'),
                 style: GoogleFonts.cairo(
@@ -1635,7 +1626,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       padding: EdgeInsets.all(isTablet ? 12.0 : 16.0),
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: AppColors.border.withOpacity(0.5), width: 1),
+          bottom: BorderSide(color: AppColors.border.withValues(alpha: 0.5), width: 1),
         ),
       ),
       child: Row(
@@ -1647,7 +1638,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 width: isTablet ? 48.0 : 56.0,
                 height: isTablet ? 48.0 : 56.0,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(isTablet ? 24.0 : 28.0),
                 ),
                 child: Icon(
@@ -1672,7 +1663,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 ),
             ],
           ),
-          SizedBox(width: 12.0),
+          const SizedBox(width: 12.0),
           
           // Chat info
           Expanded(
@@ -1701,7 +1692,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     ),
                   ],
                 ),
-                SizedBox(height: 4.0),
+                const SizedBox(height: 4.0),
                 Text(
                   chat['service'],
                   style: GoogleFonts.cairo(
@@ -1710,7 +1701,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     color: AppColors.primary,
                   ),
                 ),
-                SizedBox(height: 4.0),
+                const SizedBox(height: 4.0),
                 Row(
                   children: [
                     Expanded(
@@ -1727,7 +1718,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     ),
                     if (chat['unread'] > 0)
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: AppColors.primary,
                           borderRadius: BorderRadius.circular(10),
@@ -1757,7 +1748,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         // Chat header
         Container(
           padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: AppColors.white,
             border: Border(
               bottom: BorderSide(color: AppColors.border, width: 1),
@@ -1770,15 +1761,15 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                   onPressed: () {
                     // Show chat list on mobile
                   },
-                  icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+                  icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
                 ),
-                SizedBox(width: 12.0),
+                const SizedBox(width: 12.0),
               ],
               Container(
                 width: isMobile ? 40.0 : 48.0,
                 height: isMobile ? 40.0 : 48.0,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(isMobile ? 20.0 : 24.0),
                 ),
                 child: Icon(
@@ -1787,7 +1778,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                   size: isMobile ? 20.0 : 24.0,
                 ),
               ),
-              SizedBox(width: 12.0),
+              const SizedBox(width: 12.0),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1865,7 +1856,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
 
   Widget _buildMessageBubble(Map<String, dynamic> message, bool isMobile, bool isTablet) {
     return Container(
-      margin: EdgeInsets.only(bottom: 16.0),
+      margin: const EdgeInsets.only(bottom: 16.0),
       child: Row(
         mainAxisAlignment: message['isMe'] ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
@@ -1874,7 +1865,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               width: isMobile ? 32.0 : 36.0,
               height: isMobile ? 32.0 : 36.0,
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(isMobile ? 16.0 : 18.0),
               ),
               child: Icon(
@@ -1883,7 +1874,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 size: isMobile ? 16.0 : 18.0,
               ),
             ),
-            SizedBox(width: 8.0),
+            const SizedBox(width: 8.0),
           ],
           Flexible(
             child: Container(
@@ -1904,13 +1895,13 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                       color: message['isMe'] ? AppColors.white : AppColors.textPrimary,
                     ),
                   ),
-                  SizedBox(height: 4.0),
+                  const SizedBox(height: 4.0),
                   Text(
                     message['time'],
                     style: GoogleFonts.cairo(
                       fontSize: isMobile ? 10.0 : 12.0,
                       fontWeight: FontWeight.w400,
-                      color: message['isMe'] ? AppColors.white.withOpacity(0.7) : AppColors.textSecondary,
+                      color: message['isMe'] ? AppColors.white.withValues(alpha: 0.7) : AppColors.textSecondary,
                     ),
                   ),
                 ],
@@ -1925,7 +1916,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   Widget _buildMessageInput(bool isMobile, bool isTablet) {
     return Container(
       padding: EdgeInsets.all(isMobile ? 12.0 : 16.0),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.white,
         border: Border(
           top: BorderSide(color: AppColors.border, width: 1),
@@ -1937,7 +1928,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             onPressed: () {
               // Attach file
             },
-            icon: Icon(Icons.attach_file, color: AppColors.textSecondary),
+            icon: const Icon(Icons.attach_file, color: AppColors.textSecondary),
           ),
           Expanded(
             child: TextField(
@@ -1949,7 +1940,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(isMobile ? 20.0 : 24.0),
-                  borderSide: BorderSide(color: AppColors.border),
+                  borderSide: const BorderSide(color: AppColors.border),
                 ),
                 contentPadding: EdgeInsets.symmetric(
                   horizontal: isMobile ? 16.0 : 20.0,
@@ -1958,12 +1949,12 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               ),
             ),
           ),
-          SizedBox(width: 8.0),
+          const SizedBox(width: 8.0),
           IconButton(
             onPressed: () {
               // Send message
             },
-            icon: Icon(Icons.send, color: AppColors.primary),
+            icon: const Icon(Icons.send, color: AppColors.primary),
           ),
         ],
       ),
@@ -2024,9 +2015,9 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             border: Border.all(color: AppColors.border, width: 1),
             boxShadow: [
               BoxShadow(
-                color: AppColors.shadow.withOpacity(0.1),
+                color: AppColors.shadow.withValues(alpha: 0.1),
                 blurRadius: 8,
-                offset: Offset(0, 2),
+                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -2046,7 +2037,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                   color: AppColors.textPrimary,
                 ),
               ),
-              SizedBox(height: 4.0),
+              const SizedBox(height: 4.0),
               Text(
                 card['title'] as String,
                 style: GoogleFonts.cairo(
@@ -2109,7 +2100,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           true,
           isMobile,
         ),
-        SizedBox(height: 12.0),
+        const SizedBox(height: 12.0),
         _buildPaymentMethodCard(
           _getLocalizedString('paypal'),
           _getLocalizedString('connected'),
@@ -2140,7 +2131,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             color: color,
             size: isMobile ? 24.0 : 28.0,
           ),
-          SizedBox(width: 12.0),
+          const SizedBox(width: 12.0),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -2166,9 +2157,9 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           ),
           if (isDefault)
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -2229,10 +2220,10 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         
         ...payments.map((payment) {
           return Container(
-            margin: EdgeInsets.only(bottom: 12.0),
+            margin: const EdgeInsets.only(bottom: 12.0),
             child: _buildPaymentHistoryCard(payment, isMobile, isTablet),
           );
-        }).toList(),
+        }),
       ],
     );
   }
@@ -2259,7 +2250,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     color: AppColors.textPrimary,
                   ),
                 ),
-                SizedBox(height: 4.0),
+                const SizedBox(height: 4.0),
                 Text(
                   payment['provider'],
                   style: GoogleFonts.cairo(
@@ -2268,7 +2259,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     color: AppColors.textSecondary,
                   ),
                 ),
-                SizedBox(height: 4.0),
+                const SizedBox(height: 4.0),
                 Text(
                   payment['date'],
                   style: GoogleFonts.cairo(
@@ -2291,11 +2282,11 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                   color: AppColors.textPrimary,
                 ),
               ),
-              SizedBox(height: 4.0),
+              const SizedBox(height: 4.0),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: payment['statusColor'].withOpacity(0.1),
+                  color: payment['statusColor'].withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -2364,9 +2355,9 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             border: Border.all(color: AppColors.border, width: 1),
             boxShadow: [
               BoxShadow(
-                color: AppColors.shadow.withOpacity(0.1),
+                color: AppColors.shadow.withValues(alpha: 0.1),
                 blurRadius: 8,
-                offset: Offset(0, 2),
+                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -2386,7 +2377,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                   color: AppColors.textPrimary,
                 ),
               ),
-              SizedBox(height: 4.0),
+              const SizedBox(height: 4.0),
               Text(
                 card['title'] as String,
                 style: GoogleFonts.cairo(
@@ -2446,10 +2437,10 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         
         ...reviews.map((review) {
           return Container(
-            margin: EdgeInsets.only(bottom: 16.0),
+            margin: const EdgeInsets.only(bottom: 16.0),
             child: _buildReviewCard(review, isMobile, isTablet),
           );
-        }).toList(),
+        }),
       ],
     );
   }
@@ -2463,9 +2454,9 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         border: Border.all(color: AppColors.border, width: 1),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadow.withOpacity(0.1),
+            color: AppColors.shadow.withValues(alpha: 0.1),
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -2511,7 +2502,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 ),
             ],
           ),
-          SizedBox(height: 8.0),
+          const SizedBox(height: 8.0),
           
           // Rating stars
           Row(
@@ -2523,7 +2514,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               );
             }),
           ),
-          SizedBox(height: 8.0),
+          const SizedBox(height: 8.0),
           
           Text(
             review['comment'],
@@ -2533,7 +2524,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               color: AppColors.textPrimary,
             ),
           ),
-          SizedBox(height: 8.0),
+          const SizedBox(height: 8.0),
           
           Text(
             review['date'],
@@ -2586,7 +2577,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       padding: EdgeInsets.all(isMobile ? 20.0 : 32.0),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
+          colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -2598,7 +2589,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             width: isMobile ? 80.0 : 100.0,
             height: isMobile ? 80.0 : 100.0,
             decoration: BoxDecoration(
-              color: AppColors.white.withOpacity(0.2),
+              color: AppColors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(isMobile ? 40.0 : 50.0),
             ),
             child: Icon(
@@ -2620,13 +2611,13 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     color: AppColors.white,
                   ),
                 ),
-                SizedBox(height: 4.0),
+                const SizedBox(height: 4.0),
                 Text(
                   '${_getLocalizedString('membersSince')} ${_getLocalizedString('january2024')}',
                   style: GoogleFonts.cairo(
                     fontSize: isMobile ? 14.0 : 16.0,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.white.withOpacity(0.9),
+                    color: AppColors.white.withValues(alpha: 0.9),
                   ),
                 ),
               ],
@@ -2667,11 +2658,11 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           SizedBox(height: isMobile ? 16.0 : 20.0),
           
           _buildFormField(_getLocalizedString('fullName'), 'Ahmed Hassan', Icons.person, isMobile),
-          SizedBox(height: 12.0),
+          const SizedBox(height: 12.0),
           _buildFormField(_getLocalizedString('email'), 'ahmed@example.com', Icons.email, isMobile),
-          SizedBox(height: 12.0),
+          const SizedBox(height: 12.0),
           _buildFormField(_getLocalizedString('phoneNumber'), '+972 50 123 4567', Icons.phone, isMobile),
-          SizedBox(height: 12.0),
+          const SizedBox(height: 12.0),
           _buildFormField(_getLocalizedString('dateOfBirth'), _getLocalizedString('march15'), Icons.calendar_today, isMobile),
         ],
       ),
@@ -2686,7 +2677,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           color: AppColors.textSecondary,
           size: isMobile ? 20.0 : 24.0,
         ),
-        SizedBox(width: 12.0),
+        const SizedBox(width: 12.0),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2768,7 +2759,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           SizedBox(height: isMobile ? 12.0 : 16.0),
           
           _buildAddressCard(_getLocalizedString('home'), '123 ${_getLocalizedString('mainStreet')}, ${_getLocalizedString('jerusalem')}', true, isMobile),
-          SizedBox(height: 12.0),
+          const SizedBox(height: 12.0),
           _buildAddressCard(_getLocalizedString('work'), '456 ${_getLocalizedString('businessF')}, ${_getLocalizedString('telAviv')}', false, isMobile),
         ],
       ),
@@ -2793,7 +2784,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             color: AppColors.primary,
             size: isMobile ? 20.0 : 24.0,
           ),
-          SizedBox(width: 12.0),
+          const SizedBox(width: 12.0),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -2819,9 +2810,9 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           ),
           if (isDefault)
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -2860,9 +2851,9 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           SizedBox(height: isMobile ? 12.0 : 16.0),
           
           _buildNotificationToggle(_getLocalizedString('emailNotifications'), true, isMobile),
-          SizedBox(height: 8.0),
+          const SizedBox(height: 8.0),
           _buildNotificationToggle(_getLocalizedString('pushNotifications'), true, isMobile),
-          SizedBox(height: 8.0),
+          const SizedBox(height: 8.0),
           _buildNotificationToggle(_getLocalizedString('smsNotifications'), false, isMobile),
         ],
       ),
@@ -2942,9 +2933,9 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             border: Border.all(color: AppColors.border, width: 1),
             boxShadow: [
               BoxShadow(
-                color: AppColors.shadow.withOpacity(0.1),
+                color: AppColors.shadow.withValues(alpha: 0.1),
                 blurRadius: 8,
-                offset: Offset(0, 2),
+                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -2964,7 +2955,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                   color: AppColors.textPrimary,
                 ),
               ),
-              SizedBox(height: 4.0),
+              const SizedBox(height: 4.0),
               Text(
                 card['title'] as String,
                 style: GoogleFonts.cairo(
@@ -3023,10 +3014,10 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         
         ...providers.map((provider) {
           return Container(
-            margin: EdgeInsets.only(bottom: 16.0),
+            margin: const EdgeInsets.only(bottom: 16.0),
             child: _buildSavedProviderCard(provider, isMobile, isTablet),
           );
-        }).toList(),
+        }),
       ],
     );
   }
@@ -3040,9 +3031,9 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         border: Border.all(color: AppColors.border, width: 1),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadow.withOpacity(0.1),
+            color: AppColors.shadow.withValues(alpha: 0.1),
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -3052,7 +3043,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             width: isMobile ? 60.0 : 70.0,
             height: isMobile ? 60.0 : 70.0,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(isMobile ? 30.0 : 35.0),
             ),
             child: Icon(
@@ -3074,7 +3065,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     color: AppColors.textPrimary,
                   ),
                 ),
-                SizedBox(height: 4.0),
+                const SizedBox(height: 4.0),
                 Text(
                   provider['service'],
                   style: GoogleFonts.cairo(
@@ -3083,7 +3074,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     color: AppColors.textSecondary,
                   ),
                 ),
-                SizedBox(height: 8.0),
+                const SizedBox(height: 8.0),
                 Row(
                   children: [
                     Icon(
@@ -3091,7 +3082,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                       color: AppColors.ratingFilled,
                       size: isMobile ? 16.0 : 18.0,
                     ),
-                    SizedBox(width: 4.0),
+                    const SizedBox(width: 4.0),
                     Text(
                       provider['rating'].toString(),
                       style: GoogleFonts.cairo(
@@ -3100,11 +3091,11 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                         color: AppColors.textSecondary,
                       ),
                     ),
-                    SizedBox(width: 16.0),
+                    const SizedBox(width: 16.0),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: provider['isAvailable'] ? AppColors.success.withOpacity(0.1) : AppColors.error.withOpacity(0.1),
+                        color: provider['isAvailable'] ? AppColors.success.withValues(alpha: 0.1) : AppColors.error.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -3118,7 +3109,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     ),
                   ],
                 ),
-                SizedBox(height: 4.0),
+                const SizedBox(height: 4.0),
                 Text(
                   '${_getLocalizedString('lastBooked')}: ${provider['lastBooked']}',
                   style: GoogleFonts.cairo(
@@ -3141,7 +3132,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                   color: AppColors.primary,
                 ),
               ),
-              SizedBox(height: 8.0),
+              const SizedBox(height: 8.0),
               ElevatedButton(
                 onPressed: provider['isAvailable'] ? () {
                   // Handle book again
@@ -3207,7 +3198,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       padding: EdgeInsets.all(isMobile ? 20.0 : 32.0),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.info, AppColors.info.withOpacity(0.8)],
+          colors: [AppColors.info, AppColors.info.withValues(alpha: 0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -3233,13 +3224,13 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     color: AppColors.white,
                   ),
                 ),
-                SizedBox(height: 4.0),
+                const SizedBox(height: 4.0),
                 Text(
                   _getLocalizedString('weAreHereToHelp'),
                   style: GoogleFonts.cairo(
                     fontSize: isMobile ? 14.0 : 16.0,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.white.withOpacity(0.9),
+                    color: AppColors.white.withValues(alpha: 0.9),
                   ),
                 ),
               ],
@@ -3288,9 +3279,9 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 border: Border.all(color: AppColors.border, width: 1),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.shadow.withOpacity(0.1),
+                    color: AppColors.shadow.withValues(alpha: 0.1),
                     blurRadius: 8,
-                    offset: Offset(0, 2),
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
@@ -3347,21 +3338,21 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             Icons.help_outline,
             isMobile,
           ),
-          SizedBox(height: 12.0),
+          const SizedBox(height: 12.0),
           _buildSupportOption(
             _getLocalizedString('reportIssue'),
             _getLocalizedString('createSupportRequest'),
             Icons.support_agent,
             isMobile,
           ),
-          SizedBox(height: 12.0),
+          const SizedBox(height: 12.0),
           _buildSupportOption(
             _getLocalizedString('viewPreviousRequests'),
             _getLocalizedString('checkTicketStatus'),
             Icons.history,
             isMobile,
           ),
-          SizedBox(height: 12.0),
+          const SizedBox(height: 12.0),
           _buildSupportOption(
             _getLocalizedString('liveChat'),
             _getLocalizedString('chatWithSupport'),
@@ -3387,7 +3378,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             color: AppColors.primary,
             size: isMobile ? 24.0 : 28.0,
           ),
-          SizedBox(width: 12.0),
+          const SizedBox(width: 12.0),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -3452,10 +3443,10 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         
         ...tickets.map((ticket) {
           return Container(
-            margin: EdgeInsets.only(bottom: 12.0),
+            margin: const EdgeInsets.only(bottom: 12.0),
             child: _buildTicketCard(ticket, isMobile, isTablet),
           );
-        }).toList(),
+        }),
       ],
     );
   }
@@ -3482,7 +3473,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     color: AppColors.textPrimary,
                   ),
                 ),
-                SizedBox(height: 4.0),
+                const SizedBox(height: 4.0),
                 Text(
                   ticket['date'],
                   style: GoogleFonts.cairo(
@@ -3495,9 +3486,9 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             ),
           ),
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: ticket['statusColor'].withOpacity(0.1),
+              color: ticket['statusColor'].withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -3552,7 +3543,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       padding: EdgeInsets.all(isMobile ? 20.0 : 32.0),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.error, AppColors.error.withOpacity(0.8)],
+          colors: [AppColors.error, AppColors.error.withValues(alpha: 0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -3578,13 +3569,13 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     color: AppColors.white,
                   ),
                 ),
-                SizedBox(height: 4.0),
+                const SizedBox(height: 4.0),
                 Text(
                   _getLocalizedString('keepAccountSafe'),
                   style: GoogleFonts.cairo(
                     fontSize: isMobile ? 14.0 : 16.0,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.white.withOpacity(0.9),
+                    color: AppColors.white.withValues(alpha: 0.9),
                   ),
                 ),
               ],
@@ -3620,9 +3611,9 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             border: Border.all(color: AppColors.border, width: 1),
             boxShadow: [
               BoxShadow(
-                color: AppColors.shadow.withOpacity(0.1),
+                color: AppColors.shadow.withValues(alpha: 0.1),
                 blurRadius: 8,
-                offset: Offset(0, 2),
+                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -3642,7 +3633,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                   color: AppColors.textPrimary,
                 ),
               ),
-              SizedBox(height: 4.0),
+              const SizedBox(height: 4.0),
               Text(
                 item['title'] as String,
                 style: GoogleFonts.cairo(
@@ -3685,28 +3676,28 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             Icons.lock,
             isMobile,
           ),
-          SizedBox(height: 12.0),
+          const SizedBox(height: 12.0),
           _buildSecurityOption(
             _getLocalizedString('twoFactorAuth'),
             _getLocalizedString('addExtraSecurity'),
             Icons.verified_user,
             isMobile,
           ),
-          SizedBox(height: 12.0),
+          const SizedBox(height: 12.0),
           _buildSecurityOption(
             _getLocalizedString('loginAlerts'),
             _getLocalizedString('getLoginNotifications'),
             Icons.notifications,
             isMobile,
           ),
-          SizedBox(height: 12.0),
+          const SizedBox(height: 12.0),
           _buildSecurityOption(
             _getLocalizedString('trustedDevices'),
             _getLocalizedString('manageTrustedDevices'),
             Icons.devices,
             isMobile,
           ),
-          SizedBox(height: 12.0),
+          const SizedBox(height: 12.0),
           _buildSecurityOption(
             _getLocalizedString('deleteAccount'),
             _getLocalizedString('permanentlyDeleteAccount'),
@@ -3733,7 +3724,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             color: isDestructive ? AppColors.error : AppColors.primary,
             size: isMobile ? 24.0 : 28.0,
           ),
-          SizedBox(width: 12.0),
+          const SizedBox(width: 12.0),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -3807,10 +3798,10 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         
         ...logins.map((login) {
           return Container(
-            margin: EdgeInsets.only(bottom: 12.0),
+            margin: const EdgeInsets.only(bottom: 12.0),
             child: _buildLoginCard(login, isMobile, isTablet),
           );
-        }).toList(),
+        }),
       ],
     );
   }
@@ -3830,7 +3821,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             color: AppColors.primary,
             size: isMobile ? 24.0 : 28.0,
           ),
-          SizedBox(width: 12.0),
+          const SizedBox(width: 12.0),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -3843,7 +3834,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     color: AppColors.textPrimary,
                   ),
                 ),
-                SizedBox(height: 4.0),
+                const SizedBox(height: 4.0),
                 Text(
                   login['location'],
                   style: GoogleFonts.cairo(
@@ -3852,7 +3843,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     color: AppColors.textSecondary,
                   ),
                 ),
-                SizedBox(height: 4.0),
+                const SizedBox(height: 4.0),
                 Text(
                   login['time'],
                   style: GoogleFonts.cairo(
@@ -3865,9 +3856,9 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             ),
           ),
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: login['statusColor'].withOpacity(0.1),
+              color: login['statusColor'].withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -3889,12 +3880,12 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.construction,
             size: 64,
             color: AppColors.textSecondary,
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             '$title - Coming Soon',
             style: GoogleFonts.cairo(
@@ -3923,9 +3914,9 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 // Drawer header
                 Container(
                   height: 120,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: AppColors.primary,
-                    borderRadius: const BorderRadius.only(
+                    borderRadius: BorderRadius.only(
                       bottomLeft: Radius.circular(16),
                       bottomRight: Radius.circular(16),
                     ),
@@ -3942,7 +3933,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                               color: AppColors.white,
                               borderRadius: BorderRadius.circular(25),
                             ),
-                            child: Icon(
+                            child: const Icon(
                               Icons.person,
                               color: AppColors.primary,
                               size: 24,
@@ -3966,7 +3957,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                                   'Premium User',
                                   style: GoogleFonts.cairo(
                                     fontSize: 12,
-                                    color: AppColors.white.withOpacity(0.8),
+                                    color: AppColors.white.withValues(alpha: 0.8),
                                   ),
                                 ),
                               ],
@@ -3994,7 +3985,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 Container(
                   padding: const EdgeInsets.all(16),
                   child: ListTile(
-                    leading: Icon(
+                    leading: const Icon(
                       Icons.language,
                       color: AppColors.primary,
                       size: 20,
@@ -4017,15 +4008,15 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 // Drawer footer
                 Container(
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: AppColors.greyLight,
-                    borderRadius: const BorderRadius.only(
+                    borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(16),
                       topRight: Radius.circular(16),
                     ),
                   ),
                   child: ListTile(
-                    leading: Icon(
+                    leading: const Icon(
                       Icons.logout,
                       color: AppColors.error,
                       size: 20,
@@ -4094,7 +4085,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         ),
       ),
       selected: isSelected,
-      selectedTileColor: AppColors.primary.withOpacity(0.1),
+      selectedTileColor: AppColors.primary.withValues(alpha: 0.1),
       onTap: () {
         if (mounted) {
           setState(() {

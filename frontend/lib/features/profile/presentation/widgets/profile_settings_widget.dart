@@ -72,7 +72,7 @@ class _ProfileSettingsWidgetState extends State<ProfileSettingsWidget> {
                   width: 100.w,
                   height: 100.w,
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(50.r),
                   ),
                   child: Icon(
@@ -157,15 +157,15 @@ class _ProfileSettingsWidgetState extends State<ProfileSettingsWidget> {
           decoration: InputDecoration(
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.r),
-              borderSide: BorderSide(color: AppColors.border),
+              borderSide: const BorderSide(color: AppColors.border),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.r),
-              borderSide: BorderSide(color: AppColors.border),
+              borderSide: const BorderSide(color: AppColors.border),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.r),
-              borderSide: BorderSide(color: AppColors.primary),
+              borderSide: const BorderSide(color: AppColors.primary),
             ),
             contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
           ),

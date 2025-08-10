@@ -18,7 +18,7 @@ class MyServicesWidget extends StatefulWidget {
 
 class _MyServicesWidgetState extends State<MyServicesWidget> {
   bool _isMultiEditMode = false;
-  Set<int> _selectedServices = {};
+  final Set<int> _selectedServices = {};
 
   final List<Map<String, dynamic>> _services = [
     {
@@ -137,10 +137,10 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
                 vertical: isMobile ? 4.0 : (isTablet ? 5.0 : 6.0)
               ),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -179,7 +179,7 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.2),
+                      color: AppColors.primary.withValues(alpha: 0.2),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -229,7 +229,7 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
                 ),
                 boxShadow: _isMultiEditMode ? [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.2),
+                    color: AppColors.primary.withValues(alpha: 0.2),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),

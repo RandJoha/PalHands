@@ -76,7 +76,7 @@ class _MobileDashboardHomeWidgetState extends State<MobileDashboardHomeWidget> {
                       AppStrings.getString('welcomeBack', languageService.currentLanguage),
                       style: GoogleFonts.cairo(
                         fontSize: 16,
-                        color: AppColors.white.withOpacity(0.9),
+                        color: AppColors.white.withValues(alpha: 0.9),
                         fontWeight: FontWeight.w400,
                       ),
                     ),
@@ -96,10 +96,10 @@ class _MobileDashboardHomeWidgetState extends State<MobileDashboardHomeWidget> {
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: AppColors.white.withOpacity(0.2),
+                  color: AppColors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(30),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.person,
                   size: 30,
                   color: AppColors.white,
@@ -112,7 +112,7 @@ class _MobileDashboardHomeWidgetState extends State<MobileDashboardHomeWidget> {
             'You have 3 upcoming bookings this week',
             style: GoogleFonts.cairo(
               fontSize: 14,
-              color: AppColors.white.withOpacity(0.8),
+              color: AppColors.white.withValues(alpha: 0.8),
               fontWeight: FontWeight.w400,
             ),
           ),
@@ -182,11 +182,11 @@ class _MobileDashboardHomeWidgetState extends State<MobileDashboardHomeWidget> {
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: AppColors.shadow,
             blurRadius: 8,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -196,7 +196,7 @@ class _MobileDashboardHomeWidgetState extends State<MobileDashboardHomeWidget> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Icon(
@@ -233,10 +233,10 @@ class _MobileDashboardHomeWidgetState extends State<MobileDashboardHomeWidget> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.warning.withOpacity(0.1),
+        color: AppColors.warning.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.warning.withOpacity(0.3),
+          color: AppColors.warning.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -245,7 +245,7 @@ class _MobileDashboardHomeWidgetState extends State<MobileDashboardHomeWidget> {
         children: [
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.notifications_active,
                 color: AppColors.warning,
                 size: 20,
@@ -300,7 +300,7 @@ class _MobileDashboardHomeWidgetState extends State<MobileDashboardHomeWidget> {
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Icon(
@@ -415,10 +415,10 @@ class _MobileDashboardHomeWidgetState extends State<MobileDashboardHomeWidget> {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(25),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.cleaning_services,
                   color: AppColors.primary,
                   size: 24,
@@ -452,7 +452,7 @@ class _MobileDashboardHomeWidgetState extends State<MobileDashboardHomeWidget> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
+                  color: statusColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -552,7 +552,7 @@ class _MobileDashboardHomeWidgetState extends State<MobileDashboardHomeWidget> {
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(25),
               ),
               child: Icon(
@@ -586,7 +586,7 @@ class _MobileDashboardHomeWidgetState extends State<MobileDashboardHomeWidget> {
                 ],
               ),
             ),
-            Icon(
+            const Icon(
               Icons.arrow_forward_ios,
               color: AppColors.textSecondary,
               size: 16,

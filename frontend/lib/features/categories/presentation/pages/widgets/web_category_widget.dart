@@ -1,28 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_strings.dart';
 import '../../../../../shared/services/language_service.dart';
-import '../../../../../shared/widgets/tatreez_pattern.dart';
 import '../../../../../shared/widgets/shared_navigation.dart';
 import '../../../../../shared/widgets/shared_hero_section.dart';
+import '../../../../../shared/services/responsive_service.dart';
 
 class WebCategoryWidget extends StatefulWidget {
-  const WebCategoryWidget({Key? key}) : super(key: key);
+  const WebCategoryWidget({super.key});
 
   @override
   State<WebCategoryWidget> createState() => _WebCategoryWidgetState();
 }
 
 class _WebCategoryWidgetState extends State<WebCategoryWidget> {
-  Map<String, Set<String>> _selectedServices = {}; // Track selected services by category
+  final Map<String, Set<String>> _selectedServices = {}; // Track selected services by category
   
   @override
   Widget build(BuildContext context) {
     return Consumer<LanguageService>(
       builder: (context, languageService, child) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isCollapsed = context.read<ResponsiveService>().shouldCollapseNavigation(screenWidth);
         return Scaffold(
           backgroundColor: const Color(0xFFFDF5EC),
+          drawer: isCollapsed ? const SharedMobileDrawer(currentPage: 'ourServices') : null,
           body: SingleChildScrollView(
             child: Column(
               children: [
@@ -30,7 +32,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                 SharedNavigation(
                   currentPage: 'ourServices',
                   showAuthButtons: true,
-                  isMobile: false,
+                  isMobile: isCollapsed,
                 ),
                 // Shared Hero Section
                 SharedHeroSections.servicesHero(
@@ -247,13 +249,13 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),
           ],
           border: Border.all(
-            color: (category['color'] as Color).withOpacity(0.3),
+            color: (category['color'] as Color).withValues(alpha: 0.3),
             width: 2,
           ),
         ),
@@ -264,7 +266,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
               width: double.infinity,
               height: 100,
               decoration: BoxDecoration(
-                color: (category['color'] as Color).withOpacity(0.1),
+                color: (category['color'] as Color).withValues(alpha: 0.1),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(20),
                   topRight: Radius.circular(20),
@@ -440,7 +442,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: (category['color'] as Color).withOpacity(0.1),
+                color: (category['color'] as Color).withValues(alpha: 0.1),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(20),
                   topRight: Radius.circular(20),
@@ -512,10 +514,10 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                   return Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: isSelected ? (category['color'] as Color).withOpacity(0.1) : Colors.grey[50],
+                      color: isSelected ? (category['color'] as Color).withValues(alpha: 0.1) : Colors.grey[50],
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isSelected ? (category['color'] as Color) : (category['color'] as Color).withOpacity(0.2),
+                        color: isSelected ? (category['color'] as Color) : (category['color'] as Color).withValues(alpha: 0.2),
                         width: isSelected ? 2 : 1,
                       ),
                     ),
@@ -547,7 +549,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: isSelected
-                                ? Icon(
+                                ? const Icon(
                                     Icons.check,
                                     color: Colors.white,
                                     size: 16,
@@ -602,10 +604,10 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                       padding: const EdgeInsets.all(16),
                       margin: const EdgeInsets.only(bottom: 20),
                       decoration: BoxDecoration(
-                        color: (category['color'] as Color).withOpacity(0.1),
+                        color: (category['color'] as Color).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: (category['color'] as Color).withOpacity(0.3),
+                          color: (category['color'] as Color).withValues(alpha: 0.3),
                         ),
                       ),
                       child: Text(

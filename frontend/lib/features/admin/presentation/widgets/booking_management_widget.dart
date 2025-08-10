@@ -226,7 +226,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
         borderRadius: BorderRadius.circular(screenWidth > 1400 ? 10 : 8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 3,
             offset: const Offset(0, 1),
           ),
@@ -238,7 +238,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
             width: screenWidth > 1400 ? 40 : 36,
             height: screenWidth > 1400 ? 40 : 36,
             decoration: BoxDecoration(
-              color: stat['color'].withOpacity(0.1),
+              color: stat['color'].withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -286,7 +286,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.calendar_today_outlined,
               size: 48,
               color: AppColors.textLight,
@@ -312,7 +312,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
         borderRadius: BorderRadius.circular(screenWidth > 1400 ? 10 : 8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 3,
             offset: const Offset(0, 1),
           ),
@@ -386,7 +386,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: Colors.grey.withOpacity(0.08),
+            color: Colors.grey.withValues(alpha: 0.08),
             width: 1,
           ),
         ),
@@ -415,7 +415,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
                   width: screenWidth > 1400 ? 36 : screenWidth > 1024 ? 32 : 28,
                   height: screenWidth > 1400 ? 36 : screenWidth > 1024 ? 32 : 28,
                   decoration: BoxDecoration(
-                    color: _getServiceColor(booking['service']['category']).withOpacity(0.1),
+                    color: _getServiceColor(booking['service']['category']).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Icon(
@@ -535,7 +535,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
                 vertical: screenWidth > 1400 ? 4 : 3,
               ),
               decoration: BoxDecoration(
-                color: _getStatusColor(booking['status']).withOpacity(0.1),
+                color: _getStatusColor(booking['status']).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Row(
@@ -549,7 +549,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
                       shape: BoxShape.circle,
                     ),
                   ),
-                  SizedBox(width: 4),
+                  const SizedBox(width: 4),
                   Text(
                     _getLocalizedStatusLabel(booking['status'], languageService).toUpperCase(),
                     style: GoogleFonts.cairo(

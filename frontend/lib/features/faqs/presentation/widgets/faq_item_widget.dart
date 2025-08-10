@@ -69,13 +69,13 @@ class _FAQItemWidgetState extends State<FAQItemWidget>
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: widget.isExpanded 
-                ? AppColors.primary.withOpacity(0.3)
+                ? AppColors.primary.withValues(alpha: 0.3)
                 : AppColors.border,
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -96,7 +96,7 @@ class _FAQItemWidgetState extends State<FAQItemWidget>
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
+                          color: AppColors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Center(
@@ -130,7 +130,7 @@ class _FAQItemWidgetState extends State<FAQItemWidget>
                       AnimatedRotation(
                         turns: widget.isExpanded ? 0.5 : 0,
                         duration: const Duration(milliseconds: 300),
-                        child: Icon(
+                        child: const Icon(
                           Icons.keyboard_arrow_down,
                           color: AppColors.primary,
                           size: 24,

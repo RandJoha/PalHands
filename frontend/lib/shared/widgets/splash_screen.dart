@@ -13,7 +13,6 @@ import '../services/language_service.dart';
 // Widget imports
 import 'login_screen.dart';
 import 'animated_handshake.dart';
-import '../../features/home/presentation/pages/home_screen.dart';
 
 // Splash screen with navigation logic
 class SplashScreen extends StatefulWidget {
@@ -449,7 +448,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.language,
                       size: 20,
                       color: AppColors.primary,

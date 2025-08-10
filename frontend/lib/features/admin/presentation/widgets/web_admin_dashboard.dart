@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -13,7 +12,6 @@ import '../../../../shared/services/language_service.dart';
 
 // Admin widgets
 import 'admin_sidebar.dart';
-import 'dashboard_overview.dart';
 import 'user_management_widget.dart';
 import 'service_management_widget.dart';
 import 'booking_management_widget.dart';
@@ -152,7 +150,7 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -171,11 +169,11 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
                     width: 4,
                     height: 40,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
+                      gradient: const LinearGradient(
                         colors: [
                           AppColors.primary, // Palestinian red
                           AppColors.secondary, // Golden
-                          const Color(0xFF2E8B57), // Sea green
+                          Color(0xFF2E8B57), // Sea green
                         ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
@@ -232,7 +230,7 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
                         child: Container(
                           width: 10,
                           height: 10,
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: AppColors.primary,
                             shape: BoxShape.circle,
                           ),

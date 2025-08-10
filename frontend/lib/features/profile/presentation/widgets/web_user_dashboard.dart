@@ -147,11 +147,11 @@ class _WebUserDashboardState extends State<WebUserDashboard> {
                       decoration: BoxDecoration(
                         color: AppColors.white,
                         borderRadius: BorderRadius.circular(16.r),
-                        boxShadow: [
+                        boxShadow: const [
                           BoxShadow(
                             color: AppColors.shadow,
                             blurRadius: 10,
-                            offset: const Offset(0, 2),
+                            offset: Offset(0, 2),
                           ),
                         ],
                       ),
@@ -171,13 +171,13 @@ class _WebUserDashboardState extends State<WebUserDashboard> {
     return Container(
       height: 80.h,
       padding: EdgeInsets.symmetric(horizontal: 24.w),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.white,
         boxShadow: [
           BoxShadow(
             color: AppColors.shadow,
             blurRadius: 4,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -249,7 +249,7 @@ class _WebUserDashboardState extends State<WebUserDashboard> {
                 child: Container(
                   padding: EdgeInsets.all(8.w),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Icon(

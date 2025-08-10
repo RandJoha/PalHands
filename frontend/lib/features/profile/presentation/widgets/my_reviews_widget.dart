@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 
 // Core imports
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_strings.dart';
 
 // Shared imports
 import '../../../../shared/services/language_service.dart';
@@ -98,7 +97,7 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
                 width: 50.w,
                 height: 50.w,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(25.r),
                 ),
                 child: Icon(
