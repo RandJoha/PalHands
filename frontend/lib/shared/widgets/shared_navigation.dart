@@ -35,7 +35,7 @@ class SharedNavigation extends StatelessWidget {
   final isCollapsed = responsiveService.shouldCollapseNavigation(screenWidth);
   final forceMobileLayout = shouldUseMobileLayout || isCollapsed;
         
-        return Container(
+  return Container(
           width: double.infinity,
           padding: EdgeInsets.symmetric(
             horizontal: forceMobileLayout ? 16 : (shouldUseCompactNavigation ? 24 : 32),
@@ -51,7 +51,9 @@ class SharedNavigation extends StatelessWidget {
               ),
             ],
           ),
-          child: Row(
+          child: Directionality(
+            textDirection: TextDirection.ltr, // Keep logo on the visual left and actions on the right regardless of app language
+            child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // Logo Section - Fixed size, never wraps
@@ -72,6 +74,7 @@ class SharedNavigation extends StatelessWidget {
                 _buildMobileMenuSection(context, languageService),
               ],
             ],
+          ),
           ),
         );
       },
@@ -224,7 +227,7 @@ class SharedNavigation extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         _buildPillButton(
-          AppStrings.getString('signup', languageService.currentLanguage),
+          AppStrings.getString('signUp', languageService.currentLanguage),
           () => Navigator.pushNamed(context, '/signup'),
           isCompact: isCompact,
         ),
@@ -318,7 +321,7 @@ class SharedMobileDrawer extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        AppStrings.getString('appName', languageService.currentLanguage),
+                        'PalHands', // Brand stays in English
                         style: const TextStyle(
                           fontSize: 16, // Reduced from 18
                           fontWeight: FontWeight.bold,
@@ -417,7 +420,7 @@ class SharedMobileDrawer extends StatelessWidget {
                     )),
                     const SizedBox(width: 12),
                     Expanded(child: _buildDrawerOutlinedButton(
-                      AppStrings.getString('signup', languageService.currentLanguage),
+                      AppStrings.getString('signUp', languageService.currentLanguage),
                       () => Navigator.pushNamed(context, '/signup'),
                     )),
                   ],

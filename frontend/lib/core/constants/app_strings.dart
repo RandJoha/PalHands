@@ -921,6 +921,7 @@ class AppStrings {
     'ar': 'التقييم',
   };
 
+
   // Messages
   static const Map<String, String> messages = {
     'en': 'Messages',

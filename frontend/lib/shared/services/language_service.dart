@@ -4,8 +4,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 class LanguageService extends ChangeNotifier {
   static const String _languageKey = 'selected_language';
   String _currentLanguage = 'en'; // Default to English
+  // Product toggle: Hide Turkish language option on provider cards (UI only)
+  bool _hideTurkishForProviders = true; // default hidden as platform focuses on Palestine
 
   String get currentLanguage => _currentLanguage;
+  bool get hideTurkishForProviders => _hideTurkishForProviders;
 
   // Initialize language from storage
   Future<void> initializeLanguage() async {
@@ -41,4 +44,12 @@ class LanguageService extends ChangeNotifier {
 
   // Check if current language is RTL
   bool get isRTL => _currentLanguage == 'ar';
+
+  // Configure visibility of Turkish language option in UI (persist later if needed)
+  void setHideTurkishForProviders(bool hide) {
+    if (_hideTurkishForProviders != hide) {
+      _hideTurkishForProviders = hide;
+      notifyListeners();
+    }
+  }
 } 

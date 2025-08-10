@@ -5,6 +5,11 @@ import '../../../../../shared/services/language_service.dart';
 import '../../../../../shared/widgets/shared_navigation.dart';
 import '../../../../../shared/widgets/shared_hero_section.dart';
 import '../../../../../shared/services/responsive_service.dart';
+import '../../../../../shared/services/provider_service.dart';
+import '../../../../../shared/models/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import '../../../../../shared/services/category_selection_store.dart';
 
 class WebCategoryWidget extends StatefulWidget {
   const WebCategoryWidget({super.key});
@@ -14,7 +19,62 @@ class WebCategoryWidget extends StatefulWidget {
 }
 
 class _WebCategoryWidgetState extends State<WebCategoryWidget> {
-  final Map<String, Set<String>> _selectedServices = {}; // Track selected services by category
+  final CategorySelectionStore _store = CategorySelectionStore.instance;
+  String? get _selectedCity => _store.selectedCity;
+  set _selectedCity(String? v) => _store.selectedCity = v;
+  String get _sortBy => _store.sortBy; // rating | price
+  set _sortBy(String v) => _store.sortBy = v;
+  String get _sortOrder => _store.sortOrder; // desc | asc
+  set _sortOrder(String v) => _store.sortOrder = v;
+  bool _loading = false;
+  String? _error;
+  List<ProviderModel> _providers = const [];
+  final _providerService = ProviderService();
+
+  Set<String> get _selectedServiceKeys {
+    final set = <String>{};
+  for (final s in _store.selectedServices.values) {
+      set.addAll(s);
+    }
+    return set;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshProviders();
+  }
+
+  Future<void> _refreshProviders() async {
+    if (!mounted) return; // guard against resize-induced dispose
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final data = await _providerService.fetchProviders(
+        servicesAny: _selectedServiceKeys.toList(),
+        city: _selectedCity,
+        sortBy: _sortBy == 'rating' ? 'rating' : 'price',
+        sortOrder: _sortOrder,
+      );
+      if (!mounted) return;
+      setState(() {
+        _providers = data;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
+    }
+  }
   
   @override
   Widget build(BuildContext context) {
@@ -39,7 +99,71 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                   languageService: languageService,
                   isMobile: false,
                 ),
-                _buildCategoriesGrid(languageService),
+                // Side-by-side layout (providers left, services right) on wide screens
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final wide = constraints.maxWidth >= 1100;
+                    if (wide) {
+                      final isArabic = languageService.isArabic;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                        child: Directionality(
+                          textDirection: TextDirection.ltr, // force LTR ordering so Arabic shows categories panel on the right
+                          child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: isArabic
+                              ? [
+                                  // Providers left (for Arabic)
+                                  Expanded(
+                                    flex: 7,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        _buildFilterBar(languageService),
+                                        const SizedBox(height: 12),
+                                        _buildProvidersSection(languageService),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 24),
+                                  ConstrainedBox(
+                                    constraints: const BoxConstraints(maxWidth: 420, minWidth: 360),
+                                    child: _buildCategoriesPanel(languageService),
+                                  ),
+                                ]
+                              : [
+                                  // Categories left (for English)
+                                  ConstrainedBox(
+                                    constraints: const BoxConstraints(maxWidth: 420, minWidth: 360),
+                                    child: _buildCategoriesPanel(languageService),
+                                  ),
+                                  const SizedBox(width: 24),
+                                  Expanded(
+                                    flex: 7,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        _buildFilterBar(languageService),
+                                        const SizedBox(height: 12),
+                                        _buildProvidersSection(languageService),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                        ),
+                        ),
+                      );
+                    }
+                    // Narrow screens: show filters + "Our Services" pill and providers; hide the big categories grid
+                    return Column(
+                      children: [
+                        _buildFilterBar(languageService, showServicesPill: true),
+                        const SizedBox(height: 16),
+                        _buildProvidersSection(languageService),
+                      ],
+                    );
+                  },
+                ),
                 const SizedBox(height: 40),
               ],
             ),
@@ -49,7 +173,172 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
     );
   }
 
-  Widget _buildCategoriesGrid(LanguageService languageService) {
+  Widget _buildFilterBar(LanguageService languageService, {bool showServicesPill = false}) {
+    final cities = [
+      'ramallah', 'nablus', 'jerusalem', 'hebron', 'bethlehem', 'gaza',
+    ];
+  final width = MediaQuery.of(context).size.width;
+  final horizontalPad = width < 1200 ? 24.0 : 40.0;
+    return Directionality(
+      textDirection: languageService.textDirection,
+      child: Container(
+    padding: EdgeInsets.symmetric(horizontal: horizontalPad, vertical: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Selected service chips
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _selectedServiceKeys.map((s) {
+                return Chip(
+                  label: Text(AppStrings.getString(s, languageService.currentLanguage)),
+                  deleteIcon: const Icon(Icons.close, size: 16),
+                    onDeleted: () {
+                      setState(() {
+                        for (final entry in _store.selectedServices.entries) {
+                          entry.value.remove(s);
+                        }
+                      });
+                      _refreshProviders();
+                    },
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 12),
+            // Controls row
+      LayoutBuilder(
+              builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 1200; // raise threshold to prevent overflow band
+        final controls = <Widget>[
+                  // Location filter
+                  _buildLabeled(
+                    AppStrings.getString('location', languageService.currentLanguage),
+                    DropdownButton<String>(
+                      value: _selectedCity ?? '',
+                      hint: Text(AppStrings.getString('selectYourLocation', languageService.currentLanguage)),
+                      items: [
+                        DropdownMenuItem<String>(value: '', child: Text(AppStrings.getString('all', languageService.currentLanguage))),
+                        ...cities.map((c) => DropdownMenuItem<String>(
+                              value: c,
+                              child: Text(AppStrings.getString(c, languageService.currentLanguage)),
+                            )),
+                      ],
+                      onChanged: (val) {
+                        setState(() {
+                          _selectedCity = (val == null || val.isEmpty) ? null : val;
+                        });
+                        _refreshProviders();
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12, height: 12),
+                  // Sort filter
+                  _buildLabeled(
+                    AppStrings.getString('sort', languageService.currentLanguage),
+                    DropdownButton<String>(
+                      value: _sortBy + '_' + _sortOrder,
+                      items: [
+                        DropdownMenuItem(value: 'rating_desc', child: Text('${AppStrings.getString('rating', languageService.currentLanguage)} ↓')),
+                        DropdownMenuItem(value: 'rating_asc', child: Text('${AppStrings.getString('rating', languageService.currentLanguage)} ↑')),
+                        DropdownMenuItem(value: 'price_asc', child: Text('${AppStrings.getString('price', languageService.currentLanguage)} ↑')),
+                        DropdownMenuItem(value: 'price_desc', child: Text('${AppStrings.getString('price', languageService.currentLanguage)} ↓')),
+                      ],
+                      onChanged: (val) {
+                        if (val == null) return;
+                        final parts = val.split('_');
+                        setState(() {
+                          _sortBy = parts[0];
+                          _sortOrder = parts[1];
+                        });
+                        _refreshProviders();
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12, height: 12),
+                  // Reset button (outlined, unified style)
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _store.reset();
+                      });
+                      _refreshProviders();
+                    },
+                    icon: const Icon(Icons.refresh, size: 18),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      shape: const StadiumBorder(),
+                    ),
+                    label: Text(AppStrings.getString('reset', languageService.currentLanguage)),
+                  ),
+                  if (showServicesPill)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8, top: 4),
+                      child: OutlinedButton.icon(
+                        onPressed: () => _openServicesSelector(languageService),
+                        icon: const Icon(Icons.filter_list, size: 18),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          shape: const StadiumBorder(),
+                          foregroundColor: const Color(0xFF9B4F3D),
+                        ),
+                        label: Text(AppStrings.getString('ourServices', languageService.currentLanguage)),
+                      ),
+                    ),
+                ];
+
+                return isNarrow
+                    ? Wrap(spacing: 12, runSpacing: 12, crossAxisAlignment: WrapCrossAlignment.center, children: controls)
+                    : Row(children: controls.map((w) => Padding(padding: const EdgeInsets.only(right: 8), child: w)).toList());
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openServicesSelector(LanguageService languageService) {
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520, maxHeight: 640),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: SingleChildScrollView(child: _buildCategoriesPanel(languageService, panelSetState: setDialogState)),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLabeled(String label, Widget child) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(8),
+            color: Colors.white,
+          ),
+          child: child,
+        ),
+      ],
+    );
+  }
+
+  // Centralized categories list
+  List<Map<String, dynamic>> _categories() {
     final categories = [
       {
         'id': 'cleaning',
@@ -185,6 +474,12 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
         ],
       },
     ];
+    return categories;
+  }
+
+  // ignore: unused_element
+  Widget _buildCategoriesGrid(LanguageService languageService) {
+    final categories = _categories();
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 40),
@@ -234,6 +529,83 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  // Compact right-side panel that mirrors the category/services selection
+  Widget _buildCategoriesPanel(LanguageService languageService, {StateSetter? panelSetState}) {
+    final categories = _categories();
+    return Directionality(
+      textDirection: languageService.textDirection,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 10, offset: const Offset(0, 4))],
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              child: Text(AppStrings.getString('allCategories', languageService.currentLanguage), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: categories.length,
+              itemBuilder: (context, idx) {
+                final cat = categories[idx];
+                final color = cat['color'] as Color;
+                final services = (cat['services'] as List).cast<String>();
+                final id = cat['id'] as String;
+                _store.selectedServices.putIfAbsent(id, () => <String>{});
+                return Card(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: color.withValues(alpha: 0.25))),
+                  elevation: 0,
+                  child: Theme(
+                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                    child: ExpansionTile(
+                      initiallyExpanded: idx == 0,
+                      iconColor: color,
+                      collapsedIconColor: color,
+                      title: Text(AppStrings.getString(cat['name'] as String, languageService.currentLanguage), style: TextStyle(color: color, fontWeight: FontWeight.w700)),
+                      children: [
+                        const SizedBox(height: 4),
+        ...services.map((s) {
+                          final sel = _store.selectedServices[id]!.contains(s);
+                          return CheckboxListTile(
+                            value: sel,
+                            controlAffinity: ListTileControlAffinity.leading,
+                            activeColor: color,
+                            dense: true,
+                            title: Text(AppStrings.getString(s, languageService.currentLanguage)),
+                            onChanged: (v) {
+          // Rebuild either the embedded panel (side) or the dialog copy
+          final fn = panelSetState ?? setState;
+          fn(() {
+                                if (v == true) {
+                                  _store.selectedServices[id]!.add(s);
+                                } else {
+                                  _store.selectedServices[id]!.remove(s);
+                                }
+                              });
+                              _refreshProviders();
+                            },
+                          );
+                        }).toList(),
+                        const SizedBox(height: 8),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -336,7 +708,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => _buildCategoryDetailsDialog(category, languageService, setDialogState),
+  builder: (context, setDialogState) => _buildCategoryDetailsDialog(category, languageService, setDialogState),
       ),
     );
   }
@@ -509,7 +881,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                 itemBuilder: (context, index) {
                   final service = category['services'][index] as String;
                   final categoryId = category['id'] as String;
-                  final isSelected = _selectedServices[categoryId]?.contains(service) ?? false;
+                  final isSelected = _store.selectedServices[categoryId]?.contains(service) ?? false;
                   
                   return Container(
                     padding: const EdgeInsets.all(16),
@@ -527,13 +899,13 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                         GestureDetector(
                           onTap: () {
                             setDialogState(() {
-                              if (_selectedServices[categoryId] == null) {
-                                _selectedServices[categoryId] = <String>{};
+                              if (_store.selectedServices[categoryId] == null) {
+                                _store.selectedServices[categoryId] = <String>{};
                               }
                               if (isSelected) {
-                                _selectedServices[categoryId]!.remove(service);
+                                _store.selectedServices[categoryId]!.remove(service);
                               } else {
-                                _selectedServices[categoryId]!.add(service);
+                                _store.selectedServices[categoryId]!.add(service);
                               }
                             });
                           },
@@ -598,7 +970,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
               child: Column(
                 children: [
                   // Selected services count
-                  if (_selectedServices[category['id']]?.isNotEmpty == true)
+                  if (_store.selectedServices[category['id']]?.isNotEmpty == true)
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
@@ -611,7 +983,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                         ),
                       ),
                       child: Text(
-                        '${_selectedServices[category['id']]!.length} ${AppStrings.getString('services', languageService.currentLanguage)} ${AppStrings.getString('selected', languageService.currentLanguage)}',
+                        '${_store.selectedServices[category['id']]!.length} ${AppStrings.getString('services', languageService.currentLanguage)} ${AppStrings.getString('selected', languageService.currentLanguage)}',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -644,11 +1016,10 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: _selectedServices[category['id']]?.isNotEmpty == true
+                          onPressed: _store.selectedServices[category['id']]?.isNotEmpty == true
                               ? () {
                                   Navigator.pop(context);
-                                  // TODO: Navigate to booking with selected services
-                                  print('Selected services: ${_selectedServices[category['id']]}');
+                                  _refreshProviders();
                                 }
                               : null,
                           style: ElevatedButton.styleFrom(
@@ -674,5 +1045,181 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
         ),
       ),
     );
+  }
+
+  Widget _buildProvidersSection(LanguageService languageService) {
+    return Directionality(
+      textDirection: languageService.textDirection,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(languageService.currentLanguage == 'ar' ? 'مقدمو الخدمة' : 'Service Providers', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            if (_loading) const LinearProgressIndicator(),
+            if (_error != null) Text(_error!, style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 12),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                int crossAxisCount;
+                if (constraints.maxWidth > 1400) crossAxisCount = 3; else if (constraints.maxWidth > 900) crossAxisCount = 2; else crossAxisCount = 1;
+                // Use fixed mainAxisExtent to keep all cards the same height and avoid overflow
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: 20,
+                    mainAxisSpacing: 20,
+                    // Ensure uniform height; slightly taller for denser layouts
+                    mainAxisExtent: crossAxisCount == 1
+                        ? 360
+                        : crossAxisCount == 2
+                            ? 380
+                            : 420,
+                  ),
+                  itemCount: _providers.length,
+                  itemBuilder: (context, index) => _buildProviderCard(_providers[index], languageService),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProviderCard(ProviderModel p, LanguageService languageService) {
+    final lang = languageService.currentLanguage;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 12, offset: const Offset(0, 6))],
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(radius: 28, backgroundColor: Colors.grey.shade200, backgroundImage: p.avatarUrl != null ? NetworkImage(p.avatarUrl!) : null, child: p.avatarUrl == null ? const Icon(Icons.person, size: 28) : null),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(p.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 4),
+                    Row(children: [
+                      const Icon(Icons.location_on, size: 16, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Text(AppStrings.getString(p.city.toLowerCase(), lang), style: TextStyle(color: Colors.grey.shade700)),
+                    ]),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  RatingBarIndicator(rating: p.ratingAverage, itemSize: 16, itemBuilder: (_, __) => const Icon(Icons.star, color: Colors.amber)),
+                  Text('${p.ratingAverage.toStringAsFixed(1)} (${p.ratingCount})', style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+                ],
+              )
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            children: [
+              _kv(Icons.work_history, '${p.experienceYears} ${AppStrings.getString('years', lang)}'),
+              _kv(Icons.language, _localizedLanguages(p.languages, lang).join(', ')),
+              _kv(Icons.attach_money, '${p.hourlyRate.toStringAsFixed(0)} ${AppStrings.getString('hourly', lang)}'),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: () {
+              // Show more chips on web and avoid tooltip '+1'
+              final maxVisible = 8;
+              final visible = p.services.take(maxVisible).toList();
+              final extras = p.services.length - visible.length;
+              final chips = <Widget>[];
+              chips.addAll(visible.map((s) => Chip(label: Text(AppStrings.getString(s, lang)))));
+              // If there are still more, just append the rest without tooltip up to a safe cap
+              if (extras > 0) {
+                chips.addAll(p.services.skip(maxVisible).take(6).map((s) => Chip(label: Text(AppStrings.getString(s, lang)))));
+              }
+              return chips;
+            }(),
+          ),
+          const Spacer(),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    // TODO: Navigate to booking flow with provider
+                  },
+                  child: Text(AppStrings.getString('bookNow', lang)),
+                ),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton.icon(
+                onPressed: p.phone.isNotEmpty ? () => launchUrl(Uri(scheme: 'tel', path: p.phone)) : null,
+                icon: const Icon(Icons.call),
+                label: Text(AppStrings.getString('contact', lang)),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton.icon(
+                onPressed: () {
+                  // TODO: Navigate to chat with provider
+                },
+                icon: const Icon(Icons.chat),
+                label: Text(AppStrings.getString('chat', lang)),
+              ),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _kv(IconData icon, String text) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: Colors.grey.shade700),
+        const SizedBox(width: 6),
+        Text(text, style: TextStyle(color: Colors.grey.shade800)),
+      ],
+    );
+  }
+
+  // Language localization for display purposes without altering provider names
+  List<String> _localizedLanguages(List<String> langs, String langCode) {
+    final arMap = {
+      'arabic': 'العربية',
+      'english': 'الإنجليزية',
+      'hebrew': 'عبري',
+      'turkish': 'التركية',
+      'french': 'الفرنسية',
+      'spanish': 'الإسبانية',
+    };
+  final hideTurkish = context.read<LanguageService>().hideTurkishForProviders;
+  final filtered = hideTurkish
+    ? langs.where((l) => l.toLowerCase().trim() != 'turkish').toList()
+    : List<String>.from(langs);
+  return filtered.map((l) {
+      final key = l.toLowerCase().trim();
+      if (langCode == 'ar') return arMap[key] ?? l;
+      return l;
+    }).toList();
   }
 } 
