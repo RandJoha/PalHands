@@ -12,6 +12,9 @@ const generateToken = (userId) => {
   );
 };
 
+// Helper to create a verification token (dev-only flow)
+const crypto = require('crypto');
+
 // Register new user
 const register = asyncHandler(async (req, res) => {
     const { firstName, lastName = '', email, phone, password, role = 'client' } = req.body;
@@ -52,6 +55,12 @@ const register = asyncHandler(async (req, res) => {
       role
     });
 
+    // If email verification enabled, set token (email sending can be added later)
+    if (process.env.ENABLE_EMAIL_VERIFICATION === 'true') {
+      user.emailVerificationToken = crypto.randomBytes(20).toString('hex');
+      user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
+    }
+
     await user.save();
 
     // Generate token
@@ -73,7 +82,7 @@ const register = asyncHandler(async (req, res) => {
       createdAt: user.createdAt
     };
 
-  return created(res, { token, user: userResponse }, 'User registered successfully');
+  return created(res, { token, user: userResponse, ...(user.emailVerificationToken && { verificationToken: user.emailVerificationToken }) }, 'User registered successfully');
 });
 
 // Login user
@@ -179,5 +188,36 @@ module.exports = {
   login,
   validateToken,
   logout,
-  getProfile
+  getProfile,
+  // Issue a verification token (dev/simple flow)
+  requestVerification: asyncHandler(async (req, res) => {
+    if (process.env.ENABLE_EMAIL_VERIFICATION !== 'true') {
+      return error(res, 400, 'Email verification is disabled');
+    }
+    const user = await User.findById(req.user._id);
+    if (!user) return error(res, 404, 'User not found');
+    if (user.isVerified) return ok(res, {}, 'Already verified');
+    user.emailVerificationToken = require('crypto').randomBytes(20).toString('hex');
+    user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await user.save();
+    return ok(res, { verificationToken: user.emailVerificationToken }, 'Verification token issued');
+  }),
+  // Verify email with token
+  verifyEmail: asyncHandler(async (req, res) => {
+    if (process.env.ENABLE_EMAIL_VERIFICATION !== 'true') {
+      return error(res, 400, 'Email verification is disabled');
+    }
+    const token = req.body.token || req.query.token;
+    if (!token) return error(res, 400, 'Missing token');
+    const user = await User.findOne({
+      emailVerificationToken: token,
+      emailVerificationExpires: { $gt: new Date() }
+    });
+    if (!user) return error(res, 400, 'Invalid or expired token');
+    user.isVerified = true;
+    user.emailVerificationToken = null;
+    user.emailVerificationExpires = null;
+    await user.save();
+    return ok(res, {}, 'Email verified');
+  })
 }; 

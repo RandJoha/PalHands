@@ -151,11 +151,16 @@ const bookingSchema = new mongoose.Schema({
   }
 });
 
-// Generate unique booking ID
-bookingSchema.pre('save', function(next) {
+// Generate unique booking ID before validation so 'required' passes
+bookingSchema.pre('validate', function(next) {
   if (!this.bookingId) {
     this.bookingId = 'BK' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase();
   }
+  next();
+});
+
+// Maintain updatedAt timestamp on save
+bookingSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
   next();
 });

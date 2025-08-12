@@ -1,44 +1,223 @@
 {
   "info": {
-    "name": "PalHands API Seed",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "name": "PalHands API (Dev)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Concise collection to test core endpoints: auth, users, services, bookings."
   },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "clientToken", "value": "" },
+    { "key": "providerToken", "value": "" },
+  { "key": "adminToken", "value": "" },
+  { "key": "serviceId", "value": "" },
+  { "key": "bookingId", "value": "" },
+  { "key": "bookingCode", "value": "" }
+  ],
   "item": [
     {
-      "name": "Health",
-      "request": { "method": "GET", "url": "http://localhost:3000/api/health" }
+      "name": "Probes",
+      "item": [
+        { "name": "Health", "request": { "method": "GET", "url": "{{baseUrl}}/api/health" } },
+        { "name": "Livez", "request": { "method": "GET", "url": "{{baseUrl}}/api/livez" } },
+        { "name": "Readyz", "request": { "method": "GET", "url": "{{baseUrl}}/api/readyz" } }
+      ]
     },
     {
-      "name": "Liveness",
-      "request": { "method": "GET", "url": "http://localhost:3000/api/livez" }
-    },
-    {
-      "name": "Readiness",
-      "request": { "method": "GET", "url": "http://localhost:3000/api/readyz" }
-    },
-    {
-      "name": "Auth Register",
-      "request": {
-        "method": "POST",
-        "header": [ { "key": "Content-Type", "value": "application/json" } ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"firstName\": \"Alice\",\n  \"email\": \"alice@example.com\",\n  \"phone\": \"+972590000000\",\n  \"password\": \"secret123\"\n}"
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register Client",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"Client\",\n  \"lastName\": \"User\",\n  \"email\": \"client@example.com\",\n  \"phone\": \"+970590009999\",\n  \"password\": \"Client123\",\n  \"role\": \"client\"\n}" },
+            "url": "{{baseUrl}}/api/auth/register"
+          }
         },
-        "url": "http://localhost:3000/api/auth/register"
-      }
+        {
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if(json && json.data && json.data.token){ pm.collectionVariables.set('adminToken', json.data.token); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"Admin123!\"\n}" },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Login Client",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if(json && json.data && json.data.token){ pm.collectionVariables.set('clientToken', json.data.token); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"client@example.com\",\n  \"password\": \"Client123\"\n}" },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Login Provider (seed)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if(json && json.data && json.data.token){ pm.collectionVariables.set('providerToken', json.data.token); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"lina.provider@example.com\",\n  \"password\": \"Passw0rd!\"\n}" },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Validate Token (client)",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "url": "{{baseUrl}}/api/auth/validate"
+          }
+        }
+        ,
+        {
+          "name": "Request Verification (client)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "url": "{{baseUrl}}/api/auth/request-verification"
+          }
+        },
+        {
+          "name": "Verify Email (token)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"<paste token from register or request-verification>\"\n}" },
+            "url": "{{baseUrl}}/api/auth/verify"
+          }
+        }
+      ]
     },
     {
-      "name": "Auth Login",
-      "request": {
-        "method": "POST",
-        "header": [ { "key": "Content-Type", "value": "application/json" } ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"email\": \"alice@example.com\",\n  \"password\": \"secret123\"\n}"
+      "name": "Users",
+      "item": [
+        {
+          "name": "Update Profile (client)",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"Updated\"\n}" },
+            "url": "{{baseUrl}}/api/users/profile"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Services",
+      "item": [
+        { "name": "List Services (public)", "request": { "method": "GET", "url": "{{baseUrl}}/api/services?q=cleaning&area=Ramallah" } },
+        {
+          "name": "Create Service (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if(json && json.data && json.data._id){ pm.collectionVariables.set('serviceId', json.data._id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{adminToken}}" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Move small furniture\",\n  \"description\": \"Help moving items between rooms\",\n  \"category\": \"furniture_moving\",\n  \"price\": { \"amount\": 80, \"type\": \"hourly\", \"currency\": \"ILS\" },\n  \"location\": { \"serviceArea\": \"Ramallah\", \"radius\": 10, \"onSite\": true },\n  \"provider\": \"<providerId>\"\n}" },
+            "url": "{{baseUrl}}/api/services"
+          }
         },
-        "url": "http://localhost:3000/api/auth/login"
-      }
+        { "name": "Get Service (public)", "request": { "method": "GET", "url": "{{baseUrl}}/api/services/{{serviceId}}" } }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+  {
+    "name": "Create Booking (client)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+      "var json = pm.response.json();",
+      "if(json && json.data && json.data._id){ pm.collectionVariables.set('bookingId', json.data._id); }",
+      "if(json && json.data && json.data.bookingId){ pm.collectionVariables.set('bookingCode', json.data.bookingId); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"schedule\": { \"date\": \"2025-08-12\", \"startTime\": \"10:00\", \"endTime\": \"12:00\" },\n  \"location\": { \"address\": \"Main St. 12, Ramallah\" },\n  \"notes\": \"Be careful with the piano.\"\n}" },
+            "url": "{{baseUrl}}/api/bookings"
+          }
+        },
+        {
+          "name": "Get Booking by _id (client/provider)",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "url": "{{baseUrl}}/api/bookings/{{bookingId}}"
+          }
+        },
+        {
+          "name": "Get Booking by code (client/provider)",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "url": "{{baseUrl}}/api/bookings/code/{{bookingCode}}"
+          }
+        },
+        {
+          "name": "Update Status (provider)",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{providerToken}}" } ],
+            "body": { "mode": "raw", "raw": "{ \n  \"status\": \"confirmed\"\n}" },
+            "url": "{{baseUrl}}/api/bookings/{{bookingId}}/status"
+          }
+        }
+      ]
     }
   ]
 }

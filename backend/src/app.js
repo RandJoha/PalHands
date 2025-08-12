@@ -51,6 +51,9 @@ app.use('/uploads', express.static('uploads'));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/admin', require('./routes/admin'));
+// New modules (Phase 1)
+app.use('/api/services', require('./routes/services'));
+app.use('/api/bookings', require('./routes/bookings'));
 
 // Probes
 app.get('/api/health', (req, res) => {

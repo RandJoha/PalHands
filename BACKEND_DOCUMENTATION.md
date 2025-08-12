@@ -3,7 +3,7 @@
 
 ## 📋 Overview
 
-**PalHands Backend** is a Node.js/Express API that provides authentication, user management, admin operations, and (planned) service, booking, payments, and reviews modules. It uses MongoDB via Mongoose and JWT-based authentication.
+**PalHands Backend** is a Node.js/Express API that provides authentication, user management, admin operations, and service/booking modules. It uses MongoDB via Mongoose and JWT-based authentication.
 
 ## 🏗️ Architecture Overview
 
@@ -16,6 +16,8 @@ backend/
 │   ├── controllers/
 │   │   ├── authController.js  # Authentication logic
 │   │   ├── userController.js  # User management
+│   │   ├── servicesController.js  # Services (Phase 1)
+│   │   ├── bookingsController.js  # Bookings (Phase 1)
 │   │   └── admin/
 │   │       ├── dashboardController.js  # Admin dashboard + users/services/bookings mgmt (to be split)
 │   │       ├── reportsController.js    # Admin reports & disputes
@@ -26,6 +28,10 @@ backend/
 │   │   ├── authMiddleware.js # Unified middleware (auth, roles, admin, permissions, logger)
 │   │   ├── auth.js           # Re-exports from unified middleware
 │   │   └── adminAuth.js      # Re-exports from unified middleware
+│   ├── policies/             # Central RBAC/ABAC helpers (Phase 1.5)
+│   │   ├── index.js
+│   │   ├── servicePolicies.js
+│   │   └── bookingPolicies.js
 │   ├── validators/           # Request/response schemas per route (Phase 0.5)
 │   ├── policies/             # Central RBAC/ABAC helpers & authorization policies (Phase 1.5)
 │   ├── models/
@@ -39,6 +45,8 @@ backend/
 │   ├── routes/
 │   │   ├── auth.js           # Authentication routes
 │   │   ├── users.js          # User management routes
+│   │   ├── services.js       # Public + provider CRUD for services (Phase 1)
+│   │   ├── bookings.js       # Client/provider booking flows (Phase 1)
 │   │   └── admin.js          # Admin routes (overview, users, services, bookings, reports, settings, analytics, actions)
 │   ├── services/             # External services (placeholder)
 │   └── utils/                # Utility functions (placeholder)
@@ -47,6 +55,10 @@ backend/
 ├── server.js                 # Server startup (central DB connect)
 ├── package.json              # Dependencies
 └── env.example               # Environment variables template
+
+Seed script:
+
+- `src/utils/seedDatabase.js`  # Creates test provider accounts and a demo service each (Phase 1)
 ```
 
 ## 🔧 Technology Stack
@@ -326,6 +338,17 @@ const reportSchema = new mongoose.Schema({
 ```
 
 ### SystemSetting Model (`src/models/SystemSetting.js`)
+### Service Model (`src/models/Service.js`)
+
+Key fields: `title`, `description`, `category`, `provider (User ref)`, `price { amount, type, currency }`, `availability`, `location`, `rating`, `isActive`, `featured`.
+
+Indexes for text search, location+category, and rating.
+
+### Booking Model (`src/models/Booking.js`)
+
+Key fields: `client (User ref)`, `provider (User ref)`, `service (Service ref)`, `serviceDetails snapshot`, `schedule`, `location`, `pricing`, `status`, `payment`, `notes`, `rating`.
+
+Pre-save hook to generate `bookingId`. Indexes for client, provider, status/date.
 
 ```javascript
 const systemSettingSchema = new mongoose.Schema({
@@ -648,8 +671,32 @@ const adminAuth = async (req, res, next) => {
 | POST | `/logout` | User logout | Yes |
 | GET | `/validate` | Validate token | Yes |
 | GET | `/profile` | Get user profile | Yes |
+| POST | `/request-verification` | Issue email verification token (when ENABLE_EMAIL_VERIFICATION=true) | Yes |
+| POST | `/verify` | Verify email with token (when ENABLE_EMAIL_VERIFICATION=true) | No |
 
 ### User Management Routes (`/api/users`)
+### Services Routes (`/api/services`) — Phase 1
+
+| Method | Endpoint | Description | Auth Required | Role Required |
+|--------|----------|-------------|---------------|---------------|
+| GET | `/` | List services (filters: q, category, area, providerId, pagination) | No | - |
+| GET | `/:id` | Get service by id | No | - |
+| POST | `/` | Create service | Yes | Admin |
+| PUT | `/:id` | Update service | Yes | Admin |
+| DELETE | `/:id` | Delete service | Yes | Admin |
+
+Notes:
+- Only admins can create/update/delete services. Providers cannot create services directly.
+- Every service must have an associated provider in the backend (enforced on creation). Admin must pass `provider` (a valid provider user ID) in the request body.
+
+### Bookings Routes (`/api/bookings`) — Phase 1
+
+| Method | Endpoint | Description | Auth Required | Role Required |
+|--------|----------|-------------|---------------|---------------|
+| POST | `/` | Client creates a booking for a service | Yes | Client |
+| GET | `/` | List my bookings (client: as client; provider: as provider) | Yes | Any |
+| GET | `/:id` | Get booking (only client, provider, or admin) | Yes | Any |
+| PUT | `/:id/status` | Update booking status (RBAC rules) | Yes | Client/Provider/Admin |
 
 | Method | Endpoint | Description | Auth Required | Role Required |
 |--------|----------|-------------|---------------|---------------|
@@ -678,7 +725,7 @@ const adminAuth = async (req, res, next) => {
 | GET | `/analytics` | Growth analytics (users, bookings, categories) | Yes | Admin |
 | GET | `/actions` | Admin actions audit log | Yes | Admin |
 
-Note: Public Services/Bookings/Payments/Reviews routes are not yet mounted in `app.js` (planned below). Admin routes above are implemented.
+Note: Services and Bookings are now mounted in `app.js`. Payments/Reviews remain planned.
 
 ## 🔧 Controllers
 
@@ -824,6 +871,20 @@ const login = async (req, res) => {
 ```
 
 ### UserController (`src/controllers/userController.js`)
+### ServicesController (`src/controllers/servicesController.js`) — Phase 1
+
+- `listServices`: Public browse with filters and pagination
+- `getServiceById`: Public get
+- `createService`: Provider-only, enforces backend provider association
+- `updateService`: Provider owns resource; admin override
+- `deleteService`: Provider owns resource; admin override
+
+### BookingsController (`src/controllers/bookingsController.js`) — Phase 1
+
+- `createBooking`: Creates booking from service; captures snapshot + pricing
+- `listMyBookings`: Role-aware listing (client/provider)
+- `getBookingById`: RBAC view
+- `updateBookingStatus`: Status updates per role
 
 #### updateProfile
 ```javascript
@@ -921,7 +982,7 @@ This section clarifies responsibilities and avoids mixing snippets:
 
 ### `src/app.js` — Express app only
 - Mounts security middleware: helmet, compression, CORS allowlist, global rate limiters, structured HTTP logging (pino) and access logs (morgan with rotation).
-- Mounts routes: `/api/auth`, `/api/users`, `/api/admin`, and future modules (`/api/services`, `/api/bookings`, ...).
+- Mounts routes: `/api/auth`, `/api/users`, `/api/admin`, plus Phase 1 modules: `/api/services`, `/api/bookings`.
 - Adds probes: `/api/health` (JSON), `/api/livez` (200 OK), `/api/readyz` (200 when Mongo connected, else 503).
 - Wires celebrate/Joi and its error handler (Phase 0.5 initial).
 - Exports the configured Express app; does not connect to DB or start listening.
@@ -949,7 +1010,7 @@ This section clarifies responsibilities and avoids mixing snippets:
 - **Phone**: Flexible phone number validation
 - **Password**: Minimum length requirements
 - **Sanitization**: Input trimming and cleaning
- - **Schema Validation**: Request/response schemas using Joi/Zod (Phase 0.5)
+ - **Schema Validation**: Request/response schemas using Celebrate/Joi for auth, users, services, and bookings (Phase 0.5 + Phase 1)
 
 ### **Rate Limiting**
 - **API Protection**: 100 requests per 15 minutes per IP
@@ -1037,6 +1098,70 @@ Authorization: Bearer <token>
 ```
 
 #### **5. User Profile Update**
+#### **6. Seed Test Providers (Dev)**
+
+Run once to create provider accounts and demo services:
+
+```
+npm run seed
+```
+
+Test provider credentials:
+
+- Email: lina.provider@example.com | Password: Passw0rd!
+- Email: omar.provider@example.com | Password: Passw0rd!
+
+Admin credentials:
+
+- Email: admin@example.com | Password: Admin123!
+
+#### **7. Admin Creates a Service (assigns provider)**
+
+```
+POST http://localhost:3000/api/services
+Authorization: Bearer <admin-token>
+Content-Type: application/json
+
+{
+  "title": "Move small furniture",
+  "description": "Help moving items between rooms",
+  "category": "furniture_moving",
+  "price": { "amount": 80, "type": "hourly", "currency": "ILS" },
+  "location": { "serviceArea": "Ramallah", "radius": 10, "onSite": true },
+  "provider": "<providerId>"
+}
+```
+
+#### **8. Public List Services**
+
+```
+GET http://localhost:3000/api/services?q=cleaning&area=Ramallah
+```
+
+#### **9. Client Creates a Booking**
+
+```
+POST http://localhost:3000/api/bookings
+Authorization: Bearer <client-token>
+Content-Type: application/json
+
+{
+  "serviceId": "<serviceId>",
+  "schedule": { "date": "2025-08-12", "startTime": "10:00", "endTime": "12:00" },
+  "location": { "address": "Main St. 12, Ramallah" },
+  "notes": "Be careful with the piano."
+}
+```
+
+#### **10. Provider Updates Booking Status**
+
+```
+PUT http://localhost:3000/api/bookings/<bookingId>/status
+Authorization: Bearer <provider-token>
+Content-Type: application/json
+
+{ "status": "confirmed" }
+```
 ```
 PUT http://localhost:3000/api/users/profile
 Authorization: Bearer <token>
@@ -1109,6 +1234,12 @@ npm run lint
 
 # Format code (future implementation)
 npm run format
+
+Seed database with test providers/services (dev only):
+
+```
+npm run seed
+```
 ```
 
 ### **Code Organization**
@@ -1281,6 +1412,15 @@ Authorization: Bearer <token>
 5. **File Upload**: Profile image and document upload
 6. **Real-time Notifications**: WebSocket integration
 7. **Advanced Search**: Elasticsearch integration
+
+## ✅ Phase 1 & 1.5 Status
+
+- Phase 1 (Services & Bookings basics): Implemented and mounted
+- Phase 1.5 (Policies/RBAC helpers): Implemented (`src/policies/*`) and enforced within controllers
+- Dev note: All services require a backend provider; seed script adds test providers and demo services
+- Optional email verification: Implemented behind feature flag `ENABLE_EMAIL_VERIFICATION=true` with `/api/auth/request-verification` and `/api/auth/verify`.
+
+Maintained By: PalHands Development Team
 8. **Caching**: Redis caching layer
 9. **Monitoring**: Application performance monitoring
 10. **Logging**: Structured logging with Winston
@@ -1332,10 +1472,9 @@ Process bootstrap that connects to MongoDB Atlas using `src/config/database.js`,
   - Phase 0.5 (initial): celebrate/Joi validators on auth and user profile/password endpoints; celebrate error handler.
   - Phase 0.9: health, liveness, readiness probes; log sanitization for secrets/PII.
 - Still not implemented:
-  - Public Services/Bookings/Payments/Reviews REST APIs (app.js has them planned)
+  - Payments/Reviews REST APIs
   - Real-time Socket.io initialization and namespaces
   - Refresh token flow
-  - Seeding script referenced in package.json (src/utils/seedDatabase.js) is missing
 
 Docs updated to reflect the above and mark planned items in the phased plan.
 
@@ -1566,26 +1705,27 @@ Milestone: Validated inputs/outputs; baseline API spec.
 ### Phase 1 — Auth & Users (High)
 - [x] Consolidate auth duplication into `authMiddleware.js`
 - [x] Re-export legacy `auth.js` and `adminAuth.js` from unified middleware
-- [ ] Add login attempt rate limiting / optional lockout
-- [ ] Optional email verification flow (flagged via `ENABLE_EMAIL_VERIFICATION`)
+- [x] Add login attempt rate limiting / optional lockout (rate limiting implemented; lockout optional - deferred)
+ - [x] Optional email verification flow (flagged via `ENABLE_EMAIL_VERIFICATION`)
 - [ ] Tests: register/login/validate/profile, profile update, change password
-- [ ] Postman collection / OpenAPI stub
+- [x] Postman collection / OpenAPI stub
 
 Milestone: Tests green; API contract frozen.
 
 ### Phase 1.5 — RBAC Hardening (High)
-- [ ] Central RBAC/ABAC helpers used by controllers
+- [x] Central RBAC/ABAC helpers used by controllers
 - [ ] (Optional) refresh tokens + revocation
 - [ ] (Optional) 2FA toggle + stronger password policy
 
 Milestone: Authorization consistent and enforced centrally.
 
 ### Phase 2 — Services Module (High)
-- [ ] Create `controllers/servicesController.js` and `routes/services.js`
-- [ ] Endpoints: GET `/`, GET `/:id`, POST, PATCH, DELETE (provider-owned)
-- [ ] Text search via existing index; `q` param support
+- [x] Create `controllers/servicesController.js` and `routes/services.js`
+- [x] Endpoints: GET `/`, GET `/:id`, POST, PUT, DELETE (admin-only management)
+- [x] Text search via existing index; `q` param support
 - [ ] Multer upload pipeline + validation; store under `/uploads`
-- [ ] Mount `/api/services` in `app.js`
+- [x] Mount `/api/services` in `app.js`
+  - Note: Admin can create on behalf of a provider by passing `provider` (User ID with role=provider).
 
 Milestone: Browse + provider CRUD; admin moderation already available.
 
@@ -1610,12 +1750,12 @@ Milestone: Accurate availability and booking validation.
 Milestone: Efficient geo search and consistent pagination.
 
 ### Phase 3 — Bookings Module (High)
-- [ ] Create `controllers/bookingsController.js` and `routes/bookings.js`
-- [ ] POST create; GET my bookings; GET by id
-- [ ] PATCH status transitions (confirm/start/complete/cancel) with guards
-- [ ] Compute `pricing.totalAmount` server-side; helper functions
-- [ ] Ownership checks and admin override guards
-- [ ] Mount `/api/bookings` in `app.js`
+- [x] Create `controllers/bookingsController.js` and `routes/bookings.js`
+- [x] POST create; GET my bookings; GET by id
+- [x] Status updates endpoint with role guards (PUT `/:id/status`)
+- [~] Compute `pricing.totalAmount` server-side (basic placeholder; refine rules later)
+- [x] Ownership checks and admin override guards
+- [x] Mount `/api/bookings` in `app.js`
 - [ ] FSM for status transitions + guards
 - [ ] Idempotency keys for create/change
 - [ ] (Optional) transactions for sensitive updates
@@ -1669,7 +1809,7 @@ Milestone: One-command deploy; rollbacks and monitoring in place.
 ### Housekeeping & DX
 - [x] Admin routes: routing-only; logic moved to controllers
 - [ ] Split `dashboardController.js` into `usersAdminController.js`, `servicesAdminController.js`, `bookingsAdminController.js`
-- [ ] Remove or implement `src/utils/seedDatabase.js` (script currently referenced)
+- [x] Remove or implement `src/utils/seedDatabase.js` (script currently referenced)
 - [ ] OpenAPI schema + generated Postman collection (moved to Phase 0.5)
 - [ ] Consistent error codes/messages guide in docs
  - [ ] Unified response helper utility used across controllers

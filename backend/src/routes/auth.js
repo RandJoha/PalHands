@@ -13,5 +13,8 @@ router.post('/logout', authController.logout);
 // Protected routes (authentication required)
 router.get('/validate', auth, authController.validateToken);
 router.get('/profile', auth, authController.getProfile);
+// Email verification (optional)
+router.post('/request-verification', auth, authController.requestVerification);
+router.post('/verify', authController.verifyEmail);
 
 module.exports = router; 
