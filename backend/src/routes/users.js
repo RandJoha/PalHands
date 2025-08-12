@@ -2,10 +2,11 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
 const { auth, checkRole } = require('../middleware/auth');
+const { updateProfileValidator, changePasswordValidator } = require('../validators/userValidators');
 
 // User profile routes (authenticated users)
-router.put('/profile', auth, userController.updateProfile);
-router.put('/change-password', auth, userController.changePassword);
+router.put('/profile', auth, updateProfileValidator, userController.updateProfile);
+router.put('/change-password', auth, changePasswordValidator, userController.changePassword);
 
 // Admin routes (admin only)
 router.get('/', auth, checkRole(['admin']), userController.getAllUsers);

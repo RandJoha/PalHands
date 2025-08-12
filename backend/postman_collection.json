@@ -1,0 +1,44 @@
+{
+  "info": {
+    "name": "PalHands API Seed",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": { "method": "GET", "url": "http://localhost:3000/api/health" }
+    },
+    {
+      "name": "Liveness",
+      "request": { "method": "GET", "url": "http://localhost:3000/api/livez" }
+    },
+    {
+      "name": "Readiness",
+      "request": { "method": "GET", "url": "http://localhost:3000/api/readyz" }
+    },
+    {
+      "name": "Auth Register",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstName\": \"Alice\",\n  \"email\": \"alice@example.com\",\n  \"phone\": \"+972590000000\",\n  \"password\": \"secret123\"\n}"
+        },
+        "url": "http://localhost:3000/api/auth/register"
+      }
+    },
+    {
+      "name": "Auth Login",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"alice@example.com\",\n  \"password\": \"secret123\"\n}"
+        },
+        "url": "http://localhost:3000/api/auth/login"
+      }
+    }
+  ]
+}

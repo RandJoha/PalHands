@@ -1,47 +1,57 @@
+
 # PalHands Backend Documentation
 
-## 📋 **Backend Overview**
+## 📋 Overview
 
-**PalHands Backend** is a Node.js/Express.js API server that provides authentication, user management, and service coordination for the PalHands platform. The backend is built with MongoDB Atlas as the cloud database and implements secure JWT-based authentication.
+**PalHands Backend** is a Node.js/Express API that provides authentication, user management, admin operations, and (planned) service, booking, payments, and reviews modules. It uses MongoDB via Mongoose and JWT-based authentication.
 
-## 🏗️ **Architecture Overview**
+## 🏗️ Architecture Overview
 
 ```
 backend/
 ├── src/
-│   ├── app.js                 # Main Express application
+│   ├── app.js                 # Express app (middleware, routes, health, errors)
 │   ├── config/
-│   │   └── database.js        # Database configuration
+│   │   └── database.js        # Database connector (Atlas-only)
 │   ├── controllers/
 │   │   ├── authController.js  # Authentication logic
 │   │   ├── userController.js  # User management
 │   │   └── admin/
-│   │       └── dashboardController.js  # Admin dashboard
+│   │       ├── dashboardController.js  # Admin dashboard + users/services/bookings mgmt (to be split)
+│   │       ├── reportsController.js    # Admin reports & disputes
+│   │       ├── settingsController.js   # System settings
+│   │       ├── analyticsController.js  # Analytics & growth
+│   │       └── actionsController.js    # Admin actions/audit log
 │   ├── middleware/
-│   │   ├── auth.js           # General authentication middleware
-│   │   └── adminAuth.js      # Admin-specific middleware
+│   │   ├── authMiddleware.js # Unified middleware (auth, roles, admin, permissions, logger)
+│   │   ├── auth.js           # Re-exports from unified middleware
+│   │   └── adminAuth.js      # Re-exports from unified middleware
+│   ├── validators/           # Request/response schemas per route (Phase 0.5)
+│   ├── policies/             # Central RBAC/ABAC helpers & authorization policies (Phase 1.5)
 │   ├── models/
 │   │   ├── User.js           # User schema
 │   │   ├── Admin.js          # Admin schema
 │   │   ├── AdminAction.js    # Audit logging
 │   │   ├── Report.js         # User reports
-│   │   └── SystemSetting.js  # Platform settings
+│   │   ├── SystemSetting.js  # Platform settings
+│   │   ├── Service.js        # Service schema
+│   │   └── Booking.js        # Booking schema
 │   ├── routes/
 │   │   ├── auth.js           # Authentication routes
 │   │   ├── users.js          # User management routes
-│   │   └── admin.js          # Admin routes
-│   ├── services/             # External services
-│   └── utils/                # Utility functions
-├── uploads/                  # File uploads
+│   │   └── admin.js          # Admin routes (overview, users, services, bookings, reports, settings, analytics, actions)
+│   ├── services/             # External services (placeholder)
+│   └── utils/                # Utility functions (placeholder)
+├── uploads/                  # File uploads (Dev-only; in Prod use S3/MinIO + signed URLs)
 ├── logs/                     # Application logs
-├── server.js                 # Server startup
+├── server.js                 # Server startup (central DB connect)
 ├── package.json              # Dependencies
 └── env.example               # Environment variables template
 ```
 
-## 🔧 **Technology Stack**
+## 🔧 Technology Stack
 
-### **Core Technologies**
+### Core Technologies (current)
 - **Runtime**: Node.js (>=16.0.0)
 - **Framework**: Express.js
 - **Database**: MongoDB Atlas (Cloud)
@@ -50,30 +60,35 @@ backend/
 - **Password Hashing**: bcryptjs
 - **File Upload**: Multer
 - **Email**: Nodemailer
-- **Real-time**: Socket.io
+- **Real-time**: Socket.io (installed, not yet initialized)
 
-### **Development Dependencies**
-- **nodemon**: Development server with auto-restart
-- **dotenv**: Environment variable management
-- **cors**: Cross-Origin Resource Sharing
-- **helmet**: Security headers
-- **express-rate-limit**: Rate limiting
-- **compression**: Response compression
+### Installed Dev/Runtime Dependencies
+- express, mongoose, jsonwebtoken, bcryptjs, cors, dotenv, multer, nodemailer, socket.io
+- helmet, compression, express-rate-limit, pino, pino-http, morgan, rotating-file-stream
+- celebrate, joi, envalid, uuid
+- dev: nodemon
 
-## 🗄️ **Database Configuration**
+### Security Hardening (Phase 0 — Implemented)
+- helmet: Security headers (enabled)
+- compression: Response compression (enabled)
+- express-rate-limit: Rate limiting (global + auth/login) (enabled)
+- pino + morgan: Structured HTTP/app logging with rotation (enabled)
+- CORS allowlist from env (enabled)
 
-### **MongoDB Atlas Setup**
+## 🗄️ Database Configuration
+
+### MongoDB Atlas Setup
 - **Cluster**: PalHands (palhands.rtxny5x.mongodb.net)
 - **Database**: palhands
 - **Connection**: MongoDB Atlas cloud service
 - **Authentication**: Username/password with IP whitelist
 
-### **Connection String Format**
+### Connection String Format
 ```
 mongodb+srv://<username>:<password>@palhands.rtxny5x.mongodb.net/palhands?retryWrites=true&w=majority&appName=PalHands
 ```
 
-### **Environment Variables**
+### Environment Variables
 ```bash
 # Database Configuration
 MONGODB_URI=mongodb+srv://admindb:<password>@palhands.rtxny5x.mongodb.net/palhands?retryWrites=true&w=majority&appName=PalHands
@@ -95,9 +110,9 @@ EMAIL_PASS=your-app-password
 CORS_ORIGIN=http://localhost:8080,http://localhost:3000
 ```
 
-## 📊 **Database Models**
+## 📊 Database Models
 
-### **User Model** (`src/models/User.js`)
+### User Model (`src/models/User.js`)
 
 ```javascript
 const userSchema = new mongoose.Schema({
@@ -175,14 +190,14 @@ const userSchema = new mongoose.Schema({
 });
 ```
 
-**Key Features:**
+Key Features:
 - **Password Hashing**: Pre-save middleware using bcryptjs
 - **Password Comparison**: Instance method for secure password verification
 - **Validation**: Comprehensive input validation with custom error messages
 - **Indexing**: Email and phone fields are indexed for performance
 - **Timestamps**: Automatic createdAt and updatedAt fields
 
-### **Admin Model** (`src/models/Admin.js`)
+### Admin Model (`src/models/Admin.js`)
 
 ```javascript
 const adminSchema = new mongoose.Schema({
@@ -227,7 +242,7 @@ const adminSchema = new mongoose.Schema({
 });
 ```
 
-### **AdminAction Model** (`src/models/AdminAction.js`)
+### AdminAction Model (`src/models/AdminAction.js`)
 
 ```javascript
 const adminActionSchema = new mongoose.Schema({
@@ -259,7 +274,7 @@ const adminActionSchema = new mongoose.Schema({
 });
 ```
 
-### **Report Model** (`src/models/Report.js`)
+### Report Model (`src/models/Report.js`)
 
 ```javascript
 const reportSchema = new mongoose.Schema({
@@ -310,7 +325,7 @@ const reportSchema = new mongoose.Schema({
 });
 ```
 
-### **SystemSetting Model** (`src/models/SystemSetting.js`)
+### SystemSetting Model (`src/models/SystemSetting.js`)
 
 ```javascript
 const systemSettingSchema = new mongoose.Schema({
@@ -347,22 +362,22 @@ const systemSettingSchema = new mongoose.Schema({
 });
 ```
 
-## 🔐 **Authentication System**
+## 🔐 Authentication System
 
-### **JWT Configuration**
+### JWT Configuration
 - **Secret**: Environment variable `JWT_SECRET`
 - **Expiration**: 7 days (configurable via `JWT_EXPIRES_IN`)
 - **Algorithm**: HS256
 - **Payload**: Contains userId and role information
 
-### **Password Security**
+### Password Security
 - **Hashing**: bcryptjs with salt rounds of 12
 - **Comparison**: Secure password comparison method
 - **Validation**: Minimum 6 characters for users, 8 for admins
 
-### **Authentication Flow**
+### Authentication Flow
 
-#### **1. User Registration**
+#### 1) User Registration
 ```javascript
 // POST /api/auth/register
 {
@@ -394,7 +409,7 @@ const systemSettingSchema = new mongoose.Schema({
 }
 ```
 
-#### **2. User Login**
+#### 2) User Login
 ```javascript
 // POST /api/auth/login
 {
@@ -421,7 +436,7 @@ const systemSettingSchema = new mongoose.Schema({
 }
 ```
 
-#### **3. Token Validation**
+#### 3) Token Validation
 ```javascript
 // GET /api/auth/validate
 // Headers: Authorization: Bearer <token>
@@ -441,7 +456,7 @@ const systemSettingSchema = new mongoose.Schema({
 }
 ```
 
-#### **4. User Logout**
+#### 4) User Logout
 ```javascript
 // POST /api/auth/logout
 // Headers: Authorization: Bearer <token>
@@ -455,11 +470,11 @@ const systemSettingSchema = new mongoose.Schema({
 }
 ```
 
-## 🛡️ **Middleware System**
+## 🛡️ Middleware System
 
-### **Authentication Middleware** (`src/middleware/auth.js`)
+### Authentication Middleware (`src/middleware/auth.js`)
 
-#### **auth Middleware**
+#### auth Middleware
 ```javascript
 const auth = async (req, res, next) => {
   try {
@@ -506,7 +521,7 @@ const auth = async (req, res, next) => {
 };
 ```
 
-#### **checkRole Middleware**
+#### checkRole Middleware
 ```javascript
 const checkRole = (roles) => {
   return (req, res, next) => {
@@ -530,7 +545,7 @@ const checkRole = (roles) => {
 };
 ```
 
-#### **requireVerification Middleware**
+#### requireVerification Middleware
 ```javascript
 const requireVerification = (req, res, next) => {
   if (!req.user.isVerified) {
@@ -543,7 +558,7 @@ const requireVerification = (req, res, next) => {
 };
 ```
 
-#### **checkOwnership Middleware**
+#### checkOwnership Middleware
 ```javascript
 const checkOwnership = (modelName) => {
   return async (req, res, next) => {
@@ -586,7 +601,7 @@ const checkOwnership = (modelName) => {
 };
 ```
 
-### **Admin Authentication Middleware** (`src/middleware/adminAuth.js`)
+### Admin Authentication Middleware (`src/middleware/adminAuth.js`)
 
 ```javascript
 const adminAuth = async (req, res, next) => {
@@ -622,9 +637,9 @@ const adminAuth = async (req, res, next) => {
 };
 ```
 
-## 🎯 **API Endpoints**
+## 🎯 API Endpoints
 
-### **Authentication Routes** (`/api/auth`)
+### Authentication Routes (`/api/auth`)
 
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---------------|
@@ -634,7 +649,7 @@ const adminAuth = async (req, res, next) => {
 | GET | `/validate` | Validate token | Yes |
 | GET | `/profile` | Get user profile | Yes |
 
-### **User Management Routes** (`/api/users`)
+### User Management Routes (`/api/users`)
 
 | Method | Endpoint | Description | Auth Required | Role Required |
 |--------|----------|-------------|---------------|---------------|
@@ -645,22 +660,31 @@ const adminAuth = async (req, res, next) => {
 | PUT | `/:id/status` | Update user status | Yes | Admin |
 | DELETE | `/:id` | Delete user | Yes | Admin |
 
-### **Admin Routes** (`/api/admin`)
+### Admin Routes (`/api/admin`)
 
 | Method | Endpoint | Description | Auth Required | Role Required |
 |--------|----------|-------------|---------------|---------------|
-| GET | `/dashboard` | Admin dashboard data | Yes | Admin |
-| GET | `/users` | Get all users | Yes | Admin |
+| GET | `/dashboard/overview` | Dashboard KPIs and system health | Yes | Admin |
+| GET | `/users` | List users with filters | Yes | Admin |
+| PUT | `/users/:userId` | Update user status/role/verification | Yes | Admin |
+| GET | `/services` | List services with filters | Yes | Admin |
+| PUT | `/services/:serviceId` | Update service status/featured | Yes | Admin |
+| GET | `/bookings` | List bookings with filters | Yes | Admin |
+| PUT | `/bookings/:bookingId` | Update booking status/notes | Yes | Admin |
 | GET | `/reports` | Get user reports | Yes | Admin |
-| PUT | `/reports/:id` | Update report status | Yes | Admin |
+| PUT | `/reports/:reportId` | Update report status/assignment/resolution | Yes | Admin |
 | GET | `/settings` | Get system settings | Yes | Admin |
-| PUT | `/settings/:key` | Update system setting | Yes | Admin |
+| PUT | `/settings/:key` | Update system setting value | Yes | Admin |
+| GET | `/analytics` | Growth analytics (users, bookings, categories) | Yes | Admin |
+| GET | `/actions` | Admin actions audit log | Yes | Admin |
 
-## 🔧 **Controllers**
+Note: Public Services/Bookings/Payments/Reviews routes are not yet mounted in `app.js` (planned below). Admin routes above are implemented.
 
-### **AuthController** (`src/controllers/authController.js`)
+## 🔧 Controllers
 
-#### **register Function**
+### AuthController (`src/controllers/authController.js`)
+
+#### register
 ```javascript
 const register = async (req, res) => {
   try {
@@ -732,7 +756,7 @@ const register = async (req, res) => {
 };
 ```
 
-#### **login Function**
+#### login
 ```javascript
 const login = async (req, res) => {
   try {
@@ -799,9 +823,9 @@ const login = async (req, res) => {
 };
 ```
 
-### **UserController** (`src/controllers/userController.js`)
+### UserController (`src/controllers/userController.js`)
 
-#### **updateProfile Function**
+#### updateProfile
 ```javascript
 const updateProfile = async (req, res) => {
   try {
@@ -835,9 +859,9 @@ const updateProfile = async (req, res) => {
 };
 ```
 
-### **Admin Dashboard Controller** (`src/controllers/admin/dashboardController.js`)
+### Admin Dashboard Controller (`src/controllers/admin/dashboardController.js`)
 
-#### **getDashboardData Function**
+#### getDashboardOverview / getUserManagementData / getServiceManagementData / getBookingManagementData / updateUser / updateService / updateBooking
 ```javascript
 const getDashboardData = async (req, res) => {
   try {
@@ -892,107 +916,20 @@ const getDashboardData = async (req, res) => {
 };
 ```
 
-## 🚀 **Server Configuration**
+## 🚀 Server Configuration
+This section clarifies responsibilities and avoids mixing snippets:
 
-### **Main Application** (`src/app.js`)
+### `src/app.js` — Express app only
+- Mounts security middleware: helmet, compression, CORS allowlist, global rate limiters, structured HTTP logging (pino) and access logs (morgan with rotation).
+- Mounts routes: `/api/auth`, `/api/users`, `/api/admin`, and future modules (`/api/services`, `/api/bookings`, ...).
+- Adds probes: `/api/health` (JSON), `/api/livez` (200 OK), `/api/readyz` (200 when Mongo connected, else 503).
+- Wires celebrate/Joi and its error handler (Phase 0.5 initial).
+- Exports the configured Express app; does not connect to DB or start listening.
 
-```javascript
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const compression = require('compression');
-const rateLimit = require('express-rate-limit');
-
-const app = express();
-
-// Security middleware
-app.use(helmet());
-app.use(compression());
-
-// CORS configuration
-app.use(cors({
-  origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:8080'],
-  credentials: true
-}));
-
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
-});
-app.use('/api/', limiter);
-
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/users', require('./routes/users'));
-app.use('/api/admin', require('./routes/admin'));
-
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    success: false,
-    message: 'Internal server error'
-  });
-});
-
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found'
-  });
-});
-
-module.exports = app;
-```
-
-### **Server Startup** (`server.js`)
-
-```javascript
-const mongoose = require('mongoose');
-const app = require('./src/app');
-
-const PORT = process.env.PORT || 3000;
-
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log('✅ Connected to MongoDB Atlas');
-    console.log(`📊 Database: ${mongoose.connection.name}`);
-    console.log(`🌐 Host: ${mongoose.connection.host}`);
-  })
-  .catch((error) => {
-    console.error('❌ MongoDB connection error:', error);
-    console.log('\n🔧 Troubleshooting Tips:');
-    console.log('1. Check if MongoDB Atlas is accessible');
-    console.log('2. Verify your MONGODB_URI in .env file');
-    console.log('3. Ensure your IP is whitelisted in Atlas');
-    console.log('4. Check your username and password');
-    process.exit(1);
-  });
-
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📱 Frontend URL: http://localhost:8080`);
-  console.log(`🔧 Backend API: http://localhost:${PORT}/api`);
-  console.log(`🏥 Health Check: http://localhost:${PORT}/api/health`);
-});
-```
+### `server.js` — Process bootstrap only
+- Loads environment (dotenv), imports `connectDB` from `src/config/database.js`.
+- Connects to MongoDB Atlas (required `MONGODB_URI`), then imports and starts the Express app.
+- Handles graceful shutdown signals and process-level error logging.
 
 ## 🔒 **Security Features**
 
@@ -1012,6 +949,7 @@ app.listen(PORT, () => {
 - **Phone**: Flexible phone number validation
 - **Password**: Minimum length requirements
 - **Sanitization**: Input trimming and cleaning
+ - **Schema Validation**: Request/response schemas using Joi/Zod (Phase 0.5)
 
 ### **Rate Limiting**
 - **API Protection**: 100 requests per 15 minutes per IP
@@ -1022,6 +960,11 @@ app.listen(PORT, () => {
 - **Origin Whitelist**: Configured allowed origins
 - **Credentials**: Support for authenticated requests
 - **Security**: Prevents unauthorized cross-origin requests
+ - **No Wildcards in Prod**: Enforce allowlist from `CORS_ORIGIN` (no `*` in production)
+
+### **Log Sanitization**
+- Remove/obfuscate secrets, tokens, and PII from logs
+- Standardize fields and include requestId/traceId (structured logging)
 
 ## 📊 **Error Handling**
 
@@ -1029,13 +972,9 @@ app.listen(PORT, () => {
 ```javascript
 {
   "success": false,
+  "code": "ERROR|NOT_FOUND|RATE_LIMIT|VALIDATION_ERROR",
   "message": "Error description",
-  "errors": [
-    {
-      "field": "email",
-      "message": "Email is required"
-    }
-  ]
+  "details": [ { "path": "email", "message": "Email is required" } ]
 }
 ```
 
@@ -1048,21 +987,13 @@ app.listen(PORT, () => {
 - **404**: Not Found
 - **500**: Internal Server Error
 
-### **Validation Error Handling**
-```javascript
-const handleValidationError = (error) => {
-  const errors = Object.values(error.errors).map(err => ({
-    field: err.path,
-    message: err.message
-  }));
-
-  return {
-    success: false,
-    message: 'Validation failed',
-    errors
-  };
-};
-```
+### **Validation (Phase 0.5 — Initial)**
+- celebrate/Joi is wired; validators added for:
+  - POST `/api/auth/register`
+  - POST `/api/auth/login`
+  - PUT `/api/users/profile`
+  - PUT `/api/users/change-password`
+- Validation errors are returned by celebrate with `{ success:false, code:'VALIDATION_ERROR', message, details }`.
 
 ## 🧪 **Testing**
 
@@ -1380,6 +1311,467 @@ This documentation serves as the **comprehensive guide** for the PalHands backen
 4. **Database schemas are updated**
 5. **New team members join the project**
 
-**Last Updated**: December 2024
-**Version**: 1.0.0
-**Maintained By**: PalHands Development Team 
+**Last Updated**: August 2025
+**Version**: 1.1.0
+**Maintained By**: PalHands Development Team
+
+### Server Startup (`server.js`)
+Process bootstrap that connects to MongoDB Atlas using `src/config/database.js`, then starts the Express app. Handles graceful shutdown.
+
+---
+
+## ✅ Documentation Accuracy Audit (current vs code)
+
+- Implemented and matching code:
+  - Auth routes: register, login, logout, validate, profile
+  - User routes: profile update, change password, admin list/get/update-status/delete
+  - Admin routes: dashboard overview, users, services, bookings, reports, settings, analytics, actions (routes now call controllers only)
+  - Models: User, Admin, AdminAction, Report, SystemSetting, Service, Booking
+- Newly implemented in this pass:
+  - Phase 0: helmet, compression, rate limiting (global+auth), CORS allowlist, structured logging (pino + morgan with rotation), env validation.
+  - Phase 0.5 (initial): celebrate/Joi validators on auth and user profile/password endpoints; celebrate error handler.
+  - Phase 0.9: health, liveness, readiness probes; log sanitization for secrets/PII.
+- Still not implemented:
+  - Public Services/Bookings/Payments/Reviews REST APIs (app.js has them planned)
+  - Real-time Socket.io initialization and namespaces
+  - Refresh token flow
+  - Seeding script referenced in package.json (src/utils/seedDatabase.js) is missing
+
+Docs updated to reflect the above and mark planned items in the phased plan.
+
+---
+
+## 🛠️ Backend Implementation Plan (Phased)
+
+Goal: Enable immediate development with clear priorities, scope, and milestones until completion.
+
+Gating order:
+- Complete Phase 0 and 0.5 before building large routers (Services/Bookings/Payments).
+- Phase 1.5 (policies) should be in place before widening feature surface.
+
+### Phase 0 — Foundation & Hardening (Priority: High)
+- Dependencies: add helmet, compression, express-rate-limit, morgan (or pino/winston)
+- App hardening: wire helmet, compression, CORS allowlist from env, JSON/body limits
+- Rate limiting: global and auth-specific buckets
+- Error handling: unified response helper `{ success, code, message, errors?, data? }` + async wrapper
+- Logging: request logging + error logs to files under `logs/`
+- DB connection: use `src/config/database.js`; handle retries and shutdown
+- Config: env validation early (envalid/zod) with explicit fail on missing/invalid vars (PORT, MONGODB_URI, JWT_SECRET, CORS_ORIGIN)
+- Scripts: dev nodemon, lint stub, seed script guard
+- Deliverables: updated app.js/server.js, package.json, ENV docs
+
+Milestone: App boots with hardening and healthcheck; lint/build pass.
+
+### Phase 0.5 — API Contract & Validation (Priority: High)
+- OpenAPI seed (minimal spec) and CI check for drift
+- Request/response validation with Joi/Zod (celebrate middleware or zod-express); introduce `src/validators/`
+- Error taxonomy (consistent JSON: code, message, details)
+- Deliverables: schemas per route, error codes table, generated Postman
+
+Milestone: Validated inputs/outputs and baseline API spec.
+
+### Phase 0.9 — Observability & Probes (Priority: High)
+- Structured logging (pino) with requestId/traceId correlation
+- HTTP access logs wired to app logs with correlation IDs
+- Health, liveness, and readiness endpoints; integrate with probes
+- Basic metrics endpoint (optional) and log rotation guidance
+- Log sanitization policy (no secrets/PII): strip or mask `authorization`, `cookie`, `set-cookie`, `password`, `token`, `refreshToken`
+
+Milestone: Actionable logs and operability signals.
+
+### Phase 1 — Auth & Users (Stabilization) (Priority: High)
+### Phase 1.5 — RBAC Hardening (Priority: High)
+- Centralize RBAC/ABAC helpers (roles + permissions) in `src/policies/` and use in controllers
+- Optional refresh tokens and revocation list
+- Password policy and 2FA optional toggle
+
+Refactor tasks:
+- Replace scattered role/ownership checks in controllers/routes with calls to policies
+- Document policy decisions and add tests for critical paths
+
+Milestone: Authorization consistent and centrally enforced.
+- Tests: unit/integration for register/login/validate/profile, user profile, change password
+- Password policy: ensure min length; rate-limit login; optional lockout on brute-force
+- Email stubs: optional verification flag if ENABLE_EMAIL_VERIFICATION=true
+- Role guard: verify admin-only flows (users admin endpoints)
+- Deliverables: Jest/supertest setup (or mocha/chai), sample seeds, Postman collection
+
+Milestone: Auth/User tests green; API contract frozen.
+
+### Phase 2 — Services Module (Public & Provider) (Priority: High)
+### Phase 2.1 — Media Storage (Priority: High)
+- Migrate file storage from `/uploads` to S3/MinIO
+- Signed URLs for upload/download; validate mime/size
+- Orphan cleanup background job
+
+Milestone: Production-grade media pipeline.
+
+### Phase 2.2 — Provider Availability (Priority: High)
+- Availability model (slots/exceptions/timezone aware)
+- Prevent double-booking (unique constraints or logical locks)
+- DST/timezone normalization utilities
+
+Milestone: Accurate availability and booking validation.
+
+### Phase 2.3 — Geo & Search (Priority: Medium)
+- 2dsphere indexes for location queries
+- Unified pagination and filtering helpers
+
+Milestone: Efficient search and geo features.
+- Routes: `/api/services`
+  - GET list (filters: category, location, price, rating)
+  - GET `/:id`
+  - POST (provider) create; PUT/PATCH (provider) update; DELETE (provider) archive
+- Permissions: provider-only create/update/delete, verified requirement optional
+- Search: text index already present; expose `q` param
+- Images: add multer config + file validation; store relative URLs under /uploads
+- Deliverables: routes/services.js, controllers/servicesController.js, multer util, validation
+
+Milestone: Services browse + provider CRUD working; admin moderation via existing admin routes.
+
+### Phase 3 — Bookings Module (Public & Provider) (Priority: High)
+- Routes: `/api/bookings`
+  - POST create booking (client)
+  - GET my bookings (client/provider) with filters and pagination
+  - GET `/:id`
+  - PATCH status transitions: confirm, start, complete, cancel (role-based)
+  - Notes: client/provider/admin notes fields
+- Pricing: server-side compute `totalAmount` from service price + add-ons
+- Permissions: auth + ownership checks; admin override
+- FSM: explicit status state machine with guards (confirm/start/complete/cancel)
+- Idempotency keys for create/change operations
+- Optional transactions for sensitive updates
+- Deliverables: routes/bookings.js, controllers/bookingsController.js, status machine, validation
+
+FSM states (enum) and transitions:
+- States: `pending` → `confirmed` → `in_progress` → `completed`; with `canceled` and `no_show` as terminal side paths
+- Allowed transitions: `pending→confirmed`, `confirmed→in_progress`, `in_progress→completed`, any→`canceled` (guarded), `confirmed→canceled` (guarded)
+- Guards: role/ownership, timing windows, service availability, payment status (if applicable)
+
+Idempotency:
+- Require `Idempotency-Key` header (UUID) for create/update that change state
+- If same key and same payload is replayed: return the original response (200/201)
+- If same key with different payload: return 409 Conflict with guidance
+
+Milestone: End-to-end booking lifecycle for client/provider.
+
+### Phase 4 — Payments (Incremental) (Priority: Medium)
+- Strategy: start with `cash` and mark-as-paid; abstract interface for Stripe/PayPal later
+- Webhooks: if Stripe/PayPal enabled, add `/api/payments/webhook` with signature verification and replay protection
+- Outbox pattern + retries for reliable event dispatch
+- Reconciliation: scheduled job to ensure consistency between provider and DB
+- Deliverables: routes/payments.js, controllers/paymentsController.js, webhook verifier, outbox worker
+
+Milestone: Bookings can be paid and reconciled; admin can adjust refunds.
+
+### Phase 5 — Reviews & Ratings (Priority: Medium)
+- Source of truth: ratings embedded in Booking (existing fields)
+- Endpoints: POST review on completed bookings (one per party), list my reviews, service rating aggregation
+- Aggregations: update Service.rating and User.rating on new review
+- Deliverables: routes/reviews.js, controllers/reviewsController.js, aggregation helpers
+
+Milestone: Reviews flow live; ratings reflected on services/providers.
+
+### Phase 6 — Reports & Disputes (Priority: Medium)
+- Public endpoints: create report, attach evidence (multer), view my reports
+- Admin: existing `/api/admin/reports` to manage; add evidence storage
+- Deliverables: routes/reports.js, controllers/reportsController.js (public), evidence upload
+
+Milestone: Reporting pipeline usable end-to-end.
+
+### Phase 7 — Real-time & Notifications (Priority: Low)
+- Initialize Socket.io in `server.js`; namespaces for admin dashboard events (optional)
+- Push notifications: integrate later with FCM/email as flags allow
+
+Milestone: Basic real-time updates available for dashboards.
+
+### Phase 7.5 — Background Jobs (Priority: Medium)
+- Job runner (BullMQ/Agenda + Redis) for reminders, notifications, cleanup, reconciliation
+- DLQ and retry strategy
+
+Milestone: Reliable async processing.
+
+### Phase 8 — Deployment & Operations (Priority: High)
+- Choose one: PM2 (VM/bare‑metal) OR Containers (Docker/K8s)
+- If Docker: Dockerfile + docker-compose for dev; K8s manifests optional later
+- If PM2: ecosystem config, health/liveness probes
+- Env: production `.env` guidance; secrets via environment
+- CI/CD: GitHub Actions for lint/test/build; optional deploy step
+- Monitoring: basic logs rotation; optional metrics endpoint
+
+Milestone: One-command deploy; rollbacks supported; monitoring basics in place.
+
+### Phase 8.1 — Migrations & Backups (Priority: High)
+- Schema migrations (migrate-mongo or similar), documented process
+- Backup/restore runbook (Atlas backups or mongodump) and drills
+- Automated backup schedule for non-prod/staging if needed
+
+Milestone: Safe schema evolution and recovery readiness.
+
+---
+
+## 📡 API Contract (Planned Additions)
+
+### Services (`/api/services`)
+- GET `/` — list services; query: `q, category, location, minPrice, maxPrice, rating, page, limit`
+- GET `/:id` — service details
+- POST `/` — create (provider)
+- PATCH `/:id` — update (owner provider)
+- DELETE `/:id` — archive (owner provider)
+
+### Bookings (`/api/bookings`)
+- POST `/` — create booking (client)
+- GET `/me` — my bookings (client/provider)
+- GET `/:id`
+- PATCH `/:id/status` — transitions: pending→confirmed→in_progress→completed; cancel
+
+### Payments (`/api/payments`)
+- POST `/mark-paid` — admin/provider mark paid (cash)
+- POST `/intent` — create payment intent (Stripe) [flagged]
+- POST `/webhook` — webhook receiver
+
+### Reviews (`/api/reviews`)
+- POST `/` — add review for completed booking
+- GET `/me` — my reviews
+- GET `/service/:serviceId` — list reviews for a service
+
+All new endpoints require JWT auth unless explicitly public.
+
+---
+
+## 📋 Phased roadmap and living to‑do (update as you complete tasks)
+
+Status legend: [ ] Todo, [x] Done, [~] In progress
+
+### Phase 0 — Foundation & Hardening (High)
+- [x] Centralize DB connect in `src/config/database.js`; export mongoose
+- [x] Require `MONGODB_URI` (no local fallback); update `env.simple` and docs
+- [x] Add helmet + compression
+- [x] Add express-rate-limit (global + stricter on `/api/auth/login`)
+- [x] Add request logging (pino + morgan) and rotate to `logs/`
+- [x] CORS allowlist from `CORS_ORIGIN` env
+- [x] Config validation on boot (PORT, MONGODB_URI, JWT_SECRET)
+ - [x] Async handler wrapper + standard error response helper
+
+Milestone: App boots with security middleware and logging; healthcheck works.
+
+### Phase 0.5 — API Contract & Validation (High)
+ - [x] OpenAPI seed + CI check (`backend/openapi.yaml`, GitHub Action openapi-validate)
+- [x] Request validation (Joi via celebrate) for auth and user endpoints
+- [x] Error taxonomy (code/message/details) baseline aligned
+ - [x] Generated Postman collection (`backend/postman_collection.json`)
+
+Milestone: Validated inputs/outputs; baseline API spec.
+
+### Phase 1 — Auth & Users (High)
+- [x] Consolidate auth duplication into `authMiddleware.js`
+- [x] Re-export legacy `auth.js` and `adminAuth.js` from unified middleware
+- [ ] Add login attempt rate limiting / optional lockout
+- [ ] Optional email verification flow (flagged via `ENABLE_EMAIL_VERIFICATION`)
+- [ ] Tests: register/login/validate/profile, profile update, change password
+- [ ] Postman collection / OpenAPI stub
+
+Milestone: Tests green; API contract frozen.
+
+### Phase 1.5 — RBAC Hardening (High)
+- [ ] Central RBAC/ABAC helpers used by controllers
+- [ ] (Optional) refresh tokens + revocation
+- [ ] (Optional) 2FA toggle + stronger password policy
+
+Milestone: Authorization consistent and enforced centrally.
+
+### Phase 2 — Services Module (High)
+- [ ] Create `controllers/servicesController.js` and `routes/services.js`
+- [ ] Endpoints: GET `/`, GET `/:id`, POST, PATCH, DELETE (provider-owned)
+- [ ] Text search via existing index; `q` param support
+- [ ] Multer upload pipeline + validation; store under `/uploads`
+- [ ] Mount `/api/services` in `app.js`
+
+Milestone: Browse + provider CRUD; admin moderation already available.
+
+### Phase 2.1 — Media Storage (High)
+- [ ] Switch to S3/MinIO + signed URLs
+- [ ] Validate mime/size; strip metadata
+- [ ] Orphan cleanup background job
+
+Milestone: Production-grade media handling.
+
+### Phase 2.2 — Provider Availability (High)
+- [ ] Availability model + exceptions
+- [ ] Anti double-booking (unique constraints/locks)
+- [ ] TZ/DST-safe scheduling
+
+Milestone: Accurate availability and booking validation.
+
+### Phase 2.3 — Geo & Search (Medium)
+- [ ] 2dsphere indexes for geo queries
+- [ ] Unified pagination/filtering helpers
+
+Milestone: Efficient geo search and consistent pagination.
+
+### Phase 3 — Bookings Module (High)
+- [ ] Create `controllers/bookingsController.js` and `routes/bookings.js`
+- [ ] POST create; GET my bookings; GET by id
+- [ ] PATCH status transitions (confirm/start/complete/cancel) with guards
+- [ ] Compute `pricing.totalAmount` server-side; helper functions
+- [ ] Ownership checks and admin override guards
+- [ ] Mount `/api/bookings` in `app.js`
+- [ ] FSM for status transitions + guards
+- [ ] Idempotency keys for create/change
+- [ ] (Optional) transactions for sensitive updates
+
+Milestone: End-to-end booking lifecycle.
+
+### Phase 4 — Payments (Medium)
+- [ ] Minimal cash: mark as paid; update booking.payment, audit
+- [ ] Abstraction for processors (Stripe/PayPal) behind feature flags
+- [ ] `/api/payments/webhook` verification (if enabled) with signature + replay protection
+- [ ] Outbox + retries for reliable dispatch
+- [ ] Reconciliation scheduled job
+
+Milestone: Payments reconciled; basic admin adjustments supported.
+
+### Phase 5 — Reviews & Ratings (Medium)
+- [ ] POST review on completed bookings (1 per party)
+- [ ] GET my reviews; GET reviews for service
+- [ ] Aggregate updates to `Service.rating` and `User.rating`
+
+Milestone: Ratings flow live; surfacing on listings.
+
+### Phase 6 — Reports & Disputes (Medium)
+- [x] Admin: list/update via dedicated controllers
+- [ ] Public: `routes/reports.js` + `controllers/reportsController.js` (create/list mine)
+- [ ] Evidence upload with multer
+
+Milestone: End-to-end reporting.
+
+### Phase 7 — Real-time & Notifications (Low)
+- [ ] Initialize Socket.io; broadcast booking status changes; optional admin channel
+- [ ] Email/FCM behind feature flags
+
+Milestone: Basic real-time updates.
+
+### Phase 7.5 — Background Jobs (Medium)
+- [ ] BullMQ/Agenda + Redis
+- [ ] DLQ and retry policies
+
+Milestone: Reliable async processing.
+
+### Phase 8 — Deployment & Operations (High)
+- [ ] Choose one runtime: PM2 or Docker/K8s
+- [ ] If Docker: Dockerfile + docker-compose (dev)
+- [ ] If PM2: ecosystem config (prod)
+- [ ] GitHub Actions (lint/test/build; optional deploy)
+- [ ] Metrics/health probes and log rotation
+
+Milestone: One-command deploy; rollbacks and monitoring in place.
+
+### Housekeeping & DX
+- [x] Admin routes: routing-only; logic moved to controllers
+- [ ] Split `dashboardController.js` into `usersAdminController.js`, `servicesAdminController.js`, `bookingsAdminController.js`
+- [ ] Remove or implement `src/utils/seedDatabase.js` (script currently referenced)
+- [ ] OpenAPI schema + generated Postman collection (moved to Phase 0.5)
+- [ ] Consistent error codes/messages guide in docs
+ - [ ] Unified response helper utility used across controllers
+- [ ] Remove legacy `src/middleware/auth.js` and `src/middleware/adminAuth.js` re-export files after transition; update imports
+
+Naming and folders:
+- Use a single canonical auth middleware file: `src/middleware/authMiddleware.js` (avoid multiple auth files).
+- Place request/response validators under `src/validators/` by route.
+- Place RBAC/ABAC helpers and authorization checks in `src/policies/`.
+
+AdminAction actor note: actor is `Admin` across admin endpoints; ensure middleware attaches `req.admin` and populate consistently.
+ - [ ] Remove legacy `auth.js` and `adminAuth.js` re-export files after a short transition; update imports across codebase
+
+AdminAction actor note: actor is `Admin` across admin endpoints; ensure middleware attaches `req.admin` and populate consistently.
+
+How to use this list: check off items as you complete them, add any new tasks you discover under the relevant phase, and mark phases complete when milestones are achieved.
+
+---
+
+## 🧱 Data Model Notes
+
+- User: roles [client, provider, admin]; isVerified; rating aggregate
+- Service: provider ref; pricing; availability; location; search indexes
+- Booking: bookingId; schedule; pricing; payment; status; notes; ratings (client/provider)
+- AdminAction: audit log for admin updates
+- Report: reporter vs reported; evidence; status; priority; resolution
+- SystemSetting: key/value with type/category; edit guards
+
+Indexes are present for query hot paths (services search, bookings by user/status/date, reports filters).
+
+---
+
+## 🚢 Deployment Strategy
+
+- Environments: dev (local or Docker), staging (Atlas), production (Atlas)
+- Windows dev: use `backend/setup-env.ps1` and `env.simple` to bootstrap `.env`
+- Runtime choice: PM2 (VM) OR Docker/K8s; avoid running both in prod
+- Docker (if chosen):
+  - Dockerfile (multi-stage build)
+  - docker-compose.yml (app; Mongo only for local dev)
+- Process: enable graceful shutdown signals (already present)
+- Security: set strong JWT secrets; configure CORS allowlist; enable helmet/compression/rate-limit; sanitize logs
+- Backups: Atlas backups or mongodump in CI for staging
+ - Storage: use S3/MinIO with signed URLs in prod; `/uploads` is dev-only
+
+---
+
+## 📈 Milestones & Tracking
+
+1) Phase 0 complete — app boots with security middleware, logging, DB via config (ETA: 1–2 days)
+2) Phase 1 tests green for Auth/Users (ETA: 1–2 days)
+3) Services module live (ETA: 2–3 days)
+4) Bookings module live (ETA: 3–4 days)
+5) Payments minimal (cash) (ETA: 1–2 days)
+6) Reviews live (ETA: 1–2 days)
+7) Reports public endpoints + evidence (ETA: 2 days)
+8) Deployment (Docker/PM2/CI) (ETA: 2 days)
+
+Track with GitHub issues labeled by phase and a lightweight checklist per route.
+
+---
+
+## ✅ Quick Start (Dev)
+
+1) Create `.env` from `backend/env.simple` and adjust values
+2) Ensure MongoDB Atlas `MONGODB_URI` in `.env` (no local fallback). For dev-only Docker, point to local Mongo and adjust env.
+3) Run dev server
+
+Healthcheck: GET `/api/health`
+
+Ops Probes:
+- Liveness: GET `/api/livez`
+- Readiness: GET `/api/readyz` (200 when DB is connected; 503 otherwise)
+
+Basic testing (PowerShell):
+```powershell
+# Health
+Invoke-RestMethod -Uri "http://localhost:3000/api/health" -Method Get
+
+# Probes
+Invoke-RestMethod -Uri "http://localhost:3000/api/livez" -Method Get
+Invoke-RestMethod -Uri "http://localhost:3000/api/readyz" -Method Get
+
+# Register
+$body = @{ firstName='Test'; lastName='User'; email='test@example.com'; phone='+1234567890'; password='password123' } | ConvertTo-Json
+Invoke-RestMethod -Uri "http://localhost:3000/api/auth/register" -Method Post -Body $body -ContentType "application/json"
+
+# Login
+$login = @{ email='test@example.com'; password='password123' } | ConvertTo-Json
+$resp = Invoke-RestMethod -Uri "http://localhost:3000/api/auth/login" -Method Post -Body $login -ContentType "application/json"
+$token = $resp.token
+
+# Update profile
+$upd = @{ firstName='Updated' } | ConvertTo-Json
+Invoke-RestMethod -Uri "http://localhost:3000/api/users/profile" -Method Put -Headers @{ Authorization = "Bearer $token" } -Body $upd -ContentType "application/json"
+```
+## 📦 CHANGELOG (Summary)
+
+- 1.1.1 (2025-08): Implemented Phase 0 (helmet, compression, CORS, rate limits, logging, env validation), Phase 0.5 initial (celebrate/Joi validators, error format), Phase 0.9 (health/liveness/readiness probes, log sanitization, rotated access logs). Updated docs and added testing steps.
+- 1.1.0 (2025-08): Planning refinement — added phases 0.5/1.5/2.1/2.2/2.3/7.5; clarified server/app roles; strengthened bookings/payments/jobs/observability; added log sanitization; deployment runtime choice; updated quick start and storage guidance.
+- 1.0.0 (2024-12): Initial documentation and MVP plan.
+
+---
+
+**Maintained By**: PalHands Development Team

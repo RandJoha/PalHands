@@ -1,6 +1,6 @@
 # MongoDB Setup Guide for PalHands
 
-## Quick Solutions
+## Quick Solutions (Atlas First)
 
 ### Option 1: MongoDB Atlas (Recommended - Free Cloud Database)
 
@@ -22,17 +22,8 @@
    ```
    Replace `username`, `password`, and `cluster` with your actual values
 
-### Option 2: Docker MongoDB (If Docker Desktop is running)
-
-1. **Start Docker Desktop**
-2. **Run MongoDB container:**
-   ```bash
-   docker run -d -p 27017:27017 --name mongodb-palhands mongo:latest
-   ```
-3. **Your `.env` file should already be correct:**
-   ```
-   MONGODB_URI=mongodb://localhost:27017/palhands
-   ```
+### Option 2: Docker MongoDB (Optional for contributors)
+Atlas is recommended. If you must run locally for offline dev, you can use Docker MongoDB, but set `MONGODB_URI` explicitly and remove it before committing configs.
 
 ### Option 3: Install MongoDB Locally
 
@@ -73,7 +64,7 @@ sudo systemctl enable mongod
 
 ## Test Your Connection
 
-After setting up MongoDB, test the connection:
+After setting up Atlas and `.env`, test the connection:
 
 ```bash
 cd backend
@@ -82,7 +73,7 @@ npm run dev
 
 You should see:
 ```
-✅ Connected to MongoDB
+✅ Connected to MongoDB (Atlas)
 🚀 PalHands server running on port 3000
 ```
 

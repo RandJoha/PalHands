@@ -39,16 +39,13 @@ Contains all possible environment variables with sample values for reference.
 ## Database Setup
 
 ### Local MongoDB
-```bash
-# Install MongoDB locally or use Docker
-docker run -d -p 27017:27017 --name mongodb mongo:latest
-```
+Using a local MongoDB or Docker is no longer the default. Prefer MongoDB Atlas for consistency.
 
 ### MongoDB Atlas (Cloud)
 1. Create a free account at [MongoDB Atlas](https://www.mongodb.com/atlas)
 2. Create a cluster
 3. Get your connection string
-4. Update `MONGODB_URI` in your `.env` file
+4. Update `MONGODB_URI` in your `.env` file (required)
 
 ## Email Configuration
 

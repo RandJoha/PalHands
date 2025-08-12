@@ -1,19 +1,15 @@
 const User = require('../models/User');
+const asyncHandler = require('../utils/asyncHandler');
+const { ok, created, error } = require('../utils/response');
 
 // Update user profile
-const updateProfile = async (req, res) => {
-  try {
+const updateProfile = asyncHandler(async (req, res) => {
     const { firstName, lastName, phone, address, profileImage } = req.body;
     const userId = req.user._id;
 
     // Find user
     const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
+  if (!user) return error(res, 404, 'User not found', [], 'NOT_FOUND');
 
     // Update fields if provided
     if (firstName) user.firstName = firstName;
@@ -21,12 +17,7 @@ const updateProfile = async (req, res) => {
     if (phone) {
       // Check if phone is already taken by another user
       const existingUser = await User.findOne({ phone, _id: { $ne: userId } });
-      if (existingUser) {
-        return res.status(400).json({
-          success: false,
-          message: 'Phone number already registered'
-        });
-      }
+  if (existingUser) return error(res, 400, 'Phone number already registered', [], 'CONFLICT');
       user.phone = phone;
     }
     if (address) user.address = address;
@@ -54,60 +45,27 @@ const updateProfile = async (req, res) => {
       updatedAt: user.updatedAt
     };
 
-    res.json({
-      success: true,
-      message: 'Profile updated successfully',
-      user: userResponse
-    });
-
-  } catch (error) {
-    console.error('Update profile error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error'
-    });
-  }
-};
+  return ok(res, { user: userResponse }, 'Profile updated successfully');
+});
 
 // Change password
-const changePassword = async (req, res) => {
-  try {
+const changePassword = asyncHandler(async (req, res) => {
     const { currentPassword, newPassword } = req.body;
     const userId = req.user._id;
 
     // Validate required fields
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({
-        success: false,
-        message: 'Current password and new password are required'
-      });
-    }
+  if (!currentPassword || !newPassword) return error(res, 400, 'Current password and new password are required', [], 'VALIDATION_ERROR');
 
     // Validate new password length
-    if (newPassword.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: 'New password must be at least 6 characters long'
-      });
-    }
+  if (newPassword.length < 6) return error(res, 400, 'New password must be at least 6 characters long', [], 'VALIDATION_ERROR');
 
     // Find user
     const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
+  if (!user) return error(res, 404, 'User not found', [], 'NOT_FOUND');
 
     // Verify current password
     const isCurrentPasswordValid = await user.comparePassword(currentPassword);
-    if (!isCurrentPasswordValid) {
-      return res.status(400).json({
-        success: false,
-        message: 'Current password is incorrect'
-      });
-    }
+  if (!isCurrentPasswordValid) return error(res, 400, 'Current password is incorrect', [], 'UNAUTHORIZED');
 
     // Update password
     user.password = newPassword;
@@ -115,50 +73,20 @@ const changePassword = async (req, res) => {
 
     await user.save();
 
-    res.json({
-      success: true,
-      message: 'Password changed successfully'
-    });
-
-  } catch (error) {
-    console.error('Change password error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error'
-    });
-  }
-};
+  return ok(res, {}, 'Password changed successfully');
+});
 
 // Get user by ID (admin only)
-const getUserById = async (req, res) => {
-  try {
+const getUserById = asyncHandler(async (req, res) => {
     const { id } = req.params;
 
     const user = await User.findById(id).select('-password');
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
-
-    res.json({
-      success: true,
-      user
-    });
-
-  } catch (error) {
-    console.error('Get user by ID error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error'
-    });
-  }
-};
+  if (!user) return error(res, 404, 'User not found', [], 'NOT_FOUND');
+  return ok(res, { user }, 'User fetched');
+});
 
 // Get all users (admin only)
-const getAllUsers = async (req, res) => {
-  try {
+const getAllUsers = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, role, search } = req.query;
 
     // Build query
@@ -186,8 +114,7 @@ const getAllUsers = async (req, res) => {
     // Get total count
     const total = await User.countDocuments(query);
 
-    res.json({
-      success: true,
+    return ok(res, {
       users,
       pagination: {
         page: parseInt(page),
@@ -195,30 +122,16 @@ const getAllUsers = async (req, res) => {
         total,
         pages: Math.ceil(total / limit)
       }
-    });
-
-  } catch (error) {
-    console.error('Get all users error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error'
-    });
-  }
-};
+    }, 'Users fetched');
+});
 
 // Update user status (admin only)
-const updateUserStatus = async (req, res) => {
-  try {
+const updateUserStatus = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { isActive, isVerified } = req.body;
 
     const user = await User.findById(id);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
+  if (!user) return error(res, 404, 'User not found', [], 'NOT_FOUND');
 
     // Update status fields
     if (typeof isActive === 'boolean') user.isActive = isActive;
@@ -228,8 +141,7 @@ const updateUserStatus = async (req, res) => {
 
     await user.save();
 
-    res.json({
-      success: true,
+    return ok(res, {
       message: 'User status updated successfully',
       user: {
         _id: user._id,
@@ -242,53 +154,25 @@ const updateUserStatus = async (req, res) => {
         isVerified: user.isVerified,
         updatedAt: user.updatedAt
       }
-    });
-
-  } catch (error) {
-    console.error('Update user status error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error'
-    });
-  }
-};
+    }, 'User status updated');
+});
 
 // Delete user (admin only)
-const deleteUser = async (req, res) => {
-  try {
+const deleteUser = asyncHandler(async (req, res) => {
     const { id } = req.params;
 
     const user = await User.findById(id);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
+  if (!user) return error(res, 404, 'User not found', [], 'NOT_FOUND');
 
     // Prevent admin from deleting themselves
     if (user._id.toString() === req.user._id.toString()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Cannot delete your own account'
-      });
+      return error(res, 400, 'Cannot delete your own account', [], 'VALIDATION_ERROR');
     }
 
     await User.findByIdAndDelete(id);
 
-    res.json({
-      success: true,
-      message: 'User deleted successfully'
-    });
-
-  } catch (error) {
-    console.error('Delete user error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error'
-    });
-  }
-};
+  return ok(res, {}, 'User deleted successfully');
+});
 
 module.exports = {
   updateProfile,
