@@ -423,7 +423,7 @@ paths:
         '200': { description: OK }
   /api/bookings/{id}/status:
     put:
-  summary: Update booking status (provider only)
+      summary: Update booking status (provider only)
       security: [ { bearerAuth: [] } ]
       parameters:
         - in: path
