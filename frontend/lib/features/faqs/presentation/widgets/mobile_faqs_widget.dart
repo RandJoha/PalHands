@@ -337,41 +337,39 @@ class _MobileFAQsWidgetState extends State<MobileFAQsWidget> {
 
   Widget _buildContactSection(LanguageService languageService) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             AppStrings.getString('stillNeedHelp', languageService.currentLanguage),
-            style: GoogleFonts.cairo(
-              fontSize: 24,
+            style: const TextStyle(
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: AppColors.primary,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
-          Column(
-            children: [
-              _buildContactButton(
-                Icons.email,
-                AppStrings.getString('contactUs', languageService.currentLanguage),
-                () {
-                  // TODO: Open email
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildContactButton(
-                Icons.chat,
-                AppStrings.getString('chatNow', languageService.currentLanguage),
-                () {
-                  // TODO: Open chat
-                },
-              ),
-            ],
+          const SizedBox(height: 16),
+          Text(
+            'Get in touch with our support team for personalized assistance.',
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          _buildContactButton(
+            Icons.email,
+            AppStrings.getString('contactUs', languageService.currentLanguage),
+            () {
+              Navigator.pushNamed(context, '/contact');
+            },
           ),
         ],
       ),

@@ -314,35 +314,11 @@ class SharedHeroSections {
         ),
       ),
       actionButtons: [
-        ElevatedButton(
-          onPressed: onBookNowPressed ?? () {
-            // Default action - can be overridden by parent
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 24 : 32,
-              vertical: isMobile ? 12 : 16,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(isMobile ? 8 : 12),
-            ),
-          ),
-          child: Text(
-            AppStrings.getString('bookNow', languageService.currentLanguage),
-            style: TextStyle(
-              fontSize: isMobile ? 14 : 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        if (!isMobile) ...[
-          const SizedBox(width: 12),
-                      OutlinedButton(
-              onPressed: onRegisterPressed ?? () {
-                // Default action - can be overridden by parent
-              },
+        if (!isMobile)
+          OutlinedButton(
+            onPressed: onRegisterPressed ?? () {
+              // Default action - can be overridden by parent
+            },
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.primary,
               side: const BorderSide(color: AppColors.primary),
@@ -359,7 +335,6 @@ class SharedHeroSections {
               ),
             ),
           ),
-        ],
       ],
       isMobile: isMobile,
       onBookNowPressed: onBookNowPressed,

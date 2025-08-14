@@ -24,7 +24,6 @@ class _EarningsWidgetState extends State<EarningsWidget> {
         return LayoutBuilder(
           builder: (context, constraints) {
             final screenWidth = constraints.maxWidth;
-            final screenHeight = constraints.maxHeight;
             
             // Responsive breakpoints
             final isDesktop = screenWidth > 1200;
@@ -340,23 +339,13 @@ class _EarningsWidgetState extends State<EarningsWidget> {
             ],
           ),
           child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.bar_chart,
-                  size: isMobile ? 40 : (isTablet ? 48 : 56),
-                  color: AppColors.grey.withValues(alpha: 0.5),
-                ),
-                SizedBox(height: isMobile ? 8.0 : (isTablet ? 12.0 : 16.0)),
-                Text(
-                  AppStrings.getString('chartPlaceholder', languageService.currentLanguage),
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 12.0 : (isTablet ? 14.0 : 16.0),
-                    color: AppColors.grey,
-                  ),
-                ),
-              ],
+            child: Text(
+              AppStrings.getString('chartPlaceholder', languageService.currentLanguage),
+              style: GoogleFonts.cairo(
+                fontSize: isMobile ? 12.0 : (isTablet ? 14.0 : 16.0),
+                color: AppColors.grey,
+              ),
+              textAlign: TextAlign.center,
             ),
           ),
         ),

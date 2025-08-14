@@ -10,6 +10,7 @@ import '../../../../shared/widgets/shared_hero_section.dart';
 import '../../data/contact_data.dart';
 import '../widgets/contact_form.dart';
 import '../widgets/quick_access_widgets.dart';
+import 'contact_purpose_selector.dart';
 
 class MobileContactWidget extends StatefulWidget {
   const MobileContactWidget({super.key});
@@ -94,6 +95,33 @@ class _MobileContactWidgetState extends State<MobileContactWidget> {
                 SharedHeroSections.contactHero(
                   languageService: languageService,
                   isMobile: shouldUseMobileLayout,
+                ),
+                // Purpose selector visible on mobile, above quick access
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        AppStrings.getString('contactPurposeTitle', languageService.currentLanguage),
+                        style: GoogleFonts.cairo(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ContactPurposeSelector(
+                        selectedPurpose: _selectedPurpose,
+                        onPurposeSelected: _onPurposeSelected,
+                      ),
+                    ],
+                  ),
                 ),
                 _buildContactFormSection(languageService),
                 _buildQuickAccessSection(languageService),

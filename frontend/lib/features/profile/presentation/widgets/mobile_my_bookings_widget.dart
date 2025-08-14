@@ -295,23 +295,7 @@ class _MobileMyBookingsWidgetState extends State<MobileMyBookingsWidget> {
                 ),
               ),
               const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    // Handle track booking
-                  },
-                  icon: const Icon(Icons.location_on, size: 16),
-                  label: Text(
-                    'Track',
-                    style: GoogleFonts.cairo(fontSize: 14),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
-              ),
+              // Removed Tracking button per requirements
             ],
           ),
         ],

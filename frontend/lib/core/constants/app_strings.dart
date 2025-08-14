@@ -1221,8 +1221,8 @@ class AppStrings {
   };
 
   static const Map<String, String> faqHowDifferentAnswer = {
-    'en': 'PalHands is uniquely focused on the Palestinian community, prioritizing local talent and cultural understanding. We emphasize trust, community empowerment, and provide services that respect our cultural values and traditions.',
-    'ar': 'بال هاندز يركز بشكل فريد على المجتمع الفلسطيني، مع إعطاء الأولوية للمواهب المحلية والفهم الثقافي. نؤكد على الثقة وتمكين المجتمع ونقدم خدمات تحترم قيمنا وتقاليدنا الثقافية.',
+  'en': 'PalHands is uniquely focused on the Palestinian community, prioritizing local talent. We emphasize trust, community empowerment, and provide services that respect our cultural values and traditions.',
+  'ar': 'بال هاندز يركز بشكل فريد على المجتمع الفلسطيني، مع إعطاء الأولوية للمواهب المحلية. نؤكد على الثقة وتمكين المجتمع ونقدم خدمات تحترم قيمنا وتقاليدنا الثقافية.',
   };
 
   static const Map<String, String> faqHowToBook = {
@@ -1251,8 +1251,8 @@ class AppStrings {
   };
 
   static const Map<String, String> faqCancelRescheduleAnswer = {
-    'en': 'Yes, you can cancel or reschedule your booking up to 24 hours before the scheduled service time. Cancellations within 24 hours may be subject to our cancellation policy.',
-    'ar': 'نعم، يمكنك إلغاء أو إعادة جدولة حجزك حتى 24 ساعة قبل وقت الخدمة المجدولة. قد تخضع الإلغاءات خلال 24 ساعة لسياسة الإلغاء الخاصة بنا.',
+  'en': 'Yes, you can cancel or reschedule your booking up to 48 hours before the scheduled service time. Changes within 48 hours may be subject to our cancellation policy.',
+  'ar': 'نعم، يمكنك إلغاء أو إعادة جدولة حجزك حتى 48 ساعة قبل وقت الخدمة المجدولة. قد تخضع التغييرات خلال 48 ساعة لسياسة الإلغاء الخاصة بنا.',
   };
 
   static const Map<String, String> faqHowToPay = {
@@ -1291,8 +1291,8 @@ class AppStrings {
   };
 
   static const Map<String, String> faqProvidersVerifiedAnswer = {
-    'en': 'Yes, all our service providers go through a comprehensive verification process including identity verification, background checks, and skill assessments. We continuously monitor provider performance and customer feedback.',
-    'ar': 'نعم، يخضع جميع مقدمي خدماتنا لعملية تحقق شاملة تشمل التحقق من الهوية وفحوصات الخلفية وتقييمات المهارات. نراقب باستمرار أداء المقدمين وملاحظات العملاء.',
+  'en': 'Yes, all our service providers go through a comprehensive verification process, including identity verification. We continuously monitor provider performance and customer feedback.',
+  'ar': 'نعم، يخضع جميع مقدمي خدماتنا لعملية تحقق شاملة تشمل التحقق من الهوية. نراقب باستمرار أداء المقدمين وملاحظات العملاء.',
   };
 
   static const Map<String, String> faqNotSatisfied = {
@@ -1301,8 +1301,8 @@ class AppStrings {
   };
 
   static const Map<String, String> faqNotSatisfiedAnswer = {
-    'en': 'Your satisfaction is our priority. If you\'re not satisfied with a service, please contact our support team within 24 hours. We\'ll work with you and the provider to resolve any issues.',
-    'ar': 'رضاك هو أولويتنا. إذا لم تكن راضيًا عن خدمة، يرجى الاتصال بفريق الدعم لدينا خلال 24 ساعة. سنعمل معك ومع مقدم الخدمة لحل أي مشاكل.',
+  'en': 'You have the ability to file a complaint about a service or a client, and we will follow up with you.',
+  'ar': 'لديك القدرة على تقديم شكوى حول خدمة أو عميل، وسنتابع معك.',
   };
 
   static const Map<String, String> faqPrivacy = {
@@ -1321,8 +1321,8 @@ class AppStrings {
   };
 
   static const Map<String, String> faqSignUpProviderAnswer = {
-    'en': 'To become a service provider, download the app and select "Sign up as Service Provider" during registration. You\'ll need to provide identification documents, complete a skill assessment, and pass our verification process.',
-    'ar': 'لتصبح مقدم خدمة، قم بتحميل التطبيق واختر "إنشاء حساب كمقدم خدمة" أثناء التسجيل. ستحتاج إلى تقديم وثائق الهوية وإكمال تقييم المهارات واجتياز عملية التحقق لدينا.',
+  'en': 'To become a service provider, download the app and select "Sign up as Service Provider" during registration. Provide the required information and pass our verification process.',
+  'ar': 'لتصبح مقدم خدمة، قم بتحميل التطبيق واختر "إنشاء حساب كمقدم خدمة" أثناء التسجيل. قم بتقديم المعلومات المطلوبة واجتز عملية التحقق لدينا.',
   };
 
   static const Map<String, String> faqMultipleServices = {
@@ -1344,6 +1344,8 @@ class AppStrings {
     'en': 'Providers receive payments through our secure payment system. Payments are processed after service completion and customer confirmation, typically within 3-5 business days.',
     'ar': 'يحصل المقدمون على المدفوعات من خلال نظام الدفع الآمن لدينا. تتم معالجة المدفوعات بعد اكتمال الخدمة وتأكيد العميل، عادةً خلال 3-5 أيام عمل.',
   };
+
+  // Removed: faqHowGetPaid and faqHowGetPaidAnswer
 
   static const Map<String, String> faqLanguagesAvailable = {
     'en': 'Is PalHands available in Arabic and English?',
@@ -2121,8 +2123,8 @@ class AppStrings {
   };
 
   static const Map<String, String> ourStoryDescription = {
-    'en': 'Born from a vision to strengthen local communities and preserve cultural heritage, PalHands emerged as a bridge between traditional values and modern convenience, creating opportunities for meaningful work and trusted services.',
-    'ar': 'ولدت من رؤية لتقوية المجتمعات المحلية والحفاظ على التراث الثقافي، ظهرت بال هاندز كجسر بين القيم التقليدية والراحة الحديثة، مما يخلق فرصاً للعمل الهادف والخدمات الموثوقة.',
+  'en': 'Born from a vision to strengthen local communities, PalHands emerged as a bridge between traditional values and modern convenience, creating opportunities for meaningful work and trusted services.',
+  'ar': 'وُلدت من رؤية لتقوية المجتمعات المحلية، ظهرت بال هاندز كجسر بين القيم التقليدية والراحة الحديثة، مما يخلق فرصاً للعمل الهادف والخدمات الموثوقة.',
   };
 
   static const Map<String, String> wantToLearnMore = {
@@ -2292,8 +2294,8 @@ class AppStrings {
   };
 
   static const Map<String, String> responseTimeEstimate = {
-    'en': 'We usually respond within 24–48 hours for most inquiries.',
-    'ar': 'نحن عادة نرد خلال 24-48 ساعة لمعظم الاستفسارات.',
+  'en': 'We usually respond within 24 to 48 hours for most inquiries.',
+  'ar': 'نحن عادة نرد خلال 24 إلى 48 ساعة لمعظم الاستفسارات.',
   };
 
   static const Map<String, String> communityQuote = {
@@ -2368,8 +2370,8 @@ class AppStrings {
   };
 
   static const Map<String, String> bookingManagement = {
-    'en': 'Booking Management',
-    'ar': 'إدارة الحجوزات',
+  'en': 'Booking Monitoring',
+  'ar': 'مراقبة الحجوزات',
   };
 
   static const Map<String, String> reportsDisputes = {
@@ -2817,8 +2819,8 @@ class AppStrings {
 
   // Booking Management Strings
   static const Map<String, String> monitorBookings = {
-    'en': 'Monitor bookings, track payments, and manage schedules',
-    'ar': 'مراقبة الحجوزات، تتبع المدفوعات، وإدارة الجداول',
+  'en': 'View bookings, payment status, and schedules (read-only)',
+  'ar': 'عرض الحجوزات وحالة الدفع والجداول (عرض فقط)',
   };
 
   static const Map<String, String> pending = {

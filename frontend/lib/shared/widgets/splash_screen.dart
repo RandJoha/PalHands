@@ -23,39 +23,34 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  bool _navigated = false;
+
   @override
   void initState() {
     super.initState();
-    _checkBackendHealth();
+    // Navigate forward without blocking on backend health checks to keep startup snappy
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Navigate immediately; no artificial delay
+      if (mounted && !_navigated) {
+        _navigated = true;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const LoginScreen(),
+          ),
+        );
+      }
+    });
+    // Optional: perform health check in background without blocking UI (disabled to fully decouple)
+    // _checkBackendHealth();
   }
 
-  Future<void> _checkBackendHealth() async {
-    final healthService = Provider.of<HealthService>(context, listen: false);
-    
-    // Check backend health
-    await healthService.checkHealth();
-  }
+  // Note: Health check disabled to keep splash non-blocking.
 
   @override
   Widget build(BuildContext context) {
     return Consumer2<HealthService, LanguageService>(
       builder: (context, healthService, languageService, child) {
-        // Navigate to login when health check is successful
-        if (healthService.isConnected && !healthService.isLoading) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              Future.delayed(const Duration(seconds: 1), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-                      builder: (context) => const LoginScreen(),
-          ),
-        );
-                }
-              });
-      }
-    });
-  }
+  // Navigation is scheduled in initState to avoid blocking on backend health
 
     // Get screen dimensions
     final screenWidth = MediaQuery.of(context).size.width;

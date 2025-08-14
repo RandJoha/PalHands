@@ -4,6 +4,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 import '../../shared/services/language_service.dart';
 import '../../shared/services/responsive_service.dart';
+import '../../shared/services/auth_service.dart';
 import '../widgets/animated_handshake.dart';
 
 class SharedNavigation extends StatelessWidget {
@@ -108,13 +109,18 @@ class SharedNavigation extends StatelessWidget {
   }
 
   Widget _buildDesktopNavigation(BuildContext context, LanguageService languageService, bool isCompact, bool isVeryCompact) {
-    final navItems = [
+    // Center titles must flip order in Arabic (RTL) while logo stays left and actions stay right
+    final baseItems = [
       {'key': 'home', 'route': '/home'},
       {'key': 'aboutUs', 'route': '/about'},
       {'key': 'ourServices', 'route': '/categories'},
       {'key': 'faqs', 'route': '/faqs'},
       {'key': 'contactUs', 'route': '/contact'},
     ];
+
+    final navItems = languageService.currentLanguage == 'ar'
+        ? List<Map<String, String>>.from(baseItems.reversed)
+        : List<Map<String, String>>.from(baseItems);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -134,8 +140,8 @@ class SharedNavigation extends StatelessWidget {
   Widget _buildNavItem(BuildContext context, String key, String route, LanguageService languageService, bool isSelected, bool isCompact, bool isVeryCompact) {
     return Padding(
       padding: EdgeInsets.symmetric(
-        horizontal: isVeryCompact ? 6 : (isCompact ? 8 : 12),
-        vertical: 8,
+        horizontal: isVeryCompact ? 4 : (isCompact ? 6 : 10),
+        vertical: 6,
       ),
       child: TextButton(
         onPressed: () {
@@ -147,8 +153,8 @@ class SharedNavigation extends StatelessWidget {
         },
         style: TextButton.styleFrom(
           padding: EdgeInsets.symmetric(
-            horizontal: isVeryCompact ? 6 : (isCompact ? 8 : 12),
-            vertical: 8,
+            horizontal: isVeryCompact ? 6 : (isCompact ? 8 : 10),
+            vertical: 6,
           ),
           minimumSize: Size.zero,
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -157,7 +163,7 @@ class SharedNavigation extends StatelessWidget {
           AppStrings.getString(key, languageService.currentLanguage),
           style: TextStyle(
             color: isSelected ? AppColors.primary : Colors.black87,
-            fontSize: isVeryCompact ? 13 : (isCompact ? 14 : 15),
+            fontSize: isVeryCompact ? 12 : (isCompact ? 13 : 14),
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
           ),
           overflow: TextOverflow.visible,
@@ -172,6 +178,9 @@ class SharedNavigation extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
+        // Quick access to user dashboard/profile, always pinned to right
+        _buildDashboardQuickAction(context, languageService, isCompact),
+        const SizedBox(width: 8),
         // Language toggle
         _buildLanguageToggle(languageService, isCompact),
         
@@ -184,6 +193,34 @@ class SharedNavigation extends StatelessWidget {
     );
   }
 
+  Widget _buildDashboardQuickAction(BuildContext context, LanguageService languageService, bool isCompact) {
+    // Decide label and destination based on auth state and role
+    final auth = Provider.of<AuthService>(context, listen: false);
+    String label;
+    VoidCallback onTap;
+
+    if (auth.isAuthenticated) {
+      // Pick dashboard by role
+      if (auth.isAdmin) {
+        label = AppStrings.getString('adminDashboard', languageService.currentLanguage);
+        onTap = () => Navigator.pushNamed(context, '/admin');
+      } else if (auth.isProvider) {
+        label = AppStrings.getString('goToDashboard', languageService.currentLanguage);
+        onTap = () => Navigator.pushNamed(context, '/provider');
+      } else {
+        // Client
+        label = AppStrings.getString('goToDashboard', languageService.currentLanguage);
+        onTap = () => Navigator.pushNamed(context, '/user');
+      }
+    } else {
+      // Not authenticated -> Go to profile/login makes less sense; keep existing flow minimal
+      label = AppStrings.getString('goToDashboard', languageService.currentLanguage);
+      onTap = () => Navigator.pushNamed(context, '/login');
+    }
+
+  return _buildPillButton(label, onTap, isCompact: isCompact);
+  }
+
   // Unify button look & feel: language/login/signup share same style
   Widget _buildPillButton(String label, VoidCallback onTap, {bool isCompact = false}) {
     return ElevatedButton(
@@ -192,8 +229,8 @@ class SharedNavigation extends StatelessWidget {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         padding: EdgeInsets.symmetric(
-          horizontal: isCompact ? 12 : 16,
-          vertical: isCompact ? 8 : 10,
+          horizontal: isCompact ? 10 : 14,
+          vertical: isCompact ? 6 : 8,
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         elevation: 0,
@@ -204,7 +241,7 @@ class SharedNavigation extends StatelessWidget {
         label,
         style: TextStyle(
           color: Colors.white,
-          fontSize: isCompact ? 12 : 13,
+          fontSize: isCompact ? 11 : 12,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -225,7 +262,7 @@ class SharedNavigation extends StatelessWidget {
           () => Navigator.pushNamed(context, '/login'),
           isCompact: isCompact,
         ),
-        const SizedBox(width: 8),
+  const SizedBox(width: 6),
         _buildPillButton(
           AppStrings.getString('signUp', languageService.currentLanguage),
           () => Navigator.pushNamed(context, '/signup'),
@@ -239,7 +276,7 @@ class SharedNavigation extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _buildLanguageToggle(languageService, true),
+  _buildLanguageToggle(languageService, true),
         const SizedBox(width: 12),
         // Enhanced mobile menu button with better touch target
         Material(
@@ -338,6 +375,42 @@ class SharedMobileDrawer extends StatelessWidget {
                 child: ListView(
                   padding: EdgeInsets.zero,
                   children: [
+                    // Quick dashboard/profile access at top when logged in
+                    Builder(
+                      builder: (context) {
+                        final auth = Provider.of<AuthService>(context, listen: false);
+                        if (!auth.isAuthenticated) return const SizedBox.shrink();
+                        String title;
+                        VoidCallback onTap;
+                        if (auth.isAdmin) {
+                          title = AppStrings.getString('adminDashboard', languageService.currentLanguage);
+                          onTap = () {
+                            Navigator.pop(context);
+                            Navigator.pushNamed(context, '/admin');
+                          };
+                        } else if (auth.isProvider) {
+                          title = AppStrings.getString('goToDashboard', languageService.currentLanguage);
+                          onTap = () {
+                            Navigator.pop(context);
+                            Navigator.pushNamed(context, '/provider');
+                          };
+                        } else {
+                          title = AppStrings.getString('goToDashboard', languageService.currentLanguage);
+                          onTap = () {
+                            Navigator.pop(context);
+                            Navigator.pushNamed(context, '/user');
+                          };
+                        }
+                        return _buildDrawerItem(
+                          context,
+                          Icons.dashboard_customize,
+                          title,
+                          onTap,
+                          false,
+                          languageService,
+                        );
+                      },
+                    ),
                     _buildDrawerItem(
                       context,
                       Icons.home,
@@ -407,6 +480,38 @@ class SharedMobileDrawer extends StatelessWidget {
                   children: [
                     Expanded(child: _buildDrawerLanguageToggle(languageService)),
                   ],
+                ),
+              ),
+              // Go to Dashboard inside the drawer (small main menu)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () {
+                      final auth = Provider.of<AuthService>(context, listen: false);
+                      Navigator.pop(context);
+                      if (auth.isAuthenticated) {
+                        if (auth.isAdmin) {
+                          Navigator.pushNamed(context, '/admin');
+                        } else if (auth.isProvider) {
+                          Navigator.pushNamed(context, '/provider');
+                        } else {
+                          Navigator.pushNamed(context, '/user');
+                        }
+                      } else {
+                        Navigator.pushNamed(context, '/login');
+                      }
+                    },
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.primary),
+                      foregroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: Text(AppStrings.getString('goToDashboard', languageService.currentLanguage),
+                        style: const TextStyle(fontWeight: FontWeight.w600)),
+                  ),
                 ),
               ),
               // Auth actions in collapsed mode (match drawer language button style)

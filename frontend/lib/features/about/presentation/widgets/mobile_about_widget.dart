@@ -117,16 +117,6 @@ class _MobileAboutWidgetState extends State<MobileAboutWidget> with TickerProvid
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
-          Text(
-            AppStrings.getString('missionStatement', languageService.currentLanguage),
-            style: GoogleFonts.cairo(
-              fontSize: 16,
-              color: Colors.black87,
-              height: 1.6,
-            ),
-            textAlign: TextAlign.center,
-          ),
         ],
       ),
     );

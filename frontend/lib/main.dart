@@ -27,6 +27,7 @@ import 'shared/services/language_service.dart';
 import 'shared/services/health_service.dart';
 import 'shared/services/auth_service.dart';
 import 'shared/services/responsive_service.dart';
+import 'shared/services/provider_service.dart';
 
 // Feature imports (to be implemented)
 // import 'features/auth/presentation/bloc/auth_bloc.dart';
@@ -41,6 +42,8 @@ void main() async {
   
   // Initialize screen utilities
   await ScreenUtil.ensureScreenSize();
+  // Force frontend-only mocks for Providers/Our Services (decouple from backend)
+  ProviderService.useFrontendMocks(true);
   
   runApp(const PalHandsApp());
 }

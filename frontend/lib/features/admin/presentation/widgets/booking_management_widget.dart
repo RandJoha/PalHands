@@ -345,7 +345,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
                   Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('amount', languageService.currentLanguage))),
                 ],
                 Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('status', languageService.currentLanguage))),
-                Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('actions', languageService.currentLanguage))),
+                // View-only: no actions column
               ],
             ),
           ),
@@ -563,36 +563,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
             ),
           ),
           
-          // Actions
-          Expanded(
-            flex: 1,
-            child: Row(
-              children: [
-                IconButton(
-                  onPressed: () {
-                    // TODO: View booking details
-                  },
-                  icon: Icon(
-                    Icons.visibility,
-                    size: screenWidth > 1400 ? 18 : 16,
-                    color: AppColors.textLight,
-                  ),
-                  tooltip: AppStrings.getString('view', languageService.currentLanguage),
-                ),
-                IconButton(
-                  onPressed: () {
-                    // TODO: Edit booking
-                  },
-                  icon: Icon(
-                    Icons.edit,
-                    size: screenWidth > 1400 ? 18 : 16,
-                    color: AppColors.primary,
-                  ),
-                  tooltip: AppStrings.getString('edit', languageService.currentLanguage),
-                ),
-              ],
-            ),
-          ),
+          // View-only: actions removed per requirements
         ],
       ),
     );
@@ -667,18 +638,5 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
     }
   }
 
-  String _getStatusLabel(String status) {
-    switch (status) {
-      case 'confirmed':
-        return 'Confirmed';
-      case 'pending':
-        return 'Pending';
-      case 'completed':
-        return 'Completed';
-      case 'cancelled':
-        return 'Cancelled';
-      default:
-        return status;
-    }
-  }
+  // Removed unused _getStatusLabel helper (view-only simplifies usage)
 } 

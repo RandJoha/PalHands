@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_strings.dart';
 import '../../../../../shared/services/language_service.dart';
@@ -34,6 +35,10 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
   String? _error;
   List<ProviderModel> _providers = const [];
   final _providerService = ProviderService();
+  
+  // Performance optimization: debounce API calls
+  Timer? _debounceTimer;
+  static const Duration _debounceDuration = Duration(milliseconds: 500);
 
   Set<String> get _selectedServiceKeys {
     final set = <String>{};
@@ -46,6 +51,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
   @override
   void initState() {
     super.initState();
+    // Comment out animations to improve performance
     // _bannerController = AnimationController(
     //   duration: const Duration(milliseconds: 1500),
     //   vsync: this,
@@ -73,8 +79,9 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
     
     // _bannerController.forward();
     // _cardController.forward();
-    // initial fetch
-    _refreshProviders();
+    
+    // Load providers on demand instead of in initState for faster initial load
+    // _refreshProviders(); // REMOVED - will load when user interacts with filters
   }
 
   @override
@@ -151,7 +158,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                       entry.value.remove(s);
                     }
                   });
-                  _refreshProviders();
+                  _debouncedRefreshProviders();
                 },
               )).toList(),
             ),
@@ -175,7 +182,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                     ],
                     onChanged: (val) {
                       setState(() => _selectedCity = (val == null || val.isEmpty) ? null : val);
-                      _refreshProviders();
+                      _debouncedRefreshProviders();
                     },
                   ),
                 ),
@@ -196,7 +203,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                         _sortBy = parts[0];
                         _sortOrder = parts[1];
                       });
-                      _refreshProviders();
+                      _debouncedRefreshProviders();
                     },
                   ),
                 ),
@@ -208,7 +215,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                       _sortBy = 'rating';
                       _sortOrder = 'desc';
                     });
-                    _refreshProviders();
+                    _debouncedRefreshProviders();
                   },
                   icon: const Icon(Icons.refresh, size: 18),
                   style: OutlinedButton.styleFrom(shape: const StadiumBorder()),
@@ -348,7 +355,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context);
-                    _refreshProviders();
+                    _debouncedRefreshProviders();
                   },
                   child: Text(AppStrings.getString('bookNow', languageService.currentLanguage)),
                 ),
@@ -1016,7 +1023,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                         onPressed: _store.selectedServices[category['id']]?.isNotEmpty == true
                             ? () {
                                 Navigator.pop(context);
-                                _refreshProviders();
+                                _debouncedRefreshProviders();
                               }
                             : null,
                         style: ElevatedButton.styleFrom(
@@ -1126,23 +1133,41 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
     return AppStrings.getString('serviceDescription', language);
   }
 
+  // Debounced version for filter changes to avoid excessive API calls
+  void _debouncedRefreshProviders() {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(_debounceDuration, () {
+      if (mounted) {
+        _refreshProviders();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    super.dispose();
+  }
+
   Future<void> _refreshProviders() async {
+    if (!mounted) return;
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
+      // Since we're in frontend-only mode, this should be instant with cached mock data
       final data = await _providerService.fetchProviders(
         servicesAny: _selectedServiceKeys.toList(),
         city: _selectedCity,
         sortBy: _sortBy,
         sortOrder: _sortOrder,
       );
-  if (!mounted) return;
-  setState(() => _providers = data);
+      if (!mounted) return;
+      setState(() => _providers = data);
     } catch (e) {
-  if (!mounted) return;
-  setState(() => _error = e.toString());
+      if (!mounted) return;
+      setState(() => _error = e.toString());
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -1150,6 +1175,14 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
 
   Widget _buildProvidersSection(LanguageService languageService) {
     final lang = languageService.currentLanguage;
+    
+    // Load providers on first build if not already loaded
+    if (_providers.isEmpty && !_loading && _error == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _refreshProviders();
+      });
+    }
+    
     return Directionality(
       textDirection: languageService.textDirection,
       child: Container(
@@ -1162,6 +1195,8 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
             if (_loading) const LinearProgressIndicator(),
             if (_error != null) Text(_error!, style: const TextStyle(color: Colors.red)),
             const SizedBox(height: 8),
+            if (_providers.isEmpty && !_loading && _error == null) 
+              const Center(child: Text('Select services to see providers')),
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),

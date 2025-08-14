@@ -78,7 +78,54 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
   }
 
   Widget _buildMobileLayout(bool isMobile, LanguageService languageService) {
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: () async {
+        // If not on the home tab, go to home instead of popping the route
+        if (_selectedIndex != 0) {
+          setState(() => _selectedIndex = 0);
+          return false;
+        }
+        // On home tab: confirm stay or logout instead of leaving the dashboard
+        final shouldLogout = await showDialog<bool>(
+          context: context,
+          builder: (ctx) {
+            return AlertDialog(
+              title: Text(
+                AppStrings.getString('providerDashboard', languageService.currentLanguage),
+                style: GoogleFonts.cairo(fontWeight: FontWeight.w700),
+              ),
+              content: Text(
+                AppStrings.getString('areYouSure', languageService.currentLanguage)
+                    .isNotEmpty
+                    ? AppStrings.getString('areYouSure', languageService.currentLanguage)
+                    : 'Do you want to logout or stay on the dashboard?'
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: Text(AppStrings.getString('cancel', languageService.currentLanguage)),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  child: Text(AppStrings.getString('logout', languageService.currentLanguage)),
+                ),
+              ],
+            );
+          },
+        );
+        if (shouldLogout == true && mounted) {
+          try {
+            final authService = Provider.of<AuthService>(context, listen: false);
+            await authService.logout();
+          } catch (_) {}
+          if (mounted) {
+            Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+          }
+        }
+        // Prevent default pop in both cases (we either stayed or navigated ourselves)
+        return false;
+      },
+      child: Scaffold(
       backgroundColor: AppColors.background,
       drawer: _buildMobileDrawer(languageService),
       appBar: AppBar(
@@ -223,7 +270,6 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
         selectedLabelStyle: GoogleFonts.cairo(fontWeight: FontWeight.w600),
         unselectedLabelStyle: GoogleFonts.cairo(),
         items: _menuItems.asMap().entries.map((entry) {
-          final index = entry.key;
           final item = entry.value;
           return BottomNavigationBarItem(
             icon: Icon(item['icon']),
@@ -231,13 +277,59 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
           );
         }).toList(),
       ),
-    );
+  ),
+  );
   }
 
   Widget _buildWebLayout(bool isTablet, LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
     
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: () async {
+        if (_selectedIndex != 0) {
+          setState(() => _selectedIndex = 0);
+          return false;
+        }
+        // On home tab: confirm stay or logout instead of leaving the dashboard
+        final shouldLogout = await showDialog<bool>(
+          context: context,
+          builder: (ctx) {
+            return AlertDialog(
+              title: Text(
+                AppStrings.getString('providerDashboard', languageService.currentLanguage),
+                style: GoogleFonts.cairo(fontWeight: FontWeight.w700),
+              ),
+              content: Text(
+                AppStrings.getString('areYouSure', languageService.currentLanguage)
+                    .isNotEmpty
+                    ? AppStrings.getString('areYouSure', languageService.currentLanguage)
+                    : 'Do you want to logout or stay on the dashboard?'
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: Text(AppStrings.getString('cancel', languageService.currentLanguage)),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  child: Text(AppStrings.getString('logout', languageService.currentLanguage)),
+                ),
+              ],
+            );
+          },
+        );
+        if (shouldLogout == true && mounted) {
+          try {
+            final authService = Provider.of<AuthService>(context, listen: false);
+            await authService.logout();
+          } catch (_) {}
+          if (mounted) {
+            Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+          }
+        }
+        return false;
+      },
+      child: Scaffold(
       backgroundColor: AppColors.background,
       body: Row(
         children: [
@@ -312,6 +404,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
           ),
         ],
       ),
+    ),
     );
   }
 
@@ -582,81 +675,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
     );
   }
 
-  Widget _buildMenuItem(int index, LanguageService languageService) {
-    final item = _menuItems[index];
-    final isSelected = _selectedIndex == index;
-
-    if (_isSidebarExpanded) {
-      return _buildExpandedMenuItem(index, item, isSelected, languageService);
-    } else {
-      return _buildCollapsedMenuItem(index, item, isSelected, languageService);
-    }
-  }
-
-  Widget _buildExpandedMenuItem(int index, Map<String, dynamic> item, bool isSelected, LanguageService languageService) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () => setState(() => _selectedIndex = index),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                Icon(
-                  item['icon'],
-                  size: 20,
-                  color: isSelected ? AppColors.primary : AppColors.grey,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    AppStrings.getString(item['title'], languageService.currentLanguage),
-                    style: GoogleFonts.cairo(
-                      fontSize: 14,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                      color: isSelected ? AppColors.primary : AppColors.greyDark,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCollapsedMenuItem(int index, Map<String, dynamic> item, bool isSelected, LanguageService languageService) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () => setState(() => _selectedIndex = index),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Icon(
-              item['icon'],
-              size: 20,
-              color: isSelected ? AppColors.primary : AppColors.grey,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  // Note: legacy sidebar menu item builders removed as unused.
 
   Widget _buildContent(LanguageService languageService) {
     if (_selectedIndex == _menuItems.length - 1) {
@@ -675,64 +694,31 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
           builder: (context, constraints) {
             final isMobile = constraints.maxWidth <= 768;
             
-            return SingleChildScrollView(
-              padding: EdgeInsets.all(isMobile ? 16.0 : 24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppStrings.getString('settings', languageService.currentLanguage),
-                    style: GoogleFonts.cairo(
-                      fontSize: isMobile ? 24.0 : 32.0,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.greyDark,
+            return Center(
+              child: Padding(
+                padding: EdgeInsets.all(isMobile ? 16.0 : 24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      AppStrings.getString('settings', languageService.currentLanguage),
+                      style: GoogleFonts.cairo(
+                        fontSize: isMobile ? 24.0 : 28.0,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.greyDark,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: isMobile ? 8.0 : 12.0),
-                  Text(
-                    AppStrings.getString('manageAccountSettings', languageService.currentLanguage),
-                    style: GoogleFonts.cairo(
-                      fontSize: isMobile ? 14.0 : 16.0,
-                      color: AppColors.grey,
+                    SizedBox(height: isMobile ? 8.0 : 12.0),
+                    Text(
+                      AppStrings.getString('comingSoon', languageService.currentLanguage),
+                      style: GoogleFonts.cairo(
+                        fontSize: isMobile ? 14.0 : 16.0,
+                        color: AppColors.grey,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                  SizedBox(height: isMobile ? 20.0 : 32.0),
-                  Container(
-                    padding: EdgeInsets.all(isMobile ? 20.0 : 24.0),
-                    decoration: BoxDecoration(
-                      color: AppColors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 5,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppStrings.getString('manageAccountSettings', languageService.currentLanguage),
-                          style: GoogleFonts.cairo(
-                            fontSize: isMobile ? 18.0 : 20.0,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.greyDark,
-                          ),
-                        ),
-                        SizedBox(height: isMobile ? 16.0 : 20.0),
-                        Text(
-                          AppStrings.getString('comingSoon', languageService.currentLanguage),
-                          style: GoogleFonts.cairo(
-                            fontSize: isMobile ? 14.0 : 16.0,
-                            color: AppColors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },

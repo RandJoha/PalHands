@@ -5,7 +5,6 @@ enum ContactPurpose {
   suggestFeature,
   requestServiceCategory,
   technicalProblem,
-  businessInquiry,
   other,
 }
 
@@ -191,32 +190,6 @@ class ContactData {
             hintKey: 'attachScreenshot',
             type: FieldType.file,
             required: false,
-          ),
-          ContactFormField(
-            labelKey: 'yourName',
-            hintKey: 'yourName',
-            type: FieldType.text,
-            required: true,
-          ),
-          ContactFormField(
-            labelKey: 'contactEmail',
-            hintKey: 'contactEmail',
-            type: FieldType.email,
-            required: true,
-          ),
-        ],
-      ),
-      const ContactPurposeData(
-        purpose: ContactPurpose.businessInquiry,
-        titleKey: 'businessInquiry',
-        descriptionKey: 'businessInquiry',
-        icon: Icons.business,
-        formFields: [
-          ContactFormField(
-            labelKey: 'businessInquiryDetails',
-            hintKey: 'businessInquiryDetails',
-            type: FieldType.textarea,
-            required: true,
           ),
           ContactFormField(
             labelKey: 'yourName',

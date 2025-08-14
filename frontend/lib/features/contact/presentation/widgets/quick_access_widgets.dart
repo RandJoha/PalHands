@@ -13,128 +13,42 @@ class QuickAccessWidgets extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<LanguageService>(
       builder: (context, languageService, child) {
-        final screenWidth = MediaQuery.of(context).size.width;
-        
-        // Use different layouts based on screen width
-        if (screenWidth < 600) {
-          // Two column layout for mobile screens
-          return Column(
-            children: [
-              // First row - 2 items
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildQuickAccessCard(
-                      icon: Icons.question_answer,
-                      title: AppStrings.getString('viewFAQs', languageService.currentLanguage),
-                      subtitle: 'Find answers quickly',
-                      onTap: () {
-                        Navigator.pushNamed(context, '/faqs');
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildQuickAccessCard(
-                      icon: Icons.chat,
-                      title: AppStrings.getString('liveChat', languageService.currentLanguage),
-                      subtitle: 'Get instant help',
-                      onTap: () {
-                        _showLiveChatDialog(context, languageService);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              // Second row - 2 items
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildQuickAccessCard(
-                      icon: Icons.chat_bubble,
-                      title: AppStrings.getString('whatsappSupport', languageService.currentLanguage),
-                      subtitle: 'Chat on WhatsApp',
-                      onTap: () {
-                        _launchWhatsApp();
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildQuickAccessCard(
-                      icon: Icons.contact_phone,
-                      title: AppStrings.getString('traditionalContact', languageService.currentLanguage),
-                      subtitle: 'Email & Phone',
-                      onTap: () {
-                        _showTraditionalContactDialog(context, languageService);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          );
-        } else {
-          // Two column layout for wider screens
-          return Column(
-            children: [
-              // First row - 2 items
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildQuickAccessCard(
-                      icon: Icons.question_answer,
-                      title: AppStrings.getString('viewFAQs', languageService.currentLanguage),
-                      subtitle: 'Find answers quickly',
-                      onTap: () {
-                        Navigator.pushNamed(context, '/faqs');
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildQuickAccessCard(
-                      icon: Icons.chat,
-                      title: AppStrings.getString('liveChat', languageService.currentLanguage),
-                      subtitle: 'Get instant help',
-                      onTap: () {
-                        _showLiveChatDialog(context, languageService);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              // Second row - 2 items
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildQuickAccessCard(
-                      icon: Icons.chat_bubble,
-                      title: AppStrings.getString('whatsappSupport', languageService.currentLanguage),
-                      subtitle: 'Chat on WhatsApp',
-                      onTap: () {
-                        _launchWhatsApp();
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildQuickAccessCard(
-                      icon: Icons.contact_phone,
-                      title: AppStrings.getString('traditionalContact', languageService.currentLanguage),
-                      subtitle: 'Email & Phone',
-                      onTap: () {
-                        _showTraditionalContactDialog(context, languageService);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          );
-        }
+        final items = [
+          (
+            icon: Icons.question_answer,
+            title: AppStrings.getString('viewFAQs', languageService.currentLanguage),
+            subtitle: null,
+            onTap: () => Navigator.pushNamed(context, '/faqs'),
+          ),
+          (
+            icon: Icons.contact_phone,
+            title: AppStrings.getString('traditionalContact', languageService.currentLanguage),
+            subtitle: null,
+            onTap: () => _showTraditionalContactDialog(context, languageService),
+          ),
+        ];
+
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final isNarrow = constraints.maxWidth < 600;
+            return Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: items.map((item) {
+                final card = _buildQuickAccessCard(
+                  icon: item.icon,
+                  title: item.title,
+                  subtitle: item.subtitle ?? '',
+                  onTap: item.onTap,
+                );
+                if (isNarrow) {
+                  return SizedBox(width: constraints.maxWidth, child: card);
+                }
+                return SizedBox(width: (constraints.maxWidth - 12) / 2, child: card);
+              }).toList(),
+            );
+          },
+        );
       },
     );
   }
@@ -148,7 +62,7 @@ class QuickAccessWidgets extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 112,
+        constraints: const BoxConstraints(minHeight: 100),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -185,65 +99,26 @@ class QuickAccessWidgets extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 3),
-            Text(
-              subtitle,
-              style: GoogleFonts.cairo(
-                fontSize: 11,
-                color: Colors.grey[600],
+            if (subtitle.isNotEmpty) ...[
+              const SizedBox(height: 3),
+              Text(
+                subtitle,
+                style: GoogleFonts.cairo(
+                  fontSize: 11,
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  void _showLiveChatDialog(BuildContext context, LanguageService languageService) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          AppStrings.getString('liveChat', languageService.currentLanguage),
-          style: GoogleFonts.cairo(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.chat,
-              size: 48,
-              color: AppColors.primary,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Live chat is coming soon!',
-              style: GoogleFonts.cairo(fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'For now, please use our contact form or WhatsApp support.',
-              style: GoogleFonts.cairo(fontSize: 14, color: Colors.grey[600]),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'OK',
-              style: GoogleFonts.cairo(fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Live Chat removed per requirements
 
   void _showTraditionalContactDialog(BuildContext context, LanguageService languageService) {
     showDialog(
@@ -348,15 +223,7 @@ class QuickAccessWidgets extends StatelessWidget {
     );
   }
 
-  void _launchWhatsApp() async {
-    const phoneNumber = '+970591234567';
-    const message = 'Hello! I need help with PalHands.';
-    final url = 'https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}';
-    
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url));
-    }
-  }
+  // WhatsApp support removed per requirements
 
   void _launchEmail(String email) async {
     final url = 'mailto:$email';

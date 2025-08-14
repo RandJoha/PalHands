@@ -2,12 +2,13 @@ import 'dart:math';
 
 import '../models/provider.dart';
 import 'base_api_service.dart';
-import '../../core/constants/api_config.dart';
 
 class ProviderService with BaseApiService {
-  // Front-end-only mode to bypass backend calls. Toggle to false when backend is ready.
+  // Front-end-only mode to bypass backend calls for Our Services tab.
+  // Intentionally hard-disabled backend usage to keep the UI snappy.
   static bool frontendOnly = true;
   static void useFrontendMocks([bool value = true]) => frontendOnly = value;
+
   // Fetch providers matching any of the selected services and optional city
   Future<List<ProviderModel>> fetchProviders({
     required List<String> servicesAny,
@@ -15,25 +16,7 @@ class ProviderService with BaseApiService {
     String? sortBy, // 'rating' or 'price'
     String? sortOrder, // 'asc' | 'desc'
   }) async {
-    try {
-      // If backend route exists, call it; otherwise use mock
-  if (!frontendOnly && ApiConfig.currentApiBaseUrl.isNotEmpty) {
-        final queryParams = <String, String>{
-          if (servicesAny.isNotEmpty) 'services': servicesAny.join(','),
-          if (city != null && city.isNotEmpty) 'city': city,
-          if (sortBy != null) 'sortBy': sortBy,
-          if (sortOrder != null) 'sortOrder': sortOrder,
-        };
-        final qp = queryParams.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
-  final res = await get('/services/providers?'+qp);
-        final data = (res['data'] as List?) ?? [];
-        return data.map((e) => ProviderModel.fromJson(e as Map<String, dynamic>)).toList();
-      }
-    } catch (_) {
-      // Fall through to mock data
-    }
-
-    // Mock data for development until backend endpoint is available
+    // Always use mock data to avoid any backend latency on the Our Services tab
     final items = _mockProviders();
     return items.where((p) {
       final matchesServices = servicesAny.isEmpty || p.services.any((s) => servicesAny.contains(s));

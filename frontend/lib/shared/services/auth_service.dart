@@ -36,6 +36,16 @@ class AuthService extends ChangeNotifier with BaseApiService {
         if (kDebugMode) {
           print('✅ Auth service initialized with persisted data');
         }
+      } else if (savedToken != null && savedUser == null) {
+        // Recover session if we have a token but no user data persisted
+        _token = savedToken;
+        final valid = await validateToken();
+        _isAuthenticated = valid;
+        if (valid) {
+          if (kDebugMode) {
+            print('✅ Auth service restored session via token validation');
+          }
+        }
       }
     } catch (e) {
       if (kDebugMode) {
@@ -90,9 +100,16 @@ class AuthService extends ChangeNotifier with BaseApiService {
         },
       );
 
-      if (response['success'] == true) {
-        _token = response['token'];
-        _currentUser = response['user'];
+    if (response['success'] == true) {
+    // Support both flat and { data: { token, user } } API shapes
+    final data = (response['data'] is Map<String, dynamic>)
+      ? Map<String, dynamic>.from(response['data'])
+      : <String, dynamic>{};
+    _token = (data['token'] ?? response['token']) as String?;
+    final user = data['user'] ?? response['user'] ?? data;
+    _currentUser = user is Map<String, dynamic>
+      ? Map<String, dynamic>.from(user)
+      : null;
         _isAuthenticated = true;
         
         // Save to persistent storage
@@ -135,9 +152,16 @@ class AuthService extends ChangeNotifier with BaseApiService {
         },
       );
 
-      if (response['success'] == true) {
-        _token = response['token'];
-        _currentUser = response['user'];
+    if (response['success'] == true) {
+    // Support both flat and { data: { token, user } } API shapes
+    final data = (response['data'] is Map<String, dynamic>)
+      ? Map<String, dynamic>.from(response['data'])
+      : <String, dynamic>{};
+    _token = (data['token'] ?? response['token']) as String?;
+    final user = data['user'] ?? response['user'] ?? data;
+    _currentUser = user is Map<String, dynamic>
+      ? Map<String, dynamic>.from(user)
+      : null;
         _isAuthenticated = true;
         
         // Save to persistent storage
@@ -212,7 +236,13 @@ class AuthService extends ChangeNotifier with BaseApiService {
       );
 
       if (response['success'] == true) {
-        _currentUser = response['user'];
+        // Backend returns ok({ ...userFields }) so user lives under data
+        final data = (response['data'] is Map<String, dynamic>)
+            ? Map<String, dynamic>.from(response['data'])
+            : (response['user'] is Map<String, dynamic>)
+                ? Map<String, dynamic>.from(response['user'])
+                : <String, dynamic>{};
+        _currentUser = data.isNotEmpty ? data : _currentUser;
         await _savePersistedData();
         notifyListeners();
       }
@@ -249,7 +279,13 @@ class AuthService extends ChangeNotifier with BaseApiService {
       );
 
       if (response['success'] == true) {
-        _currentUser = response['user'];
+        // Unified shape handling: data contains updated user
+        final data = (response['data'] is Map<String, dynamic>)
+            ? Map<String, dynamic>.from(response['data'])
+            : (response['user'] is Map<String, dynamic>)
+                ? Map<String, dynamic>.from(response['user'])
+                : <String, dynamic>{};
+        _currentUser = data.isNotEmpty ? data : _currentUser;
         await _savePersistedData();
         notifyListeners();
       }
@@ -273,7 +309,17 @@ class AuthService extends ChangeNotifier with BaseApiService {
         headers: {'Authorization': 'Bearer $_token'},
       );
 
-      return response['valid'] == true;
+      // Backend shape: ok({ valid: true, user: {...} })
+      final data = (response['data'] is Map<String, dynamic>)
+          ? Map<String, dynamic>.from(response['data'])
+          : <String, dynamic>{};
+      final isValid = (data['valid'] ?? response['valid']) == true;
+      if (isValid && data['user'] is Map<String, dynamic>) {
+        _currentUser = Map<String, dynamic>.from(data['user']);
+        await _savePersistedData();
+        notifyListeners();
+      }
+      return isValid;
     } catch (e) {
       if (kDebugMode) {
         print('❌ Token validation failed: $e');

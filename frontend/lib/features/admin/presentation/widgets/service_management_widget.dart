@@ -737,21 +737,10 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
               children: [
                 IconButton(
                   onPressed: () {
-                    // TODO: View service details
-                  },
-                  icon: Icon(
-                    Icons.visibility,
-                    size: screenWidth > 1400 ? 18 : 16,
-                    color: AppColors.textLight,
-                  ),
-                  tooltip: AppStrings.getString('view', languageService.currentLanguage),
-                ),
-                IconButton(
-                  onPressed: () {
                     // TODO: Edit service
                   },
                   icon: Icon(
-                    Icons.edit,
+                    Icons.push_pin_outlined,
                     size: screenWidth > 1400 ? 18 : 16,
                     color: AppColors.primary,
                   ),
@@ -817,16 +806,4 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
     }
   }
 
-  String _getCategoryLabel(String category) {
-    switch (category) {
-      case 'cleaning':
-        return 'Cleaning';
-      case 'elderly_support':
-        return 'Elderly Support';
-      case 'maintenance':
-        return 'Maintenance';
-      default:
-        return category;
-    }
-  }
 } 

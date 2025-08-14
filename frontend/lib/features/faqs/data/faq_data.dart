@@ -138,12 +138,6 @@ class FAQData {
           categoryKey: 'faqServiceProviders',
           icon: '📋',
         ),
-        FAQItem(
-          questionKey: 'faqHowGetPaid',
-          answerKey: 'faqHowGetPaidAnswer',
-          categoryKey: 'faqServiceProviders',
-          icon: '💵',
-        ),
       ],
     ),
     FAQCategory(

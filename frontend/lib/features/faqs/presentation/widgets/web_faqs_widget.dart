@@ -326,23 +326,12 @@ class _WebFAQsWidgetState extends State<WebFAQsWidget> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(
-                width: 200,
+                width: 220,
                 child: _buildContactButton(
                   Icons.email,
                   AppStrings.getString('contactUs', languageService.currentLanguage),
                   () {
                     Navigator.pushNamed(context, '/contact');
-                  },
-                ),
-              ),
-              const SizedBox(width: 16),
-              SizedBox(
-                width: 200,
-                child: _buildContactButton(
-                  Icons.chat,
-                  AppStrings.getString('chatNow', languageService.currentLanguage),
-                  () {
-                    // TODO: Open chat
                   },
                 ),
               ),

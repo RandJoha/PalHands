@@ -68,16 +68,6 @@ class WebAboutWidget extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 32),
-          Text(
-            AppStrings.getString('missionStatement', languageService.currentLanguage),
-            style: GoogleFonts.cairo(
-              fontSize: 18,
-              color: Colors.black87,
-              height: 1.6,
-            ),
-            textAlign: TextAlign.center,
-          ),
         ],
       ),
     );

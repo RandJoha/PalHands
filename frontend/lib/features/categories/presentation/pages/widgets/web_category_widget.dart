@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 import '../../../../../core/constants/app_strings.dart';
 import '../../../../../shared/services/language_service.dart';
 import '../../../../../shared/widgets/shared_navigation.dart';
@@ -30,6 +31,10 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
   String? _error;
   List<ProviderModel> _providers = const [];
   final _providerService = ProviderService();
+  
+  // Performance optimization: debounce API calls
+  Timer? _debounceTimer;
+  static const Duration _debounceDuration = Duration(milliseconds: 500);
 
   Set<String> get _selectedServiceKeys {
     final set = <String>{};
@@ -42,7 +47,24 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
   @override
   void initState() {
     super.initState();
-    _refreshProviders();
+    // Load providers on demand instead of in initState for faster initial load
+    // _refreshProviders(); // REMOVED - will load when user interacts with filters
+  }
+
+  // Debounced version for filter changes to avoid excessive API calls
+  void _debouncedRefreshProviders() {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(_debounceDuration, () {
+      if (mounted) {
+        _refreshProviders();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _refreshProviders() async {
@@ -52,6 +74,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
       _error = null;
     });
     try {
+      // Since we're in frontend-only mode, this should be instant with cached mock data
       final data = await _providerService.fetchProviders(
         servicesAny: _selectedServiceKeys.toList(),
         city: _selectedCity,
@@ -200,7 +223,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                           entry.value.remove(s);
                         }
                       });
-                      _refreshProviders();
+                      _debouncedRefreshProviders();
                     },
                 );
               }).toList(),
@@ -228,7 +251,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                         setState(() {
                           _selectedCity = (val == null || val.isEmpty) ? null : val;
                         });
-                        _refreshProviders();
+                        _debouncedRefreshProviders();
                       },
                     ),
                   ),
@@ -251,7 +274,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                           _sortBy = parts[0];
                           _sortOrder = parts[1];
                         });
-                        _refreshProviders();
+                        _debouncedRefreshProviders();
                       },
                     ),
                   ),
@@ -262,7 +285,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                       setState(() {
                         _store.reset();
                       });
-                      _refreshProviders();
+                      _debouncedRefreshProviders();
                     },
                     icon: const Icon(Icons.refresh, size: 18),
                     style: OutlinedButton.styleFrom(
@@ -593,7 +616,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                                   _store.selectedServices[id]!.remove(s);
                                 }
                               });
-                              _refreshProviders();
+                              _debouncedRefreshProviders();
                             },
                           );
                         }).toList(),
@@ -1019,7 +1042,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                           onPressed: _store.selectedServices[category['id']]?.isNotEmpty == true
                               ? () {
                                   Navigator.pop(context);
-                                  _refreshProviders();
+                                  _debouncedRefreshProviders();
                                 }
                               : null,
                           style: ElevatedButton.styleFrom(
@@ -1048,6 +1071,13 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
   }
 
   Widget _buildProvidersSection(LanguageService languageService) {
+    // Load providers on first build if not already loaded
+    if (_providers.isEmpty && !_loading && _error == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _refreshProviders();
+      });
+    }
+    
     return Directionality(
       textDirection: languageService.textDirection,
       child: Container(
@@ -1060,6 +1090,11 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
             const SizedBox(height: 12),
             if (_loading) const LinearProgressIndicator(),
             if (_error != null) Text(_error!, style: const TextStyle(color: Colors.red)),
+            if (_providers.isEmpty && !_loading && _error == null) 
+              const Center(child: Padding(
+                padding: EdgeInsets.all(40),
+                child: Text('Select services to see providers', style: TextStyle(fontSize: 18)),
+              )),
             const SizedBox(height: 12),
             LayoutBuilder(
               builder: (context, constraints) {

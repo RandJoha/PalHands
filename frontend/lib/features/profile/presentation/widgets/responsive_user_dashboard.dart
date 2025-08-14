@@ -1478,7 +1478,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       {'icon': Icons.cancel, 'label': AppStrings.getString('cancel', languageService.currentLanguage), 'color': AppColors.error},
       {'icon': Icons.schedule, 'label': AppStrings.getString('reschedule', languageService.currentLanguage), 'color': AppColors.warning},
       {'icon': Icons.chat, 'label': AppStrings.getString('contact', languageService.currentLanguage), 'color': AppColors.primary},
-      {'icon': Icons.location_on, 'label': AppStrings.getString('track', languageService.currentLanguage), 'color': AppColors.info},
+      // Removed Tracking action per requirements
     ];
 
     return Wrap(
@@ -2913,7 +2913,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     final summaryCards = [
       {'title': _getLocalizedString('totalProviders'), 'count': '5', 'icon': Icons.favorite, 'color': AppColors.error},
       {'title': _getLocalizedString('available'), 'count': '3', 'icon': Icons.check_circle, 'color': AppColors.success},
-      {'title': _getLocalizedString('recentlyBooked'), 'count': '2', 'icon': Icons.calendar_today, 'color': AppColors.primary},
+      // Removed 'Recently Booked' card per requirements
     ];
 
     return Wrap(
@@ -2972,14 +2972,13 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   }
 
   Widget _buildSavedProvidersList(bool isMobile, bool isTablet) {
-    final providers = [
+  final providers = [
       {
         'name': 'Fatima Al-Zahra',
         'service': _getLocalizedString('homeCleaning'),
         'rating': 4.8,
         'price': '₪150',
         'isAvailable': true,
-        'lastBooked': _getLocalizedString('twoDaysAgo'),
       },
       {
         'name': 'Mariam Hassan',
@@ -2987,7 +2986,6 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         'rating': 4.9,
         'price': '₪200',
         'isAvailable': true,
-        'lastBooked': _getLocalizedString('oneWeekAgo'),
       },
       {
         'name': 'Aisha Mohammed',
@@ -2995,7 +2993,6 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         'rating': 4.7,
         'price': '₪120',
         'isAvailable': false,
-        'lastBooked': _getLocalizedString('threeWeeksAgo'),
       },
     ];
 
@@ -3109,15 +3106,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     ),
                   ],
                 ),
-                const SizedBox(height: 4.0),
-                Text(
-                  '${_getLocalizedString('lastBooked')}: ${provider['lastBooked']}',
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 12.0 : 14.0,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
+                // Removed Recent Bookings info per requirements
               ],
             ),
           ),
@@ -3180,10 +3169,6 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               _buildQuickHelp(isMobile, isTablet, constraints.maxWidth),
               SizedBox(height: isMobile ? 20.0 : 32.0),
               
-              // Support Options
-              _buildSupportOptions(isMobile, isTablet),
-              SizedBox(height: isMobile ? 20.0 : 32.0),
-              
               // Recent Tickets
               _buildRecentTickets(isMobile, isTablet),
             ],
@@ -3244,7 +3229,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   Widget _buildQuickHelp(bool isMobile, bool isTablet, double screenWidth) {
     final helpItems = [
       {'title': _getLocalizedString('faq'), 'icon': Icons.help_outline, 'color': AppColors.primary},
-      {'title': _getLocalizedString('liveChat'), 'icon': Icons.chat, 'color': AppColors.success},
+      {'title': _getLocalizedString('viewPreviousRequests'), 'icon': Icons.chat, 'color': AppColors.success},
       {'title': _getLocalizedString('reportIssue'), 'icon': Icons.support_agent, 'color': AppColors.warning},
       {'title': _getLocalizedString('contactSupport'), 'icon': Icons.phone, 'color': AppColors.info},
     ];
@@ -3311,106 +3296,9 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     );
   }
 
-  Widget _buildSupportOptions(bool isMobile, bool isTablet) {
-    return Container(
-      padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(isMobile ? 12.0 : 16.0),
-        border: Border.all(color: AppColors.border, width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            _getLocalizedString('supportHelp'),
-            style: GoogleFonts.cairo(
-              fontSize: isMobile ? 18.0 : 20.0,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          SizedBox(height: isMobile ? 12.0 : 16.0),
-          
-          _buildSupportOption(
-            _getLocalizedString('faq'),
-            _getLocalizedString('findAnswers'),
-            Icons.help_outline,
-            isMobile,
-          ),
-          const SizedBox(height: 12.0),
-          _buildSupportOption(
-            _getLocalizedString('reportIssue'),
-            _getLocalizedString('createSupportRequest'),
-            Icons.support_agent,
-            isMobile,
-          ),
-          const SizedBox(height: 12.0),
-          _buildSupportOption(
-            _getLocalizedString('viewPreviousRequests'),
-            _getLocalizedString('checkTicketStatus'),
-            Icons.history,
-            isMobile,
-          ),
-          const SizedBox(height: 12.0),
-          _buildSupportOption(
-            _getLocalizedString('liveChat'),
-            _getLocalizedString('chatWithSupport'),
-            Icons.chat,
-            isMobile,
-          ),
-        ],
-      ),
-    );
-  }
+  
 
-  Widget _buildSupportOption(String title, String subtitle, IconData icon, bool isMobile) {
-    return Container(
-      padding: EdgeInsets.all(isMobile ? 12.0 : 16.0),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(isMobile ? 8.0 : 12.0),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            color: AppColors.primary,
-            size: isMobile ? 24.0 : 28.0,
-          ),
-          const SizedBox(width: 12.0),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 16.0 : 18.0,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 14.0 : 16.0,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Icon(
-            Icons.arrow_forward_ios,
-            color: AppColors.textSecondary,
-            size: isMobile ? 16.0 : 18.0,
-          ),
-        ],
-      ),
-    );
-  }
+  
 
   Widget _buildRecentTickets(bool isMobile, bool isTablet) {
     final tickets = [
@@ -3517,20 +3405,8 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Security Header
-              _buildSecurityHeader(isMobile, isTablet),
-              SizedBox(height: isMobile ? 20.0 : 32.0),
-              
-              // Security Status
-              _buildSecurityStatus(isMobile, isTablet, constraints.maxWidth),
-              SizedBox(height: isMobile ? 20.0 : 32.0),
-              
               // Security Options
               _buildSecurityOptions(isMobile, isTablet),
-              SizedBox(height: isMobile ? 20.0 : 32.0),
-              
-              // Login History
-              _buildLoginHistory(isMobile, isTablet),
             ],
           ),
         );
@@ -3538,116 +3414,9 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     );
   }
 
-  Widget _buildSecurityHeader(bool isMobile, bool isTablet) {
-    return Container(
-      padding: EdgeInsets.all(isMobile ? 20.0 : 32.0),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.error, AppColors.error.withValues(alpha: 0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(isMobile ? 16.0 : 20.0),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.security,
-            color: AppColors.white,
-            size: isMobile ? 48.0 : 64.0,
-          ),
-          SizedBox(width: isMobile ? 16.0 : 20.0),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _getLocalizedString('accountSecurity'),
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 24.0 : 28.0,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.white,
-                  ),
-                ),
-                const SizedBox(height: 4.0),
-                Text(
-                  _getLocalizedString('keepAccountSafe'),
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 14.0 : 16.0,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.white.withValues(alpha: 0.9),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  
 
-  Widget _buildSecurityStatus(bool isMobile, bool isTablet, double screenWidth) {
-    final securityItems = [
-      {'title': _getLocalizedString('password'), 'status': _getLocalizedString('strong'), 'icon': Icons.lock, 'color': AppColors.success},
-      {'title': _getLocalizedString('twoFactorAuth'), 'status': _getLocalizedString('enabled'), 'icon': Icons.verified_user, 'color': AppColors.success},
-      {'title': _getLocalizedString('loginAlerts'), 'status': _getLocalizedString('active'), 'icon': Icons.notifications, 'color': AppColors.success},
-      {'title': _getLocalizedString('deviceTrust'), 'status': '3 ${_getLocalizedString('devices')}', 'icon': Icons.devices, 'color': AppColors.warning},
-    ];
-
-    return Wrap(
-      spacing: isMobile ? 12.0 : 16.0,
-      runSpacing: isMobile ? 12.0 : 16.0,
-      children: securityItems.map((item) {
-        final cardWidth = isMobile 
-            ? (screenWidth - 48) / 2 
-            : (screenWidth - 96) / 4;
-        
-        return Container(
-          width: cardWidth,
-          padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(isMobile ? 12.0 : 16.0),
-            border: Border.all(color: AppColors.border, width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.shadow.withValues(alpha: 0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Icon(
-                item['icon'] as IconData,
-                color: item['color'] as Color,
-                size: isMobile ? 32.0 : 40.0,
-              ),
-              SizedBox(height: isMobile ? 8.0 : 12.0),
-              Text(
-                item['status'] as String,
-                style: GoogleFonts.cairo(
-                  fontSize: isMobile ? 18.0 : 20.0,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 4.0),
-              Text(
-                item['title'] as String,
-                style: GoogleFonts.cairo(
-                  fontSize: isMobile ? 14.0 : 16.0,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
+  
 
   Widget _buildSecurityOptions(bool isMobile, bool isTablet) {
     return Container(
@@ -3758,146 +3527,11 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     );
   }
 
-  Widget _buildLoginHistory(bool isMobile, bool isTablet) {
-    final logins = [
-      {
-        'device': 'iPhone 12',
-        'location': '${_getLocalizedString('jerusalem')}, ${_getLocalizedString('palestine')}',
-        'time': _getLocalizedString('today830AM'),
-        'status': _getLocalizedString('current'),
-        'statusColor': AppColors.success,
-      },
-      {
-        'device': 'MacBook Pro',
-        'location': '${_getLocalizedString('telAviv')}, ${_getLocalizedString('palestine')}',
-                  'time': '${_getLocalizedString('yesterday')}, 2:15 PM',
-        'status': _getLocalizedString('inActive'),
-        'statusColor': AppColors.info,
-      },
-      {
-        'device': 'Samsung Galaxy',
-        'location': '${_getLocalizedString('haifa')}, ${_getLocalizedString('palestine')}',
-        'time': '3 days ago',
-        'status': _getLocalizedString('inactive'),
-        'statusColor': AppColors.textSecondary,
-      },
-    ];
+  
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          _getLocalizedString('loginHistory'),
-          style: GoogleFonts.cairo(
-            fontSize: isMobile ? 18.0 : 20.0,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        SizedBox(height: isMobile ? 12.0 : 16.0),
-        
-        ...logins.map((login) {
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12.0),
-            child: _buildLoginCard(login, isMobile, isTablet),
-          );
-        }),
-      ],
-    );
-  }
+  
 
-  Widget _buildLoginCard(Map<String, dynamic> login, bool isMobile, bool isTablet) {
-    return Container(
-      padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(isMobile ? 12.0 : 16.0),
-        border: Border.all(color: AppColors.border, width: 1),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.devices,
-            color: AppColors.primary,
-            size: isMobile ? 24.0 : 28.0,
-          ),
-          const SizedBox(width: 12.0),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  login['device'],
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 16.0 : 18.0,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4.0),
-                Text(
-                  login['location'],
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 14.0 : 16.0,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 4.0),
-                Text(
-                  login['time'],
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 12.0 : 14.0,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: login['statusColor'].withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              login['status'],
-              style: GoogleFonts.cairo(
-                fontSize: isMobile ? 12.0 : 14.0,
-                fontWeight: FontWeight.w600,
-                color: login['statusColor'],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPlaceholderContent(String title) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.construction,
-            size: 64,
-            color: AppColors.textSecondary,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            '$title - Coming Soon',
-            style: GoogleFonts.cairo(
-              fontSize: 24,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  
 
 
 

@@ -23,127 +23,51 @@ class ContactPurposeSelector extends StatelessWidget {
         final purposes = ContactData.getAllContactPurposes();
         final screenWidth = MediaQuery.of(context).size.width;
         
-        // Use different layouts based on screen width
-        if (screenWidth < 600) {
-          // Mobile layout: 2 columns
-          return Column(
-            children: [
-              // First row - 2 items
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildPurposeCard(
-                      purposes[0],
-                      languageService,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildPurposeCard(
-                      purposes[1],
-                      languageService,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              // Second row - 2 items
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildPurposeCard(
-                      purposes[2],
-                      languageService,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildPurposeCard(
-                      purposes[3],
-                      languageService,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              // Third row - 2 items
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildPurposeCard(
-                      purposes[4],
-                      languageService,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildPurposeCard(
-                      purposes[5],
-                      languageService,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+        // Use different layouts based on screen width with dynamic item counts
+        final isMobile = screenWidth < 600;
+        final crossAxisCount = isMobile ? 2 : 3;
+        final spacing = isMobile ? 12.0 : 16.0;
+
+        List<Widget> rows = [];
+        for (int i = 0; i < purposes.length; i += crossAxisCount) {
+          final rowItems = purposes.sublist(
+            i,
+            i + crossAxisCount > purposes.length ? purposes.length : i + crossAxisCount,
           );
-        } else {
-          // Desktop layout: 3 columns (more balanced)
-          return Column(
-            children: [
-              // First row - 3 items
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildPurposeCard(
-                      purposes[0],
-                      languageService,
+          rows.add(
+            Row(
+              children: [
+                ...rowItems.asMap().entries.map((entry) {
+                  final idx = entry.key;
+                  final data = entry.value;
+                  return Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(right: idx == rowItems.length - 1 ? 0 : spacing),
+                      child: _buildPurposeCard(
+                        data,
+                        languageService,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
+                  );
+                }),
+                // If last row has fewer items, fill the space to keep alignment
+                if (rowItems.length < crossAxisCount)
                   Expanded(
-                    child: _buildPurposeCard(
-                      purposes[1],
-                      languageService,
-                    ),
+                    child: SizedBox.shrink(),
                   ),
-                  const SizedBox(width: 16),
+                if (!isMobile && rowItems.length == 1)
                   Expanded(
-                    child: _buildPurposeCard(
-                      purposes[2],
-                      languageService,
-                    ),
+                    child: SizedBox.shrink(),
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              // Second row - 3 items
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildPurposeCard(
-                      purposes[3],
-                      languageService,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildPurposeCard(
-                      purposes[4],
-                      languageService,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildPurposeCard(
-                      purposes[5],
-                      languageService,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           );
+          if (i + crossAxisCount < purposes.length) {
+            rows.add(SizedBox(height: spacing));
+          }
         }
+
+        return Column(children: rows);
       },
     );
   }

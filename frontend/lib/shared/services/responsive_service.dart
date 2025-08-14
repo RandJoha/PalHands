@@ -54,7 +54,8 @@ class ResponsiveService extends ChangeNotifier {
   bool shouldUseVeryCompactNavigation(double screenWidth) {
     // Use very compact navigation only on small tablets
     // This prevents the need to hide navigation items
-    return screenWidth > mobileBreakpoint && screenWidth <= 950;
+  // Expanded to 1028px to avoid overlap between center titles and right actions
+  return screenWidth > mobileBreakpoint && screenWidth <= 1028;
   }
 
   // Unified collapsed navigation breakpoint for small/medium widths
