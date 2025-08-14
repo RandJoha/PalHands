@@ -18,4 +18,17 @@ const loginValidator = celebrate({
   })
 });
 
-module.exports = { registerValidator, loginValidator };
+const forgotPasswordValidator = celebrate({
+  [Segments.BODY]: Joi.object({
+    email: Joi.string().email().required()
+  })
+});
+
+const resetPasswordValidator = celebrate({
+  [Segments.BODY]: Joi.object({
+    token: Joi.string().required(),
+    newPassword: Joi.string().min(6).required()
+  })
+});
+
+module.exports = { registerValidator, loginValidator, forgotPasswordValidator, resetPasswordValidator };

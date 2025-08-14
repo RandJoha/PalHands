@@ -2,16 +2,17 @@
   "info": {
     "name": "PalHands API (Dev)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Concise collection to test core endpoints: auth, users, services, bookings."
+    "description": "Concise collection to test core endpoints: auth, users, services, availability, bookings."
   },
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:3000" },
     { "key": "clientToken", "value": "" },
     { "key": "providerToken", "value": "" },
-  { "key": "adminToken", "value": "" },
-  { "key": "serviceId", "value": "" },
-  { "key": "bookingId", "value": "" },
-  { "key": "bookingCode", "value": "" }
+    { "key": "adminToken", "value": "" },
+    { "key": "serviceId", "value": "" },
+    { "key": "bookingId", "value": "" },
+    { "key": "bookingCode", "value": "" },
+    { "key": "providerId", "value": "" }
   ],
   "item": [
     {
@@ -30,7 +31,7 @@
           "request": {
             "method": "POST",
             "header": [ { "key": "Content-Type", "value": "application/json" } ],
-            "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"Client\",\n  \"lastName\": \"User\",\n  \"email\": \"client@example.com\",\n  \"phone\": \"+970590009999\",\n  \"password\": \"Client123\",\n  \"role\": \"client\"\n}" },
+            "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"Client\",\n  \"lastName\": \"User\",\n  \"email\": \"client@example.com\",\n  \"phone\": \"+970590009999\",\n  \"password\": \"Client1234!\",\n  \"role\": \"client\"\n}" },
             "url": "{{baseUrl}}/api/auth/register"
           }
         },
@@ -72,7 +73,7 @@
           "request": {
             "method": "POST",
             "header": [ { "key": "Content-Type", "value": "application/json" } ],
-            "body": { "mode": "raw", "raw": "{\n  \"email\": \"client@example.com\",\n  \"password\": \"Client123\"\n}" },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"client@example.com\",\n  \"password\": \"Client1234!\"\n}" },
             "url": "{{baseUrl}}/api/auth/login"
           }
         },
@@ -84,7 +85,8 @@
               "script": {
                 "exec": [
                   "var json = pm.response.json();",
-                  "if(json && json.data && json.data.token){ pm.collectionVariables.set('providerToken', json.data.token); }"
+                  "if(json && json.data && json.data.token){ pm.collectionVariables.set('providerToken', json.data.token); }",
+                  "if(json && json.data && json.data.user && json.data.user._id){ pm.collectionVariables.set('providerId', json.data.user._id); }"
                 ],
                 "type": "text/javascript"
               }
@@ -98,14 +100,13 @@
           }
         },
         {
-          "name": "Validate Token (client)",
+          "name": "Validate Token (any role)",
           "request": {
             "method": "GET",
             "header": [ { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
             "url": "{{baseUrl}}/api/auth/validate"
           }
-        }
-        ,
+        },
         {
           "name": "Request Verification (client)",
           "request": {
@@ -123,18 +124,46 @@
             "url": "{{baseUrl}}/api/auth/verify"
           }
         }
+        ,
+        {
+          "name": "Forgot Password (public)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"client@example.com\"\n}" },
+            "url": "{{baseUrl}}/api/auth/forgot-password"
+          }
+        },
+        {
+          "name": "Reset Password (public)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"<paste token from email>\",\n  \"newPassword\": \"Client1234!\"\n}" },
+            "url": "{{baseUrl}}/api/auth/reset-password"
+          }
+        }
       ]
     },
     {
-      "name": "Users",
+    "name": "Users",
       "item": [
         {
-          "name": "Update Profile (client)",
+      "name": "Update Profile (any role)",
           "request": {
             "method": "PUT",
             "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
             "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"Updated\"\n}" },
             "url": "{{baseUrl}}/api/users/profile"
+          }
+        },
+        {
+      "name": "Change Password (any role)",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"currentPassword\": \"Client1234!\",\n  \"newPassword\": \"Client1234!!\"\n}" },
+            "url": "{{baseUrl}}/api/users/change-password"
           }
         }
       ]
@@ -160,26 +189,85 @@
           "request": {
             "method": "POST",
             "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{adminToken}}" } ],
-            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Move small furniture\",\n  \"description\": \"Help moving items between rooms\",\n  \"category\": \"furniture_moving\",\n  \"price\": { \"amount\": 80, \"type\": \"hourly\", \"currency\": \"ILS\" },\n  \"location\": { \"serviceArea\": \"Ramallah\", \"radius\": 10, \"onSite\": true },\n  \"provider\": \"<providerId>\"\n}" },
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Move small furniture\",\n  \"description\": \"Help moving items between rooms\",\n  \"category\": \"furniture_moving\",\n  \"price\": { \"amount\": 80, \"type\": \"hourly\", \"currency\": \"ILS\" },\n  \"location\": { \"serviceArea\": \"Ramallah\", \"radius\": 10, \"onSite\": true },\n  \"provider\": \"{{providerId}}\"\n}" },
             "url": "{{baseUrl}}/api/services"
+          }
+        },
+        {
+          "name": "Upload Service Images (admin; local only)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Authorization", "value": "Bearer {{adminToken}}" } ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "images", "type": "file", "src": ["/path/to/image1.jpg"] },
+                { "key": "images", "type": "file", "src": ["/path/to/image2.png"] }
+              ]
+            },
+            "url": "{{baseUrl}}/api/services/{{serviceId}}/images"
+          }
+        },
+        {
+          "name": "Presign Service Images (admin; s3/minio)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{adminToken}}" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"files\": [\n    { \"filename\": \"image1.jpg\", \"contentType\": \"image/jpeg\", \"size\": 120000 },\n    { \"filename\": \"image2.png\", \"contentType\": \"image/png\", \"size\": 90000 }\n  ]\n}" },
+            "url": "{{baseUrl}}/api/services/{{serviceId}}/images/presign"
+          }
+        },
+        {
+          "name": "Attach Service Images (admin; s3/minio)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{adminToken}}" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"images\": [\n    { \"key\": \"services/{{serviceId}}/image1.jpg\", \"alt\": \"Alt text\" }\n  ]\n}" },
+            "url": "{{baseUrl}}/api/services/{{serviceId}}/images/attach"
+          }
+        },
+        {
+          "name": "Cleanup Orphans (admin; s3/minio)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Authorization", "value": "Bearer {{adminToken}}" } ],
+            "url": "{{baseUrl}}/api/services/{{serviceId}}/images/cleanup"
           }
         },
         { "name": "Get Service (public)", "request": { "method": "GET", "url": "{{baseUrl}}/api/services/{{serviceId}}" } }
       ]
     },
     {
+      "name": "Availability",
+      "item": [
+        {
+          "name": "Get Provider Availability",
+          "request": { "method": "GET", "header": [ { "key": "Authorization", "value": "Bearer {{providerToken}}" } ], "url": "{{baseUrl}}/api/availability/{{providerId}}" }
+        },
+        {
+          "name": "Set Provider Availability",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{providerToken}}" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"timezone\": \"Asia/Jerusalem\",\n  \"weekly\": {\n    \"monday\": [{ \"start\": \"09:00\", \"end\": \"17:00\" }],\n    \"tuesday\": [],\n    \"wednesday\": [],\n    \"thursday\": [],\n    \"friday\": [],\n    \"saturday\": [],\n    \"sunday\": []\n  },\n  \"exceptions\": [ { \"date\": \"2025-08-14\", \"windows\": [] } ]\n}" },
+            "url": "{{baseUrl}}/api/availability/{{providerId}}"
+          }
+        }
+      ]
+    },
+    {
       "name": "Bookings",
       "item": [
-  {
-    "name": "Create Booking (client)",
+        {
+          "name": "Create Booking (any role)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-      "var json = pm.response.json();",
-      "if(json && json.data && json.data._id){ pm.collectionVariables.set('bookingId', json.data._id); }",
-      "if(json && json.data && json.data.bookingId){ pm.collectionVariables.set('bookingCode', json.data.bookingId); }"
+                  "var json = pm.response.json();",
+                  "if(json && json.data && json.data._id){ pm.collectionVariables.set('bookingId', json.data._id); }",
+                  "if(json && json.data && json.data.bookingId){ pm.collectionVariables.set('bookingCode', json.data.bookingId); }"
                 ],
                 "type": "text/javascript"
               }
@@ -188,12 +276,12 @@
           "request": {
             "method": "POST",
             "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
-            "body": { "mode": "raw", "raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"schedule\": { \"date\": \"2025-08-12\", \"startTime\": \"10:00\", \"endTime\": \"12:00\" },\n  \"location\": { \"address\": \"Main St. 12, Ramallah\" },\n  \"notes\": \"Be careful with the piano.\"\n}" },
+            "body": { "mode": "raw", "raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"schedule\": { \"date\": \"2025-08-12\", \"startTime\": \"10:00\", \"endTime\": \"12:00\", \"timezone\": \"Asia/Jerusalem\" },\n  \"location\": { \"address\": \"Main St. 12, Ramallah\" },\n  \"notes\": \"Be careful with the piano.\"\n}" },
             "url": "{{baseUrl}}/api/bookings"
           }
         },
         {
-          "name": "Get Booking by _id (client/provider)",
+          "name": "Get Booking by id (client/provider/admin)",
           "request": {
             "method": "GET",
             "header": [ { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
@@ -201,15 +289,7 @@
           }
         },
         {
-          "name": "Get Booking by code (client/provider)",
-          "request": {
-            "method": "GET",
-            "header": [ { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
-            "url": "{{baseUrl}}/api/bookings/code/{{bookingCode}}"
-          }
-        },
-        {
-          "name": "Update Status (provider)",
+          "name": "Update Status (provider only)",
           "request": {
             "method": "PUT",
             "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{providerToken}}" } ],

@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const asyncHandler = require('../utils/asyncHandler');
 const { ok, created, error } = require('../utils/response');
+const { sendEmail } = require('../services/mailer');
 
 // Generate JWT token
 const generateToken = (userId) => {
@@ -189,6 +190,37 @@ module.exports = {
   validateToken,
   logout,
   getProfile,
+  // Forgot password: issue reset token and email it
+  forgotPassword: asyncHandler(async (req, res) => {
+    const { email } = req.body;
+    if (!email) return error(res, 400, 'Email is required');
+    const user = await User.findOne({ email: email.toLowerCase() });
+    // Do not reveal whether the email exists
+    if (!user) return ok(res, {}, 'If the email exists, a reset link has been sent');
+    user.passwordResetToken = require('crypto').randomBytes(20).toString('hex');
+    user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1h
+    await user.save();
+    const resetUrl = `${process.env.APP_BASE_URL || 'http://localhost:3000'}/reset-password?token=${user.passwordResetToken}`;
+    await sendEmail({
+      to: user.email,
+      subject: 'Reset your PalHands password',
+      text: `Use this token to reset your password: ${user.passwordResetToken}. Or open ${resetUrl}`,
+      html: `<p>Use this token to reset your password:</p><p><b>${user.passwordResetToken}</b></p><p>Or open <a href="${resetUrl}">${resetUrl}</a></p>`
+    });
+    return ok(res, {}, 'If the email exists, a reset link has been sent');
+  }),
+  // Reset password with token
+  resetPassword: asyncHandler(async (req, res) => {
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword) return error(res, 400, 'Token and newPassword are required');
+    const user = await User.findOne({ passwordResetToken: token, passwordResetExpires: { $gt: new Date() } });
+    if (!user) return error(res, 400, 'Invalid or expired token');
+    user.password = newPassword;
+    user.passwordResetToken = null;
+    user.passwordResetExpires = null;
+    await user.save();
+    return ok(res, {}, 'Password has been reset');
+  }),
   // Issue a verification token (dev/simple flow)
   requestVerification: asyncHandler(async (req, res) => {
     if (process.env.ENABLE_EMAIL_VERIFICATION !== 'true') {

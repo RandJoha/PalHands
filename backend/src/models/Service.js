@@ -87,6 +87,18 @@ const serviceSchema = new mongoose.Schema({
     remote: {
       type: Boolean,
       default: false
+    },
+    // Optional geo point for proximity search
+    geo: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: undefined
+      },
+      coordinates: {
+        type: [Number], // [lng, lat]
+        default: undefined
+      }
     }
   },
   images: [{
@@ -131,5 +143,6 @@ const serviceSchema = new mongoose.Schema({
 serviceSchema.index({ title: 'text', description: 'text', category: 'text' });
 serviceSchema.index({ 'location.serviceArea': 1, category: 1 });
 serviceSchema.index({ 'rating.average': -1 });
+serviceSchema.index({ 'location.geo': '2dsphere' });
 
 module.exports = mongoose.model('Service', serviceSchema); 

@@ -4,6 +4,7 @@ const { validateEnv } = require('./src/utils/config');
 const env = validateEnv();
 const { connectDB, mongoose } = require('./src/config/database');
 const app = require('./src/app');
+const { startMediaCleanupScheduler } = require('./src/services/cleanup');
 
 const PORT = env.PORT || 3000;
 
@@ -14,6 +15,7 @@ const PORT = env.PORT || 3000;
     console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);
   });
+  startMediaCleanupScheduler();
 })().catch((err) => {
   console.error('❌ Failed to start server:', err);
   process.exit(1);

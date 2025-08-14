@@ -26,9 +26,6 @@ module.exports = {
     if (user.role === 'provider' && providerId === userId) {
       ['confirmed','in_progress','completed','cancelled','disputed'].forEach(s=>allowed.add(s));
     }
-    if (user.role === 'admin') {
-      ['confirmed','in_progress','completed','cancelled','disputed'].forEach(s=>allowed.add(s));
-    }
     return allowed;
   }
 };

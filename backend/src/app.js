@@ -54,6 +54,7 @@ app.use('/api/admin', require('./routes/admin'));
 // New modules (Phase 1)
 app.use('/api/services', require('./routes/services'));
 app.use('/api/bookings', require('./routes/bookings'));
+app.use('/api/availability', require('./routes/availability'));
 
 // Probes
 app.get('/api/health', (req, res) => {

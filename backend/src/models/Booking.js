@@ -39,7 +39,10 @@ const bookingSchema = new mongoose.Schema({
       type: String,
       required: true
     },
-    duration: Number // in minutes
+  duration: Number, // in minutes
+  startUtc: Date,
+  endUtc: Date,
+  timezone: String
   },
   location: {
     address: {
@@ -169,6 +172,7 @@ bookingSchema.pre('save', function(next) {
 bookingSchema.index({ client: 1, createdAt: -1 });
 bookingSchema.index({ provider: 1, createdAt: -1 });
 bookingSchema.index({ status: 1, 'schedule.date': 1 });
+bookingSchema.index({ provider: 1, 'schedule.startUtc': 1, 'schedule.endUtc': 1 });
 bookingSchema.index({ bookingId: 1 });
 
 module.exports = mongoose.model('Booking', bookingSchema); 

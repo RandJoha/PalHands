@@ -45,6 +45,35 @@ paths:
   /api/auth/login:
     post:
       summary: Login
+  /api/auth/forgot-password:
+    post:
+      summary: Forgot password (issue reset token)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '200': { description: OK }
+  /api/auth/reset-password:
+    post:
+      summary: Reset password with token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, newPassword]
+              properties:
+                token: { type: string }
+                newPassword: { type: string, format: password }
+      responses:
+        '200': { description: OK }
       requestBody:
         required: true
         content:
@@ -92,9 +121,336 @@ paths:
                 newPassword: { type: string }
       responses:
         '200': { description: OK }
+  /api/services:
+    get:
+      summary: List services
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: area
+          schema: { type: string }
+        - in: query
+          name: category
+          schema: { type: string }
+        - in: query
+          name: providerId
+          schema: { type: string }
+        - in: query
+          name: near
+          description: "lng,lat"
+          schema: { type: string }
+        - in: query
+          name: maxDistanceKm
+          schema: { type: number }
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100 }
+      responses:
+        '200': { description: OK }
+    post:
+      summary: Create service (admin)
+      security: [ { bearerAuth: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, description, category, price, location, provider]
+              properties:
+                title: { type: string }
+                description: { type: string }
+                category: { type: string }
+                subcategory: { type: string }
+                provider: { type: string }
+                price:
+                  type: object
+                  required: [amount, type]
+                  properties:
+                    amount: { type: number }
+                    type: { type: string, enum: [hourly, fixed, daily] }
+                    currency: { type: string }
+                location:
+                  type: object
+                  required: [serviceArea]
+                  properties:
+                    serviceArea: { type: string }
+                    radius: { type: number }
+                    onSite: { type: boolean }
+                    remote: { type: boolean }
+                    geo:
+                      type: object
+                      properties:
+                        type: { type: string, enum: [Point] }
+                        coordinates:
+                          type: array
+                          items: { type: number }
+                          minItems: 2
+                          maxItems: 2
+      responses:
+        '201': { description: Created }
+  /api/services/{id}:
+    get:
+      summary: Get service by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+    put:
+      summary: Update service (admin)
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Updated }
+    delete:
+      summary: Delete service (admin)
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Deleted }
+  /api/services/{id}/images:
+    post:
+      summary: Upload service images (local storage only)
+      description: Available only when STORAGE_DRIVER=local
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        '200': { description: OK }
+  /api/services/{id}/images/presign:
+    post:
+      summary: Presign image uploads (S3/MinIO)
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [files]
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: object
+                    required: [filename, contentType]
+                    properties:
+                      filename: { type: string }
+                      contentType: { type: string }
+                      size: { type: number }
+      responses:
+        '200': { description: OK }
+  /api/services/{id}/images/attach:
+    post:
+      summary: Attach uploaded images (S3/MinIO)
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [images]
+              properties:
+                images:
+                  type: array
+                  items:
+                    type: object
+                    required: [key]
+                    properties:
+                      key: { type: string }
+                      alt: { type: string }
+      responses:
+        '200': { description: OK }
+  /api/services/{id}/images/cleanup:
+    post:
+      summary: Cleanup orphan images (S3/MinIO)
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+  /api/availability/{providerId}:
+    get:
+      summary: Get provider availability (any role)
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - in: path
+          name: providerId
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+    put:
+      summary: Set provider availability (provider self or admin)
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - in: path
+          name: providerId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [timezone, weekly]
+              properties:
+                timezone: { type: string }
+                weekly:
+                  type: object
+                  properties:
+                    monday: { type: array, items: { $ref: '#/components/schemas/TimeWindow' } }
+                    tuesday: { type: array, items: { $ref: '#/components/schemas/TimeWindow' } }
+                    wednesday: { type: array, items: { $ref: '#/components/schemas/TimeWindow' } }
+                    thursday: { type: array, items: { $ref: '#/components/schemas/TimeWindow' } }
+                    friday: { type: array, items: { $ref: '#/components/schemas/TimeWindow' } }
+                    saturday: { type: array, items: { $ref: '#/components/schemas/TimeWindow' } }
+                    sunday: { type: array, items: { $ref: '#/components/schemas/TimeWindow' } }
+                exceptions:
+                  type: array
+                  items:
+                    type: object
+                    required: [date]
+                    properties:
+                      date: { type: string, format: date }
+                      windows: { type: array, items: { $ref: '#/components/schemas/TimeWindow' } }
+      responses:
+        '200': { description: OK }
+  /api/bookings:
+    post:
+      summary: Create booking
+      security: [ { bearerAuth: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [serviceId, schedule, location]
+              properties:
+                clientId: { type: string }
+                serviceId: { type: string }
+                schedule:
+                  type: object
+                  required: [date, startTime, endTime, timezone]
+                  properties:
+                    date: { type: string, example: '2025-08-12' }
+                    startTime: { type: string, example: '10:00' }
+                    endTime: { type: string, example: '12:00' }
+                    duration: { type: integer }
+                    timezone: { type: string, example: 'Asia/Jerusalem' }
+                location:
+                  type: object
+                  required: [address]
+                  properties:
+                    address: { type: string }
+                    coordinates:
+                      type: object
+                      properties:
+                        latitude: { type: number }
+                        longitude: { type: number }
+                    instructions: { type: string }
+                notes: { type: string }
+      responses:
+        '201': { description: Created }
+    get:
+      summary: List my bookings
+      security: [ { bearerAuth: [] } ]
+      responses:
+        '200': { description: OK }
+  /api/bookings/{id}:
+    get:
+      summary: Get booking by id
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+  /api/bookings/{id}/status:
+    put:
+  summary: Update booking status (provider only)
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [confirmed, in_progress, completed, cancelled, disputed] }
+      responses:
+        '200': { description: OK }
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+  schemas:
+    TimeWindow:
+      type: object
+      required: [start, end]
+      properties:
+        start: { type: string, example: '09:00' }
+        end: { type: string, example: '17:00' }

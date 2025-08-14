@@ -122,3 +122,13 @@ For production deployment:
 | `BCRYPT_ROUNDS` | Password hashing rounds | 12 | No |
 | `MAX_FILE_SIZE` | Max upload size (bytes) | 5242880 | No |
 | `UPLOAD_PATH` | File upload directory | ./uploads | No | 
+| `STORAGE_DRIVER` | local | s3 | minio | local | No |
+| `S3_BUCKET` | S3/MinIO bucket name | - | When STORAGE_DRIVER is s3/minio |
+| `S3_REGION` | S3 region | us-east-1 | When STORAGE_DRIVER is s3 |
+| `S3_ENDPOINT` | MinIO or custom S3 endpoint URL | - | When STORAGE_DRIVER is minio/custom |
+| `S3_ACCESS_KEY_ID` | Access key | - | When STORAGE_DRIVER is s3/minio |
+| `S3_SECRET_ACCESS_KEY` | Secret key | - | When STORAGE_DRIVER is s3/minio |
+| `S3_FORCE_PATH_STYLE` | Use path-style URLs | false | No |
+| `S3_SIGNED_URL_TTL` | Presign TTL (seconds) | 900 | No |
+| `ENABLE_MEDIA_CLEANUP` | Enable background media orphan cleanup | false | No |
+| `MEDIA_CLEANUP_INTERVAL_MIN` | Cleanup interval minutes | 120 | No |

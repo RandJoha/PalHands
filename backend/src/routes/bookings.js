@@ -9,10 +9,11 @@ const createBookingValidator = celebrate({
   clientId: Joi.string().hex().length(24).optional(),
     serviceId: Joi.string().hex().length(24).required(),
     schedule: Joi.object({
-      date: Joi.date().iso().required(),
+  date: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).required(),
       startTime: Joi.string().pattern(/^\d{2}:\d{2}$/).required(),
       endTime: Joi.string().pattern(/^\d{2}:\d{2}$/).required(),
-      duration: Joi.number().integer().min(0).optional()
+  duration: Joi.number().integer().min(0).optional(),
+  timezone: Joi.string().required()
     }).required(),
     location: Joi.object({
       address: Joi.string().required(),
@@ -30,7 +31,6 @@ const updateStatusValidator = celebrate({
 router.post('/', auth, checkRole(['client','provider','admin']), createBookingValidator, bookingsController.createBooking);
 router.get('/', auth, bookingsController.listMyBookings);
 // Important: define the 'code' route before the generic ':id' route
-router.get('/code/:bookingId', auth, bookingsController.getBookingByCode);
 router.get('/:id', auth, bookingsController.getBookingById);
 router.put('/:id/status', auth, updateStatusValidator, bookingsController.updateBookingStatus);
 

@@ -673,6 +673,12 @@ const adminAuth = async (req, res, next) => {
 | GET | `/profile` | Get user profile | Yes |
 | POST | `/request-verification` | Issue email verification token (when ENABLE_EMAIL_VERIFICATION=true) | Yes |
 | POST | `/verify` | Verify email with token (when ENABLE_EMAIL_VERIFICATION=true) | No |
+| POST | `/forgot-password` | Request password reset token | No |
+| POST | `/reset-password` | Reset password with token | No |
+
+Notes:
+- Email verification is optional and for sign-up only (confirming new accounts). It is not used for password change or login.
+- Password reset is a separate flow for users who forgot the current password and does not require being logged in.
 
 ### User Management Routes (`/api/users`)
 ### Services Routes (`/api/services`) — Phase 1
@@ -684,19 +690,21 @@ const adminAuth = async (req, res, next) => {
 | POST | `/` | Create service | Yes | Admin |
 | PUT | `/:id` | Update service | Yes | Admin |
 | DELETE | `/:id` | Delete service | Yes | Admin |
+| POST | `/:id/images` | Upload service images (multipart field: images[]) | Yes | Admin |
 
 Notes:
-- Only admins can create/update/delete services. Providers cannot create services directly.
+- Only admins can create/update/delete services and upload images. Providers cannot create services directly in Phase 1.
 - Every service must have an associated provider in the backend (enforced on creation). Admin must pass `provider` (a valid provider user ID) in the request body.
+- Images are stored under `/uploads/services/<serviceId>/` and exposed via `/uploads` static route (dev only).
 
 ### Bookings Routes (`/api/bookings`) — Phase 1
 
 | Method | Endpoint | Description | Auth Required | Role Required |
 |--------|----------|-------------|---------------|---------------|
-| POST | `/` | Client creates a booking for a service | Yes | Client |
+| POST | `/` | Create a booking for a service | Yes | Client/Provider/Admin |
 | GET | `/` | List my bookings (client: as client; provider: as provider) | Yes | Any |
 | GET | `/:id` | Get booking (only client, provider, or admin) | Yes | Any |
-| PUT | `/:id/status` | Update booking status (RBAC rules) | Yes | Client/Provider/Admin |
+| PUT | `/:id/status` | Update booking status | Yes | Provider only |
 
 | Method | Endpoint | Description | Auth Required | Role Required |
 |--------|----------|-------------|---------------|---------------|
@@ -717,7 +725,7 @@ Notes:
 | GET | `/services` | List services with filters | Yes | Admin |
 | PUT | `/services/:serviceId` | Update service status/featured | Yes | Admin |
 | GET | `/bookings` | List bookings with filters | Yes | Admin |
-| PUT | `/bookings/:bookingId` | Update booking status/notes | Yes | Admin |
+| PUT | `/bookings/:bookingId` | Update booking status | Yes | Provider only |
 | GET | `/reports` | Get user reports | Yes | Admin |
 | PUT | `/reports/:reportId` | Update report status/assignment/resolution | Yes | Admin |
 | GET | `/settings` | Get system settings | Yes | Admin |
@@ -875,9 +883,10 @@ const login = async (req, res) => {
 
 - `listServices`: Public browse with filters and pagination
 - `getServiceById`: Public get
-- `createService`: Provider-only, enforces backend provider association
-- `updateService`: Provider owns resource; admin override
-- `deleteService`: Provider owns resource; admin override
+- `createService`: Admin-only in Phase 1, enforces backend provider association
+- `updateService`: Admin-only in Phase 1
+- `deleteService`: Admin-only in Phase 1
+- `uploadServiceImages`: Admin-only image upload, attaches files to `service.images`
 
 ### BookingsController (`src/controllers/bookingsController.js`) — Phase 1
 
@@ -1723,29 +1732,31 @@ Milestone: Authorization consistent and enforced centrally.
 - [x] Create `controllers/servicesController.js` and `routes/services.js`
 - [x] Endpoints: GET `/`, GET `/:id`, POST, PUT, DELETE (admin-only management)
 - [x] Text search via existing index; `q` param support
-- [ ] Multer upload pipeline + validation; store under `/uploads`
+- [x] Multer upload pipeline + validation; store under `/uploads`
 - [x] Mount `/api/services` in `app.js`
   - Note: Admin can create on behalf of a provider by passing `provider` (User ID with role=provider).
 
 Milestone: Browse + provider CRUD; admin moderation already available.
 
 ### Phase 2.1 — Media Storage (High)
-- [ ] Switch to S3/MinIO + signed URLs
-- [ ] Validate mime/size; strip metadata
-- [ ] Orphan cleanup background job
+- [x] Switch to S3/MinIO + signed URLs
+- [x] Validate mime/size; strip metadata (note: stripping delegated to CDN/processor)
+- [x] Orphan cleanup background job (env-gated)
 
 Milestone: Production-grade media handling.
 
+Note: Media upload/presign/attach/cleanup APIs are implemented but will be tested later after core flows are verified. Keep STORAGE_DRIVER=local for basic dev, or configure MinIO/AWS for presign flow when ready.
+
 ### Phase 2.2 — Provider Availability (High)
-- [ ] Availability model + exceptions
-- [ ] Anti double-booking (unique constraints/locks)
-- [ ] TZ/DST-safe scheduling
+- [x] Availability model + exceptions
+- [x] Anti double-booking (unique constraints/locks)
+- [x] TZ/DST-safe scheduling
 
 Milestone: Accurate availability and booking validation.
 
 ### Phase 2.3 — Geo & Search (Medium)
-- [ ] 2dsphere indexes for geo queries
-- [ ] Unified pagination/filtering helpers
+- [x] 2dsphere indexes for geo queries
+- [x] Unified pagination/filtering helpers
 
 Milestone: Efficient geo search and consistent pagination.
 
