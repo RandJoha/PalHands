@@ -2,7 +2,7 @@
   "info": {
     "name": "PalHands API (Dev)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Concise collection to test core endpoints: auth, users, services, availability, bookings."
+    "description": "Concise collection to test core endpoints: auth, users, services, availability, bookings, reports."
   },
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:3000" },
@@ -12,7 +12,9 @@
     { "key": "serviceId", "value": "" },
     { "key": "bookingId", "value": "" },
     { "key": "bookingCode", "value": "" },
-    { "key": "providerId", "value": "" }
+    { "key": "providerId", "value": "" },
+    { "key": "adminId", "value": "" },
+    { "key": "reportId", "value": "" }
   ],
   "item": [
     {
@@ -123,8 +125,7 @@
             "body": { "mode": "raw", "raw": "{\n  \"token\": \"<paste token from register or request-verification>\"\n}" },
             "url": "{{baseUrl}}/api/auth/verify"
           }
-        }
-        ,
+        },
         {
           "name": "Forgot Password (public)",
           "request": {
@@ -146,10 +147,10 @@
       ]
     },
     {
-    "name": "Users",
+      "name": "Users",
       "item": [
         {
-      "name": "Update Profile (any role)",
+          "name": "Update Profile (any role)",
           "request": {
             "method": "PUT",
             "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
@@ -158,7 +159,7 @@
           }
         },
         {
-      "name": "Change Password (any role)",
+          "name": "Change Password (any role)",
           "request": {
             "method": "PUT",
             "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
@@ -209,7 +210,7 @@
           }
         },
         {
-          "name": "Presign Service Images (admin; s3/minio)",
+          "name": "Presign Service Images (admin; s3)",
           "request": {
             "method": "POST",
             "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{adminToken}}" } ],
@@ -218,7 +219,7 @@
           }
         },
         {
-          "name": "Attach Service Images (admin; s3/minio)",
+          "name": "Attach Service Images (admin; s3)",
           "request": {
             "method": "POST",
             "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{adminToken}}" } ],
@@ -227,7 +228,7 @@
           }
         },
         {
-          "name": "Cleanup Orphans (admin; s3/minio)",
+          "name": "Cleanup Orphans (admin; s3)",
           "request": {
             "method": "POST",
             "header": [ { "key": "Authorization", "value": "Bearer {{adminToken}}" } ],
@@ -295,6 +296,213 @@
             "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{providerToken}}" } ],
             "body": { "mode": "raw", "raw": "{ \n  \"status\": \"confirmed\"\n}" },
             "url": "{{baseUrl}}/api/bookings/{{bookingId}}/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Create Report (user issue; client reporting provider)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{clientToken}}" },
+              { "key": "Idempotency-Key", "value": "demo-key-123" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reportCategory\": \"user_issue\",\n  \"reportedType\": \"user\",\n  \"reportedId\": \"{{providerId}}\",\n  \"reportedUserRole\": \"provider\",\n  \"reportedName\": \"Lina Provider\",\n  \"issueType\": \"unsafe\",\n  \"description\": \"What went wrong…\",\n  \"partyInfo\": {\n    \"reporterName\": \"Client User\",\n    \"reporterEmail\": \"client@example.com\",\n    \"reportedEmail\": \"lina.provider@example.com\"\n  },\n  \"relatedBookingId\": \"{{bookingId}}\",\n  \"reportedServiceId\": \"{{serviceId}}\",\n  \"evidence\": []\n}"
+            },
+            "url": "{{baseUrl}}/api/reports"
+          }
+        },
+        {
+          "name": "Create Report (feature suggestion)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reportCategory\": \"feature_suggestion\",\n  \"ideaTitle\": \"Allow schedule sync with Google Calendar\",\n  \"description\": \"Explain the feature\",\n  \"communityBenefit\": \"Helps reduce no-shows…\",\n  \"contactName\": \"Client User\",\n  \"contactEmail\": \"client@example.com\",\n  \"evidence\": []\n}"
+            },
+            "url": "{{baseUrl}}/api/reports"
+          }
+        },
+        {
+          "name": "Create Report (technical issue)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reportCategory\": \"technical_issue\",\n  \"description\": \"The app crashes when uploading an image.\",\n  \"contactEmail\": \"client@example.com\",\n  \"contactName\": \"Client User\",\n  \"device\": \"Samsung S22\",\n  \"os\": \"Android 14\",\n  \"appVersion\": \"1.2.3\",\n  \"evidence\": []\n}"
+            },
+            "url": "{{baseUrl}}/api/reports"
+          }
+        },
+        {
+          "name": "Create Report (service category request)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reportCategory\": \"service_category_request\",\n  \"serviceName\": \"Garden Design\",\n  \"categoryFit\": \"Home & Garden\",\n  \"importanceReason\": \"High demand…\",\n  \"contactName\": \"Client User\",\n  \"contactEmail\": \"client@example.com\",\n  \"description\": \"Optional extra details\",\n  \"evidence\": []\n}"
+            },
+            "url": "{{baseUrl}}/api/reports"
+          }
+        },
+        {
+          "name": "Create Report (other)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reportCategory\": \"other\",\n  \"description\": \"Free text from user\",\n  \"contactName\": \"Client User\",\n  \"contactEmail\": \"client@example.com\",\n  \"evidence\": []\n}"
+            },
+            "url": "{{baseUrl}}/api/reports"
+          }
+        },
+        {
+          "name": "List My Reports",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "url": "{{baseUrl}}/api/reports/me?status=pending&reportCategory=user_issue&hasEvidence=false"
+          }
+        },
+        {
+          "name": "Get Report by Id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if(json && json.data && json.data._id){ pm.collectionVariables.set('reportId', json.data._id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "url": "{{baseUrl}}/api/reports/{{reportId}}"
+          }
+        },
+        {
+          "name": "Add Evidence (multipart)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Ensure reportId is set before calling this request"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "files", "type": "file", "src": ["/path/to/evidence1.jpg"] },
+                { "key": "files", "type": "file", "src": ["/path/to/evidence2.pdf"] }
+              ]
+            },
+            "url": "{{baseUrl}}/api/reports/{{reportId}}/evidence"
+          }
+        },
+        {
+          "name": "Admin - List Reports (filters)",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{adminToken}}" } ],
+            "url": "{{baseUrl}}/api/admin/reports?reportCategory=user_issue&issueType=unsafe&hasEvidence=true&sort=createdAt:desc"
+          }
+        },
+        {
+          "name": "Admin - List Reports",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{adminToken}}" } ],
+            "url": "{{baseUrl}}/api/admin/reports?status=pending&limit=20&page=1"
+          }
+        },
+        {
+          "name": "Admin - Update Report (set under_review)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"under_review\",\n  \"assignedAdmin\": \"{{adminId}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/reports/{{reportId}}"
+          }
+        },
+        {
+          "name": "Admin - Resolve Report",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"resolved\",\n  \"assignedAdmin\": \"{{adminId}}\",\n  \"resolution\": { \"action\": \"warn_user\", \"notes\": \"First-time offense\" }\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/reports/{{reportId}}"
+          }
+        },
+        {
+          "name": "Admin - Dismiss Report",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"dismissed\",\n  \"assignedAdmin\": \"{{adminId}}\",\n  \"resolution\": { \"reason\": \"insufficient_evidence\", \"notes\": \"No logs/screenshots\" }\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/reports/{{reportId}}"
+          }
+        },
+        {
+          "name": "Admin - Request Info",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Please attach a screenshot of the error dialog\"\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/reports/{{reportId}}/request-info"
+          }
+        },
+        {
+          "name": "Admin - Stats",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{adminToken}}" } ],
+            "url": "{{baseUrl}}/api/admin/reports/stats?since=2025-08-01"
           }
         }
       ]

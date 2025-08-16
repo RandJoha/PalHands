@@ -55,6 +55,7 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/services', require('./routes/services'));
 app.use('/api/bookings', require('./routes/bookings'));
 app.use('/api/availability', require('./routes/availability'));
+app.use('/api/reports', require('./routes/reports'));
 
 // Probes
 app.get('/api/health', (req, res) => {

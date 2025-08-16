@@ -42,3 +42,35 @@ const uploadServiceImages = multer({
 });
 
 module.exports = { uploadServiceImages };
+
+// Reports evidence: uploads/reports/<reportId>
+const evidenceFileFilter = (req, file, cb) => {
+  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
+  if (!allowed.includes(file.mimetype)) {
+    return cb(new Error('Only images or PDF files are allowed for evidence'));
+  }
+  cb(null, true);
+};
+
+const reportEvidenceStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const reportId = req.params.id || 'unknown';
+    const dest = path.join(UPLOAD_ROOT, 'reports', reportId);
+    ensureDir(dest);
+    cb(null, dest);
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname) || '.bin';
+    const base = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, '');
+    const stamp = Date.now();
+    cb(null, `${base || 'evidence'}_${stamp}${ext}`);
+  }
+});
+
+const uploadReportEvidence = multer({
+  storage: reportEvidenceStorage,
+  fileFilter: evidenceFileFilter,
+  limits: { fileSize: MAX_FILE_SIZE, files: 10 }
+});
+
+module.exports.uploadReportEvidence = uploadReportEvidence;

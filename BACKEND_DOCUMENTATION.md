@@ -47,10 +47,12 @@ backend/
 │   │   ├── users.js          # User management routes
 │   │   ├── services.js       # Public + provider CRUD for services (Phase 1)
 │   │   ├── bookings.js       # Client/provider booking flows (Phase 1)
+│   │   ├── availability.js   # Availability endpoints
+│   │   ├── reports.js        # Public reports (create/list/get/evidence)
 │   │   └── admin.js          # Admin routes (overview, users, services, bookings, reports, settings, analytics, actions)
 │   ├── services/             # External services (placeholder)
 │   └── utils/                # Utility functions (placeholder)
-├── uploads/                  # File uploads (Dev-only; in Prod use S3/MinIO + signed URLs)
+├── uploads/                  # File uploads (Dev-only; in Prod use S3 + signed URLs)
 ├── logs/                     # Application logs
 ├── server.js                 # Server startup (central DB connect)
 ├── package.json              # Dependencies
@@ -289,52 +291,51 @@ const adminActionSchema = new mongoose.Schema({
 ### Report Model (`src/models/Report.js`)
 
 ```javascript
+// Unified model for disputes/issues and general feedback
 const reportSchema = new mongoose.Schema({
-  reporter: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  reportedUser: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  type: {
-    type: String,
-    required: true,
-    enum: ['inappropriate_behavior', 'fake_profile', 'spam', 'harassment', 'other']
-  },
-  description: {
-    type: String,
-    required: true,
-    maxlength: [1000, 'Description cannot exceed 1000 characters']
-  },
-  evidence: [{
-    type: String,
-    description: String
-  }],
-  status: {
-    type: String,
-    enum: ['pending', 'under_review', 'resolved', 'dismissed'],
-    default: 'pending'
-  },
-  assignedAdmin: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Admin'
-  },
-  resolution: {
-    action: String,
-    notes: String,
-    resolvedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Admin'
-    },
-    resolvedAt: Date
-  }
-}, {
-  timestamps: true
+  reporter: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  reporterRole: { type: String, enum: ['client', 'provider', 'admin'], default: 'client' },
+  reportCategory: { type: String, enum: ['user_issue', 'technical_issue', 'feature_suggestion', 'service_category_request', 'other'], default: 'user_issue' },
+  reportedType: { type: String, enum: ['user', 'service', 'booking', 'review', 'payment'], required: false },
+  reportedId: { type: mongoose.Schema.Types.ObjectId, required: false },
+  reportedUserRole: { type: String, enum: ['client', 'provider'], required: function () { return this.reportCategory === 'user_issue' && this.reportedType === 'user'; } },
+  reportedName: { type: String, trim: true },
+  issueType: { type: String, required: function () { return this.reportCategory === 'user_issue'; }, enum: ['unsafe', 'harassment', 'misleading', 'inappropriate_behavior', 'fraud', 'spam', 'payment_issue', 'safety_concern', 'poor_quality', 'no_show', 'other'] },
+  description: { type: String, required: true, maxlength: 1000 },
+  partyInfo: { reporterName: { type: String, trim: true }, reporterEmail: { type: String, trim: true, lowercase: true }, reportedName: { type: String, trim: true }, reportedEmail: { type: String, trim: true, lowercase: true } },
+  relatedBookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking' },
+  reportedServiceId: { type: mongoose.Schema.Types.ObjectId, ref: 'Service' },
+  serviceName: { type: String, trim: true },
+  categoryFit: { type: String, trim: true },
+  importanceReason: { type: String, trim: true },
+  ideaTitle: { type: String, trim: true, maxlength: 150 },
+  communityBenefit: { type: String, trim: true, maxlength: 1000 },
+  contactEmail: { type: String, lowercase: true, trim: true, match: [/^\S+@\S+\.\S+$/, 'Invalid email'] },
+  contactName: { type: String, trim: true },
+  subject: { type: String, trim: true, maxlength: 200 },
+  requestedCategory: { type: String, trim: true, maxlength: 120 },
+  device: { type: String, trim: true, maxlength: 120 },
+  os: { type: String, trim: true, maxlength: 120 },
+  appVersion: { type: String, trim: true, maxlength: 60 },
+  evidence: [{ type: String, description: String }],
+  status: { type: String, enum: ['pending', 'under_review', 'awaiting_user', 'investigating', 'resolved', 'dismissed'], default: 'pending' },
+  statusHistory: [{ from: String, to: String, at: { type: Date, default: Date.now }, by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' } }],
+  priority: { type: String, enum: ['low', 'medium', 'high', 'urgent'], default: 'medium' },
+  assignedAdmin: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  adminNotes: [{ admin: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, note: String, timestamp: { type: Date, default: Date.now } }],
+  resolution: { action: { type: String, enum: ['warning_sent', 'warn_user', 'user_suspended', 'user_banned', 'service_disabled', 'booking_cancelled', 'refund_issued', 'no_action', 'other'] }, reason: { type: String, trim: true }, details: String, resolvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, resolvedAt: Date },
+  idempotencyKey: { type: String, trim: true, maxlength: 100 },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
 });
+
+// Indexes (selection)
+reportSchema.index({ status: 1, priority: 1, createdAt: -1 });
+reportSchema.index({ reportedType: 1, reportedId: 1 });
+reportSchema.index({ reporter: 1, createdAt: -1 });
+reportSchema.index({ assignedAdmin: 1, status: 1 });
+reportSchema.index({ reportCategory: 1, createdAt: -1 });
+reportSchema.index({ reporter: 1, idempotencyKey: 1 }, { unique: true, sparse: true });
 ```
 
 ### SystemSetting Model (`src/models/SystemSetting.js`)
@@ -726,14 +727,37 @@ Notes:
 | PUT | `/services/:serviceId` | Update service status/featured | Yes | Admin |
 | GET | `/bookings` | List bookings with filters | Yes | Admin |
 | PUT | `/bookings/:bookingId` | Update booking status | Yes | Provider only |
-| GET | `/reports` | Get user reports | Yes | Admin |
-| PUT | `/reports/:reportId` | Update report status/assignment/resolution | Yes | Admin |
+| GET | `/reports` | List reports (filters: status, priority, reportCategory, issueType, hasEvidence, assignedAdmin, awaiting_user; sort) | Yes | Admin |
+| PUT | `/reports/:reportId` | Update report (FSM enforced, status/assignment/resolution/adminNote) | Yes | Admin |
+| PUT | `/reports/:reportId/resolve` | Resolve report with action/reason/details | Yes | Admin |
+| PUT | `/reports/:reportId/dismiss` | Dismiss report with reason | Yes | Admin |
+| POST | `/reports/:reportId/request-info` | Mark as awaiting_user and leave a note | Yes | Admin |
+| GET | `/reports/stats` | Aggregate stats (by status/category/issueType, avg TTR) | Yes | Admin |
 | GET | `/settings` | Get system settings | Yes | Admin |
 | PUT | `/settings/:key` | Update system setting value | Yes | Admin |
 | GET | `/analytics` | Growth analytics (users, bookings, categories) | Yes | Admin |
 | GET | `/actions` | Admin actions audit log | Yes | Admin |
 
-Note: Services and Bookings are now mounted in `app.js`. Payments/Reviews remain planned.
+Note: Services, Bookings, Availability, and Reports are now mounted in `app.js`. Payments/Reviews remain planned.
+
+### Reports Routes (`/api/reports`) — Public
+
+| Method | Endpoint | Description | Auth Required | Role Required |
+|--------|----------|-------------|---------------|---------------|
+| POST | `/` | Create a report; supports categories and linkage fields | Yes | Any |
+| GET | `/me` | List my reports (filters: status, reportCategory, issueType, hasEvidence, createdFrom/To) | Yes | Any |
+| GET | `/:id` | Get a specific report (reporter or admin) | Yes | Any/Admin |
+| POST | `/:id/evidence` | Upload evidence files (multipart field: files[]) | Yes | Any/Admin |
+
+Notes:
+- Evidence accepts images (jpeg, png, webp, gif) and PDFs; size and count limits via multer.
+- Dev: files stored under `/uploads/reports/<reportId>/` and served by `/uploads`. Prod: use S3 (no MinIO) and signed URLs (TBD for evidence responses).
+- Idempotency: pass `Idempotency-Key` header (or body `idempotencyKey`) to avoid duplicate submissions; server returns the existing report when a duplicate key is detected for the same reporter.
+- Rate limiting: per-user limiter on create to mitigate spam.
+
+Permissions:
+- Users can only see reports they submitted (not reports filed against them).
+- Admins can view and manage all reports.
 
 ## 🔧 Controllers
 
@@ -991,7 +1015,7 @@ This section clarifies responsibilities and avoids mixing snippets:
 
 ### `src/app.js` — Express app only
 - Mounts security middleware: helmet, compression, CORS allowlist, global rate limiters, structured HTTP logging (pino) and access logs (morgan with rotation).
-- Mounts routes: `/api/auth`, `/api/users`, `/api/admin`, plus Phase 1 modules: `/api/services`, `/api/bookings`.
+- Mounts routes: `/api/auth`, `/api/users`, `/api/admin`, plus modules: `/api/services`, `/api/bookings`, `/api/availability`, `/api/reports`.
 - Adds probes: `/api/health` (JSON), `/api/livez` (200 OK), `/api/readyz` (200 when Mongo connected, else 503).
 - Wires celebrate/Joi and its error handler (Phase 0.5 initial).
 - Exports the configured Express app; does not connect to DB or start listening.
@@ -1548,7 +1572,7 @@ Milestone: Auth/User tests green; API contract frozen.
 
 ### Phase 2 — Services Module (Public & Provider) (Priority: High)
 ### Phase 2.1 — Media Storage (Priority: High)
-- Migrate file storage from `/uploads` to S3/MinIO
+- Migrate file storage from `/uploads` to S3
 - Signed URLs for upload/download; validate mime/size
 - Orphan cleanup background job
 
@@ -1716,7 +1740,7 @@ Milestone: Validated inputs/outputs; baseline API spec.
 - [x] Re-export legacy `auth.js` and `adminAuth.js` from unified middleware
 - [x] Add login attempt rate limiting / optional lockout (rate limiting implemented; lockout optional - deferred)
  - [x] Optional email verification flow (flagged via `ENABLE_EMAIL_VERIFICATION`)
-- [ ] Tests: register/login/validate/profile, profile update, change password
+- [x] Tests: register/login/validate/profile, profile update, change password
 - [x] Postman collection / OpenAPI stub
 
 Milestone: Tests green; API contract frozen.
@@ -1739,13 +1763,13 @@ Milestone: Authorization consistent and enforced centrally.
 Milestone: Browse + provider CRUD; admin moderation already available.
 
 ### Phase 2.1 — Media Storage (High)
-- [x] Switch to S3/MinIO + signed URLs
+- [x] Switch to S3 + signed URLs
 - [x] Validate mime/size; strip metadata (note: stripping delegated to CDN/processor)
 - [x] Orphan cleanup background job (env-gated)
 
 Milestone: Production-grade media handling.
 
-Note: Media upload/presign/attach/cleanup APIs are implemented but will be tested later after core flows are verified. Keep STORAGE_DRIVER=local for basic dev, or configure MinIO/AWS for presign flow when ready.
+Note: Media upload/presign/attach/cleanup APIs are implemented but will be tested later after core flows are verified. Keep STORAGE_DRIVER=local for basic dev, or configure AWS S3 for presign flow when ready.
 
 ### Phase 2.2 — Provider Availability (High)
 - [x] Availability model + exceptions
@@ -1791,8 +1815,8 @@ Milestone: Ratings flow live; surfacing on listings.
 
 ### Phase 6 — Reports & Disputes (Medium)
 - [x] Admin: list/update via dedicated controllers
-- [ ] Public: `routes/reports.js` + `controllers/reportsController.js` (create/list mine)
-- [ ] Evidence upload with multer
+- [x] Public: `routes/reports.js` + `controllers/reportsController.js` (create/list mine/get)
+- [x] Evidence upload with multer
 
 Milestone: End-to-end reporting.
 
@@ -1864,7 +1888,7 @@ Indexes are present for query hot paths (services search, bookings by user/statu
 - Process: enable graceful shutdown signals (already present)
 - Security: set strong JWT secrets; configure CORS allowlist; enable helmet/compression/rate-limit; sanitize logs
 - Backups: Atlas backups or mongodump in CI for staging
- - Storage: use S3/MinIO with signed URLs in prod; `/uploads` is dev-only
+ - Storage: use S3 with signed URLs in prod; `/uploads` is dev-only
 
 ---
 

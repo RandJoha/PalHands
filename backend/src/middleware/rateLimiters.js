@@ -17,4 +17,14 @@ const authLimiter = rateLimit({
   legacyHeaders: false
 });
 
-module.exports = { globalLimiter, authLimiter };
+// Per-user limiter for creating reports
+const createReportLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: isProd ? 5 : 50,
+  keyGenerator: (req) => (req.user ? req.user._id.toString() : req.ip),
+  message: { success: false, code: 'RATE_LIMIT', message: 'Too many reports submitted, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+module.exports = { globalLimiter, authLimiter, createReportLimiter };

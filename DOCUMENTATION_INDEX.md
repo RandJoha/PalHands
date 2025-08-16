@@ -41,6 +41,18 @@ This document serves as a comprehensive index of all PalHands project documentat
 **Last Updated**: December 2024
 **Status**: ✅ Active document for issue tracking and future reference
 
+### **NEW: TECH_MEMORY.md** 🧠
+**Purpose**: Backend tech memory focused on Reports module decisions and operations
+**Content**:
+- Data model highlights (categories, enums, linkage keys)
+- Admin lifecycle (FSM), filters, stats
+- Idempotency and rate limiting
+- Evidence flow and storage approach (Dev uploads, S3 in prod)
+- Deferred items and next steps
+
+**Last Updated**: August 2025
+**Status**: ✅ Added
+
 ## 📝 **Recent Documentation Updates**
 
 ### **August 2025 - Responsive Navigation Unification (Final)**
@@ -354,6 +366,7 @@ This document serves as a comprehensive index of all PalHands project documentat
 | FRONTEND_ANALYSIS.md | ✅ Complete | Dec 2024 | 100% |
 | APP_WORKFLOW.md | ✅ Complete | Dec 2024 | 100% |
 | TECHNICAL_MEMORY.md | ✅ Updated | Aug 2025 | 100% |
+| TECH_MEMORY.md | ✅ Added | Aug 2025 | 100% |
 
 ## 🎯 **Documentation Usage Guide**
 
