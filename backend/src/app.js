@@ -28,10 +28,17 @@ app.use(accessLog);
 
 // CORS allowlist
 const allowedOrigins = env.CORS_ORIGIN.split(',').map((o) => o.trim());
+// Also allow same-origin requests to the API itself (e.g., HTML forms served from this host)
+const serverOrigin = process.env.SERVER_ORIGIN || `http://localhost:${env.PORT}`;
+if (!allowedOrigins.includes(serverOrigin)) allowedOrigins.push(serverOrigin);
+const isDev = env.NODE_ENV !== 'production';
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // Allow non-browser tools
+    // Non-CORS or server-to-server
+    if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\\d+)?$/.test(origin)) return callback(null, true);
+    if (isDev) return callback(null, true);
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true

@@ -17,6 +17,15 @@ const authLimiter = rateLimit({
   legacyHeaders: false
 });
 
+// Tighter limiter for password reset flows to reduce enumeration/abuse
+const passwordResetLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: isProd ? 5 : 50,
+  message: { success: false, code: 'RATE_LIMIT', message: 'Too many requests. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
 // Per-user limiter for creating reports
 const createReportLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 minutes
@@ -27,4 +36,4 @@ const createReportLimiter = rateLimit({
   legacyHeaders: false
 });
 
-module.exports = { globalLimiter, authLimiter, createReportLimiter };
+module.exports = { globalLimiter, authLimiter, passwordResetLimiter, createReportLimiter };

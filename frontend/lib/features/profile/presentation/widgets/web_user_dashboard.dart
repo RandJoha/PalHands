@@ -199,7 +199,14 @@ class _WebUserDashboardState extends State<WebUserDashboard> {
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  'Ahmed Hassan', // Replace with actual user name
+                  (Provider.of<AuthService>(context, listen: false).currentUser != null)
+                      ? (
+                          [
+                            (Provider.of<AuthService>(context, listen: false).currentUser!['firstName'] ?? '').toString(),
+                            (Provider.of<AuthService>(context, listen: false).currentUser!['lastName'] ?? '').toString(),
+                          ].where((e) => e.isNotEmpty).join(' ').trim()
+                        )
+                      : '—',
                   style: GoogleFonts.cairo(
                     fontSize: 20.sp,
                     color: AppColors.textPrimary,

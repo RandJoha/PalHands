@@ -18,6 +18,7 @@ import 'booking_management_widget.dart';
 import 'reports_widget.dart';
 import 'analytics_widget.dart';
 import 'system_settings_widget.dart';
+import '../../../profile/presentation/widgets/profile_settings_widget.dart';
 
 // Admin models
 import '../../domain/models/admin_menu_item.dart';
@@ -64,6 +65,11 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
         title: AppStrings.getString('systemSettings', languageCode),
         icon: Icons.settings,
         index: 5,
+      ),
+      AdminMenuItem(
+        title: AppStrings.getString('profileSettings', languageCode),
+        icon: Icons.person,
+        index: 6,
       ),
     ];
   }
@@ -338,6 +344,8 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
         return const AnalyticsWidget();
       case 5:
         return const SystemSettingsWidget();
+      case 6:
+        return const ProfileSettingsWidget();
       default:
         return const UserManagementWidget();
     }

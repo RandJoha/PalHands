@@ -36,6 +36,8 @@ class AuthService extends ChangeNotifier with BaseApiService {
         if (kDebugMode) {
           print('✅ Auth service initialized with persisted data');
         }
+        // Always refresh profile in the background to sync latest fields (e.g., email changed)
+        try { await getProfile(); } catch (_) {}
       } else if (savedToken != null && savedUser == null) {
         // Recover session if we have a token but no user data persisted
         _token = savedToken;
@@ -45,6 +47,8 @@ class AuthService extends ChangeNotifier with BaseApiService {
           if (kDebugMode) {
             print('✅ Auth service restored session via token validation');
           }
+          // Fetch full profile after validating token
+          try { await getProfile(); } catch (_) {}
         }
       }
     } catch (e) {
@@ -231,7 +235,8 @@ class AuthService extends ChangeNotifier with BaseApiService {
   Future<Map<String, dynamic>> getProfile() async {
     try {
       final response = await get(
-        '${ApiConfig.usersEndpoint}/profile',
+  // Backend exposes GET /api/auth/profile for current user
+  '${ApiConfig.authEndpoint}/profile',
         headers: {'Authorization': 'Bearer $_token'},
       );
 
@@ -256,21 +261,172 @@ class AuthService extends ChangeNotifier with BaseApiService {
     }
   }
 
+  // Change password
+  Future<Map<String, dynamic>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await put(
+        '${ApiConfig.usersEndpoint}/change-password',
+        body: {
+          'currentPassword': currentPassword,
+          'newPassword': newPassword,
+        },
+        headers: {'Authorization': 'Bearer $_token'},
+      );
+
+      // On success, backend returns ok({}) with a message; no user change expected
+      return response;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Change password failed: $e');
+      }
+      rethrow;
+    }
+  }
+
+  // Change password directly (no login) by verifying email + currentPassword
+  Future<Map<String, dynamic>> changePasswordDirect({
+    required String email,
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await post(
+        '${ApiConfig.authEndpoint}/change-password-direct',
+        body: {
+          'email': email,
+          'currentPassword': currentPassword,
+          'newPassword': newPassword,
+        },
+        headers: { 'Content-Type': 'application/json' },
+      );
+      return response;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Change password direct failed: $e');
+      }
+      rethrow;
+    }
+  }
+
+  // Forgot password - request reset link
+  Future<Map<String, dynamic>> forgotPassword(String email) async {
+    try {
+      final response = await post(
+        '${ApiConfig.authEndpoint}/forgot-password',
+        body: { 'email': email },
+        headers: { 'Content-Type': 'application/json' },
+      );
+      return response;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Forgot password failed: $e');
+      }
+      rethrow;
+    }
+  }
+
+  // Reset password with token (from email)
+  Future<Map<String, dynamic>> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await post(
+        '${ApiConfig.authEndpoint}/reset-password',
+        body: { 'token': token, 'newPassword': newPassword },
+        headers: { 'Content-Type': 'application/json' },
+      );
+      return response;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Reset password failed: $e');
+      }
+      rethrow;
+    }
+  }
+
+  // Request email verification (if not verified)
+  Future<Map<String, dynamic>> requestVerification() async {
+    try {
+      final response = await post(
+        '${ApiConfig.authEndpoint}/request-verification',
+        headers: {'Authorization': 'Bearer $_token'},
+      );
+      return response;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Request verification failed: $e');
+      }
+      rethrow;
+    }
+  }
+
+  // Confirm email change using token from email
+  Future<Map<String, dynamic>> confirmEmailChange(String token) async {
+    try {
+      final response = await post(
+        '${ApiConfig.authEndpoint}/confirm-email-change',
+        body: { 'token': token },
+        headers: { 'Content-Type': 'application/json' },
+      );
+      // Refresh profile if logged in
+      if (_isAuthenticated) {
+        try { await getProfile(); } catch (_) {}
+      }
+      return response;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Confirm email change failed: $e');
+      }
+      rethrow;
+    }
+  }
+
+  // Verify email with token (deep link)
+  Future<Map<String, dynamic>> verifyEmail(String token) async {
+    try {
+      final response = await post(
+        '${ApiConfig.authEndpoint}/verify',
+        body: { 'token': token },
+        headers: { 'Content-Type': 'application/json' },
+      );
+      // If logged in, refresh profile to update isVerified flag
+      if (_isAuthenticated) {
+        try { await getProfile(); } catch (_) {}
+      }
+      return response;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Verify email failed: $e');
+      }
+      rethrow;
+    }
+  }
+
   // Update user profile
   Future<Map<String, dynamic>> updateProfile({
     String? firstName,
     String? lastName,
+    String? email,
     String? phone,
+    int? age,
     String? profileImage,
-    Map<String, dynamic>? address,
+  Map<String, dynamic>? address,
+  List<Map<String, dynamic>>? addresses,
   }) async {
     try {
       final body = <String, dynamic>{};
       if (firstName != null) body['firstName'] = firstName;
       if (lastName != null) body['lastName'] = lastName;
-      if (phone != null) body['phone'] = phone;
+  if (phone != null) body['phone'] = phone;
+  if (email != null) body['email'] = email;
+  if (age != null) body['age'] = age;
       if (profileImage != null) body['profileImage'] = profileImage;
       if (address != null) body['address'] = address;
+  if (addresses != null) body['addresses'] = addresses;
 
       final response = await put(
         '${ApiConfig.usersEndpoint}/profile',
@@ -279,13 +435,18 @@ class AuthService extends ChangeNotifier with BaseApiService {
       );
 
       if (response['success'] == true) {
-        // Unified shape handling: data contains updated user
+        // Prefer data.user, else top-level user
         final data = (response['data'] is Map<String, dynamic>)
             ? Map<String, dynamic>.from(response['data'])
+            : <String, dynamic>{};
+        final userPayload = (data['user'] is Map<String, dynamic>)
+            ? Map<String, dynamic>.from(data['user'])
             : (response['user'] is Map<String, dynamic>)
                 ? Map<String, dynamic>.from(response['user'])
                 : <String, dynamic>{};
-        _currentUser = data.isNotEmpty ? data : _currentUser;
+        if (userPayload.isNotEmpty) {
+          _currentUser = userPayload;
+        }
         await _savePersistedData();
         notifyListeners();
       }

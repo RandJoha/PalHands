@@ -399,6 +399,21 @@ const systemSettingSchema = new mongoose.Schema({
 - **Comparison**: Secure password comparison method
 - **Validation**: Minimum 6 characters for users, 8 for admins
 
+### Password Reset Flow (Where to find tokens in MongoDB)
+- Trigger: POST `/api/auth/forgot-password` always returns a generic success message. If the email exists, the user document is updated.
+- Storage: The reset token and expiry are stored on the user document in the `users` collection:
+  - `passwordResetToken: String`
+  - `passwordResetExpires: Date` (typically now + 1 hour)
+- Reset: POST `/api/auth/reset-password` with `{ token, newPassword }` will validate, set the new password, and clear both fields.
+- Where to look:
+  - MongoDB Compass filter: `{ email: "user@example.com" }`; inspect the fields above.
+  - Mongo Shell quick check (replace with your email):
+    ```powershell
+    # Windows PowerShell example using mongosh
+    mongosh "<your-connection-string>" --eval "db.users.findOne({email: 'user@example.com'},{passwordResetToken:1,passwordResetExpires:1})"
+    ```
+- Dev email behavior: If SMTP env vars are not configured, the mailer can fall back to logging the email contents (including the token/reset URL) to the server console/logs. Check `backend/src/services/mailer.js` and the running server output.
+
 ### Authentication Flow
 
 #### 1) User Registration

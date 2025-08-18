@@ -1336,6 +1336,9 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
       child: TextFormField(
         controller: controller,
         obscureText: obscureText,
+        autofillHints: const [AutofillHints.newPassword],
+        enableSuggestions: false,
+        autocorrect: false,
         style: GoogleFonts.cairo(
           fontSize: 16,
           color: AppColors.textPrimary,
@@ -1356,6 +1359,9 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
           ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          // Web hint to prevent password manager from suggesting similar passwords
+          // ignore: deprecated_member_use
+          semanticCounterText: '',
         ),
         validator: validator,
       ),

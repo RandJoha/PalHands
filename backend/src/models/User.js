@@ -19,10 +19,18 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     trim: true
   },
+  // When changing email, we keep the current email active and store the new one here
+  // until the user confirms via the verification link.
+  pendingEmail: {
+    type: String,
+    default: null,
+    lowercase: true,
+    trim: true
+  },
   phone: {
     type: String,
     required: true,
-    unique: true
+  unique: true
   },
   password: {
     type: String,
@@ -38,6 +46,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  // Legacy single address (kept for backward compatibility)
   address: {
     street: String,
     city: String,
@@ -46,6 +55,31 @@ const userSchema = new mongoose.Schema({
       latitude: Number,
       longitude: Number
     }
+  },
+  // New: support multiple saved addresses
+  addresses: [
+    new mongoose.Schema({
+      type: {
+        type: String,
+        enum: ['home', 'work', 'other'],
+        default: 'home'
+      },
+      street: { type: String, default: '' },
+      city: { type: String, default: '' },
+      area: { type: String, default: '' },
+      coordinates: {
+        latitude: { type: Number, default: null },
+        longitude: { type: Number, default: null }
+      },
+      isDefault: { type: Boolean, default: false }
+    }, { _id: false })
+  ],
+  // Optional: store age instead of exact DOB for privacy
+  age: {
+    type: Number,
+    min: 0,
+    max: 120,
+    default: null
   },
   isVerified: {
     type: Boolean,
@@ -59,7 +93,21 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  // Dedicated email-change verification token/expiry
+  emailChangeToken: {
+    type: String,
+    default: null
+  },
+  emailChangeExpires: {
+    type: Date,
+    default: null
+  },
   passwordResetToken: {
+    type: String,
+    default: null
+  },
+  // New: store a hashed version of reset token to avoid storing raw tokens in DB
+  passwordResetTokenHash: {
     type: String,
     default: null
   },
@@ -90,6 +138,12 @@ const userSchema = new mongoose.Schema({
     default: Date.now
   }
 });
+
+// Ensure unique index for phone and email exist (in case of older deployments)
+userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ phone: 1 }, { unique: true });
+// Helpful index if querying for defaults in future
+userSchema.index({ 'addresses.isDefault': 1 });
 
 // Password hashing middleware
 userSchema.pre('save', async function(next) {

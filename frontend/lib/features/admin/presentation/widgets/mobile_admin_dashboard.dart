@@ -17,6 +17,7 @@ import 'booking_management_widget.dart';
 import 'reports_widget.dart';
 import 'analytics_widget.dart';
 import 'system_settings_widget.dart';
+import '../../../profile/presentation/widgets/profile_settings_widget.dart';
 
 // Admin models
 import '../../domain/models/admin_menu_item.dart';
@@ -62,6 +63,11 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
         title: AppStrings.getString('systemSettings', languageCode),
         icon: Icons.settings,
         index: 5,
+      ),
+      AdminMenuItem(
+        title: AppStrings.getString('profileSettings', languageCode),
+        icon: Icons.person,
+        index: 6,
       ),
     ];
   }
@@ -458,7 +464,6 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
   }
 
   Widget _buildBottomNavigation(LanguageService languageService) {
-    final screenWidth = MediaQuery.of(context).size.width;
     
     return BottomNavigationBar(
       type: BottomNavigationBarType.fixed,
@@ -473,7 +478,7 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
       unselectedLabelStyle: GoogleFonts.cairo(
         fontSize: 10,
       ),
-      currentIndex: _selectedIndex.clamp(0, 5), // Updated to support 6 items (0-5)
+  currentIndex: _selectedIndex.clamp(0, 6), // Updated to support 7 items (0-6)
       onTap: (index) {
         setState(() {
           _selectedIndex = index;
@@ -504,6 +509,10 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
           icon: const Icon(Icons.settings, size: 20),
           label: AppStrings.getString('systemSettings', languageService.currentLanguage),
         ),
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.person, size: 20),
+          label: AppStrings.getString('profileSettings', languageService.currentLanguage),
+        ),
       ],
     );
   }
@@ -522,6 +531,8 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
         return const AnalyticsWidget();
       case 5:
         return const SystemSettingsWidget();
+      case 6:
+        return const ProfileSettingsWidget();
       default:
         return const UserManagementWidget();
     }

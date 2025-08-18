@@ -1347,6 +1347,9 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
       child: TextFormField(
         controller: controller,
         obscureText: obscureText,
+  autofillHints: const [AutofillHints.newPassword],
+  enableSuggestions: false,
+  autocorrect: false,
         style: GoogleFonts.cairo(
           fontSize: 16,
           color: AppColors.textPrimary,

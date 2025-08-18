@@ -13,6 +13,8 @@ import 'core/constants/app_strings.dart';
 import 'shared/widgets/auth_wrapper.dart';
 import 'shared/widgets/login_screen.dart';
 import 'shared/widgets/signup_screen.dart';
+import 'shared/widgets/reset_password_screen.dart';
+import 'shared/widgets/verify_email_screen.dart';
 import 'features/home/presentation/pages/home_screen.dart';
 import 'features/categories/presentation/pages/category_screen.dart';
 import 'features/about/presentation/pages/about_screen.dart';
@@ -117,7 +119,7 @@ class PalHandsApp extends StatelessWidget {
               ),
             ),
           ),
-                home: const AuthWrapper(),
+                // Do not set `home` or `initialRoute` so the browser URL is respected on web.
                 routes: {
                   '/home': (context) => const HomeScreen(),
                   '/categories': (context) => const CategoryScreen(),
@@ -130,6 +132,96 @@ class PalHandsApp extends StatelessWidget {
                   '/signup': (context) => const SignupScreen(),
                   '/provider': (context) => const ProviderDashboardScreen(),
                 },
+                // Handle deep links with query parameters (e.g., /reset-password?token=...)
+                onGenerateRoute: (settings) {
+                  final uri = Uri.tryParse(settings.name ?? '/') ?? Uri(path: '/');
+                  // If backend redirected with evt=email-updated, refresh profile once
+                  if (uri.queryParameters['evt'] == 'email-updated' && uri.path == '/user') {
+                    return MaterialPageRoute(
+                      builder: (_) => const _ProfileRefresh(child: UserDashboardScreen()),
+                      settings: const RouteSettings(name: '/user'),
+                    );
+                  }
+                  if (uri.path == '/reset-password') {
+                    final token = uri.queryParameters['token'];
+                    return MaterialPageRoute(
+                      builder: (_) => ResetPasswordScreen(token: token),
+                      settings: settings,
+                    );
+                  }
+                  if (uri.path == '/verify-email') {
+                    final token = uri.queryParameters['token'];
+                    final ret = uri.queryParameters['r'];
+                    return MaterialPageRoute(
+                      builder: (_) => VerifyEmailScreen(token: token, returnPath: ret),
+                      settings: settings,
+                    );
+                  }
+                  // Default and fallbacks
+                  switch (uri.path) {
+                    case '/':
+                      return MaterialPageRoute(builder: (_) => const AuthWrapper(), settings: settings);
+                    case '/home':
+                      return MaterialPageRoute(builder: (_) => const HomeScreen(), settings: settings);
+                    case '/categories':
+                      return MaterialPageRoute(builder: (_) => const CategoryScreen(), settings: settings);
+                    case '/about':
+                      return MaterialPageRoute(builder: (_) => const AboutScreen(), settings: settings);
+                    case '/faqs':
+                      return MaterialPageRoute(builder: (_) => const FAQsScreen(), settings: settings);
+                    case '/contact':
+                      return MaterialPageRoute(builder: (_) => const ContactScreen(), settings: settings);
+                    case '/admin':
+                      return MaterialPageRoute(builder: (_) => const AdminDashboardScreen(), settings: settings);
+                    case '/user':
+                      return MaterialPageRoute(builder: (_) => const UserDashboardScreen(), settings: settings);
+                    case '/login':
+                      return MaterialPageRoute(builder: (_) => const LoginScreen(), settings: settings);
+                    case '/signup':
+                      return MaterialPageRoute(builder: (_) => const SignupScreen(), settings: settings);
+                    case '/provider':
+                      return MaterialPageRoute(builder: (_) => const ProviderDashboardScreen(), settings: settings);
+                  }
+                  // Unknown route -> home
+                  return MaterialPageRoute(builder: (_) => const AuthWrapper(), settings: settings);
+                },
+                onGenerateInitialRoutes: (initialRoute) {
+                  final uri = Uri.tryParse(Uri.base.toString()) ?? Uri(path: '/');
+                  if (uri.queryParameters['evt'] == 'email-updated' && uri.path == '/user') {
+                    return [
+                      MaterialPageRoute(
+                        builder: (_) => const _ProfileRefresh(child: UserDashboardScreen()),
+                        settings: const RouteSettings(name: '/user'),
+                      )
+                    ];
+                  }
+                  if (uri.path == '/reset-password') {
+                    final token = uri.queryParameters['token'];
+                    return [
+                      MaterialPageRoute(
+                        builder: (_) => ResetPasswordScreen(token: token),
+                        settings: const RouteSettings(name: '/reset-password'),
+                      )
+                    ];
+                  }
+                  if (uri.path == '/verify-email') {
+                    final token = uri.queryParameters['token'];
+                    final ret = uri.queryParameters['r'];
+                    return [
+                      MaterialPageRoute(
+                        builder: (_) => VerifyEmailScreen(token: token, returnPath: ret),
+                        settings: const RouteSettings(name: '/verify-email'),
+                      )
+                    ];
+                  }
+                  // Default initial page
+                  return [
+                    MaterialPageRoute(
+                      builder: (_) => const AuthWrapper(),
+                      settings: const RouteSettings(name: '/'),
+                    )
+                  ];
+                },
               );
             },
           ),
@@ -138,3 +230,26 @@ class PalHandsApp extends StatelessWidget {
     );
   }
 } 
+
+// Internal helper: refresh the current profile once, then show the provided child.
+class _ProfileRefresh extends StatefulWidget {
+  final Widget child;
+  const _ProfileRefresh({required this.child});
+  @override
+  State<_ProfileRefresh> createState() => _ProfileRefreshState();
+}
+
+class _ProfileRefreshState extends State<_ProfileRefresh> {
+  bool _refreshed = false;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_refreshed) {
+      _refreshed = true;
+      final auth = Provider.of<AuthService>(context, listen: false);
+      Future.microtask(() async { try { await auth.getProfile(); } catch (_) {} });
+    }
+  }
+  @override
+  Widget build(BuildContext context) => widget.child;
+}

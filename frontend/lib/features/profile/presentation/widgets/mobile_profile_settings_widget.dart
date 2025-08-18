@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../shared/services/auth_service.dart';
 import 'package:provider/provider.dart';
 
 // Core imports
@@ -101,7 +102,13 @@ class _MobileProfileSettingsWidgetState extends State<MobileProfileSettingsWidge
           const SizedBox(height: 24),
           
           // Form fields
-          _buildFormField(AppStrings.getString('fullName', languageService.currentLanguage), 'Ahmed Hassan'),
+          _buildFormField(
+            AppStrings.getString('fullName', languageService.currentLanguage),
+            [
+              (Provider.of<AuthService>(context, listen: false).currentUser?['firstName'] ?? '').toString(),
+              (Provider.of<AuthService>(context, listen: false).currentUser?['lastName'] ?? '').toString(),
+            ].where((e) => e.isNotEmpty).join(' ').trim(),
+          ),
           const SizedBox(height: 16),
                       _buildFormField(AppStrings.getString('email', languageService.currentLanguage), 'ahmed@example.com'),
           const SizedBox(height: 16),

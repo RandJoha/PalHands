@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'app_toast.dart';
 
 // Core imports
 import '../../core/constants/app_colors.dart';
@@ -15,6 +16,7 @@ import '../services/responsive_service.dart';
 // Widget imports
 import 'animated_handshake.dart';
 import 'signup_screen.dart';
+import '../../features/profile/presentation/widgets/security_widget.dart';
 
 // Responsive login screen
 class LoginScreen extends StatefulWidget {
@@ -57,55 +59,26 @@ class _LoginScreenState extends State<LoginScreen> {
           password: _passwordController.text,
         );
 
-        if (response['success'] == true) {
+  if (response['success'] == true) {
           // Login successful - navigate to root to trigger AuthWrapper routing
           if (mounted) {
             Navigator.of(context).pushReplacementNamed('/');
           }
         } else {
+          // Rate limit friendly message if backend returned 429
+          final status = response['statusCode'] as int?;
+          final friendly = (status == 429)
+              ? 'Too many attempts. Please try again later.'
+              : _getSecureErrorMessage(response['error'] ?? 'Login failed');
           // Login failed - show secure error message
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  _getSecureErrorMessage(response['error'] ?? 'Login failed'),
-                  style: GoogleFonts.cairo(),
-                ),
-                backgroundColor: AppColors.error,
-                behavior: SnackBarBehavior.floating,
-                duration: const Duration(seconds: 4),
-                action: SnackBarAction(
-                  label: 'Dismiss',
-                  textColor: AppColors.white,
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                  },
-                ),
-              ),
-            );
+              AppToast.show(context, message: friendly, type: AppToastType.error, actionLabel: 'Dismiss', onAction: () => ScaffoldMessenger.of(context).hideCurrentSnackBar());
           }
         }
       } catch (e) {
         // Network or other error - show secure error message
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                _getSecureErrorMessage(e),
-                style: GoogleFonts.cairo(),
-              ),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 4),
-              action: SnackBarAction(
-                label: 'Dismiss',
-                textColor: AppColors.white,
-                onPressed: () {
-                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                },
-              ),
-            ),
-          );
+            AppToast.show(context, message: _getSecureErrorMessage(e), type: AppToastType.error);
         }
       } finally {
         if (mounted) {
@@ -469,7 +442,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final borderRadius = screenWidth != null ? (screenWidth * 0.015).clamp(8.0, 16.0) : 12.0;
         
         // Check if we're on mobile (green background)
-        final isMobile = screenWidth != null && screenWidth < 600;
+  // screenWidth is used directly below; no need for an extra flag.
         
         return Form(
           key: _formKey,
@@ -567,6 +540,9 @@ class _LoginScreenState extends State<LoginScreen> {
               child: TextFormField(
                 controller: _passwordController,
                 textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.password],
+                enableSuggestions: false,
+                autocorrect: false,
                 onFieldSubmitted: (value) {
                   // Trigger login when Enter is pressed in password field
                   if (!_isLoading) {
@@ -671,20 +647,80 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-            SizedBox(height: spacing),
-            // Register link
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const SignupScreen()),
-                );
-              },
-              child: Text(
-                AppStrings.getString('dontHaveAccount', languageService.currentLanguage),
-                style: GoogleFonts.cairo(
-                  fontSize: fontSize,
-                  color: AppColors.primary, // Palestinian red
-                  fontWeight: FontWeight.w600,
+            SizedBox(height: spacing * 0.75),
+            // Row with Forgot Password and Change Password (same line)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton(
+                  onPressed: () async {
+                    final email = _emailController.text.trim();
+                    if (email.isEmpty) {
+                      AppToast.show(context, message: 'Enter your email to reset password', type: AppToastType.warning);
+                      return;
+                    }
+                    try {
+                      final auth = Provider.of<AuthService>(context, listen: false);
+                      final res = await auth.forgotPassword(email);
+                      final ok = res['success'] == true;
+                      if (ok) {
+                        AppToast.show(context, message: 'Reset link sent to your email', type: AppToastType.info);
+                      } else {
+                        AppToast.show(context, message: res['message'] ?? 'Failed to send reset link', type: AppToastType.error);
+                      }
+                    } catch (e) {
+                      AppToast.show(context, message: 'Error: $e', type: AppToastType.error);
+                    }
+                  },
+                  child: Text(
+                    AppStrings.getString('forgotPassword', languageService.currentLanguage),
+                    style: GoogleFonts.cairo(
+                      fontSize: fontSize,
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Text(
+                  '·',
+                  style: GoogleFonts.cairo(
+                    fontSize: fontSize,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    // Open the same Change Password dialog as in Profile > Security
+                    SecurityWidget.showChangePasswordDialog(context);
+                  },
+                  child: Text(
+                    AppStrings.getString('changePassword', languageService.currentLanguage),
+                    style: GoogleFonts.cairo(
+                      fontSize: fontSize,
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: spacing * 0.25),
+            // Register link on its own line under the actions
+            Center(
+              child: TextButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => const SignupScreen()),
+                  );
+                },
+                child: Text(
+                  AppStrings.getString('dontHaveAccount', languageService.currentLanguage),
+                  style: GoogleFonts.cairo(
+                    fontSize: fontSize,
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),

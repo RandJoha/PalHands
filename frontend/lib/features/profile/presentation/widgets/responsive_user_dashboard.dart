@@ -1,6 +1,9 @@
+// ignore_for_file: dead_code
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
+import '../../../../shared/services/auth_service.dart';
 
 // Core imports
 import '../../../../core/constants/app_colors.dart';
@@ -8,7 +11,6 @@ import '../../../../core/constants/app_strings.dart';
 
 // Shared imports
 import '../../../../shared/services/language_service.dart';
-import '../../../../shared/services/auth_service.dart';
 
 // Widget imports
 import '../../../admin/presentation/widgets/language_toggle_widget.dart';
@@ -29,7 +31,8 @@ class UserMenuItem {
 }
 
 class ResponsiveUserDashboard extends StatefulWidget {
-  const ResponsiveUserDashboard({super.key});
+  final int? initialIndex;
+  const ResponsiveUserDashboard({super.key, this.initialIndex});
 
   @override
   State<ResponsiveUserDashboard> createState() => _ResponsiveUserDashboardState();
@@ -38,10 +41,10 @@ class ResponsiveUserDashboard extends StatefulWidget {
 class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard> 
     with TickerProviderStateMixin {
   int _selectedIndex = 0;
+  static const String _tabStorageKey = 'user_dashboard_tab_index';
   bool _isSidebarCollapsed = false;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late AnimationController _sidebarAnimationController;
-  late Animation<double> _sidebarAnimation;
   late AnimationController _contentAnimationController;
   late Animation<double> _contentAnimation;
 
@@ -61,579 +64,48 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
 
   String _getLocalizedString(String key) {
     final languageService = Provider.of<LanguageService>(context, listen: false);
-    final isArabic = languageService.currentLanguage == 'ar';
-    
+    final ar = languageService.currentLanguage == 'ar';
     switch (key) {
-      case 'dashboard_home':
-        return isArabic ? 'الرئيسية' : 'Dashboard Home';
-      case 'my_bookings':
-        return isArabic ? 'حجوزاتي' : 'My Bookings';
-      case 'chat_messages':
-        return isArabic ? 'المحادثات' : 'Chat / Messages';
-      case 'payments':
-        return isArabic ? 'المدفوعات' : 'Payments';
-      case 'my_reviews':
-        return isArabic ? 'تقييماتي' : 'My Reviews';
-      case 'profile_settings':
-        return isArabic ? 'إعدادات الملف الشخصي' : 'Profile Settings';
-      case 'saved_providers':
-        return isArabic ? 'المزودين المحفوظين' : 'Saved Providers';
-      case 'support_help':
-        return isArabic ? 'الدعم والمساعدة' : 'Support / Help';
-      case 'security':
-        return isArabic ? 'الأمان' : 'Security';
-      case 'welcome_back':
-        return isArabic ? 'مرحباً بعودتك' : 'Welcome Back';
-      case 'upcoming_bookings':
-        return isArabic ? 'الحجوزات القادمة' : 'Upcoming Bookings';
-      case 'completed':
-        return isArabic ? 'مكتمل' : 'Completed';
-      case 'reviews':
-        return isArabic ? 'التقييمات' : 'Reviews';
-      case 'favorites':
-        return isArabic ? 'المفضلة' : 'Favorites';
-      case 'alerts_notifications':
-        return isArabic ? 'التنبيهات والإشعارات' : 'Alerts & Notifications';
-      case 'payment_pending':
-        return isArabic ? 'دفعة معلقة' : 'Payment Pending';
-      case 'booking_reminder':
-        return isArabic ? 'تذكير بالحجز' : 'Booking Reminder';
-      case 'unread_messages':
-        return isArabic ? 'رسائل غير مقروءة' : 'Unread Messages';
-      case 'view_all':
-        return isArabic ? 'عرض الكل' : 'View All';
-      case 'confirmed':
-        return isArabic ? 'مؤكد' : 'Confirmed';
-      case 'pending':
-        return isArabic ? 'معلق' : 'Pending';
-      case 'quick_actions':
-        return isArabic ? 'إجراءات سريعة' : 'Quick Actions';
-      case 'book_again':
-        return isArabic ? 'احجز مرة أخرى' : 'Book Again';
-      case 'view_calendar':
-        return isArabic ? 'عرض التقويم' : 'View Calendar';
-      case 'rate_provider':
-        return isArabic ? 'قيّم المزود' : 'Rate Provider';
-      case 'schedule_new_service':
-        return isArabic ? 'جدولة خدمة جديدة' : 'Schedule new service';
-      case 'check_availability':
-        return isArabic ? 'تحقق من التوفر' : 'Check availability';
-      case 'share_experience':
-        return isArabic ? 'شارك تجربتك' : 'Share your experience';
-      case 'all':
-        return isArabic ? 'الكل' : 'All';
-      case 'cancelled':
-        return isArabic ? 'ملغي' : 'Cancelled';
-      case 'provider':
-        return isArabic ? 'المزود' : 'Provider';
-      case 'date_time':
-        return isArabic ? 'التاريخ والوقت' : 'Date & Time';
-      case 'address':
-        return isArabic ? 'العنوان' : 'Address';
-      case 'price':
-        return isArabic ? 'السعر' : 'Price';
-      case 'cancel':
-        return isArabic ? 'إلغاء' : 'Cancel';
-      case 'reschedule':
-        return isArabic ? 'إعادة جدولة' : 'Reschedule';
-      case 'contact':
-        return isArabic ? 'تواصل' : 'Contact';
-      case 'track':
-        return isArabic ? 'تتبع' : 'Track';
-      case 'upcoming':
-        return isArabic ? 'قادم' : 'Upcoming';
-      case 'home_cleaning':
-        return isArabic ? 'تنظيف المنزل' : 'Home Cleaning';
-      case 'elderly_care':
-        return isArabic ? 'رعاية المسنين' : 'Elderly Care';
-      case 'babysitting':
-        return isArabic ? 'رعاية الأطفال' : 'Babysitting';
-      case 'fatima_al_zahra':
-        return isArabic ? 'فاطمة الزهراء' : 'Fatima Al-Zahra';
-      case 'mariam_hassan':
-        return isArabic ? 'مريم حسن' : 'Mariam Hassan';
-      case 'aisha_mohammed':
-        return isArabic ? 'عائشة محمد' : 'Aisha Mohammed';
-      case 'tomorrow_10am':
-        return isArabic ? 'غداً، 10:00 صباحاً' : 'Tomorrow, 10:00 AM';
-      case 'friday_2pm':
-        return isArabic ? 'الجمعة، 2:00 مساءً' : 'Friday, 2:00 PM';
-      case 'yesterday_3pm':
-        return isArabic ? 'أمس، 3:00 مساءً' : 'Yesterday, 3:00 PM';
-      case 'messages':
-        return isArabic ? 'الرسائل' : 'Messages';
-      case 'chat':
-        return isArabic ? 'الدردشة' : 'Chat';
-      case 'online':
-        return isArabic ? 'متصل' : 'Online';
-      case 'offline':
-        return isArabic ? 'غير متصل' : 'Offline';
-      case 'lastSeen':
-        return isArabic ? 'آخر ظهور' : 'Last seen';
-      case 'typing':
-        return isArabic ? 'يكتب...' : 'Typing...';
-      case 'send':
-        return isArabic ? 'إرسال' : 'Send';
-      case 'attach':
-        return isArabic ? 'إرفاق' : 'Attach';
-      case 'voiceMessage':
-        return isArabic ? 'رسالة صوتية' : 'Voice Message';
-      case 'emoji':
-        return isArabic ? 'الرموز التعبيرية' : 'Emoji';
-      case 'noMessages':
-        return isArabic ? 'لا توجد رسائل بعد' : 'No messages yet';
-      case 'startConversation':
-        return isArabic ? 'ابدأ محادثة' : 'Start a conversation';
-      case 'minutesAgo':
-        return isArabic ? 'دقيقة مضت' : 'min ago';
-      case 'hoursAgo':
-        return isArabic ? 'ساعة مضت' : 'hour ago';
-      case 'daysAgo':
-        return isArabic ? 'أيام مضت' : 'days ago';
-      case 'willArriveIn':
-        return isArabic ? 'سأصل خلال 10 دقائق' : 'I will arrive in 10 minutes';
-      case 'thankYouForBooking':
-        return isArabic ? 'شكراً لك على الحجز' : 'Thank you for the booking';
-      case 'childrenDoingGreat':
-        return isArabic ? 'الأطفال بخير' : 'The children are doing great';
-      case 'type_message':
-        return isArabic ? 'اكتب رسالة...' : 'Type a message...';
-      // Payment strings
-      case 'totalSpent':
-        return isArabic ? 'إجمالي الإنفاق' : 'Total Spent';
-      case 'thisMonth':
-        return isArabic ? 'هذا الشهر' : 'This Month';
-      case 'pending':
-        return isArabic ? 'معلق' : 'Pending';
-      case 'paymentMethods':
-        return isArabic ? 'طرق الدفع' : 'Payment Methods';
-      case 'addNew':
-        return isArabic ? 'إضافة جديد' : 'Add New';
-      case 'defaultText':
-        return isArabic ? 'افتراضي' : 'Default';
-      case 'connected':
-        return isArabic ? 'متصل' : 'Connected';
-      case 'paymentHistory':
-        return isArabic ? 'سجل المدفوعات' : 'Payment History';
-      case 'visaEndingIn':
-        return isArabic ? 'فيزا تنتهي بـ 1234' : 'Visa ending in 1234';
-      case 'paypal':
-        return isArabic ? 'باي بال' : 'PayPal';
-      case 'completed':
-        return isArabic ? 'مكتمل' : 'Completed';
-      case 'today':
-        return isArabic ? 'اليوم' : 'Today';
-      case 'yesterday':
-        return isArabic ? 'أمس' : 'Yesterday';
-      case 'daysAgo':
-        return isArabic ? 'أيام مضت' : 'days ago';
-      case 'at':
-        return isArabic ? 'في' : 'at';
-      case 'totalReviews':
-        return isArabic ? 'إجمالي التقييمات' : 'Total Reviews';
-      case 'averageRating':
-        return isArabic ? 'متوسط التقييم' : 'Average Rating';
-      case 'myReviews':
-        return isArabic ? 'تقييماتي' : 'My Reviews';
-      case 'edit':
-        return isArabic ? 'تعديل' : 'Edit';
-      case 'weekAgo':
-        return isArabic ? 'أسبوع مضى' : 'week ago';
-      case 'weeksAgo':
-        return isArabic ? 'أسابيع مضت' : 'weeks ago';
-      // Profile Settings strings
-      case 'profileSettings':
-        return isArabic ? 'إعدادات الملف الشخصي' : 'Profile Settings';
-      case 'personalInformation':
-        return isArabic ? 'المعلومات الشخصية' : 'Personal Information';
-      case 'firstName':
-        return isArabic ? 'الاسم الأول' : 'First Name';
-      case 'lastName':
-        return isArabic ? 'اسم العائلة' : 'Last Name';
-      case 'phoneNumber':
-        return isArabic ? 'رقم الهاتف' : 'Phone Number';
-      case 'saveChanges':
-        return isArabic ? 'حفظ التغييرات' : 'Save Changes';
-      case 'savedAddresses':
-        return isArabic ? 'العناوين المحفوظة' : 'Saved Addresses';
-      case 'addNewAddress':
-        return isArabic ? 'إضافة عنوان جديد' : 'Add New Address';
-      case 'notificationPreferences':
-        return isArabic ? 'تفضيلات الإشعارات' : 'Notification Preferences';
-      case 'emailNotifications':
-        return isArabic ? 'إشعارات البريد الإلكتروني' : 'Email Notifications';
-      case 'pushNotifications':
-        return isArabic ? 'الإشعارات الفورية' : 'Push Notifications';
-      case 'smsNotifications':
-        return isArabic ? 'إشعارات الرسائل النصية' : 'SMS Notifications';
-      // Saved Providers strings
-      case 'savedProviders':
-        return isArabic ? 'مقدمي الخدمات المحفوظون' : 'Saved Providers';
-      case 'totalProviders':
-        return isArabic ? 'إجمالي مقدمي الخدمات' : 'Total Providers';
-      case 'available':
-        return isArabic ? 'متاح' : 'Available';
-      case 'unavailable':
-        return isArabic ? 'غير متاح' : 'Unavailable';
-      case 'bookNow':
-        return isArabic ? 'احجز الآن' : 'Book Now';
-      case 'remove':
-        return isArabic ? 'إزالة' : 'Remove';
-      // Support Help strings
-      case 'supportHelp':
-        return isArabic ? 'الدعم والمساعدة' : 'Support & Help';
-      case 'quickHelp':
-        return isArabic ? 'مساعدة سريعة' : 'Quick Help';
-      case 'contactSupport':
-        return isArabic ? 'تواصل مع الدعم' : 'Contact Support';
-      case 'faq':
-        return isArabic ? 'الأسئلة الشائعة' : 'FAQ';
-      case 'liveChat':
-        return isArabic ? 'الدردشة المباشرة' : 'Live Chat';
-      case 'reportIssue':
-        return isArabic ? 'الإبلاغ عن مشكلة' : 'Report Issue';
-      case 'recentTickets':
-        return isArabic ? 'التذاكر الحديثة' : 'Recent Tickets';
-      case 'open':
-        return isArabic ? 'مفتوح' : 'Open';
-      case 'closed':
-        return isArabic ? 'مغلق' : 'Closed';
-      // Security strings
-      case 'security':
-        return isArabic ? 'الأمان' : 'Security';
-      case 'securityStatus':
-        return isArabic ? 'حالة الأمان' : 'Security Status';
-      case 'strong':
-        return isArabic ? 'قوي' : 'Strong';
-      case 'changePassword':
-        return isArabic ? 'تغيير كلمة المرور' : 'Change Password';
-      case 'twoFactorAuth':
-        return isArabic ? 'المصادقة الثنائية' : 'Two-Factor Authentication';
-      case 'enabled':
-        return isArabic ? 'مفعل' : 'Enabled';
-      case 'disabled':
-        return isArabic ? 'معطل' : 'Disabled';
-      case 'loginHistory':
-        return isArabic ? 'سجل تسجيل الدخول' : 'Login History';
-      case 'lastLogin':
-        return isArabic ? 'آخر تسجيل دخول' : 'Last Login';
-      case 'device':
-        return isArabic ? 'الجهاز' : 'Device';
-      case 'location':
-        return isArabic ? 'الموقع' : 'Location';
-      case 'accountSettings':
-        return isArabic ? 'إعدادات الحساب' : 'Account Settings';
-      case 'deactivateAccount':
-        return isArabic ? 'إلغاء تفعيل الحساب' : 'Deactivate Account';
-      case 'deleteAccount':
-        return isArabic ? 'حذف الحساب' : 'Delete Account';
-      // Additional strings for complete translation
-      case 'dateOfBirth':
-        return isArabic ? 'تاريخ الميلاد' : 'Date of Birth';
-      case 'recentlyBooked':
-        return isArabic ? 'حجوزات حديثة' : 'Recently Booked';
-      case 'findAnswers':
-        return isArabic ? 'اعثر على إجابات للأسئلة الشائعة' : 'Find answers to common questions';
-      case 'createSupportRequest':
-        return isArabic ? 'إنشاء طلب دعم جديد' : 'Create a new support request';
-      case 'viewPreviousRequests':
-        return isArabic ? 'عرض الطلبات السابقة' : 'View Previous Requests';
-      case 'checkTicketStatus':
-        return isArabic ? 'تحقق من حالة تذاكرك' : 'Check status of your tickets';
-      case 'chatWithSupport':
-        return isArabic ? 'دردشة مع فريق الدعم' : 'Chat with our support team';
-      case 'password':
-        return isArabic ? 'كلمة المرور' : 'Password';
-      case 'loginAlerts':
-        return isArabic ? 'تنبيهات تسجيل الدخول' : 'Login Alerts';
-      case 'active':
-        return isArabic ? 'نشط' : 'Active';
-      case 'deviceTrust':
-        return isArabic ? 'ثقة الجهاز' : 'Device Trust';
-      case 'devices':
-        return isArabic ? 'الأجهزة' : 'Devices';
-      case 'updatePassword':
-        return isArabic ? 'تحديث كلمة مرور حسابك' : 'Update your account password';
-      case 'addExtraSecurity':
-        return isArabic ? 'إضافة طبقة أمان إضافية' : 'Add an extra layer of security';
-      case 'getLoginNotifications':
-        return isArabic ? 'احصل على إشعارات بتسجيلات الدخول الجديدة' : 'Get notified of new logins';
-      case 'trustedDevices':
-        return isArabic ? 'الأجهزة الموثوقة' : 'Trusted Devices';
-      case 'manageTrustedDevices':
-        return isArabic ? 'إدارة أجهزتك الموثوقة' : 'Manage your trusted devices';
-      case 'permanentlyDeleteAccount':
-        return isArabic ? 'حذف حسابك نهائياً' : 'Permanently delete your account';
+      case 'pleaseVerifyAccount':
+        return ar ? 'يرجى توثيق الحساب' : 'Please verify account';
+      case 'verify':
+        return ar ? 'توثيق' : 'Verify';
+      case 'age':
+        return ar ? 'العمر' : 'Age';
       case 'membersSince':
-        return isArabic ? 'عضو منذ' : 'Members since';
-      case 'fullName':
-        return isArabic ? 'الاسم الكامل' : 'Full Name';
-      case 'march15':
-        return isArabic ? '15 اذار 1998' : 'March 15, 1998';
-      case 'home':
-        return isArabic ? 'المنزل' : 'Home';
-      case 'businessF':
-        return isArabic ? 'الأعمال ف' : 'Business F';
-      case 'dellaBia':
-        return isArabic ? 'ديلا بيا' : 'Della Bia';
-      case 'f456':
-        return isArabic ? 'ف456' : 'F456';
-      case 'homeCleaning':
-        return isArabic ? 'تنظيف المنزل' : 'Home Cleaning';
-      case 'elderlyCare':
-        return isArabic ? 'رعاية المسنين' : 'Elderly Care';
-      case 'babysitting':
-        return isArabic ? 'رعاية الأطفال' : 'Babysitting';
-      case 'lastBook':
-        return isArabic ? 'آخر حجز' : 'Last Book';
-      case 'twoDaysAgo':
-        return isArabic ? 'قبل يومين' : 'Two days ago';
-      case 'oneWeekAgo':
-        return isArabic ? 'قبل أسبوع' : 'One week ago';
-      case 'threeWeeksAgo':
-        return isArabic ? 'قبل ثلاثة أسابيع' : 'Three weeks ago';
-      case 'threeDaysAgo':
-        return isArabic ? 'قبل ثلاثة أيام' : 'Three days ago';
-      case 'oneDayAgo':
-        return isArabic ? 'قبل يوم واحد' : 'One day ago';
-      case 'oneWeekAgo':
-        return isArabic ? 'قبل أسبوع' : 'One week ago';
-      case 'twoWeeksAgo':
-        return isArabic ? 'قبل أسبوعين' : 'Two weeks ago';
-      case 'oneMonthAgo':
-        return isArabic ? 'قبل شهر' : 'One month ago';
-      case 'twoMonthsAgo':
-        return isArabic ? 'قبل شهرين' : 'Two months ago';
-      case 'threeMonthsAgo':
-        return isArabic ? 'قبل ثلاثة أشهر' : 'Three months ago';
-      case 'oneYearAgo':
-        return isArabic ? 'قبل سنة' : 'One year ago';
-      case 'twoYearsAgo':
-        return isArabic ? 'قبل سنتين' : 'Two years ago';
-      case 'justNow':
-        return isArabic ? 'الآن' : 'Just now';
-      case 'minutesAgo':
-        return isArabic ? 'دقائق مضت' : 'minutes ago';
-      case 'hoursAgo':
-        return isArabic ? 'ساعات مضت' : 'hours ago';
-      case 'daysAgo':
-        return isArabic ? 'أيام مضت' : 'days ago';
-      case 'weeksAgo':
-        return isArabic ? 'أسابيع مضت' : 'weeks ago';
-      case 'monthsAgo':
-        return isArabic ? 'أشهر مضت' : 'months ago';
-      case 'yearsAgo':
-        return isArabic ? 'سنوات مضت' : 'years ago';
-      case 'keepAccountSafe':
-        return isArabic ? 'حافظ على أمان حسابك' : 'Keep Your Account Safe and Secure';
-      case 'accountSecurity':
-        return isArabic ? 'أمان الحساب' : 'Account Security';
-      case 'january2024':
-        return isArabic ? 'كانون الثاني 2024' : 'January 2024';
-      case 'needHelp':
-        return isArabic ? 'تحتاج مساعدة؟' : 'Need help?';
-      case 'weAreHereToHelp':
-        return isArabic ? 'نحن هنا لمساعدتك على مدار الساعة' : 'We are here to help you 24/7';
-      case 'paymentIssueResolved':
-        return isArabic ? 'تم حل مشكلة الدفع' : 'Payment issue resolved';
-      case 'bookingCancellations':
-        return isArabic ? 'إلغاءات الحجز' : 'Booking cancellations';
-      case 'inProgress':
-        return isArabic ? 'قيد التنفيذ' : 'In progress';
-      case 'jerusalem':
-        return isArabic ? 'القدس' : 'Jerusalem';
-      case 'telAviv':
-        return isArabic ? 'نابلس' : 'Nablus';
-      case 'haifa':
-        return isArabic ? 'حيفا' : 'Haifa';
-      case 'today830AM':
-        return isArabic ? 'اليوم 8:30 صباحاً' : 'Today 8:30 AM';
-      case 'current':
-        return isArabic ? 'الحالي' : 'Current';
-      case 'inActive':
-        return isArabic ? 'نشط' : 'In Active';
-      case 'palestine':
-        return isArabic ? 'فلسطين' : 'Palestine';
-      case 'total_spent':
-        return isArabic ? 'إجمالي الإنفاق' : 'Total Spent';
-      case 'this_month':
-        return isArabic ? 'هذا الشهر' : 'This Month';
-      case 'payment_methods':
-        return isArabic ? 'طرق الدفع' : 'Payment Methods';
-      case 'add_new':
-        return isArabic ? 'إضافة جديد' : 'Add New';
-      case 'default':
-        return isArabic ? 'افتراضي' : 'Default';
-      case 'connected':
-        return isArabic ? 'متصل' : 'Connected';
-      case 'payment_history':
-        return isArabic ? 'سجل المدفوعات' : 'Payment History';
-      case 'total_reviews':
-        return isArabic ? 'إجمالي التقييمات' : 'Total Reviews';
-      case 'average_rating':
-        return isArabic ? 'متوسط التقييم' : 'Average Rating';
-      case 'edit':
-        return isArabic ? 'تعديل' : 'Edit';
-      case 'personal_information':
-        return isArabic ? 'المعلومات الشخصية' : 'Personal Information';
-      case 'full_name':
-        return isArabic ? 'الاسم الكامل' : 'Full Name';
+        return ar ? 'عضو منذ' : 'Members since';
       case 'email':
-        return isArabic ? 'البريد الإلكتروني' : 'Email';
-      case 'phone':
-        return isArabic ? 'الهاتف' : 'Phone';
-      case 'date_of_birth':
-        return isArabic ? 'تاريخ الميلاد' : 'Date of Birth';
-      case 'saved_addresses':
-        return isArabic ? 'العناوين المحفوظة' : 'Saved Addresses';
+        return ar ? 'البريد الإلكتروني' : 'Email';
+      case 'phoneNumber':
+        return ar ? 'رقم الهاتف' : 'Phone Number';
+      case 'fullName':
+        return ar ? 'الاسم الكامل' : 'Full Name';
+      case 'personalInformation':
+        return ar ? 'المعلومات الشخصية' : 'Personal Information';
+      case 'savedAddresses':
+        return ar ? 'العناوين المحفوظة' : 'Saved Addresses';
+      case 'addNewAddress':
+        return ar ? 'إضافة عنوان جديد' : 'Add New Address';
+      case 'notificationPreferences':
+        return ar ? 'تفضيلات الإشعارات' : 'Notification Preferences';
+      case 'emailNotifications':
+        return ar ? 'إشعارات البريد الإلكتروني' : 'Email Notifications';
+      case 'pushNotifications':
+        return ar ? 'الإشعارات الفورية' : 'Push Notifications';
+      case 'smsNotifications':
+        return ar ? 'إشعارات الرسائل النصية' : 'SMS Notifications';
+      case 'defaultText':
+        return ar ? 'افتراضي' : 'Default';
       case 'home':
-        return isArabic ? 'المنزل' : 'Home';
-      case 'work':
-        return isArabic ? 'العمل' : 'Work';
-      case 'notification_preferences':
-        return isArabic ? 'تفضيلات الإشعارات' : 'Notification Preferences';
-      case 'email_notifications':
-        return isArabic ? 'إشعارات البريد الإلكتروني' : 'Email Notifications';
-      case 'push_notifications':
-        return isArabic ? 'الإشعارات الفورية' : 'Push Notifications';
-      case 'sms_notifications':
-        return isArabic ? 'إشعارات الرسائل النصية' : 'SMS Notifications';
-      case 'available_now':
-        return isArabic ? 'متاح الآن' : 'Available Now';
-      case 'recently_booked':
-        return isArabic ? 'محجوز مؤخراً' : 'Recently Booked';
-      case 'last_booked':
-        return isArabic ? 'آخر حجز' : 'Last booked';
-      case 'lastBooked':
-        return isArabic ? 'آخر حجز' : 'Last booked';
-      case 'available':
-        return isArabic ? 'متاح' : 'Available';
-      case 'busy':
-        return isArabic ? 'مشغول' : 'Busy';
-      case 'need_help':
-        return isArabic ? 'تحتاج مساعدة؟' : 'Need Help?';
-      case 'we_are_here':
-        return isArabic ? 'نحن هنا لمساعدتك على مدار الساعة' : 'We\'re here to help you 24/7';
-      case 'quick_help':
-        return isArabic ? 'مساعدة سريعة' : 'Quick Help';
-      case 'live_chat':
-        return isArabic ? 'الدردشة المباشرة' : 'Live Chat';
-      case 'submit_ticket':
-        return isArabic ? 'إرسال تذكرة' : 'Submit Ticket';
-      case 'call_us':
-        return isArabic ? 'اتصل بنا' : 'Call Us';
-      case 'support_options':
-        return isArabic ? 'خيارات الدعم' : 'Support Options';
-      case 'browse_faqs':
-        return isArabic ? 'تصفح الأسئلة الشائعة' : 'Browse FAQs';
-      case 'find_answers':
-        return isArabic ? 'ابحث عن إجابات للأسئلة الشائعة' : 'Find answers to common questions';
-      case 'submit_support_ticket':
-        return isArabic ? 'إرسال تذكرة دعم' : 'Submit Support Ticket';
-      case 'create_new_request':
-        return isArabic ? 'إنشاء طلب دعم جديد' : 'Create a new support request';
-      case 'view_previous_requests':
-        return isArabic ? 'عرض الطلبات السابقة' : 'View Previous Requests';
-      case 'check_ticket_status':
-        return isArabic ? 'تحقق من حالة تذاكرك' : 'Check status of your tickets';
-      case 'live_chat_support':
-        return isArabic ? 'الدردشة المباشرة مع الدعم' : 'Live Chat Support';
-      case 'chat_with_support':
-        return isArabic ? 'دردشة مع فريق الدعم' : 'Chat with our support team';
-      case 'recent_support_tickets':
-        return isArabic ? 'تذاكر الدعم الأخيرة' : 'Recent Support Tickets';
-      case 'payment_issue':
-        return isArabic ? 'مشكلة في الدفع' : 'Payment Issue';
-      case 'booking_cancellation':
-        return isArabic ? 'إلغاء الحجز' : 'Booking Cancellation';
-      case 'resolved':
-        return isArabic ? 'تم الحل' : 'Resolved';
-      case 'in_progress':
-        return isArabic ? 'قيد التنفيذ' : 'In Progress';
-      case 'account_security':
-        return isArabic ? 'أمان الحساب' : 'Account Security';
-      case 'keep_account_safe':
-        return isArabic ? 'حافظ على أمان حسابك' : 'Keep your account safe and secure';
-      case 'security_settings':
-        return isArabic ? 'إعدادات الأمان' : 'Security Settings';
-      case 'change_password':
-        return isArabic ? 'تغيير كلمة المرور' : 'Change Password';
-      case 'update_password':
-        return isArabic ? 'تحديث كلمة مرور حسابك' : 'Update your account password';
-      case 'two_factor_auth':
-        return isArabic ? 'المصادقة الثنائية' : 'Two-Factor Authentication';
-      case 'add_extra_security':
-        return isArabic ? 'أضف طبقة أمان إضافية' : 'Add an extra layer of security';
-      case 'login_alerts':
-        return isArabic ? 'تنبيهات تسجيل الدخول' : 'Login Alerts';
-      case 'get_notified':
-        return isArabic ? 'احصل على إشعارات بتسجيلات الدخول الجديدة' : 'Get notified of new logins';
-      case 'trusted_devices':
-        return isArabic ? 'الأجهزة الموثوقة' : 'Trusted Devices';
-      case 'manage_devices':
-        return isArabic ? 'إدارة أجهزتك الموثوقة' : 'Manage your trusted devices';
-      case 'delete_account':
-        return isArabic ? 'حذف الحساب' : 'Delete Account';
-      case 'permanently_delete':
-        return isArabic ? 'حذف حسابك نهائياً' : 'Permanently delete your account';
-      case 'login_history':
-        return isArabic ? 'سجل تسجيل الدخول' : 'Login History';
-      case 'current':
-        return isArabic ? 'الحالي' : 'Current';
-      case 'active':
-        return isArabic ? 'نشط' : 'Active';
-      case 'inactive':
-        return isArabic ? 'غير نشط' : 'Inactive';
-      case 'member_since':
-        return isArabic ? 'عضو منذ' : 'Member since';
-      case 'upcoming_bookings_this_week':
-        return isArabic ? 'لديك 3 حجوزات قادمة هذا الأسبوع' : 'You have 3 upcoming bookings this week';
-      case 'view_all_alerts':
-        return isArabic ? 'عرض جميع التنبيهات' : 'View All Alerts';
-      case 'payment_pending_desc':
-        return isArabic ? 'لديك دفعة معلقة للحجز رقم 1234' : 'You have a pending payment for booking #1234';
-      case 'booking_reminder_desc':
-        return isArabic ? 'خدمة التنظيف مجدولة غداً الساعة 10:00 صباحاً' : 'Your cleaning service is scheduled for tomorrow at 10:00 AM';
-      case 'unread_messages_desc':
-        return isArabic ? 'لديك رسالتان غير مقروءتين من مزود الخدمة' : 'You have 2 unread messages from your service provider';
-      case 'schedule_new_service':
-        return isArabic ? 'جدولة خدمة جديدة' : 'Schedule new service';
-      case 'check_availability':
-        return isArabic ? 'تحقق من التوفر' : 'Check availability';
-      case 'share_experience':
-        return isArabic ? 'شارك تجربتك' : 'Share your experience';
-      case 'book_again':
-        return isArabic ? 'احجز مرة أخرى' : 'Book Again';
-      case 'view_calendar':
-        return isArabic ? 'عرض التقويم' : 'View Calendar';
-      case 'rate_provider':
-        return isArabic ? 'قيّم المزود' : 'Rate Provider';
-      case 'home_cleaning':
-        return isArabic ? 'تنظيف المنزل' : 'Home Cleaning';
-      case 'elderly_care':
-        return isArabic ? 'رعاية المسنين' : 'Elderly Care';
-      case 'fatima_al_zahra':
-        return isArabic ? 'فاطمة الزهراء' : 'Fatima Al-Zahra';
-      case 'mariam_hassan':
-        return isArabic ? 'مريم حسن' : 'Mariam Hassan';
-      case 'tomorrow_10am':
-        return isArabic ? 'غداً، 10:00 صباحاً' : 'Tomorrow, 10:00 AM';
-      case 'friday_2pm':
-        return isArabic ? 'الجمعة، 2:00 مساءً' : 'Friday, 2:00 PM';
-      case 'confirmed':
-        return isArabic ? 'مؤكد' : 'Confirmed';
-      case 'pending':
-        return isArabic ? 'معلق' : 'Pending';
-      case 'service':
-        return isArabic ? 'الخدمة' : 'Service';
-      case 'provider':
-        return isArabic ? 'المزود' : 'Provider';
-      case 'date_time':
-        return isArabic ? 'التاريخ والوقت' : 'Date & Time';
-      case 'status':
-        return isArabic ? 'الحالة' : 'Status';
+        return ar ? 'المنزل' : 'Home';
+      case 'profileSettings':
+        return ar ? 'إعدادات الملف الشخصي' : 'Profile Settings';
+      case 'saveChanges':
+        return ar ? 'حفظ التغييرات' : 'Save Changes';
+      case 'cancel':
+        return ar ? 'إلغاء' : 'Cancel';
       default:
-        return key;
+        return AppStrings.getString(key, languageService.currentLanguage);
     }
   }
 
@@ -644,13 +116,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    _sidebarAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _sidebarAnimationController,
-      curve: Curves.easeInOut,
-    ));
+  // Sidebar animation controller in place for future transitions
 
     _contentAnimationController = AnimationController(
       duration: const Duration(milliseconds: 200),
@@ -664,7 +130,13 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       curve: Curves.easeInOut,
     ));
 
-    _contentAnimationController.forward();
+  _contentAnimationController.forward();
+  _restoreSelectedTab();
+  if (widget.initialIndex != null) {
+    final max = _getMenuItems().length - 1;
+    final idx = widget.initialIndex!.clamp(0, max);
+    setState(() => _selectedIndex = idx);
+  }
   }
 
   @override
@@ -678,8 +150,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final screenWidth = constraints.maxWidth;
-        final screenHeight = constraints.maxHeight;
+  final screenWidth = constraints.maxWidth;
         
         // Responsive breakpoints
         final isDesktop = screenWidth > 1200;
@@ -856,6 +327,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     setState(() {
                       _selectedIndex = index;
                     });
+                    _persistSelectedTab();
                     _contentAnimationController.reset();
                     _contentAnimationController.forward();
                   }
@@ -993,9 +465,9 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                               color: AppColors.textSecondary,
                             ),
                           ),
-                        ],
+            ],
                       ),
-                    ],
+          ],
                   ],
                 );
               },
@@ -1115,6 +587,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             if (mounted) {
               setState(() {
                 _selectedIndex = index;
+                _persistSelectedTab();
               });
               _contentAnimationController.reset();
               _contentAnimationController.forward();
@@ -1441,7 +914,6 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   }
 
   Widget _buildBookingDetailRow(IconData icon, String label, String value, bool isMobile) {
-    final languageService = Provider.of<LanguageService>(context, listen: false);
     return Row(
       children: [
         Icon(
@@ -2573,6 +2045,31 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   }
 
   Widget _buildProfileHeader(bool isMobile, bool isTablet) {
+    final auth = Provider.of<AuthService>(context, listen: false);
+    final user = auth.currentUser ?? const {};
+    final first = (user['firstName'] ?? '').toString();
+    final last = (user['lastName'] ?? '').toString();
+    final fullName = [first, last].where((e) => e.isNotEmpty).join(' ').trim();
+    final createdAt = (user['createdAt'] ?? user['created_at'] ?? '').toString();
+    String joinedText = _getLocalizedString('membersSince');
+    if (createdAt.isNotEmpty) {
+      try {
+        final dt = DateTime.tryParse(createdAt);
+        if (dt != null) {
+          final monthNames = {
+            'en': [
+              'January','February','March','April','May','June','July','August','September','October','November','December'
+            ],
+            'ar': [
+              'يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'
+            ],
+          };
+          final lang = Provider.of<LanguageService>(context, listen: false).currentLanguage;
+          final month = monthNames[lang]?[dt.month - 1] ?? dt.month.toString();
+          joinedText = '${_getLocalizedString('membersSince')} $month ${dt.year}';
+        }
+      } catch (_) {}
+    }
     return Container(
       padding: EdgeInsets.all(isMobile ? 20.0 : 32.0),
       decoration: BoxDecoration(
@@ -2604,7 +2101,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Ahmed Hassan',
+                  fullName.isNotEmpty ? fullName : _getLocalizedString('fullName'),
                   style: GoogleFonts.cairo(
                     fontSize: isMobile ? 24.0 : 28.0,
                     fontWeight: FontWeight.w700,
@@ -2613,7 +2110,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 ),
                 const SizedBox(height: 4.0),
                 Text(
-                  '${_getLocalizedString('membersSince')} ${_getLocalizedString('january2024')}',
+                  joinedText,
                   style: GoogleFonts.cairo(
                     fontSize: isMobile ? 14.0 : 16.0,
                     fontWeight: FontWeight.w400,
@@ -2623,20 +2120,23 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               ],
             ),
           ),
-          IconButton(
-            onPressed: () {},
-            icon: Icon(
-              Icons.edit,
-              color: AppColors.white,
-              size: isMobile ? 24.0 : 28.0,
-            ),
-          ),
+          // Header edit button hidden until profile image feature is implemented
         ],
       ),
     );
   }
 
   Widget _buildProfileForm(bool isMobile, bool isTablet) {
+    // Listen to AuthService so the card updates when profile changes (e.g., email)
+    final auth = Provider.of<AuthService>(context);
+    final user = auth.currentUser ?? const {};
+    final currentFullName = [
+      (user['firstName'] ?? '').toString(),
+      (user['lastName'] ?? '').toString(),
+    ].where((e) => e.isNotEmpty).join(' ').trim();
+    final currentEmail = (user['email'] ?? '').toString();
+    final currentPhone = (user['phone'] ?? '').toString();
+    final currentAge = user['age'];
     return Container(
       padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
       decoration: BoxDecoration(
@@ -2657,19 +2157,43 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           ),
           SizedBox(height: isMobile ? 16.0 : 20.0),
           
-          _buildFormField(_getLocalizedString('fullName'), 'Ahmed Hassan', Icons.person, isMobile),
+          _buildFormField(
+            _getLocalizedString('fullName'),
+            currentFullName,
+            Icons.person,
+            isMobile,
+            onEdit: _onEditName,
+          ),
           const SizedBox(height: 12.0),
-          _buildFormField(_getLocalizedString('email'), 'ahmed@example.com', Icons.email, isMobile),
+          _buildFormField(
+            _getLocalizedString('email'),
+            currentEmail,
+            Icons.email,
+            isMobile,
+            onEdit: _onEditEmail,
+          ),
           const SizedBox(height: 12.0),
-          _buildFormField(_getLocalizedString('phoneNumber'), '+972 50 123 4567', Icons.phone, isMobile),
+          _buildFormField(
+            _getLocalizedString('phoneNumber'),
+            currentPhone,
+            Icons.phone,
+            isMobile,
+            onEdit: _onEditPhone,
+          ),
           const SizedBox(height: 12.0),
-          _buildFormField(_getLocalizedString('dateOfBirth'), _getLocalizedString('march15'), Icons.calendar_today, isMobile),
+          _buildFormField(
+            _getLocalizedString('age'),
+            (currentAge is int && currentAge > 0) ? currentAge.toString() : '-',
+            Icons.cake,
+            isMobile,
+            onEdit: _onEditAge,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildFormField(String label, String value, IconData icon, bool isMobile) {
+  Widget _buildFormField(String label, String value, IconData icon, bool isMobile, {VoidCallback? onEdit}) {
     return Row(
       children: [
         Icon(
@@ -2702,7 +2226,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           ),
         ),
         IconButton(
-          onPressed: () {},
+          onPressed: onEdit,
           icon: Icon(
             Icons.edit,
             color: AppColors.primary,
@@ -2736,7 +2260,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 ),
               ),
               ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: _onAddOrEditAddress,
                 icon: Icon(Icons.add, size: isMobile ? 16.0 : 18.0),
                 label: Text(
                   _getLocalizedString('addNewAddress'),
@@ -2757,16 +2281,21 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             ],
           ),
           SizedBox(height: isMobile ? 12.0 : 16.0),
-          
-          _buildAddressCard(_getLocalizedString('home'), '123 ${_getLocalizedString('mainStreet')}, ${_getLocalizedString('jerusalem')}', true, isMobile),
-          const SizedBox(height: 12.0),
-          _buildAddressCard(_getLocalizedString('work'), '456 ${_getLocalizedString('businessF')}, ${_getLocalizedString('telAviv')}', false, isMobile),
+          ..._buildAddressCards(isMobile),
         ],
       ),
     );
   }
 
-  Widget _buildAddressCard(String label, String address, bool isDefault, bool isMobile) {
+  Widget _buildAddressCard(
+    String label,
+    String address,
+    bool isDefault,
+    bool isMobile, {
+    VoidCallback? onMakeDefault,
+    VoidCallback? onEdit,
+    VoidCallback? onDelete,
+  }) {
     return Container(
       padding: EdgeInsets.all(isMobile ? 12.0 : 16.0),
       decoration: BoxDecoration(
@@ -2824,12 +2353,37 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 ),
               ),
             ),
+          if (!isDefault && onMakeDefault != null) ...[
+            SizedBox(width: isMobile ? 4 : 8),
+            IconButton(
+              tooltip: 'Make default',
+              onPressed: onMakeDefault,
+              icon: Icon(Icons.star_border, color: AppColors.primary, size: isMobile ? 20 : 22),
+            ),
+          ],
+          if (onEdit != null) ...[
+            SizedBox(width: isMobile ? 4 : 8),
+            IconButton(
+              tooltip: 'Edit',
+              onPressed: onEdit,
+              icon: Icon(Icons.edit, color: AppColors.textSecondary, size: isMobile ? 20 : 22),
+            ),
+          ],
+          if (onDelete != null) ...[
+            SizedBox(width: isMobile ? 4 : 8),
+            IconButton(
+              tooltip: 'Delete',
+              onPressed: onDelete,
+              icon: Icon(Icons.delete_outline, color: AppColors.error, size: isMobile ? 20 : 22),
+            ),
+          ],
         ],
       ),
     );
   }
 
   Widget _buildNotificationsSection(bool isMobile, bool isTablet) {
+    // Local stateful toggles; backend integration TBD
     return Container(
       padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
       decoration: BoxDecoration(
@@ -2850,17 +2404,17 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           ),
           SizedBox(height: isMobile ? 12.0 : 16.0),
           
-          _buildNotificationToggle(_getLocalizedString('emailNotifications'), true, isMobile),
+          _buildNotificationToggle(_getLocalizedString('emailNotifications'), _emailNotifs, isMobile, (v) => setState(() { _emailNotifs = v; })),
           const SizedBox(height: 8.0),
-          _buildNotificationToggle(_getLocalizedString('pushNotifications'), true, isMobile),
+          _buildNotificationToggle(_getLocalizedString('pushNotifications'), _pushNotifs, isMobile, (v) => setState(() { _pushNotifs = v; })),
           const SizedBox(height: 8.0),
-          _buildNotificationToggle(_getLocalizedString('smsNotifications'), false, isMobile),
+          _buildNotificationToggle(_getLocalizedString('smsNotifications'), _smsNotifs, isMobile, (v) => setState(() { _smsNotifs = v; })),
         ],
       ),
     );
   }
 
-  Widget _buildNotificationToggle(String label, bool isEnabled, bool isMobile) {
+  Widget _buildNotificationToggle(String label, bool isEnabled, bool isMobile, ValueChanged<bool> onChanged) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -2875,12 +2429,427 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         Switch(
           value: isEnabled,
           onChanged: (value) {
-            // Handle toggle
+            onChanged(value);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('${_getLocalizedString('saveChanges')} · $label: ${value ? 'ON' : 'OFF'}')),
+            );
           },
           activeColor: AppColors.primary,
         ),
       ],
     );
+  }
+
+  // Local notification prefs state
+  bool _emailNotifs = true;
+  bool _pushNotifs = true;
+  bool _smsNotifs = false;
+
+  // Helpers: edit actions
+  Future<void> _onEditName() async {
+    final auth = Provider.of<AuthService>(context, listen: false);
+    final firstName = TextEditingController(text: (auth.currentUser?['firstName'] ?? '').toString());
+    final lastName = TextEditingController(text: (auth.currentUser?['lastName'] ?? '').toString());
+    final okPressed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(_getLocalizedString('fullName')),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: firstName, decoration: const InputDecoration(labelText: 'First name')),
+            TextField(controller: lastName, decoration: const InputDecoration(labelText: 'Last name')),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: Text(_getLocalizedString('cancel'))),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: Text(_getLocalizedString('saveChanges'))),
+        ],
+      ),
+    );
+    if (okPressed == true) {
+      try {
+        await auth.updateProfile(firstName: firstName.text.trim(), lastName: lastName.text.trim());
+        if (mounted) {
+          setState(() {});
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile updated')));
+        }
+      } catch (_) {}
+    }
+  }
+
+  Future<void> _onEditEmail() async {
+    final auth = Provider.of<AuthService>(context, listen: false);
+    final email = TextEditingController(text: (auth.currentUser?['email'] ?? '').toString());
+    final okPressed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(_getLocalizedString('email')),
+        content: TextField(
+          controller: email,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(labelText: 'Email'),
+        ), 
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: Text(_getLocalizedString('cancel'))),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: Text(_getLocalizedString('saveChanges'))),
+        ],
+      ),
+    );
+    if (okPressed == true) {
+      try {
+        final next = email.text.trim();
+        final valid = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$').hasMatch(next);
+        if (!valid) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a valid email address')));
+          }
+          return;
+        }
+        await auth.updateProfile(email: next);
+        if (mounted) {
+          setState(() {});
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Email updated. Check your inbox to verify.')));
+          // Prompt to send verification link immediately
+          final proceed = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: Text(_getLocalizedString('profileSettings')),
+              content: Text(_getLocalizedString('pleaseVerifyAccount')),
+              actions: [
+                TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: Text(_getLocalizedString('cancel'))),
+                TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: Text(_getLocalizedString('verify'))),
+              ],
+            ),
+          );
+          if (proceed == true) {
+            try {
+              await Provider.of<AuthService>(context, listen: false).requestVerification();
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Verification email sent. Please use the link in your inbox.')));
+              }
+            } catch (_) {}
+          }
+        }
+      } catch (_) {}
+    }
+  }
+
+  Future<void> _restoreSelectedTab() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final idx = prefs.getInt(_tabStorageKey);
+      if (idx != null && mounted) {
+        setState(() => _selectedIndex = idx);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _persistSelectedTab() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_tabStorageKey, _selectedIndex);
+    } catch (_) {}
+  }
+
+  Future<void> _onEditPhone() async {
+    final auth = Provider.of<AuthService>(context, listen: false);
+    final phone = TextEditingController(text: (auth.currentUser?['phone'] ?? '').toString());
+    final okPressed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(_getLocalizedString('phoneNumber')),
+        content: TextField(controller: phone, decoration: const InputDecoration(labelText: 'Phone')), 
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: Text(_getLocalizedString('cancel'))),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: Text(_getLocalizedString('saveChanges'))),
+        ],
+      ),
+    );
+    if (okPressed == true) {
+      try {
+        await auth.updateProfile(phone: phone.text.trim());
+        if (mounted) {
+          setState(() {});
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Phone updated')));
+        }
+      } catch (e) {
+        final msg = e.toString();
+        final friendly = msg.contains('Phone number already registered')
+            ? 'Phone number already registered'
+            : 'Failed to update phone';
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(friendly)));
+        }
+      }
+    }
+  }
+
+  Future<void> _onEditAge() async {
+    final auth = Provider.of<AuthService>(context, listen: false);
+    final ageCtl = TextEditingController(text: (auth.currentUser?['age']?.toString() ?? ''));
+    final okPressed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(_getLocalizedString('age')),
+        content: TextField(controller: ageCtl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Age')), 
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: Text(_getLocalizedString('cancel'))),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: Text(_getLocalizedString('saveChanges'))),
+        ],
+      ),
+    );
+    if (okPressed == true) {
+      final parsed = int.tryParse(ageCtl.text.trim());
+      if (parsed != null) {
+        try {
+          await auth.updateProfile(age: parsed);
+          if (mounted) {
+            setState(() {});
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Age updated')));
+          }
+        } catch (_) {}
+      }
+    }
+  }
+
+  Future<void> _onAddOrEditAddress({int? editIndex}) async {
+    final auth = Provider.of<AuthService>(context, listen: false);
+    final List<dynamic> existing = (auth.currentUser?['addresses'] as List<dynamic>?) ?? [];
+    // Pre-fill fields if editing
+    Map<String, dynamic>? current = (editIndex != null && editIndex >= 0 && editIndex < existing.length)
+        ? Map<String, dynamic>.from(existing[editIndex] as Map)
+        : null;
+    String type = (current?['type'] ?? 'home').toString();
+    // Cities whitelist aligned with backend
+    final cities = const [
+      'jerusalem','ramallah','nablus','hebron','bethlehem','jericho','tulkarm','qalqilya','jenin','salfit','tubas',
+      'gaza','rafah','khan yunis','deir al-balah','north gaza'
+    ];
+    String? city = (current?['city'] as String?);
+    final street = TextEditingController(text: (current?['street'] ?? '').toString());
+    final area = TextEditingController(text: (current?['area'] ?? '').toString());
+    bool makeDefault = current?['isDefault'] == true || existing.isEmpty; // first one becomes default
+
+    final okPressed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        final languageService = Provider.of<LanguageService>(context, listen: false);
+        return AlertDialog(
+          title: Text(editIndex == null ? _getLocalizedString('addNewAddress') : _getLocalizedString('edit')),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Address type dropdown
+                DropdownButtonFormField<String>(
+                  value: type,
+                  decoration: const InputDecoration(labelText: 'Type'),
+                  items: const [
+                    DropdownMenuItem(value: 'home', child: Text('Home')),
+                    DropdownMenuItem(value: 'work', child: Text('Work')),
+                    DropdownMenuItem(value: 'other', child: Text('Other')),
+                  ],
+                  onChanged: (v) { type = v ?? 'home'; },
+                ),
+                // City dropdown with localized labels
+                DropdownButtonFormField<String>(
+                  value: city,
+                  decoration: const InputDecoration(labelText: 'City'),
+                  items: [
+                    for (final c in cities)
+                      DropdownMenuItem(
+                        value: c,
+                        child: Text(AppStrings.getString(c, languageService.currentLanguage)),
+                      )
+                  ],
+                  onChanged: (v) { city = v; },
+                ),
+                TextField(controller: street, decoration: const InputDecoration(labelText: 'Street')),
+                TextField(controller: area, decoration: const InputDecoration(labelText: 'Area')),
+                if (existing.isNotEmpty)
+                  CheckboxListTile(
+                    value: makeDefault,
+                    onChanged: (v) { makeDefault = v ?? false; },
+                    title: Text(_getLocalizedString('defaultText')),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: Text(_getLocalizedString('cancel'))),
+            TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: Text(_getLocalizedString('saveChanges'))),
+          ],
+        );
+      },
+    );
+    if (okPressed == true) {
+      // Build updated addresses list
+      final updated = [...existing.map((e) => Map<String, dynamic>.from(e as Map))];
+      final payload = {
+        'type': type,
+        'street': street.text.trim(),
+        'city': (city ?? '').trim(),
+        'area': area.text.trim(),
+        'isDefault': makeDefault,
+      };
+      if (editIndex != null && editIndex >= 0 && editIndex < updated.length) {
+        updated[editIndex] = {
+          ...updated[editIndex],
+          ...payload,
+        };
+      } else {
+        updated.add(payload);
+      }
+      // Ensure only one default
+      bool foundDefault = false;
+      for (final m in updated) {
+        if ((m['isDefault'] ?? false) && !foundDefault) {
+          foundDefault = true;
+        } else {
+          m['isDefault'] = false;
+        }
+      }
+      if (!foundDefault && updated.isNotEmpty) updated[0]['isDefault'] = true;
+      try {
+        await auth.updateProfile(addresses: updated.cast<Map<String, dynamic>>());
+        if (mounted) {
+          setState(() {});
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(editIndex == null ? 'Address added' : 'Address updated')));
+        }
+      } catch (_) {}
+    }
+  }
+
+  List<Widget> _buildAddressCards(bool isMobile) {
+    // Listen to AuthService to update addresses when profile changes
+    final auth = Provider.of<AuthService>(context);
+    final List<dynamic> list = (auth.currentUser?['addresses'] as List<dynamic>?) ?? [];
+    if (list.isEmpty) {
+      return [
+        Container(
+          padding: EdgeInsets.all(isMobile ? 12.0 : 16.0),
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.circular(isMobile ? 8.0 : 12.0),
+            border: Border.all(color: AppColors.border, width: 1),
+          ),
+          child: Text(
+            'No address saved',
+            style: GoogleFonts.cairo(
+              fontSize: isMobile ? 14.0 : 16.0,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        )
+      ];
+    }
+    final languageService = Provider.of<LanguageService>(context, listen: false);
+    // Compute totals per type for numbering
+    final totals = <String, int>{};
+    for (final e in list) {
+      final t = ((e as Map)['type'] ?? 'home').toString();
+      totals[t] = (totals[t] ?? 0) + 1;
+    }
+    // Running counters for numbering duplicates
+    final counters = <String, int>{};
+    final widgets = <Widget>[];
+    for (int i = 0; i < list.length; i++) {
+      final m = Map<String, dynamic>.from(list[i] as Map);
+      final type = (m['type'] ?? 'home').toString();
+      final baseLabel = _localizedTypeLabel(type, languageService.currentLanguage);
+      final countForType = totals[type] ?? 0;
+      final nextIndex = (counters[type] ?? 0) + 1;
+      counters[type] = nextIndex;
+      final numberedLabel = countForType > 1 ? '$baseLabel $nextIndex' : baseLabel;
+      final line = [m['street'], m['city'], m['area']]
+          .whereType<String>()
+          .where((s) => s.trim().isNotEmpty)
+          .join(', ');
+      widgets.add(Padding(
+        padding: EdgeInsets.only(bottom: isMobile ? 8.0 : 12.0),
+        child: _buildAddressCard(
+          numberedLabel,
+          line.isEmpty ? '-' : line,
+          m['isDefault'] == true,
+          isMobile,
+          onMakeDefault: () => _setDefaultAddress(i),
+          onEdit: () => _onAddOrEditAddress(editIndex: i),
+          onDelete: () => _deleteAddress(i),
+        ),
+      ));
+    }
+    return widgets;
+  }
+
+  String _localizedTypeLabel(String type, String lang) {
+    switch (type) {
+      case 'work':
+  return AppStrings.getString('work', lang);
+      case 'other':
+  return AppStrings.getString('other', lang);
+      case 'home':
+      default:
+  return AppStrings.getString('home', lang);
+    }
+  }
+
+  Future<void> _setDefaultAddress(int index) async {
+    final auth = Provider.of<AuthService>(context, listen: false);
+    final List<dynamic> existing = (auth.currentUser?['addresses'] as List<dynamic>?) ?? [];
+    if (index < 0 || index >= existing.length) return;
+    final updated = [
+      for (int i = 0; i < existing.length; i++)
+        {
+          ...Map<String, dynamic>.from(existing[i] as Map),
+          'isDefault': i == index,
+        }
+    ];
+    try {
+      await auth.updateProfile(addresses: updated.cast<Map<String, dynamic>>());
+      if (mounted) {
+        setState(() {});
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Default address updated')));
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _deleteAddress(int index) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete address'),
+        content: const Text('Are you sure you want to delete this address?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: Text(_getLocalizedString('cancel'))),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Delete')),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    final auth = Provider.of<AuthService>(context, listen: false);
+    final List<dynamic> existing = (auth.currentUser?['addresses'] as List<dynamic>?) ?? [];
+    if (index < 0 || index >= existing.length) return;
+    final updated = [
+      for (int i = 0; i < existing.length; i++)
+        if (i != index) Map<String, dynamic>.from(existing[i] as Map)
+    ];
+    // Ensure one default remains if list not empty
+    bool hasDefault = updated.any((e) => (e['isDefault'] ?? false) == true);
+    if (updated.isNotEmpty && !hasDefault) {
+      updated[0]['isDefault'] = true;
+    }
+    try {
+      await auth.updateProfile(addresses: updated.cast<Map<String, dynamic>>());
+      if (mounted) {
+        setState(() {});
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Address deleted')));
+      }
+    } catch (_) {}
   }
 
   // Saved Providers Section
@@ -2909,7 +2878,6 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   }
 
   Widget _buildProvidersSummary(bool isMobile, bool isTablet, double screenWidth) {
-    final languageService = Provider.of<LanguageService>(context, listen: false);
     final summaryCards = [
       {'title': _getLocalizedString('totalProviders'), 'count': '5', 'icon': Icons.favorite, 'color': AppColors.error},
       {'title': _getLocalizedString('available'), 'count': '3', 'icon': Icons.check_circle, 'color': AppColors.success},
@@ -3725,6 +3693,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           setState(() {
             _selectedIndex = item.index;
           });
+          _persistSelectedTab();
         }
         Navigator.pop(context); // Close drawer
       },

@@ -17,6 +17,7 @@ import 'earnings_widget.dart';
 import 'reviews_widget.dart';
 
 import '../../../admin/presentation/widgets/language_toggle_widget.dart';
+import '../../../profile/presentation/widgets/profile_settings_widget.dart';
 
 class ResponsiveProviderDashboard extends StatefulWidget {
   const ResponsiveProviderDashboard({super.key});
@@ -49,6 +50,11 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
       'title': 'reviews',
       'icon': Icons.star,
       'widget': const ReviewsWidget(),
+    },
+    {
+      'title': 'profileSettings',
+      'icon': Icons.person,
+      'widget': const ProfileSettingsWidget(),
     },
     {
       'title': 'settings',

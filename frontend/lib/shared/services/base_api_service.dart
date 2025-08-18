@@ -139,8 +139,12 @@ mixin BaseApiService {
     }
 
     // For authentication endpoints, return the response body even for error status codes
-    // This allows the frontend to show proper error messages
+    // and attach the HTTP status code for UX decisions (e.g., rate limit messaging)
     if (response.request?.url.path.contains('/auth/') == true) {
+      try {
+        // Non-destructive augmentation
+        responseData['statusCode'] = response.statusCode;
+      } catch (_) {}
       return responseData;
     }
 

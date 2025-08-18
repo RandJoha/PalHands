@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../../../shared/services/auth_service.dart';
 
 // Core imports
 import '../../../../core/constants/app_colors.dart';
@@ -56,7 +58,7 @@ class UserSidebar extends StatelessWidget {
           ),
           
           // Footer
-          _buildFooter(),
+          _buildFooter(context),
         ],
       ),
     );
@@ -188,7 +190,7 @@ class UserSidebar extends StatelessWidget {
     );
   }
 
-  Widget _buildFooter() {
+  Widget _buildFooter(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -222,7 +224,21 @@ class UserSidebar extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Ahmed Hassan',
+                        (
+                          () {
+                            try {
+                              final auth = Provider.of<AuthService>(context, listen: false);
+                              final u = auth.currentUser ?? {};
+                              final full = [
+                                (u['firstName'] ?? '').toString(),
+                                (u['lastName'] ?? '').toString(),
+                              ].where((e) => e.isNotEmpty).join(' ').trim();
+                              return full.isNotEmpty ? full : '—';
+                            } catch (_) {
+                              return '—';
+                            }
+                          }()
+                        ),
                         style: GoogleFonts.cairo(
                           fontSize: 14.sp,
                           color: AppColors.textPrimary,

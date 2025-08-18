@@ -31,4 +31,12 @@ const resetPasswordValidator = celebrate({
   })
 });
 
-module.exports = { registerValidator, loginValidator, forgotPasswordValidator, resetPasswordValidator };
+const changePasswordDirectValidator = celebrate({
+  [Segments.BODY]: Joi.object({
+    email: Joi.string().email().required(),
+    currentPassword: Joi.string().min(6).required(),
+    newPassword: Joi.string().min(6).required(),
+  })
+});
+
+module.exports = { registerValidator, loginValidator, forgotPasswordValidator, resetPasswordValidator, changePasswordDirectValidator };
