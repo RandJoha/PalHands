@@ -18,7 +18,7 @@ import 'booking_management_widget.dart';
 import 'reports_widget.dart';
 import 'analytics_widget.dart';
 import 'system_settings_widget.dart';
-import '../../../profile/presentation/widgets/profile_settings_widget.dart';
+import '../../../profile/presentation/widgets/profile_settings_rich_widget.dart';
 
 // Admin models
 import '../../domain/models/admin_menu_item.dart';
@@ -66,6 +66,7 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
         icon: Icons.settings,
         index: 5,
       ),
+      // New: Profile Settings (reuse client profile page)
       AdminMenuItem(
         title: AppStrings.getString('profileSettings', languageCode),
         icon: Icons.person,
@@ -345,7 +346,7 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
       case 5:
         return const SystemSettingsWidget();
       case 6:
-        return const ProfileSettingsWidget();
+        return const ProfileSettingsRichWidget();
       default:
         return const UserManagementWidget();
     }

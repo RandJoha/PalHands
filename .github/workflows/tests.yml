@@ -1,0 +1,33 @@
+name: Tests
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install deps
+        working-directory: backend
+        run: npm ci
+
+      - name: Run backend API tests
+        working-directory: backend
+        env:
+          JWT_SECRET: test-secret
+          CORS_ORIGIN: http://localhost:3000,http://localhost:8080
+          ENABLE_EMAIL_VERIFICATION: 'false'
+        run: npm run test:api
+
+

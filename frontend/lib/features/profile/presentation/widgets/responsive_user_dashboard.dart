@@ -92,8 +92,6 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         return ar ? 'إشعارات البريد الإلكتروني' : 'Email Notifications';
       case 'pushNotifications':
         return ar ? 'الإشعارات الفورية' : 'Push Notifications';
-      case 'smsNotifications':
-        return ar ? 'إشعارات الرسائل النصية' : 'SMS Notifications';
       case 'defaultText':
         return ar ? 'افتراضي' : 'Default';
       case 'home':
@@ -2307,76 +2305,68 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         ),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.location_on,
-            color: AppColors.primary,
-            size: isMobile ? 20.0 : 24.0,
-          ),
-          const SizedBox(width: 12.0),
+          const Icon(Icons.location_on, color: AppColors.primary),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  label,
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 16.0 : 18.0,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        label,
+                        style: GoogleFonts.cairo(
+                          fontSize: isMobile ? 16.0 : 18.0,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    if (isDefault)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'Default',
+                          style: GoogleFonts.cairo(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
+                const SizedBox(height: 4),
                 Text(
                   address,
                   style: GoogleFonts.cairo(
                     fontSize: isMobile ? 14.0 : 16.0,
-                    fontWeight: FontWeight.w400,
                     color: AppColors.textSecondary,
                   ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    if (onEdit != null)
+                      TextButton.icon(onPressed: onEdit, icon: const Icon(Icons.edit, size: 18), label: const Text('Edit')),
+                    if (onEdit != null) const SizedBox(width: 8),
+                    if (onDelete != null)
+                      TextButton.icon(onPressed: onDelete, icon: const Icon(Icons.delete_outline, size: 18), label: const Text('Delete')),
+                    const Spacer(),
+                    if (!isDefault && onMakeDefault != null)
+                      TextButton(onPressed: onMakeDefault, child: const Text('Make Default')),
+                  ],
                 ),
               ],
             ),
           ),
-          if (isDefault)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                _getLocalizedString('defaultText'),
-                style: GoogleFonts.cairo(
-                  fontSize: isMobile ? 12.0 : 14.0,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
-                ),
-              ),
-            ),
-          if (!isDefault && onMakeDefault != null) ...[
-            SizedBox(width: isMobile ? 4 : 8),
-            IconButton(
-              tooltip: 'Make default',
-              onPressed: onMakeDefault,
-              icon: Icon(Icons.star_border, color: AppColors.primary, size: isMobile ? 20 : 22),
-            ),
-          ],
-          if (onEdit != null) ...[
-            SizedBox(width: isMobile ? 4 : 8),
-            IconButton(
-              tooltip: 'Edit',
-              onPressed: onEdit,
-              icon: Icon(Icons.edit, color: AppColors.textSecondary, size: isMobile ? 20 : 22),
-            ),
-          ],
-          if (onDelete != null) ...[
-            SizedBox(width: isMobile ? 4 : 8),
-            IconButton(
-              tooltip: 'Delete',
-              onPressed: onDelete,
-              icon: Icon(Icons.delete_outline, color: AppColors.error, size: isMobile ? 20 : 22),
-            ),
-          ],
         ],
       ),
     );
@@ -2407,8 +2397,6 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           _buildNotificationToggle(_getLocalizedString('emailNotifications'), _emailNotifs, isMobile, (v) => setState(() { _emailNotifs = v; })),
           const SizedBox(height: 8.0),
           _buildNotificationToggle(_getLocalizedString('pushNotifications'), _pushNotifs, isMobile, (v) => setState(() { _pushNotifs = v; })),
-          const SizedBox(height: 8.0),
-          _buildNotificationToggle(_getLocalizedString('smsNotifications'), _smsNotifs, isMobile, (v) => setState(() { _smsNotifs = v; })),
         ],
       ),
     );
@@ -2443,7 +2431,6 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   // Local notification prefs state
   bool _emailNotifs = true;
   bool _pushNotifs = true;
-  bool _smsNotifs = false;
 
   // Helpers: edit actions
   Future<void> _onEditName() async {
@@ -2613,6 +2600,92 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     }
   }
 
+  // Available cities with their real streets - Palestinian cities
+  final Map<String, List<String>> _cityStreets = {
+    'jerusalem': [
+      'salahuddin_street', 'damascus_gate_road', 'jaffa_road', 'king_george_street', 
+      'ben_yehuda_street', 'agron_street', 'mamilla_street', 'yafo_street',
+      'sultan_suleiman_street', 'nablus_road', 'ramallah_road', 'bethlehem_road'
+    ],
+    'ramallah': [
+      'al_manara_square', 'rukab_street', 'main_street', 'al_balad', 'al_masyoun',
+      'al_irsal_street', 'hospital_street', 'al_nahda_street', 'radio_street',
+      'al_masayef_road', 'al_bireh_ramallah_road'
+    ],
+    'nablus': [
+      'rafidia_street', 'al_najah_street', 'faisal_street', 'al_quds_street',
+      'al_maidan_street', 'al_anbat_street', 'martyrs_street', 'al_nasr_street',
+      'university_street', 'old_city_street'
+    ],
+    'hebron': [
+      'al_shuhada_street', 'king_talal_street', 'al_salam_street', 'al_haramain_street',
+      'al_manshiyya_street', 'polytechnic_university_road', 'al_thahiriyya_road',
+      'al_fawwar_road', 'halhul_road', 'dura_road'
+    ],
+    'bethlehem': [
+      'manger_street', 'pope_paul_vi_street', 'star_street', 'milk_grotto_street',
+      'nativity_square', 'hebron_road', 'jerusalem_road', 'beit_sahour_road',
+      'solomon_pools_street', 'rachel_tomb_road'
+    ],
+    'gaza': [
+      'omar_mukhtar_street', 'al_rasheed_street', 'al_wahda_street', 'al_azhar_street',
+      'al_nasr_street', 'beach_road', 'salah_al_din_street', 'al_thalateen_street',
+      'industrial_road', 'al_shati_camp_road'
+    ],
+    'jenin': [
+      'al_maidan_street', 'al_quds_street', 'hospital_street', 'al_salam_street',
+      'freedom_fighters_street', 'al_yarmouk_street', 'arab_american_university_road',
+      'al_jalama_road', 'ya_bad_road', 'tubas_road'
+    ],
+    'tulkarm': [
+      'al_alimi_street', 'nablus_street', 'al_quds_street', 'al_shuhada_street',
+      'al_sikka_street', 'industrial_street', 'khadouri_university_road',
+      'qalqilya_road', 'jenin_road', 'netanya_road'
+    ],
+    'qalqilya': [
+      'al_quds_street', 'al_andalus_street', 'al_nasr_street', 'al_wahda_street',
+      'al_istiqlal_street', 'nablus_road', 'tulkarm_road', 'al_taybeh_road',
+      'azzoun_road', 'jaljulia_road'
+    ],
+    'salfit': [
+      'al_quds_street', 'al_nahda_street', 'al_salam_street', 'hospital_street',
+      'al_bireh_road', 'ramallah_road', 'nablus_road', 'ariel_road',
+      'deir_istiya_road', 'bruqin_road'
+    ],
+    'tubas': [
+      'al_quds_street', 'al_yarmouk_street', 'al_wahda_street', 'hospital_street',
+      'al_far_aa_road', 'jenin_road', 'nablus_road', 'tammun_road',
+      'aqaba_road', 'al_malih_road'
+    ],
+    'jericho': [
+      'al_quds_street', 'al_sultan_street', 'al_andalus_street', 'hospital_street',
+      'dead_sea_road', 'jerusalem_road', 'ramallah_road', 'al_auja_road',
+      'allenby_bridge_road', 'aqabat_jaber_road'
+    ],
+    'rafah': [
+      'al_rasheed_street', 'al_salah_street', 'al_nasr_street', 'al_wahda_street',
+      'al_quds_street', 'beach_road', 'al_shati_road', 'al_thalateen_road'
+    ],
+    'khan yunis': [
+      'al_quds_street', 'al_nasr_street', 'al_wahda_street', 'al_salam_street',
+      'hospital_street', 'beach_road', 'al_shati_road', 'al_thalateen_road'
+    ],
+    'deir al-balah': [
+      'al_quds_street', 'al_nasr_street', 'al_wahda_street', 'al_salam_street',
+      'hospital_street', 'beach_road', 'al_shati_road', 'al_thalateen_road'
+    ],
+    'north gaza': [
+      'al_quds_street', 'al_nasr_street', 'al_wahda_street', 'al_salam_street',
+      'hospital_street', 'beach_road', 'al_shati_road', 'al_thalateen_road'
+    ],
+  };
+
+  // Get streets for selected city
+  List<String> _getStreetsForCity(String? city) {
+    if (city == null) return [];
+    return _cityStreets[city] ?? [];
+  }
+
   Future<void> _onAddOrEditAddress({int? editIndex}) async {
     final auth = Provider.of<AuthService>(context, listen: false);
     final List<dynamic> existing = (auth.currentUser?['addresses'] as List<dynamic>?) ?? [];
@@ -2627,61 +2700,132 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       'gaza','rafah','khan yunis','deir al-balah','north gaza'
     ];
     String? city = (current?['city'] as String?);
-    final street = TextEditingController(text: (current?['street'] ?? '').toString());
+    String? selectedStreet = (current?['street'] as String?);
     final area = TextEditingController(text: (current?['area'] ?? '').toString());
     bool makeDefault = current?['isDefault'] == true || existing.isEmpty; // first one becomes default
+    
+    // Validate that the existing street is valid for the current city
+    if (city != null && selectedStreet != null) {
+      final availableStreets = _getStreetsForCity(city);
+      if (!availableStreets.contains(selectedStreet)) {
+        selectedStreet = null; // Reset if street is not valid for current city
+      }
+    }
 
     final okPressed = await showDialog<bool>(
       context: context,
       builder: (ctx) {
         final languageService = Provider.of<LanguageService>(context, listen: false);
-        return AlertDialog(
-          title: Text(editIndex == null ? _getLocalizedString('addNewAddress') : _getLocalizedString('edit')),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Address type dropdown
-                DropdownButtonFormField<String>(
-                  value: type,
-                  decoration: const InputDecoration(labelText: 'Type'),
-                  items: const [
-                    DropdownMenuItem(value: 'home', child: Text('Home')),
-                    DropdownMenuItem(value: 'work', child: Text('Work')),
-                    DropdownMenuItem(value: 'other', child: Text('Other')),
-                  ],
-                  onChanged: (v) { type = v ?? 'home'; },
-                ),
-                // City dropdown with localized labels
-                DropdownButtonFormField<String>(
-                  value: city,
-                  decoration: const InputDecoration(labelText: 'City'),
-                  items: [
-                    for (final c in cities)
-                      DropdownMenuItem(
-                        value: c,
-                        child: Text(AppStrings.getString(c, languageService.currentLanguage)),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(editIndex == null ? _getLocalizedString('addNewAddress') : _getLocalizedString('edit')),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Address type dropdown
+                    DropdownButtonFormField<String>(
+                      value: type,
+                      decoration: const InputDecoration(labelText: 'Type'),
+                      items: const [
+                        DropdownMenuItem(value: 'home', child: Text('Home')),
+                        DropdownMenuItem(value: 'work', child: Text('Work')),
+                        DropdownMenuItem(value: 'other', child: Text('Other')),
+                      ],
+                      onChanged: (v) { 
+                        setState(() {
+                          type = v ?? 'home'; 
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    // City dropdown with localized labels
+                    DropdownButtonFormField<String>(
+                      value: city,
+                      decoration: const InputDecoration(labelText: 'City'),
+                      items: [
+                        for (final c in cities)
+                          DropdownMenuItem(
+                            value: c,
+                            child: Text(AppStrings.getString(c, languageService.currentLanguage)),
+                          )
+                      ],
+                      onChanged: (v) { 
+                        setState(() {
+                          city = v;
+                          selectedStreet = null; // Reset street when city changes
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    // Street dropdown (only show if city is selected)
+                    if (city != null) ...[
+                                             DropdownButtonFormField<String>(
+                         value: selectedStreet,
+                         decoration: const InputDecoration(
+                           labelText: 'Street *',
+                           helperText: 'Please select a street',
+                         ),
+                         items: _getStreetsForCity(city).map((street) {
+                           return DropdownMenuItem(
+                             value: street,
+                             child: Text(AppStrings.getString(street, languageService.currentLanguage)),
+                           );
+                         }).toList(),
+                         onChanged: (v) { 
+                           setState(() {
+                             selectedStreet = v; 
+                           });
+                         },
+                         validator: (value) {
+                           if (value == null || value.isEmpty) {
+                             return 'Street is required';
+                           }
+                           return null;
+                         },
+                       ),
+                      const SizedBox(height: 16),
+                    ],
+                    // Area field (optional)
+                    TextField(
+                      controller: area, 
+                      decoration: const InputDecoration(
+                        labelText: 'Area (Optional)',
+                        hintText: 'Enter area or neighborhood if needed',
                       )
+                    ),
+                    if (existing.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      CheckboxListTile(
+                        value: makeDefault,
+                        onChanged: (v) { 
+                          setState(() {
+                            makeDefault = v ?? false; 
+                          });
+                        },
+                        title: Text(_getLocalizedString('defaultText')),
+                        controlAffinity: ListTileControlAffinity.leading,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ],
                   ],
-                  onChanged: (v) { city = v; },
                 ),
-                TextField(controller: street, decoration: const InputDecoration(labelText: 'Street')),
-                TextField(controller: area, decoration: const InputDecoration(labelText: 'Area')),
-                if (existing.isNotEmpty)
-                  CheckboxListTile(
-                    value: makeDefault,
-                    onChanged: (v) { makeDefault = v ?? false; },
-                    title: Text(_getLocalizedString('defaultText')),
-                    controlAffinity: ListTileControlAffinity.leading,
-                    contentPadding: EdgeInsets.zero,
-                  ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(false), 
+                  child: Text(_getLocalizedString('cancel'))
+                ),
+                TextButton(
+                  onPressed: (city != null && selectedStreet != null) 
+                    ? () => Navigator.of(ctx).pop(true) 
+                    : null, // Disable if validation fails
+                  child: Text(_getLocalizedString('saveChanges'))
+                ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: Text(_getLocalizedString('cancel'))),
-            TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: Text(_getLocalizedString('saveChanges'))),
-          ],
+            );
+          },
         );
       },
     );
@@ -2690,7 +2834,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       final updated = [...existing.map((e) => Map<String, dynamic>.from(e as Map))];
       final payload = {
         'type': type,
-        'street': street.text.trim(),
+        'street': selectedStreet ?? '',
         'city': (city ?? '').trim(),
         'area': area.text.trim(),
         'isDefault': makeDefault,
@@ -3435,12 +3579,15 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             isMobile,
           ),
           const SizedBox(height: 12.0),
-          _buildSecurityOption(
-            _getLocalizedString('deleteAccount'),
-            _getLocalizedString('permanentlyDeleteAccount'),
-            Icons.delete_forever,
-            isMobile,
-            isDestructive: true,
+          GestureDetector(
+            onTap: () => _showDeleteAccountDialog(context),
+            child: _buildSecurityOption(
+              _getLocalizedString('deleteAccount'),
+              _getLocalizedString('permanentlyDeleteAccount'),
+              Icons.delete_forever,
+              isMobile,
+              isDestructive: true,
+            ),
           ),
         ],
       ),
@@ -3698,5 +3845,105 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         Navigator.pop(context); // Close drawer
       },
     );
+  }
+
+  // Show delete account confirmation dialog
+  void _showDeleteAccountDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            _getLocalizedString('deleteAccount'),
+            style: GoogleFonts.cairo(
+              fontWeight: FontWeight.w700,
+              color: AppColors.error,
+            ),
+          ),
+          content: Text(
+            _getLocalizedString('deleteAccountWarning') ?? 'Are you sure you want to delete your account? This action cannot be undone.',
+            style: GoogleFonts.cairo(fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                _getLocalizedString('cancel') ?? 'Cancel',
+                style: GoogleFonts.cairo(color: AppColors.textSecondary),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _deleteAccount(context);
+              },
+              style: TextButton.styleFrom(
+                backgroundColor: AppColors.error,
+                foregroundColor: AppColors.white,
+              ),
+              child: Text(
+                _getLocalizedString('delete') ?? 'Delete',
+                style: GoogleFonts.cairo(
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Delete account
+  Future<void> _deleteAccount(BuildContext context) async {
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final response = await authService.deleteAccount();
+      
+      if (response['success'] == true) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                _getLocalizedString('accountDeleted') ?? 'Account deleted successfully',
+                style: GoogleFonts.cairo(color: AppColors.white),
+              ),
+              backgroundColor: AppColors.success,
+            ),
+          );
+          
+          // Navigate to home screen and clear all routes
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            '/home',
+            (route) => false,
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                response['message'] ?? _getLocalizedString('deleteAccountFailed') ?? 'Failed to delete account',
+                style: GoogleFonts.cairo(color: AppColors.white),
+              ),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _getLocalizedString('deleteAccountFailed') ?? 'Failed to delete account: ${e.toString()}',
+              style: GoogleFonts.cairo(color: AppColors.white),
+            ),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 } 

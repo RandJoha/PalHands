@@ -18,6 +18,8 @@ router.post('/change-password-direct', passwordResetLimiter, changePasswordDirec
 // Protected routes (authentication required)
 router.get('/validate', auth, authController.validateToken);
 router.get('/profile', auth, authController.getProfile);
+// Delete account (user can delete their own account)
+router.delete('/account', auth, authController.deleteAccount);
 // Email verification (optional)
 router.post('/request-verification', auth, authController.requestVerification);
 // Safer flow: GET page requires explicit user click; that page will POST to /verify

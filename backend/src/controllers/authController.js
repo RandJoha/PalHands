@@ -97,7 +97,9 @@ function renderActionHtml({ title, heading, buttonText, actionPath, token, succe
 
 // Register new user
 const register = asyncHandler(async (req, res) => {
-    const { firstName, lastName = '', email, phone, password, role = 'client' } = req.body;
+  const { firstName, lastName = '', email, phone, password, role = 'client', age, address } = req.body;
+  
+
 
     // Validate required fields and provide specific error messages
     const missingFields = [];
@@ -132,7 +134,20 @@ const register = asyncHandler(async (req, res) => {
       email: email.toLowerCase(),
       phone,
       password,
-      role
+      role,
+      age,
+      // Initialize addresses array - only use this, no standalone address field
+      addresses: (address && address.city && address.street) ? [{
+        type: 'home',
+        street: address.street.trim(),
+        city: address.city.trim(),
+        area: address.area?.trim() || '',
+        coordinates: {
+          latitude: null,
+          longitude: null
+        },
+        isDefault: true
+      }] : []
     });
 
     // If email verification enabled, set token (email sending can be added later)
@@ -146,21 +161,24 @@ const register = asyncHandler(async (req, res) => {
     // Generate token
     const token = generateToken(user._id);
 
-    // Return user data (without password)
+    // Return user data (without password) with clean structure
     const userResponse = {
       _id: user._id,
+      // Personal info
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
       phone: user.phone,
-      role: user.role,
-      profileImage: user.profileImage,
-      address: user.address,
-    addresses: user.addresses,
       age: user.age,
+      profileImage: user.profileImage,
+      // Account info
+      role: user.role,
       isVerified: user.isVerified,
       isActive: user.isActive,
       rating: user.rating,
+      // Addresses
+      addresses: user.addresses,
+      // Metadata
       createdAt: user.createdAt
     };
 
@@ -196,25 +214,28 @@ const login = asyncHandler(async (req, res) => {
     // Generate token
     const token = generateToken(user._id);
 
-    // Return user data (without password)
+        // Return user data (without password) with clean structure
     const userResponse = {
       _id: user._id,
+      // Personal info
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
       phone: user.phone,
-      role: user.role,
-      profileImage: user.profileImage,
-      address: user.address,
-    addresses: user.addresses,
       age: user.age,
+      profileImage: user.profileImage,
+      // Account info
+      role: user.role,
       isVerified: user.isVerified,
       isActive: user.isActive,
       rating: user.rating,
+      // Addresses
+      addresses: user.addresses,
+      // Metadata
       createdAt: user.createdAt
     };
 
-  return ok(res, { token, user: userResponse }, 'Login successful');
+    return ok(res, { token, user: userResponse }, 'Login successful');
 });
 
 // Validate token
@@ -253,22 +274,49 @@ const logout = asyncHandler(async (req, res) => {
 // Get current user profile
 const getProfile = asyncHandler(async (req, res) => {
     const user = req.user;
-    return ok(res, {
+    const userResponse = {
       _id: user._id,
+      // Personal info
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
+      pendingEmail: user.pendingEmail,
       phone: user.phone,
-      role: user.role,
-      profileImage: user.profileImage,
-      address: user.address,
-    addresses: user.addresses,
       age: user.age,
+      profileImage: user.profileImage,
+      // Account info
+      role: user.role,
       isVerified: user.isVerified,
       isActive: user.isActive,
       rating: user.rating,
+      // Addresses
+      addresses: user.addresses,
+      // Metadata
       createdAt: user.createdAt
-    }, 'Profile fetched');
+    };
+    return ok(res, userResponse, 'Profile fetched');
+});
+
+// Delete account (user can delete their own account)
+const deleteAccount = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
+  try {
+    // Find the user
+    const user = await User.findById(userId);
+    if (!user) {
+      return error(res, 404, 'User not found', [], 'NOT_FOUND');
+    }
+
+    // Delete the user
+    await User.findByIdAndDelete(userId);
+
+    // Return success response
+    return ok(res, {}, 'Account deleted successfully');
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    return error(res, 500, 'Failed to delete account', [], 'INTERNAL_ERROR');
+  }
 });
 
 module.exports = {
@@ -457,5 +505,6 @@ module.exports = {
   successText: 'Your email has been updated. Redirecting…',
   redirectPath: redirect
     }));
-  })
+  }),
+  deleteAccount
 }; 

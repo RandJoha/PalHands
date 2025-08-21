@@ -121,22 +121,25 @@ const updateProfile = asyncHandler(async (req, res) => {
       throw e;
     }
 
-    // Return updated user data (without password). Note: pendingEmail returned so FE can show banner.
+    // Return updated user data (without password) with clean structure
     const userResponse = {
       _id: user._id,
+      // Personal info
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
       pendingEmail: user.pendingEmail,
       phone: user.phone,
-      role: user.role,
+      age: user.age,
       profileImage: user.profileImage,
-      address: user.address,
-  addresses: user.addresses,
-  age: user.age,
+      // Account info
+      role: user.role,
       isVerified: user.isVerified,
       isActive: user.isActive,
       rating: user.rating,
+      // Addresses
+      addresses: user.addresses,
+      // Metadata
       createdAt: user.createdAt,
       updatedAt: user.updatedAt
     };

@@ -175,7 +175,7 @@ class _SecurityWidgetState extends State<SecurityWidget> {
           ListTile(
             leading: const Icon(Icons.delete_forever, color: AppColors.error),
             title: Text('Delete Account', style: GoogleFonts.cairo(fontSize: 16.sp)),
-            onTap: () {},
+            onTap: () => _showDeleteAccountDialog(context),
           ),
           ListTile(
             leading: const Icon(Icons.history, color: AppColors.primary),
@@ -187,4 +187,77 @@ class _SecurityWidgetState extends State<SecurityWidget> {
     );
   }
 
+  void _showDeleteAccountDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: Text(
+            'Delete Account',
+            style: GoogleFonts.cairo(fontWeight: FontWeight.w700),
+          ),
+          content: Text(
+            'Are you sure you want to delete your account? This action cannot be undone.',
+            style: GoogleFonts.cairo(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(ctx).pop();
+                await _deleteAccount(context);
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Delete account
+  Future<void> _deleteAccount(BuildContext context) async {
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final response = await authService.deleteAccount();
+      
+      if (response['success'] == true) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Account deleted successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          
+          // Navigate to home screen and clear all routes
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            '/home',
+            (route) => false,
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response['message'] ?? 'Failed to delete account'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete account: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 } 

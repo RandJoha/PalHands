@@ -50,6 +50,8 @@ The Admin Dashboard is a comprehensive administrative interface designed for pla
 - **Platform Configuration**: System-wide settings and configuration
 - **Security Settings**: Security policies and access control
 - **Notification Settings**: Email and notification configuration
+  - Note: Global email sending is configured in backend via SMTP. See `backend/EMAIL_SETUP.md`.
+  - Password reset for admin accounts uses the same flow as users; when SMTP is not configured, reset links are logged to console for QA (see `backend/GET_PASSWORD_RESET_TOKEN.md`).
 - **Backup & Recovery**: System backup and recovery management
 - **Feature Flags**: Enable/disable platform features
 - **Maintenance Mode**: Platform maintenance controls

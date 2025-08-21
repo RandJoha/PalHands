@@ -399,20 +399,20 @@ const systemSettingSchema = new mongoose.Schema({
 - **Comparison**: Secure password comparison method
 - **Validation**: Minimum 6 characters for users, 8 for admins
 
-### Password Reset Flow (Where to find tokens in MongoDB)
+### Password Reset Flow (Dev email fallback + where to find tokens)
 - Trigger: POST `/api/auth/forgot-password` always returns a generic success message. If the email exists, the user document is updated.
-- Storage: The reset token and expiry are stored on the user document in the `users` collection:
-  - `passwordResetToken: String`
-  - `passwordResetExpires: Date` (typically now + 1 hour)
-- Reset: POST `/api/auth/reset-password` with `{ token, newPassword }` will validate, set the new password, and clear both fields.
-- Where to look:
-  - MongoDB Compass filter: `{ email: "user@example.com" }`; inspect the fields above.
-  - Mongo Shell quick check (replace with your email):
-    ```powershell
-    # Windows PowerShell example using mongosh
-    mongosh "<your-connection-string>" --eval "db.users.findOne({email: 'user@example.com'},{passwordResetToken:1,passwordResetExpires:1})"
-    ```
-- Dev email behavior: If SMTP env vars are not configured, the mailer can fall back to logging the email contents (including the token/reset URL) to the server console/logs. Check `backend/src/services/mailer.js` and the running server output.
+  - Storage: Transitioned to hashed tokens. Fields on user document in `users` collection:
+    - `passwordResetTokenHash: String` (SHA‑256 of the raw token)
+    - `passwordResetToken: String | null` (legacy compatibility; not populated for new requests)
+    - `passwordResetExpires: Date` (typically now + 1 hour)
+  - Reset: POST `/api/auth/reset-password` with `{ token, newPassword }` will validate against hash (or legacy field), set the new password, and clear fields.
+  - Where to look (DB):
+    - MongoDB Compass filter: `{ email: "user@example.com" }`; inspect the fields above.
+    - mongosh quick check:
+      ```powershell
+      mongosh "<conn>" --eval "db.users.findOne({email: 'user@example.com'},{passwordResetToken:1,passwordResetTokenHash:1,passwordResetExpires:1})"
+      ```
+  - Dev email behavior: If SMTP env vars are not configured, the mailer falls back to logging the email contents (including the reset URL and raw token) to the server console/logs. See `src/services/mailer.js`. For setup, see `backend/EMAIL_SETUP.md`; for dev fallback usage, see `backend/GET_PASSWORD_RESET_TOKEN.md`. A helper script `backend/setup-email.ps1` can update `.env` interactively.
 
 ### Authentication Flow
 
@@ -1238,6 +1238,18 @@ $body = @{
 
 Invoke-RestMethod -Uri "http://localhost:3000/api/auth/register" -Method Post -Body $body -ContentType "application/json"
 ```
+
+### Running Backend API E2E tests (Auth Happy Paths)
+
+```
+cd backend
+npm ci
+npm run test:api
+```
+
+Notes:
+- Uses in-memory MongoDB; no external DB required.
+- Outbound emails are mocked; reset tokens are extracted from mocked payloads.
 
 ## 📈 **Performance Optimization**
 

@@ -18,6 +18,11 @@ const env = validateEnv();
 
 const app = express();
 
+// Trust proxy in tests when explicitly enabled (for X-Forwarded-For in rate-limiter)
+if (String(process.env.TRUST_PROXY || '').toLowerCase() === 'true') {
+	app.set('trust proxy', true);
+}
+
 // Security & compression
 app.use(helmet());
 app.use(compression());

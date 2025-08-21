@@ -3,5 +3,7 @@ module.exports = {
   testMatch: ['**/tests/**/*.test.js'],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
   globalTeardown: '<rootDir>/tests/teardown.js',
-  verbose: false
+  verbose: false,
+  transform: {},
+  moduleNameMapper: {}
 };

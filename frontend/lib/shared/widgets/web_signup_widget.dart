@@ -38,6 +38,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
   final _confirmPasswordController = TextEditingController();
   final _phoneController = TextEditingController();
   final _notesController = TextEditingController();
+  final _ageController = TextEditingController();
   
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -50,12 +51,80 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
   String? _selectedSubCategory;
   int _serviceProvidersCount = 1;
   String? _selectedLocation;
+  String? _selectedStreet;
   
-  // Available cities - Basic Palestinian cities
-  final List<String> _availableCities = [
-    'jerusalem', 'ramallah', 'nablus', 'hebron', 'bethlehem', 'gaza',
-    'jenin', 'tulkarm', 'qalqilya', 'salfit', 'tubas', 'jericho'
-  ];
+  // Available cities with their real streets - Palestinian cities
+  final Map<String, List<String>> _cityStreets = {
+    'jerusalem': [
+      'salahuddin_street', 'damascus_gate_road', 'jaffa_road', 'king_george_street', 
+      'ben_yehuda_street', 'agron_street', 'mamilla_street', 'yafo_street',
+      'sultan_suleiman_street', 'nablus_road', 'ramallah_road', 'bethlehem_road'
+    ],
+    'ramallah': [
+      'al_manara_square', 'rukab_street', 'main_street', 'al_balad', 'al_masyoun',
+      'al_irsal_street', 'hospital_street', 'al_nahda_street', 'radio_street',
+      'al_masayef_road', 'al_bireh_ramallah_road'
+    ],
+    'nablus': [
+      'rafidia_street', 'al_najah_street', 'faisal_street', 'al_quds_street',
+      'al_maidan_street', 'al_anbat_street', 'martyrs_street', 'al_nasr_street',
+      'university_street', 'old_city_street'
+    ],
+    'hebron': [
+      'al_shuhada_street', 'king_talal_street', 'al_salam_street', 'al_haramain_street',
+      'al_manshiyya_street', 'polytechnic_university_road', 'al_thahiriyya_road',
+      'al_fawwar_road', 'halhul_road', 'dura_road'
+    ],
+    'bethlehem': [
+      'manger_street', 'pope_paul_vi_street', 'star_street', 'milk_grotto_street',
+      'nativity_square', 'hebron_road', 'jerusalem_road', 'beit_sahour_road',
+      'solomon_pools_street', 'rachel_tomb_road'
+    ],
+    'gaza': [
+      'omar_mukhtar_street', 'al_rasheed_street', 'al_wahda_street', 'al_azhar_street',
+      'al_nasr_street', 'beach_road', 'salah_al_din_street', 'al_thalateen_street',
+      'industrial_road', 'al_shati_camp_road'
+    ],
+    'jenin': [
+      'al_maidan_street', 'al_quds_street', 'hospital_street', 'al_salam_street',
+      'freedom_fighters_street', 'al_yarmouk_street', 'arab_american_university_road',
+      'al_jalama_road', 'ya_bad_road', 'tubas_road'
+    ],
+    'tulkarm': [
+      'al_alimi_street', 'nablus_street', 'al_quds_street', 'al_shuhada_street',
+      'al_sikka_street', 'industrial_street', 'khadouri_university_road',
+      'qalqilya_road', 'jenin_road', 'netanya_road'
+    ],
+    'qalqilya': [
+      'al_quds_street', 'al_andalus_street', 'al_nasr_street', 'al_wahda_street',
+      'al_istiqlal_street', 'nablus_road', 'tulkarm_road', 'al_taybeh_road',
+      'azzoun_road', 'jaljulia_road'
+    ],
+    'salfit': [
+      'al_quds_street', 'al_nahda_street', 'al_salam_street', 'hospital_street',
+      'al_bireh_road', 'ramallah_road', 'nablus_road', 'ariel_road',
+      'deir_istiya_road', 'bruqin_road'
+    ],
+    'tubas': [
+      'al_quds_street', 'al_yarmouk_street', 'al_wahda_street', 'hospital_street',
+      'al_far_aa_road', 'jenin_road', 'nablus_road', 'tammun_road',
+      'aqaba_road', 'al_malih_road'
+    ],
+    'jericho': [
+      'al_quds_street', 'al_sultan_street', 'al_andalus_street', 'hospital_street',
+      'dead_sea_road', 'jerusalem_road', 'ramallah_road', 'al_auja_road',
+      'allenby_bridge_road', 'aqabat_jaber_road'
+    ],
+  };
+
+  // Get available cities list
+  List<String> get _availableCities => _cityStreets.keys.toList();
+
+  // Get streets for selected city
+  List<String> get _availableStreets {
+    if (_selectedLocation == null) return [];
+    return _cityStreets[_selectedLocation!] ?? [];
+  }
   
   // Service categories
   final Map<String, Map<String, dynamic>> _serviceCategories = {
@@ -181,6 +250,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
     _confirmPasswordController.dispose();
     _phoneController.dispose();
     _notesController.dispose();
+    _ageController.dispose();
     super.dispose();
   }
 
@@ -360,7 +430,26 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
   }
 
   void _submitForm() async {
-    if (!_formKey.currentState!.validate()) return;
+    // Use the original form validation that shows field-level errors
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    
+    // Additional validation: Ensure city and street are selected
+    if (_selectedLocation == null || _selectedLocation!.trim().isEmpty || 
+        _selectedStreet == null || _selectedStreet!.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Please select both city and street before proceeding.',
+            style: GoogleFonts.cairo(color: AppColors.white),
+          ),
+          backgroundColor: AppColors.error,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
 
     // For service providers, ensure subcategory is selected before submission
     if (_selectedUserType == 'provider' && _selectedSubCategory == null) {
@@ -434,6 +523,8 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
       print('password: "${_passwordController.text}"');
       print('phone: "${_phoneController.text.trim()}"');
       print('role: "${_selectedUserType ?? 'client'}"');
+      print('city: $_selectedLocation');
+      print('street: $_selectedStreet');
 
       final response = await authService.register(
         firstName: firstName,
@@ -442,6 +533,9 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
         password: _passwordController.text,
         phone: _phoneController.text.trim(),
         role: _selectedUserType ?? 'client',
+        age: int.tryParse(_ageController.text.trim()),
+        city: _selectedLocation,
+        street: _selectedStreet,
       );
 
       if (response['success'] == true) {
@@ -820,6 +914,23 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
         ),
         SizedBox(height: widget.screenHeight * 0.02),
         _buildTextField(
+          controller: _ageController,
+          label: AppStrings.getString('age', languageService.currentLanguage),
+          icon: Icons.cake,
+          keyboardType: TextInputType.number,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return AppStrings.getString('pleaseEnterAge', languageService.currentLanguage);
+            }
+            final age = int.tryParse(value);
+            if (age == null || age < 1 || age > 120) {
+              return AppStrings.getString('pleaseEnterValidAge', languageService.currentLanguage);
+            }
+            return null;
+          },
+        ),
+        SizedBox(height: widget.screenHeight * 0.02),
+        _buildTextField(
           controller: _emailController,
           label: AppStrings.getString('email', languageService.currentLanguage),
           icon: Icons.email,
@@ -897,6 +1008,8 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
         ),
         SizedBox(height: widget.screenHeight * 0.02),
         _buildLocationDropdown(languageService),
+        SizedBox(height: widget.screenHeight * 0.02),
+        // Street field removed - now handled by dropdown in location section
       ],
     );
   }
@@ -1383,6 +1496,8 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
           ),
         ),
         SizedBox(height: widget.screenHeight * 0.02),
+        
+        // City Selection
         Container(
           decoration: BoxDecoration(
             color: AppColors.inputFieldBackground,
@@ -1392,12 +1507,12 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
           child: DropdownButtonFormField<String>(
             value: _selectedLocation,
             decoration: InputDecoration(
-              hintText: AppStrings.getString('selectYourLocation', languageService.currentLanguage),
+              hintText: AppStrings.getString('selectYourCity', languageService.currentLanguage),
               hintStyle: GoogleFonts.cairo(
                 fontSize: 16,
                 color: AppColors.placeholderText,
               ),
-              prefixIcon: const Icon(Icons.location_on, color: AppColors.primary),
+              prefixIcon: const Icon(Icons.location_city, color: AppColors.primary),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             ),
@@ -1416,17 +1531,66 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
             onChanged: (value) {
               setState(() {
                 _selectedLocation = value;
+                _selectedStreet = null; // Reset street when city changes
               });
             },
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return AppStrings.getString('pleaseSelectLocation', languageService.currentLanguage);
+                return AppStrings.getString('pleaseSelectCity', languageService.currentLanguage);
               }
               return null;
             },
           ),
         ),
+        
+        // Street Selection (only show if city is selected)
+        if (_selectedLocation != null) ...[
+          SizedBox(height: widget.screenHeight * 0.02),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.inputFieldBackground,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.inputBorder),
+            ),
+            child: DropdownButtonFormField<String>(
+              value: _selectedStreet,
+              decoration: InputDecoration(
+                hintText: AppStrings.getString('selectYourStreet', languageService.currentLanguage),
+                hintStyle: GoogleFonts.cairo(
+                  fontSize: 16,
+                  color: AppColors.placeholderText,
+                ),
+                prefixIcon: const Icon(Icons.streetview, color: AppColors.primary),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              ),
+              items: _availableStreets.map((street) {
+                return DropdownMenuItem(
+                  value: street,
+                  child: Text(
+                    AppStrings.getString(street, languageService.currentLanguage),
+                    style: GoogleFonts.cairo(
+                      fontSize: 16,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedStreet = value;
+                });
+              },
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return AppStrings.getString('pleaseSelectStreet', languageService.currentLanguage);
+                }
+                return null;
+              },
+            ),
+          ),
+        ],
       ],
     );
   }
-} 
+}

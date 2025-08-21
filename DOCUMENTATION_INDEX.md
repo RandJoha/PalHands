@@ -21,8 +21,9 @@ This document serves as a comprehensive index of all PalHands project documentat
 - Deployment guidelines
 - **NEW**: Current critical responsive design issues (unresolved)
 
-**Last Updated**: December 2024
+**Last Updated**: August 2025
 **Status**: ✅ Complete and up-to-date
+**Recent addenda**: Password reset now uses hashed token storage with dev email fallback when SMTP is not configured. See new files: `backend/EMAIL_SETUP.md`, `backend/GET_PASSWORD_RESET_TOKEN.md`, and `backend/setup-email.ps1`.
 
 ### **2. TECHNICAL_MEMORY.md** 🧠
 **Purpose**: Comprehensive technical memory for responsive design issues and development evolution

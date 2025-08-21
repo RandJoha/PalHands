@@ -7,7 +7,12 @@ const registerValidator = celebrate({
     email: Joi.string().email().required(),
     phone: Joi.string().pattern(/^[\+]?[0-9\s\-\(\)]{8,15}$/).required(),
     password: Joi.string().min(6).required(),
-    role: Joi.string().valid('client', 'provider', 'admin').optional()
+    role: Joi.string().valid('client', 'provider', 'admin').optional(),
+    age: Joi.number().integer().min(1).max(120).required(),
+    address: Joi.object({
+      city: Joi.string().trim().required(),
+      street: Joi.string().trim().required(),
+    }).required(),
   })
 });
 

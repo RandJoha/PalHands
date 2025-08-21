@@ -46,16 +46,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
-  // Legacy single address (kept for backward compatibility)
-  address: {
-    street: String,
-    city: String,
-    area: String,
-    coordinates: {
-      latitude: Number,
-      longitude: Number
-    }
-  },
+
   // New: support multiple saved addresses
   addresses: [
     new mongoose.Schema({
@@ -149,6 +140,35 @@ userSchema.index({ 'addresses.isDefault': 1 });
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 12);
+  next();
+});
+
+// Enforce single default address middleware
+userSchema.pre('save', function(next) {
+  if (this.isModified('addresses') && this.addresses.length > 0) {
+    let defaultCount = 0;
+    let lastDefaultIndex = -1;
+    
+    // Count default addresses and track the last one
+    this.addresses.forEach((address, index) => {
+      if (address.isDefault) {
+        defaultCount++;
+        lastDefaultIndex = index;
+      }
+    });
+    
+    // If multiple defaults exist, keep only the last one
+    if (defaultCount > 1) {
+      this.addresses.forEach((address, index) => {
+        address.isDefault = (index === lastDefaultIndex);
+      });
+    }
+    
+    // If no default exists and we have addresses, make the first one default
+    if (defaultCount === 0 && this.addresses.length > 0) {
+      this.addresses[0].isDefault = true;
+    }
+  }
   next();
 });
 

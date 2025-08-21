@@ -142,18 +142,31 @@ class AuthService extends ChangeNotifier with BaseApiService {
     required String password,
     required String phone,
     String role = 'client',
+    int? age,
+    String? city,
+    String? street,
+    String? area,
   }) async {
     try {
+      final Map<String, dynamic> body = {
+        'firstName': firstName,
+        'lastName': lastName,
+        'email': email,
+        'password': password,
+        'phone': phone,
+        'role': role,
+      };
+      if (age != null) body['age'] = age;
+      if (city != null || street != null || area != null) {
+        body['address'] = {
+          if (city != null) 'city': city,
+          if (street != null) 'street': street,
+          if (area != null) 'area': area,
+        };
+      }
       final response = await post(
         '${ApiConfig.authEndpoint}/register',
-        body: {
-          'firstName': firstName,
-          'lastName': lastName,
-          'email': email,
-          'password': password,
-          'phone': phone,
-          'role': role,
-        },
+        body: body,
       );
 
     if (response['success'] == true) {
@@ -529,4 +542,30 @@ class AuthService extends ChangeNotifier with BaseApiService {
 
   // Check if user is active
   bool get isActive => _currentUser?['isActive'] ?? false;
+
+  // Delete account
+  Future<Map<String, dynamic>> deleteAccount() async {
+    if (_token == null) {
+      throw Exception('No authentication token available');
+    }
+
+    try {
+      final response = await delete(
+        '${ApiConfig.authEndpoint}/account',
+        headers: {'Authorization': 'Bearer $_token'},
+      );
+
+      if (response['success'] == true) {
+        // Clear all data after successful deletion
+        await _clearAllData();
+      }
+
+      return response;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Delete account failed: $e');
+      }
+      rethrow;
+    }
+  }
 } 

@@ -19,6 +19,8 @@ The **User Dashboard** is a comprehensive client management interface for PalHan
 3. **Payments** - Payment history and management
 4. **My Reviews** - Review system with rating management
 5. **Profile Settings** - Personal information and preferences
+   - Address Book UI updated to match provider/admin style: text button actions (Edit/Delete) and right-aligned "Make Default"; default badge and highlighted border retained
+   - Notification Preferences: SMS option removed; Email and Push only
 6. **Saved Providers** - Favorite service providers
 7. **Support Help** - Help center and support tickets
 8. **Security** - Account security and login history

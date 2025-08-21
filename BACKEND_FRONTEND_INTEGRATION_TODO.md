@@ -46,15 +46,24 @@ Frontend wiring
   - [x] FE: Load profile → GET /auth/profile on mount
   - [x] FE: Update profile → PUT /users/profile (optimistic UI + toast)
   - [x] FE: Change password → PUT /users/change-password
+  - [x] FE: Saved Addresses — client UI now matches provider/admin design (text buttons; right-aligned "Make Default"; default badge and border)
+  - [x] FE: Notification Preferences — SMS toggle removed; Email/Push only
 - Session
   - [x] FE: Auto-login on app start (hydrate token, fetch me)
   - [x] FE: Logout clears token, resets state
 - Rate limiting UX
   - [x] FE: Friendly message for 429 on login (cooldown UI)
 
+Password reset and verification
+- [x] BE: Forgot password issues hashed token and sends email (or logs dev fallback)
+- [x] BE: Reset password validates token (hashed/plain legacy) and updates password
+- [x] FE: Forgot/Reset wired via `AuthService.forgotPassword()` / `resetPassword()`
+- [x] QA: Verified admin/client/provider emails accepted; if SMTP not configured, dev fallback logs reset link and token to console
+- [x] Docs/Tools: Added `backend/EMAIL_SETUP.md`, `backend/GET_PASSWORD_RESET_TOKEN.md`, and `backend/setup-email.ps1` to guide SMTP setup and dev fallback usage
+
 QA
-- [ ] BE/FE: E2E happy paths (register, login, profile read/update, change password)
-- [ ] BE/FE: Invalid creds, weak password, expired token
+- [x] BE/FE: E2E happy paths (register, login, profile read/update, change password, forgot/reset) — automated via Jest + supertest (tests/e2e)
+- [x] BE/FE: Invalid creds, weak password, expired/tampered token, rate limit
 
 Single-tab verification flow
 - [x] BE: Added GET /api/auth/verify/start and /api/auth/confirm-email-change/start landing pages that require explicit user click (prevents mail scanner auto-verify).

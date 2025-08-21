@@ -67,7 +67,8 @@ PORT=3000
 MONGODB_URI=mongodb://localhost:27017/palhands
 JWT_SECRET=your-secret-key
 
-# Optional Variables
+# Optional Variables (Email sending)
+# Configure SMTP to enable real emails. In dev, if not configured, the app logs emails to console.
 EMAIL_HOST=smtp.gmail.com
 EMAIL_USER=your-email@gmail.com
 EMAIL_PASS=your-app-password
@@ -647,6 +648,7 @@ The Contact Us system provides a comprehensive way for users to reach out to Pal
 - **Security**: Proper password hashing, token validation, and session management
 - **Form UX**: Enter key support and secure error messaging
 - **Logout Behavior**: Proper session termination and navigation
+ - **Password Reset**: Unified flow for all roles. When SMTP is missing in dev, reset links are logged to console; docs and setup script added (see `backend/EMAIL_SETUP.md`, `backend/GET_PASSWORD_RESET_TOKEN.md`, `backend/setup-email.ps1`).
 
 ### **Authentication Flow Details**
 

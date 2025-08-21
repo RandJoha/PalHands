@@ -87,6 +87,9 @@ The Provider Dashboard is a comprehensive management interface designed for serv
 - **Translation Integration**: Uses existing `palestine` key in `app_strings.dart`
 - **Responsive Design**: Different padding and font sizes for mobile, tablet, and desktop
 
+### **Address Book Parity with Client** ✅
+- The client dashboard "Saved Addresses" section UI has been aligned with provider/admin style (text buttons, right-aligned "Make Default", default badge and border). This ensures consistent UX across roles.
+
 ### **Color Scheme**
 - **Primary Colors**: Palestinian red (#CE1126) and dark red (#8B0000)
 - **Success Colors**: Green (#28A745) for positive actions and status

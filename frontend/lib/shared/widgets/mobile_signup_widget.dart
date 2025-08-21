@@ -37,6 +37,9 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _ageController = TextEditingController();
+  final _streetController = TextEditingController();
+  final _areaController = TextEditingController();
   final _notesController = TextEditingController();
   
   bool _isLoading = false;
@@ -180,6 +183,9 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _phoneController.dispose();
+    _ageController.dispose();
+    _streetController.dispose();
+    _areaController.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -421,11 +427,13 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
 
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
-      
-      // Get first and last name from separate fields
+      // Get all required fields
       final firstName = _firstNameController.text.trim();
       final lastName = _lastNameController.text.trim();
-
+      final age = int.tryParse(_ageController.text.trim());
+      final street = _streetController.text.trim();
+      final area = _areaController.text.trim();
+      final city = _selectedLocation;
       // Debug: Print the values being sent
       print('🔍 Debug - Registration values:');
       print('firstName: "$firstName"');
@@ -433,14 +441,21 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
       print('email: "${_emailController.text.trim()}"');
       print('password: "${_passwordController.text}"');
       print('phone: "${_phoneController.text.trim()}"');
+      print('age: "$age"');
+      print('street: "$street"');
+      print('area: "$area"');
+      print('city: "$city"');
       print('role: "${_selectedUserType ?? 'client'}"');
-
       final response = await authService.register(
         firstName: firstName,
         lastName: lastName,
         email: _emailController.text.trim(),
         password: _passwordController.text,
         phone: _phoneController.text.trim(),
+        age: age,
+        street: street,
+        area: area,
+        city: city,
         role: _selectedUserType ?? 'client',
       );
 
@@ -757,7 +772,6 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
           ),
         ),
         SizedBox(height: widget.screenHeight * 0.03),
-        
         // First Name and Last Name
         Row(
           children: [
@@ -790,13 +804,29 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
             ),
           ],
         ),
-        
         SizedBox(height: widget.screenHeight * 0.02),
-        
+        // Age
+        _buildTextField(
+          controller: _ageController,
+          label: AppStrings.getString('age', languageService.currentLanguage),
+          icon: Icons.cake,
+          keyboardType: TextInputType.number,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return AppStrings.getString('pleaseEnterAge', languageService.currentLanguage);
+            }
+            final age = int.tryParse(value);
+            if (age == null || age < 1 || age > 120) {
+              return AppStrings.getString('pleaseEnterValidAge', languageService.currentLanguage);
+            }
+            return null;
+          },
+        ),
+        SizedBox(height: widget.screenHeight * 0.02),
         // Email
         _buildTextField(
           controller: _emailController,
-                      label: AppStrings.getString('email', languageService.currentLanguage),
+          label: AppStrings.getString('email', languageService.currentLanguage),
           icon: Icons.email,
           keyboardType: TextInputType.emailAddress,
           validator: (value) {
@@ -809,9 +839,7 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
             return null;
           },
         ),
-        
         SizedBox(height: widget.screenHeight * 0.02),
-        
         // Password
         _buildPasswordField(
           controller: _passwordController,
@@ -869,6 +897,32 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
             final regExp = RegExp(pattern);
             if (!regExp.hasMatch(value)) {
               return 'Please enter a valid phone number';
+            }
+            return null;
+          },
+        ),
+        SizedBox(height: widget.screenHeight * 0.02),
+        // Street
+        _buildTextField(
+          controller: _streetController,
+          label: AppStrings.getString('street', languageService.currentLanguage),
+          icon: Icons.home,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return AppStrings.getString('pleaseEnterStreet', languageService.currentLanguage);
+            }
+            return null;
+          },
+        ),
+        SizedBox(height: widget.screenHeight * 0.02),
+        // Area
+        _buildTextField(
+          controller: _areaController,
+          label: AppStrings.getString('area', languageService.currentLanguage),
+          icon: Icons.location_city,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return AppStrings.getString('pleaseEnterArea', languageService.currentLanguage);
             }
             return null;
           },
@@ -1160,7 +1214,6 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
           ),
           const SizedBox(width: 16),
         ],
-        
         Expanded(
           child: ElevatedButton(
             onPressed: _isLoading ? null : () {

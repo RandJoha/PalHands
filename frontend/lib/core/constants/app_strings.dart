@@ -800,6 +800,26 @@ class AppStrings {
     'ar': 'يرجى اختيار موقعك',
   };
 
+  static const Map<String, String> selectYourCity = {
+    'en': 'Select your city',
+    'ar': 'اختر مدينتك',
+  };
+
+  static const Map<String, String> selectYourStreet = {
+    'en': 'Select your street',
+    'ar': 'اختر شارعك',
+  };
+
+  static const Map<String, String> pleaseSelectCity = {
+    'en': 'Please select your city',
+    'ar': 'يرجى اختيار مدينتك',
+  };
+
+  static const Map<String, String> pleaseSelectStreet = {
+    'en': 'Please select your street',
+    'ar': 'يرجى اختيار شارعك',
+  };
+
   // Palestinian Cities
   static const Map<String, String> jerusalem = {
     'en': 'Jerusalem',
@@ -886,6 +906,676 @@ class AppStrings {
   static const Map<String, String> pineRoad = {
     'en': 'Pine Road',
     'ar': 'طريق الصنوبر',
+  };
+
+  // Jerusalem Streets
+  static const Map<String, String> salahuddin = {
+    'en': 'Salahuddin Street',
+    'ar': 'شارع صلاح الدين',
+  };
+
+  static const Map<String, String> nablus_road = {
+    'en': 'Nablus Road',
+    'ar': 'طريق نابلس',
+  };
+
+  static const Map<String, String> ramallah_road = {
+    'en': 'Ramallah Road',
+    'ar': 'طريق رام الله',
+  };
+
+  static const Map<String, String> bethlehem_road = {
+    'en': 'Bethlehem Road',
+    'ar': 'طريق بيت لحم',
+  };
+
+  static const Map<String, String> hebron_road = {
+    'en': 'Hebron Road',
+    'ar': 'طريق الخليل',
+  };
+
+  static const Map<String, String> jaffa_road = {
+    'en': 'Jaffa Road',
+    'ar': 'طريق يافا',
+  };
+
+  static const Map<String, String> damascus_gate = {
+    'en': 'Damascus Gate',
+    'ar': 'باب العمود',
+  };
+
+  static const Map<String, String> jaffa_gate = {
+    'en': 'Jaffa Gate',
+    'ar': 'باب الخليل',
+  };
+
+  static const Map<String, String> new_gate = {
+    'en': 'New Gate',
+    'ar': 'الباب الجديد',
+  };
+
+  static const Map<String, String> zions_gate = {
+    'en': 'Zion\'s Gate',
+    'ar': 'باب صهيون',
+  };
+
+  static const Map<String, String> dung_gate = {
+    'en': 'Dung Gate',
+    'ar': 'باب المغاربة',
+  };
+
+  static const Map<String, String> golden_gate = {
+    'en': 'Golden Gate',
+    'ar': 'الباب الذهبي',
+  };
+
+  static const Map<String, String> herods_gate = {
+    'en': 'Herod\'s Gate',
+    'ar': 'باب الساهرة',
+  };
+
+  static const Map<String, String> lions_gate = {
+    'en': 'Lion\'s Gate',
+    'ar': 'باب الأسباط',
+  };
+
+  static const Map<String, String> stephen_gate = {
+    'en': 'Stephen\'s Gate',
+    'ar': 'باب ستنا مريم',
+  };
+
+  // Ramallah Streets
+  static const Map<String, String> al_manara = {
+    'en': 'Al Manara',
+    'ar': 'المنارة',
+  };
+
+  static const Map<String, String> al_balad = {
+    'en': 'Al Balad',
+    'ar': 'البلد',
+  };
+
+  static const Map<String, String> al_masyoun = {
+    'en': 'Al Masyoun',
+    'ar': 'المصيون',
+  };
+
+  static const Map<String, String> al_tireh = {
+    'en': 'Al Tireh',
+    'ar': 'الطيرة',
+  };
+
+  static const Map<String, String> al_amari = {
+    'en': 'Al Amari',
+    'ar': 'الأمعري',
+  };
+
+  static const Map<String, String> al_jalazoun = {
+    'en': 'Al Jalazoun',
+    'ar': 'الجالزون',
+  };
+
+  static const Map<String, String> al_beituniya = {
+    'en': 'Al Beituniya',
+    'ar': 'بيتونيا',
+  };
+
+  static const Map<String, String> al_ram = {
+    'en': 'Al Ram',
+    'ar': 'الرام',
+  };
+
+  static const Map<String, String> al_tira = {
+    'en': 'Al Tira',
+    'ar': 'الطيرة',
+  };
+
+  // Nablus Streets
+  static const Map<String, String> rafidia = {
+    'en': 'Rafidia',
+    'ar': 'رفيديا',
+  };
+
+  static const Map<String, String> al_maidan = {
+    'en': 'Al Maidan',
+    'ar': 'الميدان',
+  };
+
+  static const Map<String, String> al_gharbi = {
+    'en': 'Al Gharbi',
+    'ar': 'الغربي',
+  };
+
+  static const Map<String, String> al_sharqi = {
+    'en': 'Al Sharqi',
+    'ar': 'الشرقي',
+  };
+
+  static const Map<String, String> al_quds = {
+    'en': 'Al Quds',
+    'ar': 'القدس',
+  };
+
+  // Hebron Streets
+  static const Map<String, String> al_shuhada = {
+    'en': 'Al Shuhada',
+    'ar': 'الشهداء',
+  };
+
+  // Bethlehem Streets
+  static const Map<String, String> manger_street = {
+    'en': 'Manger Street',
+    'ar': 'شارع المهد',
+  };
+
+  static const Map<String, String> star_street = {
+    'en': 'Star Street',
+    'ar': 'شارع النجمة',
+  };
+
+  static const Map<String, String> milk_grotto = {
+    'en': 'Milk Grotto',
+    'ar': 'مغارة الحليب',
+  };
+
+  static const Map<String, String> olive_tree = {
+    'en': 'Olive Tree',
+    'ar': 'شجرة الزيتون',
+  };
+
+  static const Map<String, String> shepherds_field = {
+    'en': 'Shepherd\'s Field',
+    'ar': 'حقل الرعاة',
+  };
+
+  // Gaza Streets
+  static const Map<String, String> omar_mukhtar = {
+    'en': 'Omar Mukhtar',
+    'ar': 'عمر المختار',
+  };
+
+  static const Map<String, String> al_rasheed = {
+    'en': 'Al Rasheed',
+    'ar': 'الرشيد',
+  };
+
+  static const Map<String, String> al_azhar = {
+    'en': 'Al Azhar',
+    'ar': 'الأزهر',
+  };
+
+  static const Map<String, String> al_nasser = {
+    'en': 'Al Nasser',
+    'ar': 'الناصر',
+  };
+
+  static const Map<String, String> al_shati = {
+    'en': 'Al Shati',
+    'ar': 'الشاطئ',
+  };
+
+  // Real Palestinian Street Names
+  // Jerusalem Streets
+  static const Map<String, String> salahuddin_street = {
+    'en': 'Salahuddin Street',
+    'ar': 'شارع صلاح الدين',
+  };
+
+  static const Map<String, String> damascus_gate_road = {
+    'en': 'Damascus Gate Road',
+    'ar': 'طريق باب العمود',
+  };
+
+  static const Map<String, String> king_george_street = {
+    'en': 'King George Street',
+    'ar': 'شارع الملك جورج',
+  };
+
+  static const Map<String, String> ben_yehuda_street = {
+    'en': 'Ben Yehuda Street',
+    'ar': 'شارع بن يهودا',
+  };
+
+  static const Map<String, String> agron_street = {
+    'en': 'Agron Street',
+    'ar': 'شارع أجرون',
+  };
+
+  static const Map<String, String> mamilla_street = {
+    'en': 'Mamilla Street',
+    'ar': 'شارع مأمن الله',
+  };
+
+  static const Map<String, String> yafo_street = {
+    'en': 'Yafo Street',
+    'ar': 'شارع يافا',
+  };
+
+  static const Map<String, String> sultan_suleiman_street = {
+    'en': 'Sultan Suleiman Street',
+    'ar': 'شارع السلطان سليمان',
+  };
+
+  // Ramallah Streets  
+  static const Map<String, String> al_manara_square = {
+    'en': 'Al Manara Square',
+    'ar': 'ساحة المنارة',
+  };
+
+  static const Map<String, String> rukab_street = {
+    'en': 'Rukab Street',
+    'ar': 'شارع ركاب',
+  };
+
+  static const Map<String, String> al_irsal_street = {
+    'en': 'Al Irsal Street',
+    'ar': 'شارع الإرسال',
+  };
+
+  static const Map<String, String> hospital_street = {
+    'en': 'Hospital Street',
+    'ar': 'شارع المستشفى',
+  };
+
+  static const Map<String, String> al_nahda_street = {
+    'en': 'Al Nahda Street',
+    'ar': 'شارع النهضة',
+  };
+
+  static const Map<String, String> radio_street = {
+    'en': 'Radio Street',
+    'ar': 'شارع الإذاعة',
+  };
+
+  static const Map<String, String> al_masayef_road = {
+    'en': 'Al Masayef Road',
+    'ar': 'طريق المصايف',
+  };
+
+  static const Map<String, String> al_bireh_ramallah_road = {
+    'en': 'Al Bireh Ramallah Road',
+    'ar': 'طريق البيرة رام الله',
+  };
+
+  // Nablus Streets
+  static const Map<String, String> rafidia_street = {
+    'en': 'Rafidia Street',
+    'ar': 'شارع رفيديا',
+  };
+
+  static const Map<String, String> al_najah_street = {
+    'en': 'Al Najah Street',
+    'ar': 'شارع النجاح',
+  };
+
+  static const Map<String, String> faisal_street = {
+    'en': 'Faisal Street',
+    'ar': 'شارع فيصل',
+  };
+
+  static const Map<String, String> al_maidan_street = {
+    'en': 'Al Maidan Street',
+    'ar': 'شارع الميدان',
+  };
+
+  static const Map<String, String> al_anbat_street = {
+    'en': 'Al Anbat Street',
+    'ar': 'شارع الأنبات',
+  };
+
+  static const Map<String, String> martyrs_street = {
+    'en': 'Martyrs Street',
+    'ar': 'شارع الشهداء',
+  };
+
+  static const Map<String, String> al_nasr_street = {
+    'en': 'Al Nasr Street',
+    'ar': 'شارع النصر',
+  };
+
+  static const Map<String, String> university_street = {
+    'en': 'University Street',
+    'ar': 'شارع الجامعة',
+  };
+
+  static const Map<String, String> old_city_street = {
+    'en': 'Old City Street',
+    'ar': 'شارع البلدة القديمة',
+  };
+
+  // Hebron Streets
+  static const Map<String, String> king_talal_street = {
+    'en': 'King Talal Street',
+    'ar': 'شارع الملك طلال',
+  };
+
+  static const Map<String, String> al_salam_street = {
+    'en': 'Al Salam Street',
+    'ar': 'شارع السلام',
+  };
+
+  static const Map<String, String> al_haramain_street = {
+    'en': 'Al Haramain Street',
+    'ar': 'شارع الحرمين',
+  };
+
+  static const Map<String, String> al_manshiyya_street = {
+    'en': 'Al Manshiyya Street',
+    'ar': 'شارع المنشية',
+  };
+
+  static const Map<String, String> polytechnic_university_road = {
+    'en': 'Polytechnic University Road',
+    'ar': 'طريق جامعة البوليتكنك',
+  };
+
+  static const Map<String, String> al_thahiriyya_road = {
+    'en': 'Al Thahiriyya Road',
+    'ar': 'طريق الظاهرية',
+  };
+
+  static const Map<String, String> al_fawwar_road = {
+    'en': 'Al Fawwar Road',
+    'ar': 'طريق الفوار',
+  };
+
+  static const Map<String, String> halhul_road = {
+    'en': 'Halhul Road',
+    'ar': 'طريق حلحول',
+  };
+
+  static const Map<String, String> dura_road = {
+    'en': 'Dura Road',
+    'ar': 'طريق دورا',
+  };
+
+  // Bethlehem Streets
+  static const Map<String, String> pope_paul_vi_street = {
+    'en': 'Pope Paul VI Street',
+    'ar': 'شارع البابا بولس السادس',
+  };
+
+  static const Map<String, String> milk_grotto_street = {
+    'en': 'Milk Grotto Street',
+    'ar': 'شارع مغارة الحليب',
+  };
+
+  static const Map<String, String> nativity_square = {
+    'en': 'Nativity Square',
+    'ar': 'ساحة المهد',
+  };
+
+  static const Map<String, String> beit_sahour_road = {
+    'en': 'Beit Sahour Road',
+    'ar': 'طريق بيت ساحور',
+  };
+
+  static const Map<String, String> solomon_pools_street = {
+    'en': 'Solomon Pools Street',
+    'ar': 'شارع برك سليمان',
+  };
+
+  static const Map<String, String> rachel_tomb_road = {
+    'en': 'Rachel Tomb Road',
+    'ar': 'طريق قبر راحيل',
+  };
+
+  // Gaza Streets (Updated)
+  static const Map<String, String> omar_mukhtar_street = {
+    'en': 'Omar Mukhtar Street',
+    'ar': 'شارع عمر المختار',
+  };
+
+  static const Map<String, String> al_rasheed_street = {
+    'en': 'Al Rasheed Street',
+    'ar': 'شارع الرشيد',
+  };
+
+  static const Map<String, String> al_wahda_street = {
+    'en': 'Al Wahda Street',
+    'ar': 'شارع الوحدة',
+  };
+
+  static const Map<String, String> al_azhar_street = {
+    'en': 'Al Azhar Street',
+    'ar': 'شارع الأزهر',
+  };
+
+  static const Map<String, String> beach_road = {
+    'en': 'Beach Road',
+    'ar': 'طريق الشاطئ',
+  };
+
+  static const Map<String, String> salah_al_din_street = {
+    'en': 'Salah Al Din Street',
+    'ar': 'شارع صلاح الدين',
+  };
+
+  static const Map<String, String> al_thalateen_street = {
+    'en': 'Al Thalateen Street',
+    'ar': 'شارع الثلاثين',
+  };
+
+  static const Map<String, String> industrial_road = {
+    'en': 'Industrial Road',
+    'ar': 'الطريق الصناعي',
+  };
+
+  static const Map<String, String> al_shati_camp_road = {
+    'en': 'Al Shati Camp Road',
+    'ar': 'طريق مخيم الشاطئ',
+  };
+
+  // Additional city streets (Jenin, Tulkarm, etc.)
+  static const Map<String, String> freedom_fighters_street = {
+    'en': 'Freedom Fighters Street',
+    'ar': 'شارع المناضلين',
+  };
+
+  static const Map<String, String> al_yarmouk_street = {
+    'en': 'Al Yarmouk Street',
+    'ar': 'شارع اليرموك',
+  };
+
+  static const Map<String, String> arab_american_university_road = {
+    'en': 'Arab American University Road',
+    'ar': 'طريق الجامعة العربية الأمريكية',
+  };
+
+  static const Map<String, String> al_jalama_road = {
+    'en': 'Al Jalama Road',
+    'ar': 'طريق الجلمة',
+  };
+
+  static const Map<String, String> ya_bad_road = {
+    'en': 'Ya\'bad Road',
+    'ar': 'طريق يعبد',
+  };
+
+  static const Map<String, String> tubas_road = {
+    'en': 'Tubas Road',
+    'ar': 'طريق طوباس',
+  };
+
+  static const Map<String, String> al_alimi_street = {
+    'en': 'Al Alimi Street',
+    'ar': 'شارع العليمي',
+  };
+
+  static const Map<String, String> nablus_street = {
+    'en': 'Nablus Street',
+    'ar': 'شارع نابلس',
+  };
+
+  static const Map<String, String> al_shuhada_street = {
+    'en': 'Al Shuhada Street',
+    'ar': 'شارع الشهداء',
+  };
+
+  static const Map<String, String> al_sikka_street = {
+    'en': 'Al Sikka Street',
+    'ar': 'شارع السكة',
+  };
+
+  static const Map<String, String> industrial_street = {
+    'en': 'Industrial Street',
+    'ar': 'شارع الصناعة',
+  };
+
+  static const Map<String, String> khadouri_university_road = {
+    'en': 'Khadouri University Road',
+    'ar': 'طريق جامعة الخضوري',
+  };
+
+  static const Map<String, String> qalqilya_road = {
+    'en': 'Qalqilya Road',
+    'ar': 'طريق قلقيلية',
+  };
+
+  static const Map<String, String> jenin_road = {
+    'en': 'Jenin Road',
+    'ar': 'طريق جنين',
+  };
+
+  static const Map<String, String> netanya_road = {
+    'en': 'Netanya Road',
+    'ar': 'طريق نتانيا',
+  };
+
+  static const Map<String, String> al_andalus_street = {
+    'en': 'Al Andalus Street',
+    'ar': 'شارع الأندلس',
+  };
+
+  static const Map<String, String> al_istiqlal_street = {
+    'en': 'Al Istiqlal Street',
+    'ar': 'شارع الاستقلال',
+  };
+
+  static const Map<String, String> tulkarm_road = {
+    'en': 'Tulkarm Road',
+    'ar': 'طريق طولكرم',
+  };
+
+  static const Map<String, String> al_taybeh_road = {
+    'en': 'Al Taybeh Road',
+    'ar': 'طريق الطيبة',
+  };
+
+  static const Map<String, String> azzoun_road = {
+    'en': 'Azzoun Road',
+    'ar': 'طريق عزون',
+  };
+
+  static const Map<String, String> jaljulia_road = {
+    'en': 'Jaljulia Road',
+    'ar': 'طريق جلجولية',
+  };
+
+  static const Map<String, String> al_bireh_road = {
+    'en': 'Al Bireh Road',
+    'ar': 'طريق البيرة',
+  };
+
+  static const Map<String, String> ariel_road = {
+    'en': 'Ariel Road',
+    'ar': 'طريق أريئيل',
+  };
+
+  static const Map<String, String> deir_istiya_road = {
+    'en': 'Deir Istiya Road',
+    'ar': 'طريق دير استيا',
+  };
+
+  static const Map<String, String> bruqin_road = {
+    'en': 'Bruqin Road',
+    'ar': 'طريق بروقين',
+  };
+
+  static const Map<String, String> al_far_aa_road = {
+    'en': 'Al Far\'aa Road',
+    'ar': 'طريق الفارعة',
+  };
+
+  // Additional street names for cities
+  static const Map<String, String> al_balata_street_2 = {
+    'en': 'Al Balata Street 2',
+    'ar': 'شارع البلتة 2',
+  };
+
+  static const Map<String, String> al_balata_street_3 = {
+    'en': 'Al Balata Street 3',
+    'ar': 'شارع البلتة 3',
+  };
+
+  static const Map<String, String> al_amman_street_2 = {
+    'en': 'Al Amman Street 2',
+    'ar': 'شارع عمان 2',
+  };
+
+  static const Map<String, String> al_asira_street_2 = {
+    'en': 'Al Asira Street 2',
+    'ar': 'شارع العسيرة 2',
+  };
+
+  static const Map<String, String> al_quds_street_2 = {
+    'en': 'Al Quds Street 2',
+    'ar': 'شارع القدس 2',
+  };
+
+  static const Map<String, String> al_quds_street_3 = {
+    'en': 'Al Quds Street 3',
+    'ar': 'شارع القدس 3',
+  };
+
+  static const Map<String, String> al_rasheed_street_2 = {
+    'en': 'Al Rasheed Street 2',
+    'ar': 'شارع الرشيد 2',
+  };
+
+  static const Map<String, String> tammun_road = {
+    'en': 'Tammun Road',
+    'ar': 'طريق تمون',
+  };
+
+  static const Map<String, String> aqaba_road = {
+    'en': 'Aqaba Road',
+    'ar': 'طريق عقبة',
+  };
+
+  static const Map<String, String> al_malih_road = {
+    'en': 'Al Malih Road',
+    'ar': 'طريق المالح',
+  };
+
+  static const Map<String, String> al_sultan_street = {
+    'en': 'Al Sultan Street',
+    'ar': 'شارع السلطان',
+  };
+
+  static const Map<String, String> dead_sea_road = {
+    'en': 'Dead Sea Road',
+    'ar': 'طريق البحر الميت',
+  };
+
+  static const Map<String, String> jerusalem_road = {
+    'en': 'Jerusalem Road',
+    'ar': 'طريق القدس',
+  };
+
+  static const Map<String, String> al_auja_road = {
+    'en': 'Al Auja Road',
+    'ar': 'طريق العوجا',
+  };
+
+  static const Map<String, String> allenby_bridge_road = {
+    'en': 'Allenby Bridge Road',
+    'ar': 'طريق جسر اللنبي',
+  };
+
+  static const Map<String, String> aqabat_jaber_road = {
+    'en': 'Aqabat Jaber Road',
+    'ar': 'طريق عقبة جبر',
   };
 
   // Person/People strings
@@ -1653,7 +2343,7 @@ class AppStrings {
 
   static const Map<String, String> packingUnpackingDesc = {
     'en': 'Complete packing and unpacking services with organized labeling, protection, and systematic arrangement of belongings.',
-    'ar': 'خدمات تعبئة وفك تعبئة كاملة مع تسمية منظمة وحماية وترتيب منهجي للممتلكات.',
+    'ar': 'خدمات تعبئة وتفريغ أغراض كاملة مع تسمية منظمة وحماية وترتيب منهجي للممتلكات.',
   };
 
   static const Map<String, String> furnitureWrappingDesc = {
@@ -3225,6 +3915,26 @@ class AppStrings {
     'ar': 'حذف الحساب نهائياً',
   };
 
+  // Delete account warning
+  static const Map<String, String> deleteAccountWarning = {
+    'en': 'Are you sure you want to delete your account? This action cannot be undone.',
+    'ar': 'هل أنت متأكد من أنك تريد حذف حسابك؟ لا يمكن التراجع عن هذا الإجراء.',
+  };
+
+  // Account deleted successfully
+  static const Map<String, String> accountDeleted = {
+    'en': 'Account deleted successfully',
+    'ar': 'تم حذف الحساب بنجاح',
+  };
+
+  // Delete account failed
+  static const Map<String, String> deleteAccountFailed = {
+    'en': 'Failed to delete account',
+    'ar': 'فشل في حذف الحساب',
+  };
+
+
+
   // Additional missing strings for complete translation
   static const Map<String, String> membersSince = {
     'en': 'Members since',
@@ -3722,6 +4432,13 @@ class AppStrings {
       'trustedDevices': trustedDevices,
       'manageTrustedDevices': manageTrustedDevices,
       'permanentlyDeleteAccount': permanentlyDeleteAccount,
+      // Delete account strings
+      'deleteAccountWarning': deleteAccountWarning,
+      'accountDeleted': accountDeleted,
+      'deleteAccountFailed': deleteAccountFailed,
+      'delete': delete,
+      'cancel': cancel,
+      'security': security,
       // Service Names
       'homeCleaning': homeCleaning,
       // Provider Names
@@ -3739,6 +4456,152 @@ class AppStrings {
       'mainStreet': mainStreet,
       'oakAvenue': oakAvenue,
       'pineRoad': pineRoad,
+      // Jerusalem Streets
+      'salahuddin': salahuddin,
+      'nablus_road': nablus_road,
+      'ramallah_road': ramallah_road,
+      'bethlehem_road': bethlehem_road,
+      'hebron_road': hebron_road,
+      'jaffa_road': jaffa_road,
+      'damascus_gate': damascus_gate,
+      'jaffa_gate': jaffa_gate,
+      'new_gate': new_gate,
+      'zions_gate': zions_gate,
+      'dung_gate': dung_gate,
+      'golden_gate': golden_gate,
+      'herods_gate': herods_gate,
+      'lions_gate': lions_gate,
+      'stephen_gate': stephen_gate,
+      // Ramallah Streets
+      'al_manara': al_manara,
+      'al_balad': al_balad,
+      'al_masyoun': al_masyoun,
+      'al_tireh': al_tireh,
+      'al_amari': al_amari,
+      'al_jalazoun': al_jalazoun,
+      'al_beituniya': al_beituniya,
+      'al_ram': al_ram,
+      'al_tira': al_tira,
+      // Nablus Streets
+      'rafidia': rafidia,
+      'al_maidan': al_maidan,
+      'al_gharbi': al_gharbi,
+      'al_sharqi': al_sharqi,
+      'al_quds': al_quds,
+      // Hebron Streets
+      'al_shuhada': al_shuhada,
+      // Bethlehem Streets
+      'manger_street': manger_street,
+      'star_street': star_street,
+      'milk_grotto': milk_grotto,
+      'olive_tree': olive_tree,
+      'shepherds_field': shepherds_field,
+      // Gaza Streets
+      'omar_mukhtar': omar_mukhtar,
+      'al_rasheed': al_rasheed,
+      'al_azhar': al_azhar,
+      'al_nasser': al_nasser,
+      'al_shati': al_shati,
+      // Real Palestinian Street Names
+      // Jerusalem Streets
+      'salahuddin_street': salahuddin_street,
+      'damascus_gate_road': damascus_gate_road,
+      'king_george_street': king_george_street,
+      'ben_yehuda_street': ben_yehuda_street,
+      'agron_street': agron_street,
+      'mamilla_street': mamilla_street,
+      'yafo_street': yafo_street,
+      'sultan_suleiman_street': sultan_suleiman_street,
+      // Ramallah Streets  
+      'al_manara_square': al_manara_square,
+      'rukab_street': rukab_street,
+      'al_irsal_street': al_irsal_street,
+      'hospital_street': hospital_street,
+      'al_nahda_street': al_nahda_street,
+      'radio_street': radio_street,
+      'al_masayef_road': al_masayef_road,
+      'al_bireh_ramallah_road': al_bireh_ramallah_road,
+      // Nablus Streets
+      'rafidia_street': rafidia_street,
+      'al_najah_street': al_najah_street,
+      'faisal_street': faisal_street,
+      'al_maidan_street': al_maidan_street,
+      'al_anbat_street': al_anbat_street,
+      'martyrs_street': martyrs_street,
+      'al_nasr_street': al_nasr_street,
+      'university_street': university_street,
+      'old_city_street': old_city_street,
+      // Hebron Streets
+      'king_talal_street': king_talal_street,
+      'al_salam_street': al_salam_street,
+      'al_haramain_street': al_haramain_street,
+      'al_manshiyya_street': al_manshiyya_street,
+      'polytechnic_university_road': polytechnic_university_road,
+      'al_thahiriyya_road': al_thahiriyya_road,
+      'al_fawwar_road': al_fawwar_road,
+      'halhul_road': halhul_road,
+      'dura_road': dura_road,
+      // Bethlehem Streets
+      'pope_paul_vi_street': pope_paul_vi_street,
+      'milk_grotto_street': milk_grotto_street,
+      'nativity_square': nativity_square,
+      'beit_sahour_road': beit_sahour_road,
+      'solomon_pools_street': solomon_pools_street,
+      'rachel_tomb_road': rachel_tomb_road,
+      // Gaza Streets (Updated)
+      'omar_mukhtar_street': omar_mukhtar_street,
+      'al_rasheed_street': al_rasheed_street,
+      'al_wahda_street': al_wahda_street,
+      'al_azhar_street': al_azhar_street,
+      'beach_road': beach_road,
+      'salah_al_din_street': salah_al_din_street,
+      'al_thalateen_street': al_thalateen_street,
+      'industrial_road': industrial_road,
+      'al_shati_camp_road': al_shati_camp_road,
+      // Additional city streets
+      'freedom_fighters_street': freedom_fighters_street,
+      'al_yarmouk_street': al_yarmouk_street,
+      'arab_american_university_road': arab_american_university_road,
+      'al_jalama_road': al_jalama_road,
+      'ya_bad_road': ya_bad_road,
+      'tubas_road': tubas_road,
+      'al_alimi_street': al_alimi_street,
+      'nablus_street': nablus_street,
+      'al_shuhada_street': al_shuhada_street,
+      'al_sikka_street': al_sikka_street,
+      'industrial_street': industrial_street,
+      'khadouri_university_road': khadouri_university_road,
+      'qalqilya_road': qalqilya_road,
+      'jenin_road': jenin_road,
+      'netanya_road': netanya_road,
+      'al_andalus_street': al_andalus_street,
+      'al_istiqlal_street': al_istiqlal_street,
+      'tulkarm_road': tulkarm_road,
+      'al_taybeh_road': al_taybeh_road,
+      'azzoun_road': azzoun_road,
+      'jaljulia_road': jaljulia_road,
+      'al_bireh_road': al_bireh_road,
+      'ariel_road': ariel_road,
+      'deir_istiya_road': deir_istiya_road,
+      'bruqin_road': bruqin_road,
+      'al_far_aa_road': al_far_aa_road,
+      'tammun_road': tammun_road,
+      'aqaba_road': aqaba_road,
+      'al_malih_road': al_malih_road,
+      'al_sultan_street': al_sultan_street,
+      'dead_sea_road': dead_sea_road,
+      'jerusalem_road': jerusalem_road,
+      'al_auja_road': al_auja_road,
+      'allenby_bridge_road': allenby_bridge_road,
+      'aqabat_jaber_road': aqabat_jaber_road,
+      // Additional numbered street names
+      'al_balata_street_2': al_balata_street_2,
+      'al_balata_street_3': al_balata_street_3,
+      'al_amman_street_2': al_amman_street_2,
+      'al_asira_street_2': al_asira_street_2,
+      'al_quds_street_2': al_quds_street_2,
+      'al_quds_street_3': al_quds_street_3,
+      'al_rasheed_street_2': al_rasheed_street_2,
       // Additional Chat strings
       'daysAgo': daysAgo,
       'willArriveIn': willArriveIn,
@@ -3807,24 +4670,25 @@ class AppStrings {
       'basicInformation': basicInformation,
       'connectWithTrustedServiceProvider': connectWithTrustedServiceProvider,
       'joinPalhands': joinPalhands,
-              'doYouWantToSignUpAs': doYouWantToSignUpAs,
-        'location': location,
-        'selectYourLocation': selectYourLocation,
-        'whereDoYouWantToProvideService': whereDoYouWantToProvideService,
-        'whereDoYouPreferToGetService': whereDoYouPreferToGetService,
-        'pleaseSelectLocation': pleaseSelectLocation,
-        // Palestinian Cities
-        'ramallah': ramallah,
-        'nablus': nablus,
-        'hebron': hebron,
-        'bethlehem': bethlehem,
-        'gaza': gaza,
-        'jenin': jenin,
-        'tulkarm': tulkarm,
-        'qalqilya': qalqilya,
-        'salfit': salfit,
-        'tubas': tubas,
-        'jericho': jericho,
+      'doYouWantToSignUpAs': doYouWantToSignUpAs,
+      'location': location,
+      'selectYourLocation': selectYourLocation,
+      'selectYourCity': selectYourCity,
+      'selectYourStreet': selectYourStreet,
+      'pleaseSelectCity': pleaseSelectCity,
+      'pleaseSelectStreet': pleaseSelectStreet,
+      // Palestinian Cities
+      'ramallah': ramallah,
+      'nablus': nablus,
+      'hebron': hebron,
+      'bethlehem': bethlehem,
+      'gaza': gaza,
+      'jenin': jenin,
+      'tulkarm': tulkarm,
+      'qalqilya': qalqilya,
+      'salfit': salfit,
+      'tubas': tubas,
+      'jericho': jericho,
       'onePerson': onePerson,
       'people': people,
       'contactPhoneNumber': contactPhoneNumber,
