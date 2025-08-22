@@ -1156,7 +1156,6 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
       _error = null;
     });
     try {
-      // Since we're in frontend-only mode, this should be instant with cached mock data
       final data = await _providerService.fetchProviders(
         servicesAny: _selectedServiceKeys.toList(),
         city: _selectedCity,
@@ -1196,7 +1195,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
             if (_error != null) Text(_error!, style: const TextStyle(color: Colors.red)),
             const SizedBox(height: 8),
             if (_providers.isEmpty && !_loading && _error == null) 
-              const Center(child: Text('Select services to see providers')),
+              const Center(child: Text('Loading providers...')),
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),

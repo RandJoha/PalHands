@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-const userSchema = new mongoose.Schema({
+const providerSchema = new mongoose.Schema({
+  // Authentication & Basic Profile (from User model)
   firstName: {
     type: String,
     required: true,
@@ -20,19 +21,6 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     trim: true
   },
-  // When changing email, we keep the current email active and store the new one here
-  // until the user confirms via the verification link.
-  pendingEmail: {
-    type: String,
-    default: null,
-    lowercase: true,
-    trim: true
-  },
-  phone: {
-    type: String,
-    required: true,
-    unique: true
-  },
   password: {
     type: String,
     required: true,
@@ -40,15 +28,26 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['client', 'provider', 'admin'],
-    default: 'client'
+    enum: ['provider'],
+    default: 'provider'
+  },
+  phone: {
+    type: String,
+    required: true,
+    unique: true
   },
   profileImage: {
     type: String,
     default: null
   },
-
-  // New: support multiple saved addresses
+  age: {
+    type: Number,
+    min: 0,
+    max: 120,
+    default: null
+  },
+  
+  // Addresses (from User model)
   addresses: [
     new mongoose.Schema({
       type: {
@@ -66,17 +65,75 @@ const userSchema = new mongoose.Schema({
       isDefault: { type: Boolean, default: false }
     }, { _id: false })
   ],
-  // Optional: store age instead of exact DOB for privacy
-  age: {
+
+  // Service Provider Specific Fields (from our enhanced schema)
+  experienceYears: {
     type: Number,
-    min: 0,
-    max: 120,
-    default: null
+    required: true,
+    min: 0
+  },
+  languages: [{
+    type: String,
+    required: true
+  }],
+  hourlyRate: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  services: [{
+    type: String,
+    required: true
+  }],
+  
+  // Rating (merged from both schemas)
+  rating: {
+    average: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5
+    },
+    count: {
+      type: Number,
+      default: 0,
+      min: 0
+    }
+  },
+  
+  // Location (enhanced from our schema)
+  location: {
+    address: {
+      type: String,
+      trim: true
+    },
+    coordinates: {
+      latitude: Number,
+      longitude: Number
+    }
+  },
+  
+  // Status & Verification
+  isActive: {
+    type: Boolean,
+    default: true
   },
   isVerified: {
     type: Boolean,
     default: false
   },
+  
+  // Booking Statistics
+  totalBookings: {
+    type: Number,
+    default: 0
+  },
+  completedBookings: {
+    type: Number,
+    default: 0
+  },
+  
+  // Email verification fields (from User model)
   emailVerificationToken: {
     type: String,
     default: null
@@ -85,7 +142,12 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
-  // Dedicated email-change verification token/expiry
+  pendingEmail: {
+    type: String,
+    default: null,
+    lowercase: true,
+    trim: true
+  },
   emailChangeToken: {
     type: String,
     default: null
@@ -98,7 +160,6 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
-  // New: store a hashed version of reset token to avoid storing raw tokens in DB
   passwordResetTokenHash: {
     type: String,
     default: null
@@ -107,20 +168,8 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
-  isActive: {
-    type: Boolean,
-    default: true
-  },
-  rating: {
-    average: {
-      type: Number,
-      default: 0
-    },
-    count: {
-      type: Number,
-      default: 0
-    }
-  },
+  
+  // Timestamps
   createdAt: {
     type: Date,
     default: Date.now
@@ -131,21 +180,25 @@ const userSchema = new mongoose.Schema({
   }
 });
 
-// Ensure unique index for phone and email exist (in case of older deployments)
-userSchema.index({ email: 1 }, { unique: true });
-userSchema.index({ phone: 1 }, { unique: true });
-// Helpful index if querying for defaults in future
-userSchema.index({ 'addresses.isDefault': 1 });
+// Indexes for search functionality
+providerSchema.index({ firstName: 'text', lastName: 'text', city: 'text' });
+// Note: email and phone uniqueness is handled at the schema level, not as global indexes
+providerSchema.index({ city: 1 });
+providerSchema.index({ 'rating.average': -1 });
+providerSchema.index({ hourlyRate: 1 });
+providerSchema.index({ isActive: 1 });
+providerSchema.index({ services: 1 });
+providerSchema.index({ 'addresses.isDefault': 1 });
 
-// Password hashing middleware
-userSchema.pre('save', async function(next) {
+// Password hashing middleware (from User model)
+providerSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 12);
   next();
 });
 
-// Enforce single default address middleware
-userSchema.pre('save', function(next) {
+// Enforce single default address middleware (from User model)
+providerSchema.pre('save', function(next) {
   if (this.isModified('addresses') && this.addresses.length > 0) {
     let defaultCount = 0;
     let lastDefaultIndex = -1;
@@ -173,9 +226,9 @@ userSchema.pre('save', function(next) {
   next();
 });
 
-// Compare password method
-userSchema.methods.comparePassword = async function(candidatePassword) {
+// Compare password method (from User model)
+providerSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
-module.exports = mongoose.model('User', userSchema); 
+module.exports = mongoose.model('Provider', providerSchema);

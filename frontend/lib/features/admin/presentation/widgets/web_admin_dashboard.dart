@@ -222,7 +222,44 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
             padding: EdgeInsets.symmetric(horizontal: screenWidth > 1400 ? 32 : 24),
             child: Row(
               children: [
-                // Notifications
+                // Go to Main Menu button - more compact
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: screenWidth > 1400 ? 10 : 8, vertical: screenWidth > 1400 ? 6 : 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                  ),
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.pushNamed(context, '/home');
+                    },
+                    borderRadius: BorderRadius.circular(6),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.home,
+                          size: screenWidth > 1400 ? 16 : 14,
+                          color: AppColors.primary,
+                        ),
+                        SizedBox(width: screenWidth > 1400 ? 6 : 4),
+                        Text(
+                          screenWidth > 1400 ? AppStrings.getString('goToMainMenu', languageService.currentLanguage) : 'Menu',
+                          style: GoogleFonts.cairo(
+                            fontSize: screenWidth > 1400 ? 12 : 10,
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                SizedBox(width: screenWidth > 1400 ? 12 : 8),
+
+                // Notifications - more compact
                 IconButton(
                   onPressed: () {
                     // TODO: Show notifications
@@ -230,13 +267,13 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
                   icon: Stack(
                     children: [
                       Icon(Icons.notifications_outlined, 
-                           size: screenWidth > 1400 ? 26 : 24),
+                           size: screenWidth > 1400 ? 22 : 20),
                       Positioned(
                         right: 0,
                         top: 0,
                         child: Container(
-                          width: 10,
-                          height: 10,
+                          width: 8,
+                          height: 8,
                           decoration: const BoxDecoration(
                             color: AppColors.primary,
                             shape: BoxShape.circle,
@@ -245,9 +282,14 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
                       ),
                     ],
                   ),
+                  padding: EdgeInsets.all(screenWidth > 1400 ? 8 : 6),
+                  constraints: BoxConstraints(
+                    minWidth: screenWidth > 1400 ? 40 : 32,
+                    minHeight: screenWidth > 1400 ? 40 : 32,
+                  ),
                 ),
 
-                SizedBox(width: screenWidth > 1400 ? 20 : 16),
+                SizedBox(width: screenWidth > 1400 ? 12 : 8),
 
                 // Admin profile - more compact
                 Consumer<AuthService>(
@@ -255,18 +297,18 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
                     return Row(
                       children: [
                         CircleAvatar(
-                          radius: screenWidth > 1400 ? 24 : 20,
+                          radius: screenWidth > 1400 ? 20 : 18,
                           backgroundColor: AppColors.primary,
                           child: Text(
                             authService.currentUser?['firstName']?.substring(0, 1).toUpperCase() ?? 'A',
                             style: GoogleFonts.cairo(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
-                              fontSize: screenWidth > 1400 ? 18 : 16,
+                              fontSize: screenWidth > 1400 ? 16 : 14,
                             ),
                           ),
                         ),
-                        SizedBox(width: screenWidth > 1400 ? 12 : 10),
+                        SizedBox(width: screenWidth > 1400 ? 8 : 6),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -274,15 +316,16 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
                             Text(
                               '${authService.currentUser?['firstName'] ?? 'Admin'} ${authService.currentUser?['lastName'] ?? ''}',
                               style: GoogleFonts.cairo(
-                                fontSize: screenWidth > 1400 ? 16 : 14,
+                                fontSize: screenWidth > 1400 ? 14 : 12,
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.textDark,
                               ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                             Text(
                               AppStrings.getString('administrator', languageService.currentLanguage),
                               style: GoogleFonts.cairo(
-                                fontSize: screenWidth > 1400 ? 12 : 10,
+                                fontSize: screenWidth > 1400 ? 10 : 9,
                                 color: AppColors.textLight,
                               ),
                             ),
@@ -293,7 +336,7 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
                   },
                 ),
 
-                SizedBox(width: screenWidth > 1400 ? 20 : 16),
+                SizedBox(width: screenWidth > 1400 ? 12 : 8),
 
                 // Logout button
                 IconButton(

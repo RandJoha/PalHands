@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const timeWindowSchema = new mongoose.Schema({ start: String, end: String }, { _id: false });
 
 const availabilitySchema = new mongoose.Schema({
-  provider: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
+  provider: { type: mongoose.Schema.Types.ObjectId, ref: 'Provider', required: true, unique: true },
   timezone: { type: String, required: true, default: 'Asia/Jerusalem' },
   weekly: {
     monday: [timeWindowSchema],

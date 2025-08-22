@@ -15,15 +15,13 @@ const serviceSchema = new mongoose.Schema({
     required: true,
     enum: [
       'cleaning',
-      'laundry',
-      'caregiving',
-      'furniture_moving',
-      'elderly_support',
-      'aluminum_work',
-      'carpentry',
-      'home_nursing',
+      'organizing',
+      'cooking',
+      'childcare',
+      'elderly',
       'maintenance',
-      'other'
+      'newhome',
+      'miscellaneous'
     ]
   },
   subcategory: {
@@ -32,7 +30,7 @@ const serviceSchema = new mongoose.Schema({
   },
   provider: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Provider',
     required: true
   },
   price: {

@@ -69,6 +69,10 @@ app.use('/api/bookings', require('./routes/bookings'));
 app.use('/api/availability', require('./routes/availability'));
 app.use('/api/reports', require('./routes/reports'));
 
+// New modules (Phase 3 - Provider & Categories)
+app.use('/api/servicecategories', require('./routes/serviceCategories'));
+app.use('/api/providers', require('./routes/providers'));
+
 // Probes
 app.get('/api/health', (req, res) => {
   res.json({ status: 'success', message: 'PalHands API is running', timestamp: new Date().toISOString() });

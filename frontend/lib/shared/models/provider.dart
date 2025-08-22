@@ -28,10 +28,33 @@ class ProviderModel {
   });
 
   factory ProviderModel.fromJson(Map<String, dynamic> json) {
+    // Handle backend Provider model structure
+    String getProviderName() {
+      if (json['firstName'] != null && json['lastName'] != null) {
+        return '${json['firstName']} ${json['lastName']}'.trim();
+      } else if (json['name'] != null) {
+        return json['name'];
+      }
+      return 'Provider';
+    }
+
+    String getProviderCity() {
+      if (json['city'] != null) {
+        return json['city'];
+      } else if (json['addresses'] != null && json['addresses'] is List && json['addresses'].isNotEmpty) {
+        final defaultAddress = json['addresses'].firstWhere(
+          (addr) => addr['isDefault'] == true,
+          orElse: () => json['addresses'][0]
+        );
+        return defaultAddress['city'] ?? 'Palestine';
+      }
+      return 'Palestine';
+    }
+
     return ProviderModel(
       id: json['_id']?.toString() ?? json['id']?.toString() ?? UniqueKey().toString(),
-      name: json['name'] ?? 'Provider',
-      city: json['city'] ?? json['location'] ?? 'Palestine',
+      name: getProviderName(),
+      city: getProviderCity(),
       phone: json['phone'] ?? '',
       experienceYears: (json['experienceYears'] ?? 0) as int,
       languages: (json['languages'] as List?)?.map((e) => e.toString()).toList() ?? const [],
@@ -45,7 +68,7 @@ class ProviderModel {
       ratingCount: (json['rating'] is Map)
           ? (((json['rating'] as Map)['count'] as num?)?.toInt() ?? 0)
           : (json['ratingCount'] as num?)?.toInt() ?? 0,
-      avatarUrl: json['avatarUrl']?.toString(),
+      avatarUrl: json['profileImage']?.toString() ?? json['avatarUrl']?.toString(),
     );
   }
 }

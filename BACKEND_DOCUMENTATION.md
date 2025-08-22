@@ -1,4 +1,3 @@
-
 # PalHands Backend Documentation
 
 ## 📋 Overview
@@ -61,7 +60,103 @@ backend/
 Seed script:
 
 - `src/utils/seedDatabase.js`  # Creates test provider accounts and a demo service each (Phase 1)
+
+---
+
+## 🌱 **Database Seeding & Current Status**
+
+### **Seeding Script: `scripts/seed-database.js`**
+
+**Purpose**: Populate MongoDB with complete provider data for testing and development.
+
+**What Gets Seeded**:
+- **8 Service Categories**: cleaning, organizing, cooking, childcare, elderly, maintenance, newhome, miscellaneous
+- **79 Providers**: Complete profiles with authentication credentials
+- **162 Services**: Linked to providers and categories
+
+**Provider Data Structure**:
+```javascript
+// Example seeded provider
+{
+  firstName: "أحمد",           // Arabic name
+  lastName: "محمد",
+  email: "ahmed0@palhands.com", // English email (no Arabic characters)
+  password: "password123",      // Same password for all providers
+  role: "provider",
+  phone: "0591000001",
+  age: 23,
+  addresses: [
+    {
+      type: "home",
+      street: "1 Main Street",
+      city: "Ramallah",
+      coordinates: { latitude: 31.5, longitude: 35.0 }
+    }
+  ],
+  experienceYears: 5,
+  languages: ["Arabic", "English"],
+  hourlyRate: 45,
+  services: ["bedroomCleaning", "kitchenCleaning"],
+  rating: { average: 4.2, count: 15 },
+  isActive: true,
+  isVerified: true
+}
 ```
+
+**Seeding Commands**:
+```bash
+# Run seeding script
+npm run seed
+
+# Or run directly
+node scripts/seed-database.js
+```
+
+### **Current Status: ⚠️ Provider Authentication Not Working**
+
+**What's Working**:
+✅ **79 providers successfully seeded** with complete profiles  
+✅ **All provider data exists** in MongoDB `providers` collection  
+✅ **Email/password combinations** correctly stored  
+✅ **Services properly linked** to provider records  
+✅ **Backend models updated** to reference Provider collection  
+
+**What's Broken**:
+❌ **Provider login fails** with "Incorrect email or password" error  
+❌ **Authentication system** only checks `users` collection  
+❌ **Provider password verification** not working  
+❌ **Cannot test provider dashboard** functionality  
+
+**Test Credentials** (seeded but not working):
+- **Email**: `ahmed0@palhands.com`
+- **Password**: `password123`
+- **Expected**: Successful login to provider dashboard
+- **Actual**: "Incorrect email or password" error
+
+### **Root Cause Analysis**
+
+The issue is that the **authentication system is not integrated with the Provider model**:
+
+1. **Login endpoint** (`/api/auth/login`) only searches the `users` collection
+2. **Provider records** exist in the separate `providers` collection
+3. **Password verification** may not work on the Provider model
+4. **Provider authentication flow** not implemented
+
+### **Required Fixes**
+
+1. **Update authentication controller** to check both `users` and `providers` collections
+2. **Ensure Provider model** has the same password hashing/verification as User model
+3. **Create provider login endpoint** or modify existing auth to handle provider role
+4. **Test provider login** with seeded credentials
+
+### **Impact on Development**
+
+- ❌ **Cannot test provider dashboard** with real provider accounts
+- ❌ **Cannot verify booking acceptance/rejection** by providers  
+- ❌ **End-to-end booking flow incomplete** until providers can login
+- ❌ **Provider-side testing blocked**
+
+---
 
 ## 🔧 Technology Stack
 
@@ -210,6 +305,90 @@ Key Features:
 - **Validation**: Comprehensive input validation with custom error messages
 - **Indexing**: Email and phone fields are indexed for performance
 - **Timestamps**: Automatic createdAt and updatedAt fields
+
+### Provider Model (`src/models/Provider.js`) - **NEWLY IMPLEMENTED**
+
+```javascript
+const providerSchema = new mongoose.Schema({
+  // Authentication & Basic Profile (from User model)
+  firstName: { type: String, required: true, trim: true },
+  lastName: { type: String, required: false, trim: true, default: '' },
+  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+  password: { type: String, required: true, minlength: 6 },
+  role: { type: String, enum: ['provider'], default: 'provider' },
+  phone: { type: String, required: true, unique: true },
+  profileImage: { type: String, default: null },
+  age: { type: Number, required: true, min: 18, max: 100 },
+  
+  // Addresses (multiple addresses support)
+  addresses: [{
+    type: { type: String, enum: ['home', 'work'], required: true },
+    street: { type: String, trim: true },
+    city: { type: String, required: true, trim: true },
+    area: { type: String, trim: true },
+    coordinates: {
+      latitude: Number,
+      longitude: Number
+    },
+    isDefault: { type: Boolean, default: false }
+  }],
+  
+  // Service Provider Specific Fields
+  experienceYears: { type: Number, required: true, min: 0 },
+  languages: [{ type: String, required: true }],
+  hourlyRate: { type: Number, required: true, min: 0 },
+  services: [{ type: String, required: true }],
+  
+  // Rating & Statistics
+  rating: {
+    average: { type: Number, default: 0, min: 0, max: 5 },
+    count: { type: Number, default: 0 }
+  },
+  
+  // Location & Availability
+  location: {
+    address: String,
+    coordinates: {
+      latitude: Number,
+      longitude: Number
+    }
+  },
+  
+  // Status & Verification
+  isActive: { type: Boolean, default: true },
+  isVerified: { type: Boolean, default: false },
+  totalBookings: { type: Number, default: 0 },
+  completedBookings: { type: Number, default: 0 },
+  
+  // Email verification & password reset fields
+  emailVerificationToken: String,
+  emailVerificationExpires: Date,
+  pendingEmail: String,
+  emailChangeToken: String,
+  emailChangeExpires: Date,
+  passwordResetToken: String,
+  passwordResetTokenHash: String,
+  passwordResetExpires: Date
+}, {
+  timestamps: true
+});
+```
+
+**Key Features**:
+- **Merged Schema**: Combines User authentication fields with enhanced provider-specific fields
+- **Password Security**: Same bcryptjs hashing and verification as User model
+- **Multiple Addresses**: Support for home/work addresses with coordinates
+- **Service Linking**: Services array for provider offerings
+- **Rating System**: Embedded rating with average and count
+- **Verification Fields**: Complete email verification and password reset support
+
+**Current Status**: ⚠️ **AUTHENTICATION INTEGRATION PENDING**
+- ✅ **79 providers seeded** with complete profiles and credentials
+- ✅ **All provider data exists** in MongoDB `providers` collection
+- ❌ **Provider login not working** - authentication system not integrated
+- ❌ **Cannot test provider dashboard** functionality
+
+**Required Fix**: Update authentication system to check both `users` and `providers` collections during login.
 
 ### Admin Model (`src/models/Admin.js`)
 

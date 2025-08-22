@@ -422,6 +422,86 @@ class AppStrings {
     'ar': 'إلغاء الحجز',
   };
 
+  static const Map<String, String> createBooking = {
+    'en': 'Create Booking',
+    'ar': 'إنشاء حجز',
+  };
+
+  static const Map<String, String> selectServiceFirst = {
+    'en': 'Please select a service first to create a booking',
+    'ar': 'يرجى اختيار خدمة أولاً لإنشاء حجز',
+  };
+
+  static const Map<String, String> browseServices = {
+    'en': 'Browse Services',
+    'ar': 'تصفح الخدمات',
+  };
+
+  static const Map<String, String> loginToCreateBooking = {
+    'en': 'Login to Create Bookings',
+    'ar': 'سجل دخولك لإنشاء الحجوزات',
+  };
+
+  static const Map<String, String> loginPromptDescription = {
+    'en': 'You need to be logged in to create and manage your bookings',
+    'ar': 'تحتاج إلى تسجيل الدخول لإنشاء وإدارة حجوزاتك',
+  };
+
+  static const Map<String, String> noBookingsYet = {
+    'en': 'No Bookings Yet',
+    'ar': 'لا توجد حجوزات بعد',
+  };
+
+  static const Map<String, String> startByBookingService = {
+    'en': 'Start by booking your first service with us',
+    'ar': 'ابدأ بحجز خدمتك الأولى معنا',
+  };
+
+  static const Map<String, String> createFirstBooking = {
+    'en': 'Create First Booking',
+    'ar': 'إنشاء أول حجز',
+  };
+
+  static const Map<String, String> errorLoadingBookings = {
+    'en': 'Error Loading Bookings',
+    'ar': 'خطأ في تحميل الحجوزات',
+  };
+
+  static const Map<String, String> retry = {
+    'en': 'Retry',
+    'ar': 'إعادة المحاولة',
+  };
+
+  static const Map<String, String> details = {
+    'en': 'Details',
+    'ar': 'التفاصيل',
+  };
+
+  static const Map<String, String> disputed = {
+    'en': 'Disputed',
+    'ar': 'متنازع عليه',
+  };
+
+  static const Map<String, String> bookingCancelled = {
+    'en': 'Booking cancelled successfully',
+    'ar': 'تم إلغاء الحجز بنجاح',
+  };
+
+  static const Map<String, String> cancelBookingConfirmation = {
+    'en': 'Are you sure you want to cancel this booking?',
+    'ar': 'هل أنت متأكد من أنك تريد إلغاء هذا الحجز؟',
+  };
+
+  static const Map<String, String> yes = {
+    'en': 'Yes',
+    'ar': 'نعم',
+  };
+
+  static const Map<String, String> no = {
+    'en': 'No',
+    'ar': 'لا',
+  };
+
   // Booking Actions
   static const Map<String, String> track = {
     'en': 'Track',
@@ -3104,6 +3184,11 @@ class AppStrings {
     'ar': 'الذهاب إلى لوحة التحكم',
   };
 
+  static const Map<String, String> goToMainMenu = {
+    'en': 'Go to Main Menu',
+    'ar': 'الذهاب إلى القائمة الرئيسية',
+  };
+
   static const Map<String, String> notifications = {
     'en': 'Notifications',
     'ar': 'الإشعارات',
@@ -4345,6 +4430,22 @@ class AppStrings {
       'myBookings': myBookings,
       'bookNow': bookNow,
       'cancelBooking': cancelBooking,
+      'createBooking': createBooking,
+      'selectServiceFirst': selectServiceFirst,
+      'browseServices': browseServices,
+      'loginToCreateBooking': loginToCreateBooking,
+      'loginPromptDescription': loginPromptDescription,
+      'noBookingsYet': noBookingsYet,
+      'startByBookingService': startByBookingService,
+      'createFirstBooking': createFirstBooking,
+      'errorLoadingBookings': errorLoadingBookings,
+      'retry': retry,
+      'details': details,
+      'disputed': disputed,
+      'bookingCancelled': bookingCancelled,
+      'cancelBookingConfirmation': cancelBookingConfirmation,
+      'yes': yes,
+      'no': no,
       // Booking Actions
       'track': track,
       'reschedule': reschedule,
@@ -5009,6 +5110,7 @@ class AppStrings {
       'collapse': collapse,
       'logout': logout,
       'goToDashboard': goToDashboard,
+      'goToMainMenu': goToMainMenu,
       'notifications': notifications,
       'palestinianHeritage': palestinianHeritage,
       'connectingCommunities': connectingCommunities,
@@ -5707,4 +5809,5 @@ class AppStrings {
 
     return allStrings[key]?[languageCode] ?? allStrings[key]?['en'] ?? key;
   }
+
 } 

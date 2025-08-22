@@ -74,7 +74,6 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
       _error = null;
     });
     try {
-      // Since we're in frontend-only mode, this should be instant with cached mock data
       final data = await _providerService.fetchProviders(
         servicesAny: _selectedServiceKeys.toList(),
         city: _selectedCity,
@@ -1093,7 +1092,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
             if (_providers.isEmpty && !_loading && _error == null) 
               const Center(child: Padding(
                 padding: EdgeInsets.all(40),
-                child: Text('Select services to see providers', style: TextStyle(fontSize: 18)),
+                child: Text('Loading providers...', style: TextStyle(fontSize: 18)),
               )),
             const SizedBox(height: 12),
             LayoutBuilder(
