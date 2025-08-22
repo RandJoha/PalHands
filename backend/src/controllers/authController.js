@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const Provider = require('../models/Provider');
 const asyncHandler = require('../utils/asyncHandler');
 const { ok, created, error } = require('../utils/response');
 const { sendEmail } = require('../services/mailer');
@@ -99,7 +98,6 @@ function renderActionHtml({ title, heading, buttonText, actionPath, token, succe
 // Register new user
 const register = asyncHandler(async (req, res) => {
   const { firstName, lastName = '', email, phone, password, role = 'client', age, address } = req.body;
-  console.log('Registration attempt:', { firstName, lastName, email, phone, password: password ? '[HIDDEN]' : 'MISSING', role });
   
 
 
@@ -111,7 +109,6 @@ const register = asyncHandler(async (req, res) => {
     if (!password) missingFields.push('password');
     
     if (missingFields.length > 0) {
-      console.log('Missing fields:', missingFields);
       return error(res, 400, `Missing required fields: ${missingFields.join(', ')}`, [], 'VALIDATION_ERROR');
     }
 
@@ -127,7 +124,6 @@ const register = asyncHandler(async (req, res) => {
     });
 
     if (existingUser) {
-      console.log('User already exists:', existingUser.email === email.toLowerCase() ? 'Email conflict' : 'Phone conflict');
       return error(res, 400, existingUser.email === email.toLowerCase() ? 'Email already registered' : 'Phone number already registered', [], 'CONFLICT');
     }
 
@@ -198,19 +194,8 @@ const login = asyncHandler(async (req, res) => {
       return error(res, 400, 'Email and password are required', [], 'VALIDATION_ERROR');
     }
 
-    // Find user by email in both User and Provider collections
-    let user = await User.findOne({ email: email.toLowerCase() }).select('+password');
-    let isProvider = false;
-    
-    if (!user) {
-      // Check Provider collection if not found in User collection
-      const provider = await Provider.findOne({ email: email.toLowerCase() }).select('+password');
-      if (provider) {
-        user = provider;
-        isProvider = true;
-      }
-    }
-    
+    // Find user by email
+    const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
       return error(res, 401, 'Invalid email or password', [], 'UNAUTHORIZED');
     }
@@ -226,10 +211,10 @@ const login = asyncHandler(async (req, res) => {
       return error(res, 401, 'Invalid email or password', [], 'UNAUTHORIZED');
     }
 
-    // Generate token with appropriate ID field
+    // Generate token
     const token = generateToken(user._id);
 
-    // Return user data (without password) with clean structure
+        // Return user data (without password) with clean structure
     const userResponse = {
       _id: user._id,
       // Personal info
@@ -246,15 +231,6 @@ const login = asyncHandler(async (req, res) => {
       rating: user.rating,
       // Addresses
       addresses: user.addresses,
-      // Provider-specific fields (if applicable)
-      ...(isProvider && {
-        experienceYears: user.experienceYears,
-        languages: user.languages,
-        hourlyRate: user.hourlyRate,
-        services: user.services,
-        totalBookings: user.totalBookings,
-        completedBookings: user.completedBookings
-      }),
       // Metadata
       createdAt: user.createdAt
     };
@@ -278,20 +254,11 @@ const validateToken = asyncHandler(async (req, res) => {
         role: user.role,
         profileImage: user.profileImage,
         address: user.address,
-        addresses: user.addresses,
+  addresses: user.addresses,
         age: user.age,
         isVerified: user.isVerified,
         isActive: user.isActive,
         rating: user.rating,
-        // Provider-specific fields (if applicable)
-        ...(user.role === 'provider' && {
-          experienceYears: user.experienceYears,
-          languages: user.languages,
-          hourlyRate: user.hourlyRate,
-          services: user.services,
-          totalBookings: user.totalBookings,
-          completedBookings: user.completedBookings
-        }),
         createdAt: user.createdAt
       }
     }, 'Token valid');
@@ -324,15 +291,6 @@ const getProfile = asyncHandler(async (req, res) => {
       rating: user.rating,
       // Addresses
       addresses: user.addresses,
-      // Provider-specific fields (if applicable)
-      ...(user.role === 'provider' && {
-        experienceYears: user.experienceYears,
-        languages: user.languages,
-        hourlyRate: user.hourlyRate,
-        services: user.services,
-        totalBookings: user.totalBookings,
-        completedBookings: user.completedBookings
-      }),
       // Metadata
       createdAt: user.createdAt
     };

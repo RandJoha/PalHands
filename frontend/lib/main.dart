@@ -24,7 +24,6 @@ import 'features/admin/presentation/pages/admin_dashboard_screen.dart';
 import 'features/profile/presentation/pages/user_dashboard_screen.dart';
 import 'features/provider/presentation/pages/provider_dashboard_screen.dart';
 
-
 // Services
 import 'shared/services/language_service.dart';
 import 'shared/services/health_service.dart';
@@ -35,6 +34,7 @@ import 'shared/services/provider_service.dart';
 // Feature imports (to be implemented)
 // import 'features/auth/presentation/bloc/auth_bloc.dart';
 // import 'features/services/presentation/bloc/services_bloc.dart';
+// import 'features/bookings/presentation/bloc/bookings_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,7 +45,7 @@ void main() async {
   // Initialize screen utilities
   await ScreenUtil.ensureScreenSize();
   // Force frontend-only mocks for Providers/Our Services (decouple from backend)
-  ProviderService.useFrontendMocks(false);
+  ProviderService.useFrontendMocks(true);
   
   runApp(const PalHandsApp());
 }
@@ -131,7 +131,6 @@ class PalHandsApp extends StatelessWidget {
                   '/login': (context) => const LoginScreen(),
                   '/signup': (context) => const SignupScreen(),
                   '/provider': (context) => const ProviderDashboardScreen(),
-          
                 },
                 // Handle deep links with query parameters (e.g., /reset-password?token=...)
                 onGenerateRoute: (settings) {

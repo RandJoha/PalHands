@@ -4,35 +4,16 @@ const Availability = require('../models/Availability');
 const { DateTime } = require('luxon');
 const { ok, created, error } = require('../utils/response');
 const { bookingPolicies } = require('../policies');
-const { validateTransition } = require('../utils/bookingStateMachine');
 
 async function createBooking(req, res) {
   try {
-    const actor = req.user;
-    const { serviceId, schedule, location, notes, clientId } = req.body;
-    const idempotencyKey = req.headers['idempotency-key'] || req.body.idempotencyKey;
-
-    // Check for duplicate request if idempotency key provided
-    if (idempotencyKey) {
-      const existingBooking = await Booking.findOne({
-        client: clientId || actor._id,
-        idempotencyKey: idempotencyKey
-      });
-      
-      if (existingBooking) {
-        // Return existing booking for duplicate request
-        return res.status(200).json({
-          success: true,
-          message: 'Booking already exists (idempotent request)',
-          data: existingBooking
-        });
-      }
-    }
+  const actor = req.user;
+  const { serviceId, schedule, location, notes, clientId } = req.body;
 
     const service = await Service.findById(serviceId).populate('provider');
     if (!service || !service.isActive) return error(res, 404, 'Service not available');
 
-    const baseAmount = service.price.amount;
+  const baseAmount = service.price.amount;
     const totalAmount = baseAmount; // simple for Phase 1
 
     // Resolve client for the booking
@@ -69,15 +50,13 @@ async function createBooking(req, res) {
     }).select('_id');
     if (overlap) return error(res, 409, 'Time slot already booked');
 
-    const bookingData = {
+    const booking = await Booking.create({
       client: resolvedClientId,
       provider: service.provider._id,
       service: service._id,
       serviceDetails: { title: service.title, description: service.description, category: service.category },
       schedule: {
-        date: startDateTime.toJSDate(),
-        startTime: schedule.startTime,
-        endTime: schedule.endTime,
+        ...schedule,
         startUtc: startDateTime.toUTC().toJSDate(),
         endUtc: endDateTime.toUTC().toJSDate(),
         timezone: tz
@@ -85,14 +64,7 @@ async function createBooking(req, res) {
       location,
       pricing: { baseAmount, additionalCharges: [], totalAmount, currency: service.price.currency || 'ILS' },
       notes: { clientNotes: notes || '' }
-    };
-
-    // Add idempotency key if provided
-    if (idempotencyKey) {
-      bookingData.idempotencyKey = idempotencyKey;
-    }
-
-    const booking = await Booking.create(bookingData);
+    });
 
     return created(res, booking, 'Booking created');
   } catch (e) {
@@ -124,64 +96,28 @@ async function getBookingById(req, res) {
       .populate('provider', 'firstName lastName email')
       .populate('service', 'title category');
     if (!booking) return error(res, 404, 'Booking not found');
-    if (!bookingPolicies.canView(req.user, booking)) return error(res, 403, 'Access denied');
+  if (!bookingPolicies.canView(req.user, booking)) return error(res, 403, 'Access denied');
     return ok(res, booking);
   } catch (e) {
     return error(res, 404, 'Booking not found');
   }
 }
 
+
 async function updateBookingStatus(req, res) {
   try {
     const booking = await Booking.findById(req.params.id);
     if (!booking) return error(res, 404, 'Booking not found');
 
-    // Check if user can view/modify this booking
-    if (!bookingPolicies.canView(req.user, booking)) {
-      return error(res, 403, 'Access denied');
-    }
+  const allowed = bookingPolicies.allowedStatusFor(req.user, booking);
+  if (!allowed.has(req.body.status)) return error(res, 403, 'Not allowed to set this status');
 
-    const currentStatus = booking.status;
-    const newStatus = req.body.status;
-    const userRole = req.user.role;
-
-    // Validate status transition using state machine
-    const validation = validateTransition({
-      fromStatus: currentStatus,
-      toStatus: newStatus,
-      userRole: userRole,
-      booking: booking,
-      user: req.user
-    });
-
-    if (!validation.success) {
-      return error(res, 400, validation.error);
-    }
-
-    // Update booking status
-    booking.status = newStatus;
+    booking.status = req.body.status;
     booking.updatedAt = Date.now();
-
-    // Add status-specific metadata
-    if (newStatus === 'cancelled') {
-      booking.cancellation = {
-        cancelledBy: req.user._id,
-        reason: req.body.reason || 'Cancelled by user',
-        cancelledAt: new Date()
-      };
-    } else if (newStatus === 'completed') {
-      booking.completion = {
-        completedAt: new Date(),
-        ...(userRole === 'client' ? { clientConfirmation: true } : {}),
-        ...(userRole === 'provider' ? { providerConfirmation: true } : {})
-      };
-    }
-
     await booking.save();
-    return ok(res, booking, 'Status updated successfully');
+    return ok(res, booking, 'Status updated');
   } catch (e) {
-    console.error('updateBookingStatus error', e);
-    return error(res, 400, e.message || 'Failed to update status');
+    return error(res, 400, 'Failed to update status');
   }
 }
 

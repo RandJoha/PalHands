@@ -393,62 +393,26 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   Widget _buildHeaderActions(bool isMobile, bool isTablet) {
     return Consumer<LanguageService>(
       builder: (context, languageService, child) {
-        return Row(
-          children: [
-            // Go to Main Menu button - more compact
-            Container(
-              margin: EdgeInsets.only(right: isTablet ? 8.0 : 12.0),
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/home');
-                },
-                icon: Icon(
-                  Icons.home,
-                  color: AppColors.primary,
-                  size: isTablet ? 16.0 : 18.0,
-                ),
-                label: Text(
-                  isTablet ? 'Menu' : AppStrings.getString('goToMainMenu', languageService.currentLanguage),
-                  style: GoogleFonts.cairo(
-                    fontSize: isTablet ? 10.0 : 12.0,
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                  foregroundColor: AppColors.primary,
-                  elevation: 0,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isTablet ? 8.0 : 10.0,
-                    vertical: isTablet ? 4.0 : 6.0,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                    side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
-                  ),
-                ),
-              ),
-            ),
-            
-            // Notifications - more compact
+    return Row(
+      children: [
+            // Notifications
             IconButton(
               onPressed: () {
                 // TODO: Show notifications
               },
               icon: Stack(
                 children: [
-                  Icon(
-                    Icons.notifications_outlined,
-                    color: AppColors.textSecondary,
-                    size: isTablet ? 20.0 : 22.0,
-                  ),
+          Icon(
+            Icons.notifications_outlined,
+            color: AppColors.textSecondary,
+            size: isTablet ? 22.0 : 24.0,
+          ),
                   Positioned(
                     right: 0,
                     top: 0,
                     child: Container(
-                      width: 6,
-                      height: 6,
+                      width: 8,
+                      height: 8,
                       decoration: const BoxDecoration(
                         color: AppColors.primary,
                         shape: BoxShape.circle,
@@ -457,34 +421,29 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                   ),
                 ],
               ),
-              padding: EdgeInsets.all(isTablet ? 6.0 : 8.0),
-              constraints: BoxConstraints(
-                minWidth: isTablet ? 32.0 : 36.0,
-                minHeight: isTablet ? 32.0 : 36.0,
-              ),
             ),
             
-            SizedBox(width: isTablet ? 8.0 : 12.0),
+          SizedBox(width: isTablet ? 16.0 : 20.0),
 
             // User profile
             Consumer<AuthService>(
               builder: (context, authService, child) {
                 return Row(
                   children: [
-                                        CircleAvatar(
-                      radius: isTablet ? 18.0 : 20.0,
+                    CircleAvatar(
+                      radius: isTablet ? 20.0 : 24.0,
                       backgroundColor: AppColors.primary,
                       child: Text(
                         authService.currentUser?['firstName']?.substring(0, 1).toUpperCase() ?? 'U',
                         style: GoogleFonts.cairo(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: isTablet ? 14.0 : 16.0,
+                          fontSize: isTablet ? 16.0 : 18.0,
                         ),
                       ),
                     ),
                     if (!isMobile) ...[
-                      SizedBox(width: isTablet ? 8.0 : 10.0),
+                      SizedBox(width: isTablet ? 10.0 : 12.0),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -492,22 +451,21 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                           Text(
                             '${authService.currentUser?['firstName'] ?? 'User'} ${authService.currentUser?['lastName'] ?? ''}',
                             style: GoogleFonts.cairo(
-                              fontSize: isTablet ? 12.0 : 14.0,
+                              fontSize: isTablet ? 14.0 : 16.0,
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
                             ),
-                            overflow: TextOverflow.ellipsis,
                           ),
                           Text(
                             AppStrings.getString('client', languageService.currentLanguage),
                             style: GoogleFonts.cairo(
-                              fontSize: isTablet ? 9.0 : 11.0,
+                              fontSize: isTablet ? 10.0 : 12.0,
                               color: AppColors.textSecondary,
                             ),
                           ),
-                        ],
+            ],
                       ),
-                    ],
+          ],
                   ],
                 );
               },
@@ -3806,51 +3764,24 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                       topRight: Radius.circular(16),
                     ),
                   ),
-                  child: Column(
-                    children: [
-                      // Go to Main Menu button
-                      ListTile(
-                        leading: const Icon(
-                          Icons.home,
-                          color: AppColors.primary,
-                          size: 20,
-                        ),
-                        title: Text(
-                          AppStrings.getString('goToMainMenu', languageService.currentLanguage),
-                          style: GoogleFonts.cairo(
-                            fontSize: 14,
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        onTap: () {
-                          Navigator.pop(context); // Close drawer
-                          Navigator.pushNamed(context, '/home');
-                        },
+                  child: ListTile(
+                    leading: const Icon(
+                      Icons.logout,
+                      color: AppColors.error,
+                      size: 20,
+                    ),
+                    title: Text(
+                      AppStrings.getString('logout', languageService.currentLanguage),
+                      style: GoogleFonts.cairo(
+                        fontSize: 14,
+                        color: AppColors.error,
+                        fontWeight: FontWeight.w500,
                       ),
-                      
-                      const SizedBox(height: 8),
-                      
-                      ListTile(
-                        leading: const Icon(
-                          Icons.logout,
-                          color: AppColors.error,
-                          size: 20,
-                        ),
-                        title: Text(
-                          AppStrings.getString('logout', languageService.currentLanguage),
-                          style: GoogleFonts.cairo(
-                            fontSize: 14,
-                            color: AppColors.error,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        onTap: () {
-                          // Handle logout
-                          Navigator.pop(context); // Close drawer
-                        },
-                      ),
-                    ],
+                    ),
+                    onTap: () {
+                      // Handle logout
+                      Navigator.pop(context); // Close drawer
+                    },
                   ),
                 ),
               ],

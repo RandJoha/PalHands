@@ -158,39 +158,6 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
           ],
         ),
         actions: [
-          // Go to Main Menu button
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.pushNamed(context, '/home');
-              },
-              icon: const Icon(
-                Icons.home,
-                color: AppColors.primary,
-                size: 16,
-              ),
-              label: Text(
-                AppStrings.getString('goToMainMenu', languageService.currentLanguage),
-                style: GoogleFonts.cairo(
-                  fontSize: 10,
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.white,
-                foregroundColor: AppColors.primary,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
-                  side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
-                ),
-              ),
-            ),
-          ),
-          
           // Language toggle button
           Container(
             margin: const EdgeInsets.only(right: 4),
@@ -521,44 +488,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
             padding: EdgeInsets.symmetric(horizontal: screenWidth > 1400 ? 32 : 24),
             child: Row(
               children: [
-                // Go to Main Menu button - more compact
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: screenWidth > 1400 ? 10 : 8, vertical: screenWidth > 1400 ? 6 : 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-                  ),
-                  child: InkWell(
-                    onTap: () {
-                      Navigator.pushNamed(context, '/home');
-                    },
-                    borderRadius: BorderRadius.circular(6),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.home,
-                          size: screenWidth > 1400 ? 16 : 14,
-                          color: AppColors.primary,
-                        ),
-                        SizedBox(width: screenWidth > 1400 ? 6 : 4),
-                        Text(
-                          screenWidth > 1400 ? AppStrings.getString('goToMainMenu', languageService.currentLanguage) : 'Menu',
-                          style: GoogleFonts.cairo(
-                            fontSize: screenWidth > 1400 ? 12 : 10,
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                SizedBox(width: screenWidth > 1400 ? 12 : 8),
-
-                // Notifications - more compact
+                // Notifications
                 IconButton(
                   onPressed: () {
                     // TODO: Show notifications
@@ -566,13 +496,13 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
                   icon: Stack(
                     children: [
                       Icon(Icons.notifications_outlined, 
-                           size: screenWidth > 1400 ? 22 : 20),
+                           size: screenWidth > 1400 ? 26 : 24),
                       Positioned(
                         right: 0,
                         top: 0,
                         child: Container(
-                          width: 8,
-                          height: 8,
+                          width: 10,
+                          height: 10,
                           decoration: const BoxDecoration(
                             color: AppColors.primary,
                             shape: BoxShape.circle,
@@ -581,31 +511,26 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
                       ),
                     ],
                   ),
-                  padding: EdgeInsets.all(screenWidth > 1400 ? 8 : 6),
-                  constraints: BoxConstraints(
-                    minWidth: screenWidth > 1400 ? 40 : 32,
-                    minHeight: screenWidth > 1400 ? 40 : 32,
-                  ),
                 ),
 
-                SizedBox(width: screenWidth > 1400 ? 12 : 8),
+                SizedBox(width: screenWidth > 1400 ? 20 : 16),
 
                 // Provider profile - more compact
                 Row(
                   children: [
                     CircleAvatar(
-                      radius: screenWidth > 1400 ? 20 : 18,
+                      radius: screenWidth > 1400 ? 24 : 20,
                       backgroundColor: AppColors.primary,
                       child: Text(
                         'P', // Provider initial
                         style: GoogleFonts.cairo(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: screenWidth > 1400 ? 16 : 14,
+                          fontSize: screenWidth > 1400 ? 18 : 16,
                         ),
                       ),
                     ),
-                    SizedBox(width: screenWidth > 1400 ? 8 : 6),
+                    SizedBox(width: screenWidth > 1400 ? 12 : 10),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -613,16 +538,15 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
                         Text(
                           AppStrings.getString('providerName', languageService.currentLanguage),
                           style: GoogleFonts.cairo(
-                            fontSize: screenWidth > 1400 ? 14 : 12,
+                            fontSize: screenWidth > 1400 ? 16 : 14,
                             fontWeight: FontWeight.w600,
                             color: AppColors.textDark,
                           ),
-                          overflow: TextOverflow.ellipsis,
                         ),
                         Text(
                           AppStrings.getString('serviceProvider', languageService.currentLanguage),
                           style: GoogleFonts.cairo(
-                            fontSize: screenWidth > 1400 ? 10 : 9,
+                            fontSize: screenWidth > 1400 ? 12 : 10,
                             color: AppColors.textLight,
                           ),
                         ),
@@ -924,29 +848,6 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
               ),
               child: Column(
                 children: [
-                  // Go to Main Menu button
-                  ListTile(
-                    leading: const Icon(
-                      Icons.home,
-                      color: AppColors.primary,
-                      size: 20,
-                    ),
-                    title: Text(
-                      AppStrings.getString('goToMainMenu', languageService.currentLanguage),
-                      style: GoogleFonts.cairo(
-                        fontSize: 14,
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    onTap: () {
-                      Navigator.pop(context); // Close drawer
-                      Navigator.pushNamed(context, '/home');
-                    },
-                  ),
-                  
-                  const SizedBox(height: 8),
-                  
                   // Language toggle - Updated to match Admin dashboard design
                   LanguageToggleWidget(
                     isCollapsed: false,

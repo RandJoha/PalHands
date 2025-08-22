@@ -181,31 +181,6 @@ Frontend wiring
 QA
 - [ ] E2E create/list/status-change; ownership/role guard failures rendered properly
 
-### 🚨 **Current Blocker: Provider Authentication Not Working**
-
-**Status**: ⚠️ **BLOCKED** - Cannot test provider-side booking flow
-
-**Issue**: While 79 providers are seeded with complete credentials, the authentication system is not integrated with the Provider model. Providers cannot login to test the booking management flow.
-
-**What's Working**:
-- ✅ 79 providers seeded with complete profiles and credentials
-- ✅ Provider data exists in MongoDB `providers` collection
-- ✅ Services properly linked to provider records
-- ✅ Client-side booking creation working
-
-**What's Broken**:
-- ❌ Provider login fails with "Incorrect email or password"
-- ❌ Authentication system only checks `users` collection
-- ❌ Provider password verification not working
-- ❌ Cannot test provider dashboard functionality
-
-**Required Fix**:
-1. Update authentication controller to check both `users` and `providers` collections
-2. Ensure Provider model has same password hashing/verification as User model
-3. Test provider login with seeded credentials (e.g., `ahmed0@palhands.com` / `password123`)
-
-**Impact**: End-to-end booking flow testing blocked until providers can authenticate.
-
 ---
 
 ## Phase 6 — Reports & Disputes (BE: Done)

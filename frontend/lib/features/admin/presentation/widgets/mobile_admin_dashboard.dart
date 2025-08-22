@@ -147,39 +147,6 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
         ],
       ),
       actions: [
-        // Go to Main Menu button
-        Container(
-          margin: const EdgeInsets.only(right: 8),
-          child: ElevatedButton.icon(
-            onPressed: () {
-              Navigator.pushNamed(context, '/home');
-            },
-            icon: const Icon(
-              Icons.home,
-              color: AppColors.primary,
-              size: 16,
-            ),
-            label: Text(
-              AppStrings.getString('goToMainMenu', languageService.currentLanguage),
-              style: GoogleFonts.cairo(
-                fontSize: 10,
-                color: AppColors.primary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.white,
-              foregroundColor: AppColors.primary,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
-                side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
-              ),
-            ),
-          ),
-        ),
-        
         // Language toggle button
         Container(
           margin: const EdgeInsets.only(right: 4),
@@ -445,36 +412,6 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
             ),
             child: Column(
               children: [
-                // Go to Main Menu button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context); // Close drawer
-                      Navigator.pushNamed(context, '/home');
-                    },
-                    icon: const Icon(Icons.home, size: 16),
-                    label: Text(
-                      AppStrings.getString('goToMainMenu', languageService.currentLanguage),
-                      style: GoogleFonts.cairo(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                      foregroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                        side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
-                      ),
-                    ),
-                  ),
-                ),
-                
-                const SizedBox(height: 8),
-                
                 // Logout button - More compact
                 SizedBox(
                   width: double.infinity,

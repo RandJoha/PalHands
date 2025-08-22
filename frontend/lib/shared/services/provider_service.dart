@@ -5,8 +5,8 @@ import 'base_api_service.dart';
 
 class ProviderService with BaseApiService {
   // Front-end-only mode to bypass backend calls for Our Services tab.
-  // Set to false to use real backend data
-  static bool frontendOnly = false;
+  // Intentionally hard-disabled backend usage to keep the UI snappy.
+  static bool frontendOnly = true;
   static void useFrontendMocks([bool value = true]) => frontendOnly = value;
 
   // Fetch providers matching any of the selected services and optional city
@@ -16,73 +16,32 @@ class ProviderService with BaseApiService {
     String? sortBy, // 'rating' or 'price'
     String? sortOrder, // 'asc' | 'desc'
   }) async {
-    if (frontendOnly) {
-      // Use mock data when frontend-only mode is enabled
-      final items = _mockProviders();
-      return _filterAndSortProviders(items, servicesAny, city, sortBy, sortOrder);
-    } else {
-      // Fetch real data from backend
-      try {
-        final response = await get('/providers');
-        if (response['success'] == true) {
-          final List<dynamic> providersData = response['data']['providers'];
-          final List<ProviderModel> providers = providersData.map((data) => 
-            ProviderModel.fromJson(data)
-          ).toList();
-          
-          return _filterAndSortProviders(providers, servicesAny, city, sortBy, sortOrder);
-        } else {
-          // Fallback to mock data if backend fails
-          print('Backend fetch failed, falling back to mock data');
-          final items = _mockProviders();
-          return _filterAndSortProviders(items, servicesAny, city, sortBy, sortOrder);
-        }
-      } catch (e) {
-        // Fallback to mock data if backend fails
-        print('Backend fetch error: $e, falling back to mock data');
-        final items = _mockProviders();
-        return _filterAndSortProviders(items, servicesAny, city, sortBy, sortOrder);
-      }
-    }
-  }
-
-  // Helper method to filter and sort providers
-  List<ProviderModel> _filterAndSortProviders(
-    List<ProviderModel> providers,
-    List<String> servicesAny,
-    String? city,
-    String? sortBy,
-    String? sortOrder,
-  ) {
-    final filtered = providers.where((p) {
+    // Always use mock data to avoid any backend latency on the Our Services tab
+    final items = _mockProviders();
+    return items.where((p) {
       final matchesServices = servicesAny.isEmpty || p.services.any((s) => servicesAny.contains(s));
       final matchesCity = city == null || city.isEmpty || p.city.toLowerCase() == city.toLowerCase();
-      
       return matchesServices && matchesCity;
-    }).toList();
-
-    // Sort providers
-    filtered.sort((a, b) {
-      if (sortBy == 'price') {
-        return sortOrder == 'asc' ? a.hourlyRate.compareTo(b.hourlyRate) : b.hourlyRate.compareTo(a.hourlyRate);
-      } else if (sortBy == 'rating') {
-        // Weighted rating using Bayesian average to consider review count
-        // score = (v/(v+C))*R + (C/(v+C))*m, where m is global mean and C is prior weight
-        final m = providers.isEmpty ? 0.0 : providers.map((e) => e.ratingAverage).reduce((x, y) => x + y) / providers.length;
-        const C = 20.0;
-        double score(ProviderModel p) {
-          final v = p.ratingCount.toDouble();
-          final R = p.ratingAverage;
-          return (v / (v + C)) * R + (C / (v + C)) * m;
+    }).toList()
+      ..sort((a, b) {
+        if (sortBy == 'price') {
+          return sortOrder == 'asc' ? a.hourlyRate.compareTo(b.hourlyRate) : b.hourlyRate.compareTo(a.hourlyRate);
+        } else if (sortBy == 'rating') {
+          // Weighted rating using Bayesian average to consider review count
+          // score = (v/(v+C))*R + (C/(v+C))*m, where m is global mean and C is prior weight
+          final m = items.isEmpty ? 0.0 : items.map((e) => e.ratingAverage).reduce((x, y) => x + y) / items.length;
+          const C = 20.0;
+          double score(ProviderModel p) {
+            final v = p.ratingCount.toDouble();
+            final R = p.ratingAverage;
+            return (v / (v + C)) * R + (C / (v + C)) * m;
+          }
+          final sA = score(a);
+          final sB = score(b);
+          return sortOrder == 'asc' ? sA.compareTo(sB) : sB.compareTo(sA);
         }
-        final sA = score(a);
-        final sB = score(b);
-        return sortOrder == 'asc' ? sA.compareTo(sB) : sB.compareTo(sA);
-      }
-      return 0;
-    });
-
-    return filtered;
+        return 0;
+      });
   }
 
   List<ProviderModel> _mockProviders() {

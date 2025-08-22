@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const Provider = require('../models/Provider');
 const Admin = require('../models/Admin');
 
 // Core: verify token, load user, ensure active
@@ -12,14 +11,7 @@ const authenticate = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // Check both User and Provider collections
-    let user = await User.findById(decoded.userId).select('-password');
-    if (!user) {
-      // Check Provider collection if not found in User collection
-      user = await Provider.findById(decoded.userId).select('-password');
-    }
-    
+    const user = await User.findById(decoded.userId).select('-password');
     if (!user) {
       return res.status(401).json({ success: false, message: 'Invalid token. User not found.' });
     }
@@ -112,20 +104,23 @@ const checkAdminPermission = (permission) => (req, res, next) => {
   next();
 };
 
-// Admin action logger (unchanged behavior)
-const logAdminAction = (action, targetType, targetId, details = {}) => {
+// Admin action logger
+// Usage: logAdminAction('user_update', 'user', (req)=>req.params.userId, (req)=>({ before, after }))
+const logAdminAction = (action, targetType, getTargetId, getDetails) => {
   return (req, res, next) => {
     const originalSend = res.send;
     res.send = function(data) {
       setTimeout(async () => {
         try {
           const AdminAction = require('../models/AdminAction');
+          const targetId = typeof getTargetId === 'function' ? getTargetId(req, res) : getTargetId;
+          const detailsBase = typeof getDetails === 'function' ? (getDetails(req, res) || {}) : (getDetails || {});
           await AdminAction.create({
             admin: req.user?._id,
             action,
             targetType,
             targetId,
-            details: { ...details, responseStatus: res.statusCode, responseData: data },
+            details: { ...detailsBase, responseStatus: res.statusCode },
             ipAddress: req.ip,
             userAgent: req.get('User-Agent'),
             status: res.statusCode < 400 ? 'success' : 'failed'
@@ -134,7 +129,7 @@ const logAdminAction = (action, targetType, targetId, details = {}) => {
           console.error('Failed to log admin action:', error);
         }
       }, 0);
-      originalSend.call(this, data);
+      return originalSend.call(this, data);
     };
     next();
   };
