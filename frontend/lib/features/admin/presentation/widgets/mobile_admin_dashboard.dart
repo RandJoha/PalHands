@@ -147,6 +147,19 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
         ],
       ),
       actions: [
+        // Back to Main Menu Button
+        IconButton(
+          onPressed: () {
+            Navigator.pushNamed(context, '/home');
+          },
+          icon: const Icon(
+            Icons.home,
+            color: AppColors.primary,
+            size: 24,
+          ),
+          tooltip: 'Back to Main Menu',
+        ),
+        
         // Language toggle button
         Container(
           margin: const EdgeInsets.only(right: 4),

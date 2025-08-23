@@ -114,6 +114,7 @@ class SharedNavigation extends StatelessWidget {
       {'key': 'home', 'route': '/home'},
       {'key': 'aboutUs', 'route': '/about'},
       {'key': 'ourServices', 'route': '/categories'},
+      {'key': 'bookings', 'route': '/bookings'},
       {'key': 'faqs', 'route': '/faqs'},
       {'key': 'contactUs', 'route': '/contact'},
     ];
@@ -178,19 +179,60 @@ class SharedNavigation extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        // Quick access to user dashboard/profile, always pinned to right
-        _buildDashboardQuickAction(context, languageService, isCompact),
-        const SizedBox(width: 8),
         // Language toggle
         _buildLanguageToggle(languageService, isCompact),
         
-        // Authentication buttons
+        // Authentication buttons or user actions
         if (showAuthButtons) ...[
           const SizedBox(width: 8),
-          _buildAuthButtons(context, languageService, isCompact),
+          _buildAuthOrUserActions(context, languageService, isCompact),
         ],
       ],
     );
+  }
+
+  Widget _buildAuthOrUserActions(BuildContext context, LanguageService languageService, bool isCompact) {
+    final auth = Provider.of<AuthService>(context, listen: false);
+    
+    if (auth.isAuthenticated) {
+      // User is authenticated - show user actions
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Dashboard button
+          _buildDashboardQuickAction(context, languageService, isCompact),
+          const SizedBox(width: 8),
+          // Logout button
+          _buildPillButton(
+            AppStrings.getString('logout', languageService.currentLanguage),
+            () async {
+              try {
+                await auth.logout();
+                if (context.mounted) {
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    '/home',
+                    (route) => false,
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Logout failed: ${e.toString()}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            isCompact: isCompact,
+          ),
+        ],
+      );
+    } else {
+      // User is not authenticated - show login/signup buttons
+      return _buildAuthButtons(context, languageService, isCompact);
+    }
   }
 
   Widget _buildDashboardQuickAction(BuildContext context, LanguageService languageService, bool isCompact) {
@@ -442,6 +484,17 @@ class SharedMobileDrawer extends StatelessWidget {
                         Navigator.pushNamed(context, '/categories');
                       },
                       currentPage == 'ourServices',
+                      languageService,
+                    ),
+                    _buildDrawerItem(
+                      context,
+                      Icons.book_online,
+                      AppStrings.getString('bookings', languageService.currentLanguage),
+                      () {
+                        Navigator.pop(context);
+                        Navigator.pushNamed(context, '/bookings');
+                      },
+                      currentPage == 'bookings',
                       languageService,
                     ),
                     _buildDrawerItem(

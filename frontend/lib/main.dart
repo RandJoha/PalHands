@@ -23,6 +23,7 @@ import 'features/contact/presentation/pages/contact_screen.dart';
 import 'features/admin/presentation/pages/admin_dashboard_screen.dart';
 import 'features/profile/presentation/pages/user_dashboard_screen.dart';
 import 'features/provider/presentation/pages/provider_dashboard_screen.dart';
+import 'features/bookings/presentation/pages/bookings_screen.dart';
 
 // Services
 import 'shared/services/language_service.dart';
@@ -131,6 +132,7 @@ class PalHandsApp extends StatelessWidget {
                   '/login': (context) => const LoginScreen(),
                   '/signup': (context) => const SignupScreen(),
                   '/provider': (context) => const ProviderDashboardScreen(),
+                  '/bookings': (context) => const BookingsScreen(),
                 },
                 // Handle deep links with query parameters (e.g., /reset-password?token=...)
                 onGenerateRoute: (settings) {

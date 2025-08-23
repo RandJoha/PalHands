@@ -95,7 +95,7 @@ class _AdminSidebarState extends State<AdminSidebar> {
     final screenWidth = MediaQuery.of(context).size.width;
     
     return Container(
-      height: screenWidth > 1400 ? 70 : 60, // Reduced height
+      height: screenWidth > 1400 ? 90 : 80, // Increased height to accommodate button
       padding: EdgeInsets.symmetric(horizontal: screenWidth > 1400 ? 16 : 12),
       decoration: BoxDecoration(
         color: AppColors.primary,
@@ -107,68 +107,107 @@ class _AdminSidebarState extends State<AdminSidebar> {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Logo/Icon - Smaller
-          Container(
-            width: screenWidth > 1400 ? 36 : 32,
-            height: screenWidth > 1400 ? 36 : 32,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Icon(
-              Icons.admin_panel_settings,
-              color: AppColors.primary,
-              size: screenWidth > 1400 ? 20 : 18,
-            ),
-          ),
-          
+          // Back to Main Menu Button
           if (!widget.isCollapsed) ...[
-            SizedBox(width: screenWidth > 1400 ? 10 : 8),
-            
-            // Title - More compact
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'PalHands',
-                    style: GoogleFonts.cairo(
-                      fontSize: screenWidth > 1400 ? 16 : 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+            Container(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/home');
+                },
+                icon: const Icon(
+                  Icons.home,
+                  color: Colors.white,
+                  size: 14,
+                ),
+                label: Text(
+                  AppStrings.getString('backToMainMenu', languageService.currentLanguage),
+                  style: GoogleFonts.cairo(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
                   ),
-                  Text(
-                    AppStrings.getString('adminPanel', languageService.currentLanguage),
-                    style: GoogleFonts.cairo(
-                      fontSize: screenWidth > 1400 ? 10 : 9,
-                      color: Colors.white.withValues(alpha: 0.8),
-                    ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.white, width: 1),
+                  backgroundColor: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                ],
+                ),
               ),
             ),
+            const SizedBox(height: 8),
           ],
-          
-          // Toggle button - Smaller
-          IconButton(
-            onPressed: widget.onToggleCollapse,
-            icon: Icon(
-              widget.isCollapsed ? Icons.chevron_right : Icons.chevron_left,
-              color: Colors.white,
-              size: screenWidth > 1400 ? 18 : 16,
-            ),
-            tooltip: widget.isCollapsed 
-              ? AppStrings.getString('expand', languageService.currentLanguage)
-              : AppStrings.getString('collapse', languageService.currentLanguage),
-            padding: EdgeInsets.zero,
-            constraints: BoxConstraints(
-              minWidth: screenWidth > 1400 ? 32 : 28,
-              minHeight: screenWidth > 1400 ? 32 : 28,
-            ),
+          // Existing header content
+          Row(
+            children: [
+              // Logo/Icon - Smaller
+              Container(
+                width: screenWidth > 1400 ? 36 : 32,
+                height: screenWidth > 1400 ? 36 : 32,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(
+                  Icons.admin_panel_settings,
+                  color: AppColors.primary,
+                  size: screenWidth > 1400 ? 20 : 18,
+                ),
+              ),
+              
+              if (!widget.isCollapsed) ...[
+                SizedBox(width: screenWidth > 1400 ? 10 : 8),
+                
+                // Title - More compact
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'PalHands',
+                        style: GoogleFonts.cairo(
+                          fontSize: screenWidth > 1400 ? 16 : 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        AppStrings.getString('adminPanel', languageService.currentLanguage),
+                        style: GoogleFonts.cairo(
+                          fontSize: screenWidth > 1400 ? 10 : 9,
+                          color: Colors.white.withValues(alpha: 0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              
+              // Toggle button - Smaller
+              IconButton(
+                onPressed: widget.onToggleCollapse,
+                icon: Icon(
+                  widget.isCollapsed ? Icons.chevron_right : Icons.chevron_left,
+                  color: Colors.white,
+                  size: screenWidth > 1400 ? 18 : 16,
+                ),
+                tooltip: widget.isCollapsed 
+                  ? AppStrings.getString('expand', languageService.currentLanguage)
+                  : AppStrings.getString('collapse', languageService.currentLanguage),
+                padding: EdgeInsets.zero,
+                constraints: BoxConstraints(
+                  minWidth: screenWidth > 1400 ? 32 : 28,
+                  minHeight: screenWidth > 1400 ? 32 : 28,
+                ),
+              ),
+            ],
           ),
         ],
       ),

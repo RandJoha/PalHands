@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Provider = require('../models/Provider');
 const asyncHandler = require('../utils/asyncHandler');
 const { ok, created, error } = require('../utils/response');
 const { sendEmail } = require('../services/mailer');
@@ -98,6 +99,7 @@ function renderActionHtml({ title, heading, buttonText, actionPath, token, succe
 // Register new user
 const register = asyncHandler(async (req, res) => {
   const { firstName, lastName = '', email, phone, password, role = 'client', age, address } = req.body;
+  console.log('Registration attempt:', { firstName, lastName, email, phone, password: password ? '[HIDDEN]' : 'MISSING', role });
   
 
 
@@ -109,6 +111,7 @@ const register = asyncHandler(async (req, res) => {
     if (!password) missingFields.push('password');
     
     if (missingFields.length > 0) {
+      console.log('Missing fields:', missingFields);
       return error(res, 400, `Missing required fields: ${missingFields.join(', ')}`, [], 'VALIDATION_ERROR');
     }
 
@@ -124,6 +127,7 @@ const register = asyncHandler(async (req, res) => {
     });
 
     if (existingUser) {
+      console.log('User already exists:', existingUser.email === email.toLowerCase() ? 'Email conflict' : 'Phone conflict');
       return error(res, 400, existingUser.email === email.toLowerCase() ? 'Email already registered' : 'Phone number already registered', [], 'CONFLICT');
     }
 
@@ -185,7 +189,7 @@ const register = asyncHandler(async (req, res) => {
   return created(res, { token, user: userResponse }, 'User registered successfully');
 });
 
-// Login user
+// Login user (now checks both User and Provider collections)
 const login = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
@@ -194,48 +198,102 @@ const login = asyncHandler(async (req, res) => {
       return error(res, 400, 'Email and password are required', [], 'VALIDATION_ERROR');
     }
 
-    // Find user by email
-    const user = await User.findOne({ email: email.toLowerCase() });
+    // First, try to find user in the users collection
+    let user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+    
+    // If not found in users, check the providers collection
     if (!user) {
-      return error(res, 401, 'Invalid email or password', [], 'UNAUTHORIZED');
+      const provider = await Provider.findOne({ email: email.toLowerCase() }).select('+password');
+      if (provider) {
+        // Check if provider is active
+        if (!provider.isActive) {
+          return error(res, 401, 'Account is deactivated', [], 'UNAUTHORIZED');
+        }
+
+        // Verify password
+        const isPasswordValid = await provider.comparePassword(password);
+        if (!isPasswordValid) {
+          return error(res, 401, 'Invalid email or password', [], 'UNAUTHORIZED');
+        }
+
+        // Generate token (use provider._id but mark as provider role)
+        const token = generateToken(provider._id);
+
+        // Return provider data (without password) with clean structure
+        const providerResponse = {
+          _id: provider._id,
+          // Personal info
+          firstName: provider.firstName,
+          lastName: provider.lastName,
+          email: provider.email,
+          phone: provider.phone,
+          age: provider.age,
+          profileImage: provider.profileImage,
+          // Account info
+          role: provider.role,
+          isVerified: provider.isVerified,
+          isActive: provider.isActive,
+          rating: provider.rating,
+          // Provider-specific fields
+          experienceYears: provider.experienceYears,
+          languages: provider.languages,
+          hourlyRate: provider.hourlyRate,
+          services: provider.services,
+          location: provider.location,
+          totalBookings: provider.totalBookings,
+          completedBookings: provider.completedBookings,
+          // Addresses
+          addresses: provider.addresses,
+          // Metadata
+          createdAt: provider.createdAt
+        };
+
+        return ok(res, { token, user: providerResponse }, 'Login successful');
+      }
     }
 
-    // Check if user is active
-    if (!user.isActive) {
-      return error(res, 401, 'Account is deactivated', [], 'UNAUTHORIZED');
+    // If we found a user in the users collection
+    if (user) {
+      // Check if user is active
+      if (!user.isActive) {
+        return error(res, 401, 'Account is deactivated', [], 'UNAUTHORIZED');
+      }
+
+      // Verify password
+      const isPasswordValid = await user.comparePassword(password);
+      if (!isPasswordValid) {
+        return error(res, 401, 'Invalid email or password', [], 'UNAUTHORIZED');
+      }
+
+      // Generate token
+      const token = generateToken(user._id);
+
+      // Return user data (without password) with clean structure
+      const userResponse = {
+        _id: user._id,
+        // Personal info
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+        age: user.age,
+        profileImage: user.profileImage,
+        // Account info
+        role: user.role,
+        isVerified: user.isVerified,
+        isActive: user.isActive,
+        rating: user.rating,
+        // Addresses
+        addresses: user.addresses,
+        // Metadata
+        createdAt: user.createdAt
+      };
+
+      return ok(res, { token, user: userResponse }, 'Login successful');
     }
 
-    // Verify password
-    const isPasswordValid = await user.comparePassword(password);
-    if (!isPasswordValid) {
-      return error(res, 401, 'Invalid email or password', [], 'UNAUTHORIZED');
-    }
-
-    // Generate token
-    const token = generateToken(user._id);
-
-        // Return user data (without password) with clean structure
-    const userResponse = {
-      _id: user._id,
-      // Personal info
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      phone: user.phone,
-      age: user.age,
-      profileImage: user.profileImage,
-      // Account info
-      role: user.role,
-      isVerified: user.isVerified,
-      isActive: user.isActive,
-      rating: user.rating,
-      // Addresses
-      addresses: user.addresses,
-      // Metadata
-      createdAt: user.createdAt
-    };
-
-    return ok(res, { token, user: userResponse }, 'Login successful');
+    // If we reach here, no user or provider was found
+    return error(res, 401, 'Invalid email or password', [], 'UNAUTHORIZED');
 });
 
 // Validate token
@@ -243,25 +301,58 @@ const validateToken = asyncHandler(async (req, res) => {
     // User is already verified by auth middleware
     const user = req.user;
 
-    return ok(res, {
-      valid: true,
-      user: {
-        _id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-        profileImage: user.profileImage,
-        address: user.address,
-  addresses: user.addresses,
-        age: user.age,
-        isVerified: user.isVerified,
-        isActive: user.isActive,
-        rating: user.rating,
-        createdAt: user.createdAt
-      }
-    }, 'Token valid');
+    // Check if this is a provider (from providers collection) or regular user
+    if (user.role === 'provider' && user.experienceYears !== undefined) {
+      // This is a provider from the providers collection
+      return ok(res, {
+        valid: true,
+        user: {
+          _id: user._id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+          profileImage: user.profileImage,
+          age: user.age,
+          isVerified: user.isVerified,
+          isActive: user.isActive,
+          rating: user.rating,
+          // Provider-specific fields
+          experienceYears: user.experienceYears,
+          languages: user.languages,
+          hourlyRate: user.hourlyRate,
+          services: user.services,
+          location: user.location,
+          totalBookings: user.totalBookings,
+          completedBookings: user.completedBookings,
+          // Addresses
+          addresses: user.addresses,
+          createdAt: user.createdAt
+        }
+      }, 'Token valid');
+    } else {
+      // This is a regular user from the users collection
+      return ok(res, {
+        valid: true,
+        user: {
+          _id: user._id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+          profileImage: user.profileImage,
+          address: user.address,
+          addresses: user.addresses,
+          age: user.age,
+          isVerified: user.isVerified,
+          isActive: user.isActive,
+          rating: user.rating,
+          createdAt: user.createdAt
+        }
+      }, 'Token valid');
+    }
 });
 
 // Logout user (client-side token removal)
@@ -274,27 +365,63 @@ const logout = asyncHandler(async (req, res) => {
 // Get current user profile
 const getProfile = asyncHandler(async (req, res) => {
     const user = req.user;
-    const userResponse = {
-      _id: user._id,
-      // Personal info
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      pendingEmail: user.pendingEmail,
-      phone: user.phone,
-      age: user.age,
-      profileImage: user.profileImage,
-      // Account info
-      role: user.role,
-      isVerified: user.isVerified,
-      isActive: user.isActive,
-      rating: user.rating,
-      // Addresses
-      addresses: user.addresses,
-      // Metadata
-      createdAt: user.createdAt
-    };
-    return ok(res, userResponse, 'Profile fetched');
+
+    // Check if this is a provider (from providers collection) or regular user
+    if (user.role === 'provider' && user.experienceYears !== undefined) {
+      // This is a provider from the providers collection
+      const providerResponse = {
+        _id: user._id,
+        // Personal info
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        pendingEmail: user.pendingEmail,
+        phone: user.phone,
+        age: user.age,
+        profileImage: user.profileImage,
+        // Account info
+        role: user.role,
+        isVerified: user.isVerified,
+        isActive: user.isActive,
+        rating: user.rating,
+        // Provider-specific fields
+        experienceYears: user.experienceYears,
+        languages: user.languages,
+        hourlyRate: user.hourlyRate,
+        services: user.services,
+        location: user.location,
+        totalBookings: user.totalBookings,
+        completedBookings: user.completedBookings,
+        // Addresses
+        addresses: user.addresses,
+        // Metadata
+        createdAt: user.createdAt
+      };
+      return ok(res, providerResponse, 'Profile fetched');
+    } else {
+      // This is a regular user from the users collection
+      const userResponse = {
+        _id: user._id,
+        // Personal info
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        pendingEmail: user.pendingEmail,
+        phone: user.phone,
+        age: user.age,
+        profileImage: user.profileImage,
+        // Account info
+        role: user.role,
+        isVerified: user.isVerified,
+        isActive: user.isActive,
+        rating: user.rating,
+        // Addresses
+        addresses: user.addresses,
+        // Metadata
+        createdAt: user.createdAt
+      };
+      return ok(res, userResponse, 'Profile fetched');
+    }
 });
 
 // Delete account (user can delete their own account)

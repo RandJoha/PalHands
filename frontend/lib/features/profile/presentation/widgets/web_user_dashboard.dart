@@ -220,6 +220,46 @@ class _WebUserDashboardState extends State<WebUserDashboard> {
           // Language toggle and user menu
           Row(
             children: [
+              // Back to Main Menu Button
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.pushNamed(context, '/home');
+                  },
+                  borderRadius: BorderRadius.circular(8.r),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.home,
+                        size: 16.sp,
+                        color: AppColors.primary,
+                      ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        AppStrings.getString('backToMainMenu', languageService.currentLanguage),
+                        style: GoogleFonts.cairo(
+                          fontSize: 12.sp,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              SizedBox(width: 16.w),
+              
               // Language toggle
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),

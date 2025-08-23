@@ -3104,6 +3104,11 @@ class AppStrings {
     'ar': 'الذهاب إلى لوحة التحكم',
   };
 
+  static const Map<String, String> backToMainMenu = {
+    'en': 'Back to Main Menu',
+    'ar': 'العودة للقائمة الرئيسية',
+  };
+
   static const Map<String, String> notifications = {
     'en': 'Notifications',
     'ar': 'الإشعارات',
@@ -5009,6 +5014,7 @@ class AppStrings {
       'collapse': collapse,
       'logout': logout,
       'goToDashboard': goToDashboard,
+      'backToMainMenu': backToMainMenu,
       'notifications': notifications,
       'palestinianHeritage': palestinianHeritage,
       'connectingCommunities': connectingCommunities,

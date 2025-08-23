@@ -174,9 +174,19 @@ Frontend wiring
   - [ ] FE: Booking details view → GET /bookings/:id
   - [ ] FE: Actions per status (cancel if allowed)
 - Provider Dashboard → Bookings
-  - [ ] FE: List bookings for my services; role-aware view
-  - [ ] FE: Accept/Reject/Complete → PUT :id/status with correct next state
-  - [ ] FE: Realtime optional (deferred; see Phase 7)
+  - [ ] FE: List bookings for my services → GET /bookings/mine (provider context)
+  - [ ] FE: Accept/Reject/Update status → PUT /bookings/:id/status
+  - [ ] FE: Provider-specific actions (reschedule, add notes)
+
+**✅ RESOLVED: Frontend Compilation Issue**
+- **BookingsScreen**: Successfully recreated and now compiles without errors
+- **Import Issues**: Fixed package import paths and dependency resolution
+- **Frontend Status**: Ready for testing and integration with backend APIs
+
+**⚠️ CURRENT BLOCKER: Provider Authentication Integration**
+- **Status**: Provider login working but needs frontend integration
+- **Backend**: Authentication system updated to handle both User and Provider models
+- **Frontend**: Needs to be updated to use real backend data instead of mock data
 
 QA
 - [ ] E2E create/list/status-change; ownership/role guard failures rendered properly

@@ -126,6 +126,19 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
         ],
       ),
       actions: [
+        // Back to Main Menu Button
+        IconButton(
+          onPressed: () {
+            Navigator.pushNamed(context, '/home');
+          },
+          icon: const Icon(
+            Icons.home,
+            color: AppColors.primary,
+            size: 24,
+          ),
+          tooltip: 'Back to Main Menu',
+        ),
+        
         // Notifications
         IconButton(
           onPressed: () {

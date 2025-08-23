@@ -158,6 +158,19 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
           ],
         ),
         actions: [
+          // Back to Main Menu Button
+          IconButton(
+            onPressed: () {
+              Navigator.pushNamed(context, '/home');
+            },
+            icon: const Icon(
+              Icons.home,
+              color: Colors.white,
+              size: 24,
+            ),
+            tooltip: 'Back to Main Menu',
+          ),
+          
           // Language toggle button
           Container(
             margin: const EdgeInsets.only(right: 4),
@@ -609,72 +622,111 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
           ],
         ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Back to Main Menu Button
           if (_isSidebarExpanded) ...[
-            // User avatar
             Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Icon(
-                Icons.person,
-                color: AppColors.white,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 12),
-            // User info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppStrings.getString('providerName', languageService.currentLanguage),
-                    style: GoogleFonts.cairo(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.white,
-                    ),
-                  ),
-                  Text(
-                    AppStrings.getString('serviceProvider', languageService.currentLanguage),
-                    style: GoogleFonts.cairo(
-                      fontSize: 12,
-                      color: AppColors.white.withValues(alpha: 0.8),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ] else ...[
-            // Collapsed header
-            Expanded(
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(20),
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/home');
+                },
+                icon: const Icon(
+                  Icons.home,
+                  color: Colors.white,
+                  size: 16,
                 ),
-                child: const Icon(
-                  Icons.person,
-                  color: AppColors.white,
-                  size: 24,
+                label: Text(
+                  AppStrings.getString('backToMainMenu', languageService.currentLanguage),
+                  style: GoogleFonts.cairo(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.white, width: 1),
+                  backgroundColor: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
             ),
+            const SizedBox(height: 16),
           ],
-          // Toggle button
-          IconButton(
-            onPressed: () => setState(() => _isSidebarExpanded = !_isSidebarExpanded),
-            icon: Icon(
-              _isSidebarExpanded ? Icons.chevron_left : Icons.chevron_right,
-              color: AppColors.white,
-            ),
+          // Existing header content
+          Row(
+            children: [
+              if (_isSidebarExpanded) ...[
+                // User avatar
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Icon(
+                    Icons.person,
+                    color: AppColors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // User info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        AppStrings.getString('providerName', languageService.currentLanguage),
+                        style: GoogleFonts.cairo(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.white,
+                        ),
+                      ),
+                      Text(
+                        AppStrings.getString('serviceProvider', languageService.currentLanguage),
+                        style: GoogleFonts.cairo(
+                          fontSize: 12,
+                          color: AppColors.white.withValues(alpha: 0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ] else ...[
+                // Collapsed header
+                Expanded(
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Icon(
+                      Icons.person,
+                      color: AppColors.white,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ],
+              // Toggle button
+              IconButton(
+                onPressed: () => setState(() => _isSidebarExpanded = !_isSidebarExpanded),
+                icon: Icon(
+                  _isSidebarExpanded ? Icons.chevron_left : Icons.chevron_right,
+                  color: AppColors.white,
+                ),
+              ),
+            ],
           ),
         ],
       ),

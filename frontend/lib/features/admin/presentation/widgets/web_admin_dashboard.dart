@@ -222,6 +222,21 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
             padding: EdgeInsets.symmetric(horizontal: screenWidth > 1400 ? 32 : 24),
             child: Row(
               children: [
+                // Back to Main Menu Button
+                IconButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/home');
+                  },
+                  icon: Icon(
+                    Icons.home,
+                    size: screenWidth > 1400 ? 26 : 24,
+                    color: AppColors.primary,
+                  ),
+                  tooltip: 'Back to Main Menu',
+                ),
+
+                SizedBox(width: screenWidth > 1400 ? 20 : 16),
+
                 // Notifications
                 IconButton(
                   onPressed: () {
@@ -236,7 +251,7 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
                         top: 0,
                         child: Container(
                           width: 10,
-                          height: 10,
+                  height: 10,
                           decoration: const BoxDecoration(
                             color: AppColors.primary,
                             shape: BoxShape.circle,
