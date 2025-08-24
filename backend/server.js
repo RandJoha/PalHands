@@ -7,13 +7,14 @@ const app = require('./src/app-minimal');
 const { startMediaCleanupScheduler } = require('./src/services/cleanup');
 
 const PORT = env.PORT || 3000;
+const HOST = '127.0.0.1'; // Force IPv4 binding
 
 (async () => {
   await connectDB();
-  app.listen(PORT, () => {
-    console.log(`🚀 PalHands server running on port ${PORT}`);
+  app.listen(PORT, HOST, () => {
+    console.log(`🚀 PalHands server running on http://${HOST}:${PORT}`);
     console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);
+    console.log(`🌐 Health check: http://${HOST}:${PORT}/api/health`);
   });
   startMediaCleanupScheduler();
 })().catch((err) => {
