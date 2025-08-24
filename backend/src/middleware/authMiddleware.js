@@ -1,0 +1,146 @@
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+const Admin = require('../models/Admin');
+
+// Core: verify token, load user, ensure active
+const authenticate = async (req, res, next) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ success: false, message: 'Access denied. No token provided.' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId).select('-password');
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Invalid token. User not found.' });
+    }
+    if (!user.isActive) {
+      return res.status(401).json({ success: false, message: 'Account is deactivated.' });
+    }
+
+    req.user = user;
+    next();
+  } catch (error) {
+    console.error('Auth error:', error);
+    return res.status(401).json({ success: false, message: 'Invalid token.' });
+  }
+};
+
+// Role guard (e.g., ['admin'])
+const requireRole = (roles) => (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ success: false, message: 'Authentication required.' });
+  }
+  if (!roles.includes(req.user.role)) {
+    return res.status(403).json({ success: false, message: `Access denied. ${roles.join(' or ')} role required.` });
+  }
+  next();
+};
+
+// Extra: account verification guard
+const requireVerification = (req, res, next) => {
+  if (!req.user?.isVerified) {
+    return res.status(403).json({ success: false, message: 'Account verification required.' });
+  }
+  next();
+};
+
+// Ownership guard for resources
+const requireOwnership = (modelName) => {
+  return async (req, res, next) => {
+    try {
+      const Model = require(`../models/${modelName}`);
+      const resource = await Model.findById(req.params.id);
+      if (!resource) {
+        return res.status(404).json({ success: false, message: `${modelName} not found.` });
+      }
+      if (req.user.role === 'admin') {
+        req.resource = resource;
+        return next();
+      }
+      const ownerField = modelName === 'User' ? '_id' : 'user';
+      if (resource[ownerField].toString() !== req.user._id.toString()) {
+        return res.status(403).json({ success: false, message: 'Access denied. You can only access your own resources.' });
+      }
+      req.resource = resource;
+      next();
+    } catch (error) {
+      console.error('Ownership check error:', error);
+      res.status(500).json({ success: false, message: 'Internal server error.' });
+    }
+  };
+};
+
+// Admin: ensure authenticated + admin role + active admin record
+const adminAuth = async (req, res, next) => {
+  try {
+    await authenticate(req, res, async () => {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ success: false, message: 'Access denied. Admin privileges required.' });
+      }
+      const adminRecord = await Admin.findOne({ user: req.user._id });
+      if (!adminRecord || !adminRecord.isActive) {
+        return res.status(403).json({ success: false, message: 'Admin access not granted or account deactivated.' });
+      }
+      req.admin = adminRecord;
+      next();
+    });
+  } catch (error) {
+    console.error('Admin auth error:', error);
+    return res.status(401).json({ success: false, message: 'Invalid token.' });
+  }
+};
+
+// Admin permission guard
+const checkAdminPermission = (permission) => (req, res, next) => {
+  if (!req.admin) {
+    return res.status(403).json({ success: false, message: 'Admin access required.' });
+  }
+  if (req.admin.role === 'super_admin') return next();
+  if (!req.admin.permissions[permission]) {
+    return res.status(403).json({ success: false, message: `Permission denied. ${permission} access required.` });
+  }
+  next();
+};
+
+// Admin action logger
+// Usage: logAdminAction('user_update', 'user', (req)=>req.params.userId, (req)=>({ before, after }))
+const logAdminAction = (action, targetType, getTargetId, getDetails) => {
+  return (req, res, next) => {
+    const originalSend = res.send;
+    res.send = function(data) {
+      setTimeout(async () => {
+        try {
+          const AdminAction = require('../models/AdminAction');
+          const targetId = typeof getTargetId === 'function' ? getTargetId(req, res) : getTargetId;
+          const detailsBase = typeof getDetails === 'function' ? (getDetails(req, res) || {}) : (getDetails || {});
+          await AdminAction.create({
+            admin: req.user?._id,
+            action,
+            targetType,
+            targetId,
+            details: { ...detailsBase, responseStatus: res.statusCode },
+            ipAddress: req.ip,
+            userAgent: req.get('User-Agent'),
+            status: res.statusCode < 400 ? 'success' : 'failed'
+          });
+        } catch (error) {
+          console.error('Failed to log admin action:', error);
+        }
+      }, 0);
+      return originalSend.call(this, data);
+    };
+    next();
+  };
+};
+
+module.exports = {
+  authenticate,
+  requireRole,
+  requireVerification,
+  requireOwnership,
+  adminAuth,
+  checkAdminPermission,
+  logAdminAction
+};
