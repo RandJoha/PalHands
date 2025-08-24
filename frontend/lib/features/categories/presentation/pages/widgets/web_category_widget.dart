@@ -5,6 +5,7 @@ import '../../../../../core/constants/app_strings.dart';
 import '../../../../../shared/services/language_service.dart';
 import '../../../../../shared/widgets/shared_navigation.dart';
 import '../../../../../shared/widgets/shared_hero_section.dart';
+import '../../../../../shared/widgets/booking_dialog.dart';
 import '../../../../../shared/services/responsive_service.dart';
 import '../../../../../shared/services/provider_service.dart';
 import '../../../../../shared/models/provider.dart';
@@ -1200,7 +1201,15 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
-                    // TODO: Navigate to booking flow with provider
+                    showDialog(
+                      context: context,
+                      builder: (context) => BookingDialog(
+                        provider: p,
+                        selectedService: _selectedServiceKeys.isNotEmpty 
+                            ? _selectedServiceKeys.first 
+                            : null,
+                      ),
+                    );
                   },
                   child: Text(AppStrings.getString('bookNow', lang)),
                 ),

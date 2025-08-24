@@ -114,7 +114,6 @@ class SharedNavigation extends StatelessWidget {
       {'key': 'home', 'route': '/home'},
       {'key': 'aboutUs', 'route': '/about'},
       {'key': 'ourServices', 'route': '/categories'},
-      {'key': 'bookings', 'route': '/bookings'},
       {'key': 'faqs', 'route': '/faqs'},
       {'key': 'contactUs', 'route': '/contact'},
     ];
@@ -398,10 +397,10 @@ class SharedMobileDrawer extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Expanded(
+                    const Expanded(
                       child: Text(
                         'PalHands', // Brand stays in English
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16, // Reduced from 18
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -484,17 +483,6 @@ class SharedMobileDrawer extends StatelessWidget {
                         Navigator.pushNamed(context, '/categories');
                       },
                       currentPage == 'ourServices',
-                      languageService,
-                    ),
-                    _buildDrawerItem(
-                      context,
-                      Icons.book_online,
-                      AppStrings.getString('bookings', languageService.currentLanguage),
-                      () {
-                        Navigator.pop(context);
-                        Navigator.pushNamed(context, '/bookings');
-                      },
-                      currentPage == 'bookings',
                       languageService,
                     ),
                     _buildDrawerItem(

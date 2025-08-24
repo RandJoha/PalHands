@@ -601,7 +601,7 @@ class _ProfileSettingsRichWidgetState extends State<ProfileSettingsRichWidget> {
         : null;
     String type = (current?['type'] ?? 'home').toString();
     // Cities whitelist aligned with backend
-    final cities = const [
+    const cities = [
       'jerusalem','ramallah','nablus','hebron','bethlehem','jericho','tulkarm','qalqilya','jenin','salfit','tubas',
       'gaza','rafah','khan yunis','deir al-balah','north gaza'
     ];

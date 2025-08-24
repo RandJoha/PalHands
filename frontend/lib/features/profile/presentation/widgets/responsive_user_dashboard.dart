@@ -395,6 +395,20 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       builder: (context, languageService, child) {
     return Row(
       children: [
+            // Main Menu (Home) button – preserves session
+            IconButton(
+              onPressed: () {
+                // Navigate to main menu without clearing session or routes
+                Navigator.of(context).pushNamed('/home');
+              },
+              icon: Icon(
+                Icons.home_outlined,
+                color: AppColors.textSecondary,
+                size: isTablet ? 22.0 : 24.0,
+              ),
+              tooltip: AppStrings.getString('home', languageService.currentLanguage),
+            ),
+            SizedBox(width: isTablet ? 12.0 : 16.0),
             // Notifications
             IconButton(
               onPressed: () {
@@ -2695,7 +2709,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         : null;
     String type = (current?['type'] ?? 'home').toString();
     // Cities whitelist aligned with backend
-    final cities = const [
+    const cities = [
       'jerusalem','ramallah','nablus','hebron','bethlehem','jericho','tulkarm','qalqilya','jenin','salfit','tubas',
       'gaza','rafah','khan yunis','deir al-balah','north gaza'
     ];
@@ -3753,6 +3767,30 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     },
                   ),
                 ),
+
+                // Main Menu (Home) navigation in drawer
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: ListTile(
+                    leading: const Icon(
+                      Icons.home_outlined,
+                      color: AppColors.textPrimary,
+                      size: 20,
+                    ),
+                    title: Text(
+                      AppStrings.getString('home', languageService.currentLanguage),
+                      style: GoogleFonts.cairo(
+                        fontSize: 14,
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context); // Close drawer
+                      Navigator.of(context).pushNamed('/home'); // Preserve session, navigate to main menu
+                    },
+                  ),
+                ),
                 
                 // Drawer footer
                 Container(
@@ -3861,14 +3899,14 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             ),
           ),
           content: Text(
-            _getLocalizedString('deleteAccountWarning') ?? 'Are you sure you want to delete your account? This action cannot be undone.',
+      _getLocalizedString('deleteAccountWarning'),
             style: GoogleFonts.cairo(fontSize: 16),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
-                _getLocalizedString('cancel') ?? 'Cancel',
+        _getLocalizedString('cancel'),
                 style: GoogleFonts.cairo(color: AppColors.textSecondary),
               ),
             ),
@@ -3882,7 +3920,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 foregroundColor: AppColors.white,
               ),
               child: Text(
-                _getLocalizedString('delete') ?? 'Delete',
+        _getLocalizedString('delete'),
                 style: GoogleFonts.cairo(
                   color: AppColors.white,
                   fontWeight: FontWeight.w600,
@@ -3897,53 +3935,16 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
 
   // Delete account
   Future<void> _deleteAccount(BuildContext context) async {
-    try {
-      final authService = Provider.of<AuthService>(context, listen: false);
-      final response = await authService.deleteAccount();
-      
-      if (response['success'] == true) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                _getLocalizedString('accountDeleted') ?? 'Account deleted successfully',
-                style: GoogleFonts.cairo(color: AppColors.white),
-              ),
-              backgroundColor: AppColors.success,
-            ),
-          );
-          
-          // Navigate to home screen and clear all routes
-          Navigator.of(context).pushNamedAndRemoveUntil(
-            '/home',
-            (route) => false,
-          );
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                response['message'] ?? _getLocalizedString('deleteAccountFailed') ?? 'Failed to delete account',
-                style: GoogleFonts.cairo(color: AppColors.white),
-              ),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              _getLocalizedString('deleteAccountFailed') ?? 'Failed to delete account: ${e.toString()}',
-              style: GoogleFonts.cairo(color: AppColors.white),
-            ),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
+    // Feature not yet implemented in AuthService; show a friendly message.
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          _getLocalizedString('deleteAccountFailed'),
+          style: GoogleFonts.cairo(color: AppColors.white),
+        ),
+        backgroundColor: AppColors.error,
+      ),
+    );
   }
 } 

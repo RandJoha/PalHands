@@ -367,9 +367,9 @@ class WebAboutWidget extends StatelessWidget {
           topRight: Radius.circular(24),
         ),
       ),
-      child: Column(
+      child: const Column(
         children: [
-          const SizedBox.shrink(),
+          SizedBox.shrink(),
         ],
       ),
     );

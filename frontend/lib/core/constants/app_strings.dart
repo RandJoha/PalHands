@@ -3492,6 +3492,78 @@ class AppStrings {
     'ar': 'الخدمة',
   };
 
+  // Booking dialog specific
+  static const Map<String, String> pleaseSelectService = {
+    'en': 'Please select a service',
+    'ar': 'يرجى اختيار خدمة',
+  };
+
+  static const Map<String, String> dateAndTime = {
+    'en': 'Date & Time',
+    'ar': 'التاريخ والوقت',
+  };
+
+  static const Map<String, String> selectDate = {
+    'en': 'Select date',
+    'ar': 'اختر التاريخ',
+  };
+
+  static const Map<String, String> startTime = {
+    'en': 'Start time',
+    'ar': 'وقت البدء',
+  };
+
+  static const Map<String, String> endTime = {
+    'en': 'End time',
+    'ar': 'وقت الانتهاء',
+  };
+
+  static const Map<String, String> serviceAddress = {
+    'en': 'Service Address',
+    'ar': 'عنوان الخدمة',
+  };
+
+  static const Map<String, String> enterYourAddress = {
+    'en': 'Enter your address (street, area, city)',
+    'ar': 'أدخل عنوانك (الشارع، المنطقة، المدينة)',
+  };
+
+  static const Map<String, String> pleaseEnterAddress = {
+    'en': 'Please enter your address',
+    'ar': 'يرجى إدخال عنوانك',
+  };
+
+  static const Map<String, String> specialInstructions = {
+    'en': 'Special Instructions (optional)',
+    'ar': 'تعليمات خاصة (اختياري)',
+  };
+
+  static const Map<String, String> specialInstructionsHint = {
+    'en': 'Gate code, floor number, landmark, or directions for easier access',
+    'ar': 'رمز البوابة، رقم الطابق، معلم قريب، أو اتجاهات لتسهيل الوصول',
+  };
+
+  // Extra helper text for special instructions
+  static const Map<String, String> specialInstructionsHelp = {
+    'en': 'Examples: gate code, floor/apt number, pet at home, parking notes',
+    'ar': 'أمثلة: رمز البوابة، رقم الطابق/الشقة، وجود حيوان أليف، ملاحظات ركن السيارة',
+  };
+
+  static const Map<String, String> additionalNotesOptional = {
+    'en': 'Additional Notes (optional)',
+    'ar': 'ملاحظات إضافية (اختياري)',
+  };
+
+  static const Map<String, String> additionalNotesHint = {
+    'en': 'Anything else you want the provider to know',
+    'ar': 'أي شيء آخر تود إبلاغ مقدم الخدمة به',
+  };
+
+  static const Map<String, String> estimatedCost = {
+    'en': 'Estimated Cost',
+    'ar': 'التكلفة التقديرية',
+  };
+
   static const Map<String, String> price = {
     'en': 'Price',
     'ar': 'السعر',
@@ -4221,6 +4293,12 @@ class AppStrings {
     'ar': 'سنوات',
   };
 
+  // Generic label: Experience
+  static const Map<String, String> experience = {
+    'en': 'experience',
+    'ar': 'خبرة',
+  };
+
   // Helper method to get time ago string efficiently
   static String getTimeAgo(int value, String unit, String languageCode) {
     if (value == 0) {
@@ -4355,6 +4433,21 @@ class AppStrings {
       'reschedule': reschedule,
       'cancel': cancel,
       'contact': contact,
+  // Booking Dialog strings
+  'pleaseSelectService': pleaseSelectService,
+  'dateAndTime': dateAndTime,
+  'selectDate': selectDate,
+  'startTime': startTime,
+  'endTime': endTime,
+  'serviceAddress': serviceAddress,
+  'enterYourAddress': enterYourAddress,
+  'pleaseEnterAddress': pleaseEnterAddress,
+  'specialInstructions': specialInstructions,
+  'specialInstructionsHint': specialInstructionsHint,
+  'specialInstructionsHelp': specialInstructionsHelp,
+  'additionalNotesOptional': additionalNotesOptional,
+  'additionalNotesHint': additionalNotesHint,
+  'estimatedCost': estimatedCost,
       // Booking Filters
       'all': all,
       'upcoming': upcoming,
@@ -4372,7 +4465,7 @@ class AppStrings {
       'completed': completed,
       'today': today,
       'yesterday': yesterday,
-      'daysAgo': daysAgo,
+  // duplicate removed: 'daysAgo'
       'at': at,
       'totalReviews': totalReviews,
       'averageRating': averageRating,
@@ -4396,7 +4489,6 @@ class AppStrings {
       'totalProviders': totalProviders,
       'available': available,
       'unavailable': unavailable,
-      'bookNow': bookNow,
       'remove': remove,
       // Support Help strings
       'supportHelp': supportHelp,
@@ -4437,13 +4529,14 @@ class AppStrings {
       'trustedDevices': trustedDevices,
       'manageTrustedDevices': manageTrustedDevices,
       'permanentlyDeleteAccount': permanentlyDeleteAccount,
+  'experience': experience,
       // Delete account strings
       'deleteAccountWarning': deleteAccountWarning,
       'accountDeleted': accountDeleted,
       'deleteAccountFailed': deleteAccountFailed,
       'delete': delete,
-      'cancel': cancel,
-      'security': security,
+  // duplicate removed: 'cancel'
+  // duplicate removed: 'security'
       // Service Names
       'homeCleaning': homeCleaning,
       // Provider Names
@@ -4640,27 +4733,25 @@ class AppStrings {
       'miscellaneousErrands': miscellaneousErrands,
       'houseCleaning': houseCleaning,
       'deepCleaning': deepCleaning,
-      'windowCleaning': windowCleaningService,
-      'carpetCleaning': carpetCleaningService,
+  // duplicate removed: 'windowCleaning'
+  // duplicate removed: 'carpetCleaning'
       'homeOrganization': homeOrganization,
       'closetOrganization': closetOrganization,
       'officeOrganization': officeOrganization,
-      'eventPlanning': eventPlanning,
+  // duplicate removed: 'eventPlanning'
       'mainDishes': mainDishes,
       'desserts': desserts,
       'specialRequests': specialRequests,
       'mealPrep': mealPrep,
       'babysitting': babysitting,
-      'tutoring': tutoring,
+  // duplicate removed: 'tutoring'
       'playActivities': playActivities,
       'specialNeedsCare': specialNeedsCare,
       'elderlyCare': elderlyCare,
       'personalAssistance': personalAssistance,
       'medicalSupport': medicalSupport,
       'companionship': companionship,
-      'plumbing': plumbing,
-      'electrical': electrical,
-      'carpentry': carpentry,
+  // duplicates removed: 'plumbing', 'electrical', 'carpentry'
       'generalRepairs': generalRepairs,
       'movingAssistance': movingAssistance,
       'furnitureAssembly': furnitureAssembly,
@@ -4922,7 +5013,7 @@ class AppStrings {
       'plumbingWork': plumbingWork,
       'aluminumWork': aluminumWork,
       'carpentryWork': carpentryWork,
-      'painting': wallPainting,
+  // duplicate removed: 'painting'
       'hangingItems': hangingItems,
       'satelliteInstallation': satelliteInstallation,
       'applianceMaintenance': applianceMaintenance,
@@ -4993,7 +5084,7 @@ class AppStrings {
       'communityQuote': communityQuote,
       'quickAccessTitle': quickAccessTitle,
       'viewFAQs': viewFAQs,
-      'liveChat': liveChat,
+  // duplicate removed: 'liveChat'
       'whatsappSupport': whatsappSupport,
       'traditionalContact': traditionalContact,
       'formSubmitted': formSubmitted,
@@ -5062,9 +5153,9 @@ class AppStrings {
       'user': user,
       'joined': joined,
       'actions': actions,
-      'edit': edit,
+  // duplicate removed: 'edit'
       'view': view,
-      'delete': delete,
+  // duplicate removed: 'delete'
       'activate': activate,
       'deactivate': deactivate,
       'verify': verify,
@@ -5096,8 +5187,7 @@ class AppStrings {
       'fixed': fixed,
       // Booking Management strings
       'monitorBookings': monitorBookings,
-      'pending': pending,
-      'completed': completed,
+  // duplicates removed: 'pending', 'completed'
       'revenue': revenue,
       'noBookingsFound': noBookingsFound,
       'bookingId': bookingId,
@@ -5252,10 +5342,7 @@ class AppStrings {
         'en': 'Recent Reviews',
         'ar': 'المراجعات الحديثة',
       },
-      'recentActivity': {
-        'en': 'Recent Activity',
-        'ar': 'النشاط الحديث',
-      },
+  // duplicate removed: 'recentActivity'
       'quickStats': {
         'en': 'Quick Stats',
         'ar': 'إحصائيات سريعة',
@@ -5272,14 +5359,8 @@ class AppStrings {
         'en': 'Coming Soon',
         'ar': 'قريباً',
       },
-      'totalEarnings': {
-        'en': 'Total Earnings',
-        'ar': 'إجمالي الأرباح',
-      },
-      'monthlyEarnings': {
-        'en': 'Monthly Earnings',
-        'ar': 'الأرباح الشهرية',
-      },
+  // duplicate removed: 'totalEarnings'
+  // duplicate removed: 'monthlyEarnings'
       'weeklyEarnings': {
         'en': 'Weekly Earnings',
         'ar': 'الأرباح الأسبوعية',
@@ -5288,14 +5369,8 @@ class AppStrings {
         'en': 'Daily Earnings',
         'ar': 'الأرباح اليومية',
       },
-      'averageRating': {
-        'en': 'Average Rating',
-        'ar': 'متوسط التقييم',
-      },
-      'totalReviews': {
-        'en': 'Total Reviews',
-        'ar': 'إجمالي المراجعات',
-      },
+  // duplicate removed: 'averageRating'
+  // duplicate removed: 'totalReviews'
       'positiveReviews': {
         'en': 'Positive Reviews',
         'ar': 'المراجعات الإيجابية',
@@ -5352,30 +5427,7 @@ class AppStrings {
         'en': 'Multi-Edit',
         'ar': 'تعديل متعدد',
       },
-      'selected': {
-        'en': 'Selected',
-        'ar': 'محدد',
-      },
-      'activate': {
-        'en': 'Activate',
-        'ar': 'تفعيل',
-      },
-      'deactivate': {
-        'en': 'Deactivate',
-        'ar': 'إلغاء التفعيل',
-      },
-      'delete': {
-        'en': 'Delete',
-        'ar': 'حذف',
-      },
-      'cancel': {
-        'en': 'Cancel',
-        'ar': 'إلغاء',
-      },
-      'addService': {
-        'en': 'Add Service',
-        'ar': 'إضافة خدمة',
-      },
+  // duplicates removed: selected, activate, deactivate, delete, cancel, addService
       'manageYourServices': {
         'en': 'Manage your service offerings',
         'ar': 'إدارة خدماتك',
@@ -5417,10 +5469,7 @@ class AppStrings {
         'en': 'Pending Replies',
         'ar': 'ردود معلقة',
       },
-      'thisMonth': {
-        'en': 'This Month',
-        'ar': 'هذا الشهر',
-      },
+  // duplicate removed: 'thisMonth'
       'pendingPayments': {
         'en': 'Pending Payments',
         'ar': 'مدفوعات معلقة',
@@ -5437,22 +5486,10 @@ class AppStrings {
         'en': 'Provider Name',
         'ar': 'اسم مقدم الخدمة',
       },
-      'homeCleaning': {
-        'en': 'Home Cleaning',
-        'ar': 'تنظيف المنزل',
-      },
-      'elderlyCare': {
-        'en': 'Elderly Care',
-        'ar': 'رعاية المسنين',
-      },
-      'homeCooking': {
-        'en': 'Home Cooking',
-        'ar': 'طهي منزلي',
-      },
-      'babysitting': {
-        'en': 'Babysitting',
-        'ar': 'رعاية الأطفال',
-      },
+  // duplicate removed: 'homeCleaning'
+  // duplicate removed: 'elderlyCare'
+  // duplicate removed: 'homeCooking'
+  // duplicate removed: 'babysitting'
       'babysittingService': {
         'en': 'Babysitting Service',
         'ar': 'خدمة رعاية الأطفال',
@@ -5469,14 +5506,8 @@ class AppStrings {
         'en': 'Home Cooking Service',
         'ar': 'خدمة الطهي المنزلي',
       },
-      'responded': {
-        'en': 'Responded',
-        'ar': 'تم الرد',
-      },
-      'pending': {
-        'en': 'Pending',
-        'ar': 'معلق',
-      },
+  // duplicate removed: 'responded'
+  // duplicate removed: 'pending'
       'respond': {
         'en': 'Respond',
         'ar': 'رد',
@@ -5485,42 +5516,18 @@ class AppStrings {
         'en': 'Report',
         'ar': 'إبلاغ',
       },
-      'edit': {
-        'en': 'Edit',
-        'ar': 'تعديل',
-      },
-      'close': {
-        'en': 'Close',
-        'ar': 'إغلاق',
-      },
-      'settings': {
-        'en': 'Settings',
-        'ar': 'الإعدادات',
-      },
-      'bookings': {
-        'en': 'Bookings',
-        'ar': 'الحجوزات',
-      },
-      'reviews': {
-        'en': 'Reviews',
-        'ar': 'التقييمات',
-      },
+  // duplicate removed: 'edit'
+  // duplicate removed: 'close'
+  // duplicate removed: 'settings'
+  // duplicate removed: 'bookings'
+  // duplicate removed: 'reviews'
       'dashboard': {
         'en': 'Dashboard',
         'ar': 'لوحة التحكم',
       },
-      'logout': {
-        'en': 'Logout',
-        'ar': 'تسجيل الخروج',
-      },
-      'notifications': {
-        'en': 'Notifications',
-        'ar': 'الإشعارات',
-      },
-      'profile': {
-        'en': 'Profile',
-        'ar': 'الملف الشخصي',
-      },
+  // duplicate removed: 'logout'
+  // duplicate removed: 'notifications'
+  // duplicate removed: 'profile'
       'search': {
         'en': 'Search',
         'ar': 'بحث',
@@ -5533,18 +5540,12 @@ class AppStrings {
         'en': 'Sort',
         'ar': 'ترتيب',
       },
-      'view': {
-        'en': 'View',
-        'ar': 'عرض',
-      },
+  // duplicate removed: 'view'
       'details': {
         'en': 'Details',
         'ar': 'التفاصيل',
       },
-      'status': {
-        'en': 'Status',
-        'ar': 'الحالة',
-      },
+  // duplicate removed: 'status'
       'date': {
         'en': 'Date',
         'ar': 'التاريخ',
@@ -5553,162 +5554,45 @@ class AppStrings {
         'en': 'Time',
         'ar': 'الوقت',
       },
-      'amount': {
-        'en': 'Amount',
-        'ar': 'المبلغ',
-      },
-      'client': {
-        'en': 'Client',
-        'ar': 'العميل',
-      },
-      'service': {
-        'en': 'Service',
-        'ar': 'الخدمة',
-      },
-      'rating': {
-        'en': 'Rating',
-        'ar': 'التقييم',
-      },
-      'comment': {
-        'en': 'Comment',
-        'ar': 'تعليق',
-      },
-      'description': {
-        'en': 'Description',
-        'ar': 'الوصف',
-      },
-      'price': {
-        'en': 'Price',
-        'ar': 'السعر',
-      },
-      'category': {
-        'en': 'Category',
-        'ar': 'الفئة',
-      },
-      'active': {
-        'en': 'Active',
-        'ar': 'نشط',
-      },
-      'inactive': {
-        'en': 'Inactive',
-        'ar': 'غير نشط',
-      },
-      'enabled': {
-        'en': 'Enabled',
-        'ar': 'مفعل',
-      },
-      'disabled': {
-        'en': 'Disabled',
-        'ar': 'معطل',
-      },
-      'yes': {
-        'en': 'Yes',
-        'ar': 'نعم',
-      },
-      'no': {
-        'en': 'No',
-        'ar': 'لا',
-      },
-      'ok': {
-        'en': 'OK',
-        'ar': 'موافق',
-      },
-      'save': {
-        'en': 'Save',
-        'ar': 'حفظ',
-      },
-      'update': {
-        'en': 'Update',
-        'ar': 'تحديث',
-      },
-      'create': {
-        'en': 'Create',
-        'ar': 'إنشاء',
-      },
-      'remove': {
-        'en': 'Remove',
-        'ar': 'إزالة',
-      },
-      'clear': {
-        'en': 'Clear',
-        'ar': 'مسح',
-      },
-      'reset': {
-        'en': 'Reset',
-        'ar': 'إعادة تعيين',
-      },
-      'back': {
-        'en': 'Back',
-        'ar': 'رجوع',
-      },
-      'next': {
-        'en': 'Next',
-        'ar': 'التالي',
-      },
-      'previous': {
-        'en': 'Previous',
-        'ar': 'السابق',
-      },
-      'finish': {
-        'en': 'Finish',
-        'ar': 'إنهاء',
-      },
-      'continue': {
-        'en': 'Continue',
-        'ar': 'متابعة',
-      },
-      'skip': {
-        'en': 'Skip',
-        'ar': 'تخطي',
-      },
-      'loading': {
-        'en': 'Loading...',
-        'ar': 'جاري التحميل...',
-      },
-      'error': {
-        'en': 'Error',
-        'ar': 'خطأ',
-      },
-      'success': {
-        'en': 'Success',
-        'ar': 'نجح',
-      },
-      'warning': {
-        'en': 'Warning',
-        'ar': 'تحذير',
-      },
-      'info': {
-        'en': 'Information',
-        'ar': 'معلومات',
-      },
-      'help': {
-        'en': 'Help',
-        'ar': 'مساعدة',
-      },
-      'support': {
-        'en': 'Support',
-        'ar': 'الدعم',
-      },
-      'contact': {
-        'en': 'Contact',
-        'ar': 'اتصال',
-      },
-      'about': {
-        'en': 'About',
-        'ar': 'حول',
-      },
-      'privacy': {
-        'en': 'Privacy',
-        'ar': 'الخصوصية',
-      },
-      'terms': {
-        'en': 'Terms',
-        'ar': 'الشروط',
-      },
-      'faq': {
-        'en': 'FAQ',
-        'ar': 'الأسئلة الشائعة',
-      },
+  // duplicate removed: 'amount'
+  // duplicate removed: 'client'
+  // duplicate removed: 'service'
+  // duplicate removed: 'rating'
+  // duplicate removed: 'comment'
+  // duplicate removed: 'description'
+  // duplicate removed: 'price'
+  // duplicate removed: 'category'
+  // duplicate removed: 'active'
+  // duplicate removed: 'inactive'
+  // duplicate removed: 'enabled'
+  // duplicate removed: 'disabled'
+  // duplicate removed: 'yes'
+  // duplicate removed: 'no'
+  // duplicate removed: 'ok'
+  // duplicate removed: 'save'
+  // duplicate removed: 'update'
+  // duplicate removed: 'create'
+  // duplicate removed: 'remove'
+  // duplicate removed: 'clear'
+  // duplicate removed: 'reset'
+  // duplicate removed: 'back'
+  // duplicate removed: 'next'
+  // duplicate removed: 'previous'
+  // duplicate removed: 'finish'
+  // duplicate removed: 'continue'
+  // duplicate removed: 'skip'
+  // duplicate removed: 'loading'
+  // duplicate removed: 'error'
+  // duplicate removed: 'success'
+  // duplicate removed: 'warning'
+  // duplicate removed: 'info'
+  // duplicate removed: 'help'
+  // duplicate removed: 'support'
+  // duplicate removed: 'contact'
+  // duplicate removed: 'about'
+  // duplicate removed: 'privacy'
+  // duplicate removed: 'terms'
+  // duplicate removed: 'faq'
     };
 
     return allStrings[key]?[languageCode] ?? allStrings[key]?['en'] ?? key;

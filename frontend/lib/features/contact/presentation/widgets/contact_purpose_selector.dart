@@ -52,11 +52,11 @@ class ContactPurposeSelector extends StatelessWidget {
                 }),
                 // If last row has fewer items, fill the space to keep alignment
                 if (rowItems.length < crossAxisCount)
-                  Expanded(
+                  const Expanded(
                     child: SizedBox.shrink(),
                   ),
                 if (!isMobile && rowItems.length == 1)
-                  Expanded(
+                  const Expanded(
                     child: SizedBox.shrink(),
                   ),
               ],

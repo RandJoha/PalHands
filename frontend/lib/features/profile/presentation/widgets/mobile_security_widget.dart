@@ -66,17 +66,17 @@ class _MobileSecurityWidgetState extends State<MobileSecurityWidget> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Delete Account'),
-          content: Text('Are you sure you want to delete your account? This action cannot be undone.'),
+          title: const Text('Delete Account'),
+          content: const Text('Are you sure you want to delete your account? This action cannot be undone.'),
           actions: <Widget>[
             TextButton(
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text('Delete'),
+              child: const Text('Delete'),
               onPressed: () async {
                 Navigator.of(context).pop();
                 await _deleteAccount(context);
@@ -97,7 +97,7 @@ class _MobileSecurityWidgetState extends State<MobileSecurityWidget> {
       if (response['success'] == true) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text('Account deleted successfully'),
               backgroundColor: Colors.green,
             ),

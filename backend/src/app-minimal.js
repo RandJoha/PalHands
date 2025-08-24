@@ -35,13 +35,53 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Auth routes only (the essential one)
+// Essential routes for Phase 3
 try {
   const authRoutes = require('./routes/auth');
   app.use('/api/auth', authRoutes);
   console.log('✅ Auth routes loaded');
 } catch (error) {
   console.error('❌ Auth routes failed:', error.message);
+}
+
+try {
+  const serviceCategoriesRoutes = require('./routes/servicecategories');
+  app.use('/api/servicecategories', serviceCategoriesRoutes);
+  console.log('✅ Service categories routes loaded');
+} catch (error) {
+  console.error('❌ Service categories routes failed:', error.message);
+}
+
+try {
+  const servicesRoutes = require('./routes/services');
+  app.use('/api/services', servicesRoutes);
+  console.log('✅ Services routes loaded');
+} catch (error) {
+  console.error('❌ Services routes failed:', error.message);
+}
+
+try {
+  const bookingsRoutes = require('./routes/bookings');
+  app.use('/api/bookings', bookingsRoutes);
+  console.log('✅ Bookings routes loaded');
+} catch (error) {
+  console.error('❌ Bookings routes failed:', error.message);
+}
+
+try {
+  const userRoutes = require('./routes/users');
+  app.use('/api/users', userRoutes);
+  console.log('✅ User routes loaded');
+} catch (error) {
+  console.error('❌ User routes failed:', error.message);
+}
+
+try {
+  const providersRoutes = require('./routes/providers');
+  app.use('/api/providers', providersRoutes);
+  console.log('✅ Providers routes loaded');
+} catch (error) {
+  console.error('❌ Providers routes failed:', error.message);
 }
 
 // Simple error handler

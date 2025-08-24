@@ -112,7 +112,7 @@ class _AdminSidebarState extends State<AdminSidebar> {
         children: [
           // Back to Main Menu Button
           if (!widget.isCollapsed) ...[
-            Container(
+            SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () {

@@ -627,7 +627,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
         children: [
           // Back to Main Menu Button
           if (_isSidebarExpanded) ...[
-            Container(
+            SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () {

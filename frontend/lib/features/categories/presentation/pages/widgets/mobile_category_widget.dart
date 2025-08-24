@@ -6,6 +6,7 @@ import '../../../../../core/constants/app_strings.dart';
 import '../../../../../shared/services/language_service.dart';
 import '../../../../../shared/widgets/shared_navigation.dart';
 import '../../../../../shared/widgets/shared_hero_section.dart';
+import '../../../../../shared/widgets/booking_dialog.dart';
 import '../../../../../shared/services/responsive_service.dart';
 import '../../../../../shared/services/provider_service.dart';
 import '../../../../../shared/models/provider.dart';
@@ -1286,7 +1287,17 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
             children: [
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => BookingDialog(
+                        provider: p,
+                        selectedService: _selectedServiceKeys.isNotEmpty 
+                            ? _selectedServiceKeys.first 
+                            : null,
+                      ),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
                   child: Text(AppStrings.getString('bookNow', lang)),
                 ),

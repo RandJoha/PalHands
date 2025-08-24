@@ -227,7 +227,7 @@ class _SecurityWidgetState extends State<SecurityWidget> {
       if (response['success'] == true) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text('Account deleted successfully'),
               backgroundColor: Colors.green,
             ),

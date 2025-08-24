@@ -390,9 +390,9 @@ class _MobileAboutWidgetState extends State<MobileAboutWidget> with TickerProvid
           topRight: Radius.circular(20),
         ),
       ),
-      child: Column(
+      child: const Column(
         children: [
-          const SizedBox.shrink(),
+          SizedBox.shrink(),
         ],
       ),
     );

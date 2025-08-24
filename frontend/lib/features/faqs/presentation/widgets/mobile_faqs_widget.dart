@@ -355,7 +355,7 @@ class _MobileFAQsWidgetState extends State<MobileFAQsWidget> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
-          Text(
+          const Text(
             'Get in touch with our support team for personalized assistance.',
             style: TextStyle(
               fontSize: 14,

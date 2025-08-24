@@ -228,10 +228,10 @@ class _MobileContactWidgetState extends State<MobileContactWidget> {
           topRight: Radius.circular(20),
         ),
       ),
-      child: Column(
+      child: const Column(
         children: [
           // Removed copyright
-          const SizedBox.shrink(),
+          SizedBox.shrink(),
         ],
       ),
     );

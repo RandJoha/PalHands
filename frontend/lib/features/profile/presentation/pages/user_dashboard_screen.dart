@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../../../shared/services/auth_service.dart';
 
 // Core imports
 
@@ -22,12 +20,10 @@ class _UserDashboardScreenState extends State<UserDashboardScreen>
     with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  late final FocusNode _focusNode;
 
   @override
   void initState() {
     super.initState();
-    _focusNode = FocusNode();
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -40,17 +36,10 @@ class _UserDashboardScreenState extends State<UserDashboardScreen>
       curve: Curves.easeInOut,
     ));
     _animationController.forward();
-    // When this screen gains focus (tab becomes active again), refresh profile
-    _focusNode.addListener(() async {
-      if (_focusNode.hasFocus) {
-        try { await Provider.of<AuthService>(context, listen: false).getProfile(); } catch (_) {}
-      }
-    });
   }
 
   @override
   void dispose() {
-    _focusNode.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -60,10 +49,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen>
     return Scaffold(
       body: FadeTransition(
         opacity: _fadeAnimation,
-        child: Focus(
-          focusNode: _focusNode,
-          child: const ResponsiveUserDashboard(),
-        ),
+        child: const ResponsiveUserDashboard(),
       ),
     );
   }
