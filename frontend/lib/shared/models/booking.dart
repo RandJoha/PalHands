@@ -1,0 +1,249 @@
+// Booking domain models used across the app and BookingService
+
+class Schedule {
+	final String date; // yyyy-MM-dd
+	final String startTime; // HH:mm
+	final String endTime; // HH:mm
+	final int? duration; // minutes (optional)
+	final String? timezone;
+
+	Schedule({
+		required this.date,
+		required this.startTime,
+		required this.endTime,
+		this.duration,
+		this.timezone,
+	});
+
+	factory Schedule.fromJson(Map<String, dynamic> json) {
+		return Schedule(
+			date: (json['date'] ?? '').toString(),
+			startTime: (json['startTime'] ?? json['start'] ?? '').toString(),
+			endTime: (json['endTime'] ?? json['end'] ?? '').toString(),
+			duration: json['duration'] is int
+					? json['duration'] as int
+					: (json['duration'] is String
+							? int.tryParse(json['duration'] as String)
+							: null),
+			timezone: (json['timezone'] ?? json['tz'])?.toString(),
+		);
+	}
+
+	Map<String, dynamic> toJson() => {
+				'date': date,
+				'startTime': startTime,
+				'endTime': endTime,
+				if (duration != null) 'duration': duration,
+				if (timezone != null) 'timezone': timezone,
+			};
+}
+
+class Coordinates {
+	final double latitude;
+	final double longitude;
+
+	Coordinates({required this.latitude, required this.longitude});
+
+	factory Coordinates.fromJson(Map<String, dynamic> json) {
+		// Support various shapes: {latitude, longitude} or {lat, lng}
+		final lat = (json['latitude'] ?? json['lat']);
+		final lng = (json['longitude'] ?? json['lng']);
+		return Coordinates(
+			latitude: lat is num ? lat.toDouble() : double.tryParse(lat?.toString() ?? '0') ?? 0,
+			longitude: lng is num ? lng.toDouble() : double.tryParse(lng?.toString() ?? '0') ?? 0,
+		);
+	}
+
+	Map<String, dynamic> toJson() => {
+				'latitude': latitude,
+				'longitude': longitude,
+			};
+}
+
+class Location {
+	final String address;
+	final Coordinates? coordinates;
+	final String? instructions;
+
+	Location({
+		required this.address,
+		this.coordinates,
+		this.instructions,
+	});
+
+	factory Location.fromJson(Map<String, dynamic> json) {
+		return Location(
+			address: (json['address'] ?? '').toString(),
+			coordinates: json['coordinates'] is Map<String, dynamic>
+					? Coordinates.fromJson(json['coordinates'] as Map<String, dynamic>)
+					: null,
+			instructions: (json['instructions'])?.toString(),
+		);
+	}
+
+	Map<String, dynamic> toJson() => {
+				'address': address,
+				if (coordinates != null) 'coordinates': coordinates!.toJson(),
+				if (instructions != null) 'instructions': instructions,
+			};
+}
+
+class Pricing {
+	final double totalAmount;
+	final String currency;
+	final String? type; // hourly | fixed | daily
+
+	Pricing({
+		required this.totalAmount,
+		required this.currency,
+		this.type,
+	});
+
+	factory Pricing.fromJson(Map<String, dynamic> json) {
+		final amountRaw = json['totalAmount'] ?? json['total'] ?? json['amount'] ?? 0;
+		final amount = amountRaw is num ? amountRaw.toDouble() : double.tryParse(amountRaw.toString()) ?? 0.0;
+		return Pricing(
+			totalAmount: amount,
+			currency: (json['currency'] ?? 'ILS').toString(),
+			type: (json['type'])?.toString(),
+		);
+	}
+
+	Map<String, dynamic> toJson() => {
+				'totalAmount': totalAmount,
+				'currency': currency,
+				if (type != null) 'type': type,
+			};
+}
+
+class PaymentInfo {
+	final String status; // pending | paid | failed
+	final String? method; // cash | credit_card | bank_transfer
+
+	PaymentInfo({required this.status, this.method});
+
+	factory PaymentInfo.fromJson(Map<String, dynamic> json) {
+		return PaymentInfo(
+			status: (json['status'] ?? 'pending').toString(),
+			method: (json['method'])?.toString(),
+		);
+	}
+
+	Map<String, dynamic> toJson() => {
+				'status': status,
+				if (method != null) 'method': method,
+			};
+}
+
+class ServiceDetails {
+	final String title;
+	final String? category;
+	final String? serviceId;
+
+	ServiceDetails({required this.title, this.category, this.serviceId});
+
+	factory ServiceDetails.fromJson(Map<String, dynamic> json) {
+		return ServiceDetails(
+			title: (json['title'] ?? json['name'] ?? 'Service').toString(),
+			category: (json['category'])?.toString(),
+			serviceId: (json['id'] ?? json['_id'] ?? json['serviceId'])?.toString(),
+		);
+	}
+
+	Map<String, dynamic> toJson() => {
+				'title': title,
+				if (category != null) 'category': category,
+				if (serviceId != null) 'id': serviceId,
+			};
+}
+
+class BookingModel {
+	final String id;
+	final String? bookingId;
+	final ServiceDetails serviceDetails;
+	final Schedule schedule;
+	final Location location;
+	final Pricing pricing;
+	final String status;
+	final PaymentInfo? payment;
+	final String? notes;
+
+	BookingModel({
+		required this.id,
+		this.bookingId,
+		required this.serviceDetails,
+		required this.schedule,
+		required this.location,
+		required this.pricing,
+		required this.status,
+		this.payment,
+		this.notes,
+	});
+
+	factory BookingModel.fromJson(Map<String, dynamic> json) {
+		// Some APIs wrap details under 'service' or 'serviceDetails'
+		final serviceJson = (json['serviceDetails'] ?? json['service'] ?? {}) as Map<String, dynamic>;
+		final scheduleJson = (json['schedule'] ?? {}) as Map<String, dynamic>;
+		final locationJson = (json['location'] ?? {}) as Map<String, dynamic>;
+		final pricingJson = (json['pricing'] ?? json['price'] ?? {}) as Map<String, dynamic>;
+		final paymentJson = (json['payment'] ?? {}) as Map<String, dynamic>;
+
+		final idVal = json['_id'] ?? json['id'] ?? json['bookingId'] ?? '';
+
+		return BookingModel(
+			id: idVal.toString(),
+			bookingId: (json['bookingId'])?.toString(),
+			serviceDetails: ServiceDetails.fromJson(serviceJson),
+			schedule: Schedule.fromJson(scheduleJson),
+			location: Location.fromJson(locationJson),
+			pricing: Pricing.fromJson(pricingJson),
+			status: (json['status'] ?? 'pending').toString(),
+			payment: paymentJson.isNotEmpty ? PaymentInfo.fromJson(paymentJson) : null,
+			notes: (json['notes'])?.toString(),
+		);
+	}
+
+	Map<String, dynamic> toJson() => {
+				'_id': id,
+				if (bookingId != null) 'bookingId': bookingId,
+				'serviceDetails': serviceDetails.toJson(),
+				'schedule': schedule.toJson(),
+				'location': location.toJson(),
+				'pricing': pricing.toJson(),
+				'status': status,
+				if (payment != null) 'payment': payment!.toJson(),
+				if (notes != null) 'notes': notes,
+			};
+}
+
+class CreateBookingRequest {
+	final String serviceId;
+	final Schedule schedule;
+	final Location location;
+	final String? notes;
+
+	CreateBookingRequest({
+		required this.serviceId,
+		required this.schedule,
+		required this.location,
+		this.notes,
+	});
+
+	Map<String, dynamic> toJson() => {
+				'serviceId': serviceId,
+				'schedule': schedule.toJson(),
+				'location': location.toJson(),
+				if (notes != null) 'notes': notes,
+			};
+}
+
+class UpdateBookingStatusRequest {
+	final String status;
+
+	UpdateBookingStatusRequest({required this.status});
+
+	Map<String, dynamic> toJson() => {
+				'status': status,
+			};
+}
+

@@ -1,0 +1,511 @@
+{
+  "info": {
+    "name": "PalHands API (Dev)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Concise collection to test core endpoints: auth, users, services, availability, bookings, reports."
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "clientToken", "value": "" },
+    { "key": "providerToken", "value": "" },
+    { "key": "adminToken", "value": "" },
+    { "key": "serviceId", "value": "" },
+    { "key": "bookingId", "value": "" },
+    { "key": "bookingCode", "value": "" },
+    { "key": "providerId", "value": "" },
+    { "key": "adminId", "value": "" },
+    { "key": "reportId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Probes",
+      "item": [
+        { "name": "Health", "request": { "method": "GET", "url": "{{baseUrl}}/api/health" } },
+        { "name": "Livez", "request": { "method": "GET", "url": "{{baseUrl}}/api/livez" } },
+        { "name": "Readyz", "request": { "method": "GET", "url": "{{baseUrl}}/api/readyz" } }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register Client",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"Client\",\n  \"lastName\": \"User\",\n  \"email\": \"client@example.com\",\n  \"phone\": \"+970590009999\",\n  \"password\": \"Client1234!\",\n  \"role\": \"client\"\n}" },
+            "url": "{{baseUrl}}/api/auth/register"
+          }
+        },
+        {
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if(json && json.data && json.data.token){ pm.collectionVariables.set('adminToken', json.data.token); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"Admin123!\"\n}" },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Login Client",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if(json && json.data && json.data.token){ pm.collectionVariables.set('clientToken', json.data.token); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"client@example.com\",\n  \"password\": \"Client1234!\"\n}" },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Login Provider (seed)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if(json && json.data && json.data.token){ pm.collectionVariables.set('providerToken', json.data.token); }",
+                  "if(json && json.data && json.data.user && json.data.user._id){ pm.collectionVariables.set('providerId', json.data.user._id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"lina.provider@example.com\",\n  \"password\": \"Passw0rd!\"\n}" },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Validate Token (any role)",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "url": "{{baseUrl}}/api/auth/validate"
+          }
+        },
+        {
+          "name": "Request Verification (client)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "url": "{{baseUrl}}/api/auth/request-verification"
+          }
+        },
+        {
+          "name": "Verify Email (token)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"<paste token from register or request-verification>\"\n}" },
+            "url": "{{baseUrl}}/api/auth/verify"
+          }
+        },
+        {
+          "name": "Forgot Password (public)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"client@example.com\"\n}" },
+            "url": "{{baseUrl}}/api/auth/forgot-password"
+          }
+        },
+        {
+          "name": "Reset Password (public)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"<paste token from email>\",\n  \"newPassword\": \"Client1234!\"\n}" },
+            "url": "{{baseUrl}}/api/auth/reset-password"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Update Profile (any role)",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"Updated\"\n}" },
+            "url": "{{baseUrl}}/api/users/profile"
+          }
+        },
+        {
+          "name": "Change Password (any role)",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"currentPassword\": \"Client1234!\",\n  \"newPassword\": \"Client1234!!\"\n}" },
+            "url": "{{baseUrl}}/api/users/change-password"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Services",
+      "item": [
+        { "name": "List Services (public)", "request": { "method": "GET", "url": "{{baseUrl}}/api/services?q=cleaning&area=Ramallah" } },
+        {
+          "name": "Create Service (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if(json && json.data && json.data._id){ pm.collectionVariables.set('serviceId', json.data._id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{adminToken}}" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Move small furniture\",\n  \"description\": \"Help moving items between rooms\",\n  \"category\": \"furniture_moving\",\n  \"price\": { \"amount\": 80, \"type\": \"hourly\", \"currency\": \"ILS\" },\n  \"location\": { \"serviceArea\": \"Ramallah\", \"radius\": 10, \"onSite\": true },\n  \"provider\": \"{{providerId}}\"\n}" },
+            "url": "{{baseUrl}}/api/services"
+          }
+        },
+        {
+          "name": "Upload Service Images (admin; local only)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Authorization", "value": "Bearer {{adminToken}}" } ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "images", "type": "file", "src": ["/path/to/image1.jpg"] },
+                { "key": "images", "type": "file", "src": ["/path/to/image2.png"] }
+              ]
+            },
+            "url": "{{baseUrl}}/api/services/{{serviceId}}/images"
+          }
+        },
+        {
+          "name": "Presign Service Images (admin; s3)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{adminToken}}" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"files\": [\n    { \"filename\": \"image1.jpg\", \"contentType\": \"image/jpeg\", \"size\": 120000 },\n    { \"filename\": \"image2.png\", \"contentType\": \"image/png\", \"size\": 90000 }\n  ]\n}" },
+            "url": "{{baseUrl}}/api/services/{{serviceId}}/images/presign"
+          }
+        },
+        {
+          "name": "Attach Service Images (admin; s3)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{adminToken}}" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"images\": [\n    { \"key\": \"services/{{serviceId}}/image1.jpg\", \"alt\": \"Alt text\" }\n  ]\n}" },
+            "url": "{{baseUrl}}/api/services/{{serviceId}}/images/attach"
+          }
+        },
+        {
+          "name": "Cleanup Orphans (admin; s3)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Authorization", "value": "Bearer {{adminToken}}" } ],
+            "url": "{{baseUrl}}/api/services/{{serviceId}}/images/cleanup"
+          }
+        },
+        { "name": "Get Service (public)", "request": { "method": "GET", "url": "{{baseUrl}}/api/services/{{serviceId}}" } }
+      ]
+    },
+    {
+      "name": "Availability",
+      "item": [
+        {
+          "name": "Get Provider Availability",
+          "request": { "method": "GET", "header": [ { "key": "Authorization", "value": "Bearer {{providerToken}}" } ], "url": "{{baseUrl}}/api/availability/{{providerId}}" }
+        },
+        {
+          "name": "Set Provider Availability",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{providerToken}}" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"timezone\": \"Asia/Jerusalem\",\n  \"weekly\": {\n    \"monday\": [{ \"start\": \"09:00\", \"end\": \"17:00\" }],\n    \"tuesday\": [],\n    \"wednesday\": [],\n    \"thursday\": [],\n    \"friday\": [],\n    \"saturday\": [],\n    \"sunday\": []\n  },\n  \"exceptions\": [ { \"date\": \"2025-08-14\", \"windows\": [] } ]\n}" },
+            "url": "{{baseUrl}}/api/availability/{{providerId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Create Booking (any role)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if(json && json.data && json.data._id){ pm.collectionVariables.set('bookingId', json.data._id); }",
+                  "if(json && json.data && json.data.bookingId){ pm.collectionVariables.set('bookingCode', json.data.bookingId); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"schedule\": { \"date\": \"2025-08-12\", \"startTime\": \"10:00\", \"endTime\": \"12:00\", \"timezone\": \"Asia/Jerusalem\" },\n  \"location\": { \"address\": \"Main St. 12, Ramallah\" },\n  \"notes\": \"Be careful with the piano.\"\n}" },
+            "url": "{{baseUrl}}/api/bookings"
+          }
+        },
+        {
+          "name": "Get Booking by id (client/provider/admin)",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "url": "{{baseUrl}}/api/bookings/{{bookingId}}"
+          }
+        },
+        {
+          "name": "Update Status (provider only)",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{providerToken}}" } ],
+            "body": { "mode": "raw", "raw": "{ \n  \"status\": \"confirmed\"\n}" },
+            "url": "{{baseUrl}}/api/bookings/{{bookingId}}/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Create Report (user issue; client reporting provider)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{clientToken}}" },
+              { "key": "Idempotency-Key", "value": "demo-key-123" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reportCategory\": \"user_issue\",\n  \"reportedType\": \"user\",\n  \"reportedId\": \"{{providerId}}\",\n  \"reportedUserRole\": \"provider\",\n  \"reportedName\": \"Lina Provider\",\n  \"issueType\": \"unsafe\",\n  \"description\": \"What went wrong…\",\n  \"partyInfo\": {\n    \"reporterName\": \"Client User\",\n    \"reporterEmail\": \"client@example.com\",\n    \"reportedEmail\": \"lina.provider@example.com\"\n  },\n  \"relatedBookingId\": \"{{bookingId}}\",\n  \"reportedServiceId\": \"{{serviceId}}\",\n  \"evidence\": []\n}"
+            },
+            "url": "{{baseUrl}}/api/reports"
+          }
+        },
+        {
+          "name": "Create Report (feature suggestion)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reportCategory\": \"feature_suggestion\",\n  \"ideaTitle\": \"Allow schedule sync with Google Calendar\",\n  \"description\": \"Explain the feature\",\n  \"communityBenefit\": \"Helps reduce no-shows…\",\n  \"contactName\": \"Client User\",\n  \"contactEmail\": \"client@example.com\",\n  \"evidence\": []\n}"
+            },
+            "url": "{{baseUrl}}/api/reports"
+          }
+        },
+        {
+          "name": "Create Report (technical issue)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reportCategory\": \"technical_issue\",\n  \"description\": \"The app crashes when uploading an image.\",\n  \"contactEmail\": \"client@example.com\",\n  \"contactName\": \"Client User\",\n  \"device\": \"Samsung S22\",\n  \"os\": \"Android 14\",\n  \"appVersion\": \"1.2.3\",\n  \"evidence\": []\n}"
+            },
+            "url": "{{baseUrl}}/api/reports"
+          }
+        },
+        {
+          "name": "Create Report (service category request)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reportCategory\": \"service_category_request\",\n  \"serviceName\": \"Garden Design\",\n  \"categoryFit\": \"Home & Garden\",\n  \"importanceReason\": \"High demand…\",\n  \"contactName\": \"Client User\",\n  \"contactEmail\": \"client@example.com\",\n  \"description\": \"Optional extra details\",\n  \"evidence\": []\n}"
+            },
+            "url": "{{baseUrl}}/api/reports"
+          }
+        },
+        {
+          "name": "Create Report (other)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reportCategory\": \"other\",\n  \"description\": \"Free text from user\",\n  \"contactName\": \"Client User\",\n  \"contactEmail\": \"client@example.com\",\n  \"evidence\": []\n}"
+            },
+            "url": "{{baseUrl}}/api/reports"
+          }
+        },
+        {
+          "name": "List My Reports",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "url": "{{baseUrl}}/api/reports/me?status=pending&reportCategory=user_issue&hasEvidence=false"
+          }
+        },
+        {
+          "name": "Get Report by Id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if(json && json.data && json.data._id){ pm.collectionVariables.set('reportId', json.data._id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "url": "{{baseUrl}}/api/reports/{{reportId}}"
+          }
+        },
+        {
+          "name": "Add Evidence (multipart)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Ensure reportId is set before calling this request"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Authorization", "value": "Bearer {{clientToken}}" } ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "files", "type": "file", "src": ["/path/to/evidence1.jpg"] },
+                { "key": "files", "type": "file", "src": ["/path/to/evidence2.pdf"] }
+              ]
+            },
+            "url": "{{baseUrl}}/api/reports/{{reportId}}/evidence"
+          }
+        },
+        {
+          "name": "Admin - List Reports (filters)",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{adminToken}}" } ],
+            "url": "{{baseUrl}}/api/admin/reports?reportCategory=user_issue&issueType=unsafe&hasEvidence=true&sort=createdAt:desc"
+          }
+        },
+        {
+          "name": "Admin - List Reports",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{adminToken}}" } ],
+            "url": "{{baseUrl}}/api/admin/reports?status=pending&limit=20&page=1"
+          }
+        },
+        {
+          "name": "Admin - Update Report (set under_review)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"under_review\",\n  \"assignedAdmin\": \"{{adminId}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/reports/{{reportId}}"
+          }
+        },
+        {
+          "name": "Admin - Resolve Report",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"resolved\",\n  \"assignedAdmin\": \"{{adminId}}\",\n  \"resolution\": { \"action\": \"warn_user\", \"notes\": \"First-time offense\" }\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/reports/{{reportId}}"
+          }
+        },
+        {
+          "name": "Admin - Dismiss Report",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"dismissed\",\n  \"assignedAdmin\": \"{{adminId}}\",\n  \"resolution\": { \"reason\": \"insufficient_evidence\", \"notes\": \"No logs/screenshots\" }\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/reports/{{reportId}}"
+          }
+        },
+        {
+          "name": "Admin - Request Info",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Please attach a screenshot of the error dialog\"\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/reports/{{reportId}}/request-info"
+          }
+        },
+        {
+          "name": "Admin - Stats",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{adminToken}}" } ],
+            "url": "{{baseUrl}}/api/admin/reports/stats?since=2025-08-01"
+          }
+        }
+      ]
+    }
+  ]
+}

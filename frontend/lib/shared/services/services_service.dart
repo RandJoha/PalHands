@@ -1,0 +1,338 @@
+import 'package:flutter/foundation.dart';
+import 'base_api_service.dart';
+import 'auth_service.dart';
+import '../../core/constants/api_config.dart';
+
+class ServiceModel {
+  final String id;
+  final String title;
+  final String description;
+  final String category;
+  final String? subcategory;
+  final String providerId;
+  final PriceModel price;
+  final LocationModel location;
+  final List<String> images;
+  final List<String> requirements;
+  final List<String> equipment;
+  final RatingModel rating;
+  final int totalBookings;
+  final bool isActive;
+  final bool featured;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  const ServiceModel({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.category,
+    this.subcategory,
+    required this.providerId,
+    required this.price,
+    required this.location,
+    required this.images,
+    required this.requirements,
+    required this.equipment,
+    required this.rating,
+    required this.totalBookings,
+    required this.isActive,
+    required this.featured,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory ServiceModel.fromJson(Map<String, dynamic> json) {
+    return ServiceModel(
+      id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
+      title: json['title'] ?? '',
+      description: json['description'] ?? '',
+      category: json['category'] ?? '',
+      subcategory: json['subcategory'],
+      providerId: json['provider']?.toString() ?? '',
+      price: PriceModel.fromJson(json['price'] ?? {}),
+      location: LocationModel.fromJson(json['location'] ?? {}),
+      images: (json['images'] as List?)?.map((e) => e['url']?.toString() ?? '').toList() ?? [],
+      requirements: (json['requirements'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      equipment: (json['equipment'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      rating: RatingModel.fromJson(json['rating'] ?? {}),
+      totalBookings: (json['totalBookings'] as num?)?.toInt() ?? 0,
+      isActive: json['isActive'] ?? true,
+      featured: json['featured'] ?? false,
+      createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
+      updatedAt: DateTime.tryParse(json['updatedAt'] ?? '') ?? DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      '_id': id,
+      'title': title,
+      'description': description,
+      'category': category,
+      if (subcategory != null) 'subcategory': subcategory,
+      'provider': providerId,
+      'price': price.toJson(),
+      'location': location.toJson(),
+      'images': images.map((url) => {'url': url}).toList(),
+      'requirements': requirements,
+      'equipment': equipment,
+      'rating': rating.toJson(),
+      'totalBookings': totalBookings,
+      'isActive': isActive,
+      'featured': featured,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+  }
+}
+
+class PriceModel {
+  final double amount;
+  final String type;
+  final String currency;
+
+  const PriceModel({
+    required this.amount,
+    required this.type,
+    required this.currency,
+  });
+
+  factory PriceModel.fromJson(Map<String, dynamic> json) {
+    return PriceModel(
+      amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
+      type: json['type'] ?? 'hourly',
+      currency: json['currency'] ?? 'ILS',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'amount': amount,
+      'type': type,
+      'currency': currency,
+    };
+  }
+}
+
+class LocationModel {
+  final String serviceArea;
+  final double radius;
+  final bool onSite;
+  final bool remote;
+
+  const LocationModel({
+    required this.serviceArea,
+    required this.radius,
+    required this.onSite,
+    required this.remote,
+  });
+
+  factory LocationModel.fromJson(Map<String, dynamic> json) {
+    return LocationModel(
+      serviceArea: json['serviceArea'] ?? '',
+      radius: (json['radius'] as num?)?.toDouble() ?? 10.0,
+      onSite: json['onSite'] ?? true,
+      remote: json['remote'] ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'serviceArea': serviceArea,
+      'radius': radius,
+      'onSite': onSite,
+      'remote': remote,
+    };
+  }
+}
+
+class RatingModel {
+  final double average;
+  final int count;
+
+  const RatingModel({
+    required this.average,
+    required this.count,
+  });
+
+  factory RatingModel.fromJson(Map<String, dynamic> json) {
+    return RatingModel(
+      average: (json['average'] as num?)?.toDouble() ?? 0.0,
+      count: (json['count'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'average': average,
+      'count': count,
+    };
+  }
+}
+
+class ServicesService with BaseApiService {
+  static final ServicesService _instance = ServicesService._internal();
+  factory ServicesService() => _instance;
+  ServicesService._internal();
+
+  // Get authentication token from AuthService
+  Map<String, String> get _authHeaders {
+    final token = AuthService().token;
+    if (token != null) {
+      return {
+        'Authorization': 'Bearer $token',
+        ...ApiConfig.defaultHeaders,
+      };
+    }
+    return ApiConfig.defaultHeaders;
+  }
+
+  /// Get list of services with filtering and pagination
+  Future<List<ServiceModel>> getServices({
+    String? category,
+    String? q,
+    String? area,
+    String? providerId,
+    String? near,
+    double? maxDistanceKm,
+    int? page,
+    int? limit,
+  }) async {
+    try {
+      final queryParams = <String, String>{};
+      if (category != null) queryParams['category'] = category;
+      if (q != null && q.isNotEmpty) queryParams['q'] = q;
+      if (area != null && area.isNotEmpty) queryParams['area'] = area;
+      if (providerId != null) queryParams['providerId'] = providerId;
+      if (near != null) queryParams['near'] = near;
+      if (maxDistanceKm != null) queryParams['maxDistanceKm'] = maxDistanceKm.toString();
+      if (page != null) queryParams['page'] = page.toString();
+      if (limit != null) queryParams['limit'] = limit.toString();
+
+      final endpoint = ApiConfig.servicesEndpoint +
+          (queryParams.isNotEmpty 
+              ? '?${Uri(queryParameters: queryParams).query}' 
+              : '');
+
+      final response = await get(endpoint, headers: _authHeaders);
+
+      if (kDebugMode) {
+        print('🛠️ Fetched services: ${response['services']?.length ?? 0} items');
+      }
+
+      final List<dynamic> servicesData = response['services'] ?? response['data'] ?? [];
+      return servicesData
+          .map((json) => ServiceModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error fetching services: $e');
+      }
+      return [];
+    }
+  }
+
+  /// Get a specific service by ID
+  Future<ServiceModel?> getServiceById(String serviceId) async {
+    try {
+      final response = await get(
+        '${ApiConfig.servicesEndpoint}/$serviceId',
+        headers: _authHeaders,
+      );
+
+      if (kDebugMode) {
+        print('🛠️ Fetched service: $serviceId');
+      }
+
+      final serviceData = response['data'] ?? response;
+      return ServiceModel.fromJson(serviceData);
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error fetching service $serviceId: $e');
+      }
+      return null;
+    }
+  }
+
+  /// Get services by category
+  Future<List<ServiceModel>> getServicesByCategory(
+    String category, {
+    String? area,
+    String? q,
+    int? page,
+    int? limit,
+  }) async {
+    return getServices(
+      category: category,
+      area: area,
+      q: q,
+      page: page,
+      limit: limit,
+    );
+  }
+
+  /// Get services by provider
+  Future<List<ServiceModel>> getServicesByProvider(
+    String providerId, {
+    int? page,
+    int? limit,
+  }) async {
+    return getServices(
+      providerId: providerId,
+      page: page,
+      limit: limit,
+    );
+  }
+
+  /// Search services with text query
+  Future<List<ServiceModel>> searchServices(
+    String query, {
+    String? category,
+    String? area,
+    int? page,
+    int? limit,
+  }) async {
+    return getServices(
+      q: query,
+      category: category,
+      area: area,
+      page: page,
+      limit: limit,
+    );
+  }
+
+  /// Get featured services
+  Future<List<ServiceModel>> getFeaturedServices({
+    int? limit,
+  }) async {
+    try {
+      final queryParams = <String, String>{};
+      if (limit != null) queryParams['limit'] = limit.toString();
+
+      final endpoint = ApiConfig.servicesEndpoint +
+          (queryParams.isNotEmpty 
+              ? '?${Uri(queryParameters: queryParams).query}' 
+              : '');
+
+      final response = await get(endpoint, headers: _authHeaders);
+
+      if (kDebugMode) {
+        print('🛠️ Fetched featured services: ${response['services']?.length ?? 0} items');
+      }
+
+      final List<dynamic> servicesData = response['services'] ?? response['data'] ?? [];
+      final services = servicesData
+          .map((json) => ServiceModel.fromJson(json))
+          .toList();
+
+      // Filter featured services on client side since backend returns all
+      return services.where((service) => service.featured).toList();
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error fetching featured services: $e');
+      }
+      return [];
+    }
+  }
+}

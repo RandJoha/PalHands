@@ -1,0 +1,17 @@
+name: Validate OpenAPI
+on:
+  push:
+    paths:
+      - 'backend/openapi.yaml'
+  pull_request:
+    paths:
+      - 'backend/openapi.yaml'
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install swagger-cli
+        run: npm i -g @apidevtools/swagger-cli
+      - name: Validate spec
+        run: swagger-cli validate backend/openapi.yaml
