@@ -1,16 +1,19 @@
-# frontend
+# PalHands Frontend (Flutter)
 
-A new Flutter project.
+Flutter app for PalHands with web support.
 
-## Getting Started
+## Quick start (Windows PowerShell)
 
-This project is a starting point for a Flutter application.
+1. Install deps
+- flutter pub get
 
-A few resources to get you started if this is your first Flutter project:
+2. Run (Web)
+- flutter run -d chrome --web-port 8000
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+3. Backend URL
+- Point API base URL to http://127.0.0.1:3000 (see backend server.js IPv4 bind)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Notes
+
+- Ensure CORS_ORIGIN in backend .env includes http://127.0.0.1:8000 and/or http://localhost:8000
+- For password reset in dev without SMTP, see backend/GET_PASSWORD_RESET_TOKEN.md

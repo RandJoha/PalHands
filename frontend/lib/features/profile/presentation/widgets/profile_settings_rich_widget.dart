@@ -606,6 +606,11 @@ class _ProfileSettingsRichWidgetState extends State<ProfileSettingsRichWidget> {
       'gaza','rafah','khan yunis','deir al-balah','north gaza'
     ];
     String? city = (current?['city'] as String?);
+    // Normalize to lowercase and ensure it matches allowed list
+    if (city != null) {
+      final lc = city.toLowerCase().trim();
+      city = cities.contains(lc) ? lc : null;
+    }
     String? selectedStreet = (current?['street'] as String?);
     final area = TextEditingController(text: (current?['area'] ?? '').toString());
     bool makeDefault = current?['isDefault'] == true || existing.isEmpty; // first one becomes default
@@ -648,7 +653,7 @@ class _ProfileSettingsRichWidgetState extends State<ProfileSettingsRichWidget> {
                     const SizedBox(height: 16),
                     // City dropdown with localized labels
                     DropdownButtonFormField<String>(
-                      value: city,
+                      value: (city != null && cities.contains(city)) ? city : null,
                       decoration: const InputDecoration(
                         labelText: 'City *',
                         helperText: 'Please select a city first',
@@ -678,7 +683,7 @@ class _ProfileSettingsRichWidgetState extends State<ProfileSettingsRichWidget> {
                     // Street dropdown - only appears after city is selected
                     if (city != null && city!.isNotEmpty)
                       DropdownButtonFormField<String>(
-                        value: selectedStreet,
+                        value: (_getStreetsForCity(city).contains(selectedStreet)) ? selectedStreet : null,
                         decoration: const InputDecoration(
                           labelText: 'Street *',
                           helperText: 'Please select a street',
@@ -750,7 +755,7 @@ class _ProfileSettingsRichWidgetState extends State<ProfileSettingsRichWidget> {
       final payload = {
         'type': type,
         'street': selectedStreet ?? '', // Use selectedStreet instead of street.text
-        'city': (city ?? '').trim(),
+        'city': (city ?? '').toLowerCase().trim(),
         'area': area.text.trim(),
         'isDefault': makeDefault,
       };

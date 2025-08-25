@@ -35,7 +35,8 @@ const CATEGORIES = [
 // Provider roster generation consistent with FE mocks (deterministic)
 const rnd = (seed => () => (seed = (seed * 16807) % 2147483647) / 2147483647)(3);
 const pick = (arr) => arr[Math.floor(rnd() * arr.length)];
-const CITIES = ['Ramallah','Nablus','Jerusalem','Hebron','Bethlehem','Gaza'];
+// Use lowercase city keys to match FE dropdown values and i18n keys
+const CITIES = ['ramallah','nablus','jerusalem','hebron','bethlehem','gaza'];
 const LANG_POOLS = [ ['Arabic'], ['Arabic','English'], ['Arabic','Hebrew'], ['Arabic','Turkish'] ];
 const NAMES = ['Rami Services','Maya Haddad','Omar Khalil','Sara Nasser','Khaled Mansour','Yara Saleh','Hadi Suleiman','Noor Ali','Lina Faris','Osama T.','Adam Q.','Layla Z.','Sami R.','Dana M.','Fares K.','محمد العابد','سارة يوسف','ليلى حسن','أحمد درويش','نور الهدى','مريم خليل','رامي ناصر','عمر عوض','هالة سمير','رنا أحمد'];
 
@@ -191,7 +192,8 @@ async function upsertServicesForProviders(roster, capTotal = 50){
       price: { amount: c.r.hourlyRate, type: 'hourly', currency: 'ILS' },
       duration: { estimated: 120, flexible: true },
       availability: { days: ['monday','tuesday','wednesday','thursday','friday'], timeSlots: [{ start: '09:00', end: '17:00' }], flexible: true },
-      location: { serviceArea: c.city || 'Ramallah', radius: 20, onSite: true, remote: false },
+  // Keep serviceArea capitalized nicely for readability; city stored lowercase in provider address
+  location: { serviceArea: (c.city ? (c.city[0].toUpperCase()+c.city.slice(1)) : 'Ramallah'), radius: 20, onSite: true, remote: false },
       isActive: true,
       featured: false,
     };

@@ -2714,6 +2714,11 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       'gaza','rafah','khan yunis','deir al-balah','north gaza'
     ];
     String? city = (current?['city'] as String?);
+    // Normalize city to lowercase and validate against allowed list to avoid Dropdown value mismatch
+    if (city != null) {
+      final lc = city.toLowerCase().trim();
+      city = cities.contains(lc) ? lc : null;
+    }
     String? selectedStreet = (current?['street'] as String?);
     final area = TextEditingController(text: (current?['area'] ?? '').toString());
     bool makeDefault = current?['isDefault'] == true || existing.isEmpty; // first one becomes default
@@ -2756,7 +2761,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     const SizedBox(height: 16),
                     // City dropdown with localized labels
                     DropdownButtonFormField<String>(
-                      value: city,
+                      value: (city != null && cities.contains(city)) ? city : null,
                       decoration: const InputDecoration(labelText: 'City'),
                       items: [
                         for (final c in cities)
@@ -2775,8 +2780,8 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     const SizedBox(height: 16),
                     // Street dropdown (only show if city is selected)
                     if (city != null) ...[
-                                             DropdownButtonFormField<String>(
-                         value: selectedStreet,
+                      DropdownButtonFormField<String>(
+                         value: (_getStreetsForCity(city).contains(selectedStreet)) ? selectedStreet : null,
                          decoration: const InputDecoration(
                            labelText: 'Street *',
                            helperText: 'Please select a street',
@@ -2849,7 +2854,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       final payload = {
         'type': type,
         'street': selectedStreet ?? '',
-        'city': (city ?? '').trim(),
+  'city': (city ?? '').toLowerCase().trim(),
         'area': area.text.trim(),
         'isDefault': makeDefault,
       };
@@ -2923,7 +2928,8 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       final nextIndex = (counters[type] ?? 0) + 1;
       counters[type] = nextIndex;
       final numberedLabel = countForType > 1 ? '$baseLabel $nextIndex' : baseLabel;
-      final line = [m['street'], m['city'], m['area']]
+  final cityKey = (m['city'] is String) ? (m['city'] as String).toLowerCase().trim() : '';
+  final line = [m['street'], cityKey, m['area']]
           .whereType<String>()
           .where((s) => s.trim().isNotEmpty)
           .join(', ');

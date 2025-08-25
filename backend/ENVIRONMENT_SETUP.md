@@ -2,22 +2,33 @@
 
 ## Quick Start
 
-1. **Copy the simple environment file:**
-   ```bash
-   cp env.simple .env
-   ```
+1. **Create your environment file (.env):**
+    - Windows (PowerShell):
+       ```powershell
+       Copy-Item env.example .env
+       notepad .env
+       ```
+    - macOS/Linux:
+       ```bash
+       cp env.example .env && ${EDITOR:-nano} .env
+       ```
 
 2. **Update the values in `.env` as needed**
 
 3. **Start the server:**
-   ```bash
-   npm run dev
-   ```
+    - Windows (PowerShell):
+       ```powershell
+       npm run dev
+       ```
+    - macOS/Linux:
+       ```bash
+       npm run dev
+       ```
 
 ## Environment Files
 
-### `env.simple` - Essential Variables
-Contains only the essential environment variables needed to run the application in development mode.
+### `.env` - Essential Variables
+Contains the essential environment variables needed to run the application in development mode. Start by copying from `env.example`.
 
 ### `env.example` - Complete Configuration
 Contains all possible environment variables with sample values for reference.
@@ -112,7 +123,7 @@ For production deployment:
 |----------|-------------|---------|----------|
 | `NODE_ENV` | Environment mode | development | Yes |
 | `PORT` | Server port | 3000 | No |
-| `MONGODB_URI` | Database connection | localhost:27017/palhands | Yes |
+| `MONGODB_URI` | Database connection | (Atlas URI recommended) | Yes |
 | `JWT_SECRET` | JWT signing secret | - | Yes |
 | `JWT_EXPIRES_IN` | Token expiration | 7d | No |
 | `EMAIL_HOST` | SMTP server | - | No |

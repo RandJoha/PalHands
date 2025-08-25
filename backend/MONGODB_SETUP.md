@@ -77,6 +77,63 @@ You should see:
 🚀 PalHands server running on port 3000
 ```
 
+## Restore frontend data into Atlas (providers, categories, services)
+
+If your Atlas data was deleted or inflated incorrectly, you can restore a consistent snapshot derived from the frontend definitions without touching the `users` collection:
+
+1. Ensure your `.env` points to Atlas (MONGODB_URI=...)
+2. Run the restore script:
+
+   Windows (PowerShell):
+   ```powershell
+   cd backend
+   npm run restore:fe
+   ```
+
+   This will:
+   - Upsert 8 service categories into `servicecategories`
+   - Upsert ~34 providers into `providers` with uniform password `Provider123!`
+   - Upsert services linked to those providers, capped at ~50 total
+
+3. Optional: Hard reset before restore (drops only providers/services/servicecategories):
+
+   ```powershell
+   cd backend
+   npm run restore:reset
+   ```
+
+Notes
+- The script is idempotent (safe to re-run); it never modifies the `users` collection.
+- Provider login format: `provider+<name>.<index>@palhands.com` with password `Provider123!`.
+
+### Prune extra services (remove everything not in the canonical ~50)
+
+If your `services` collection has duplicates or leftovers from previous conflicts, prune them:
+
+```powershell
+cd backend
+npm run restore:prune
+```
+
+Or, do a full reset and prune in one step:
+
+```powershell
+cd backend
+npm run restore:reset-prune
+```
+
+This deletes services not part of the freshly generated canonical set while leaving `users` untouched.
+
+### Snapshot files for quick recovery
+
+Every restore run writes JSON snapshots to `backend/src/utils/data/`:
+- `snapshot.json` (combined)
+- `categories.json`
+- `providers.json`
+- `services.json`
+
+You can use these for quick audits or to re-seed another environment.
+
 ## Troubleshooting
 
 ### Connection Refused Error

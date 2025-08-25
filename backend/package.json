@@ -12,7 +12,8 @@
   "restore:fe": "node src/utils/restoreFrontendData.js",
   "restore:reset": "cross-env RESET=true node src/utils/restoreFrontendData.js",
   "restore:prune": "cross-env PRUNE=true node src/utils/restoreFrontendData.js",
-  "restore:reset-prune": "cross-env RESET=true PRUNE=true node src/utils/restoreFrontendData.js"
+  "restore:reset-prune": "cross-env RESET=true PRUNE=true node src/utils/restoreFrontendData.js",
+  "migrate:normalize-cities": "node scripts/normalizeAddressCities.js"
   },
   "keywords": [
     "palhands",
