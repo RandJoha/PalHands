@@ -1,0 +1,135 @@
+[
+  {
+    "id": "cleaning",
+    "name": "cleaningServices",
+    "description": "cleaningServicesDescription",
+    "icon": "cleaning_services",
+    "color": "#4CAF50",
+    "services": [
+      "bedroomCleaning",
+      "livingRoomCleaning",
+      "kitchenCleaning",
+      "bathroomCleaning",
+      "windowCleaning",
+      "doorCabinetCleaning",
+      "floorCleaning",
+      "carpetCleaning",
+      "furnitureCleaning",
+      "gardenCleaning",
+      "entranceCleaning",
+      "stairCleaning",
+      "garageCleaning",
+      "postEventCleaning",
+      "postConstructionCleaning",
+      "apartmentCleaning",
+      "regularCleaning"
+    ]
+  },
+  {
+    "id": "organizing",
+    "name": "organizingServices",
+    "description": "organizingServicesDescription",
+    "icon": "folder_open",
+    "color": "#2196F3",
+    "services": [
+      "bedroomOrganizing",
+      "kitchenOrganizing",
+      "closetOrganizing",
+      "storageOrganizing",
+      "livingRoomOrganizing",
+      "postPartyOrganizing",
+      "fullHouseOrganizing",
+      "childrenOrganizing"
+    ]
+  },
+  {
+    "id": "cooking",
+    "name": "homeCookingServices",
+    "description": "homeCookingServicesDescription",
+    "icon": "restaurant",
+    "color": "#FF9800",
+    "services": [
+      "mainDishes",
+      "desserts",
+      "specialRequests"
+    ]
+  },
+  {
+    "id": "childcare",
+    "name": "childCareServices",
+    "description": "childCareServicesDescription",
+    "icon": "child_care",
+    "color": "#9C27B0",
+    "services": [
+      "homeBabysitting",
+      "schoolAccompaniment",
+      "homeworkHelp",
+      "educationalActivities",
+      "childrenMealPrep",
+      "sickChildCare"
+    ]
+  },
+  {
+    "id": "elderly",
+    "name": "personalElderlyCare",
+    "description": "personalElderlyCareDescription",
+    "icon": "elderly",
+    "color": "#607D8B",
+    "services": [
+      "homeElderlyCare",
+      "medicalTransport",
+      "healthMonitoring",
+      "medicationAssistance",
+      "emotionalSupport",
+      "mobilityAssistance"
+    ]
+  },
+  {
+    "id": "maintenance",
+    "name": "maintenanceRepair",
+    "description": "maintenanceRepairDescription",
+    "icon": "build",
+    "color": "#795548",
+    "services": [
+      "electricalWork",
+      "plumbingWork",
+      "aluminumWork",
+      "carpentryWork",
+      "painting",
+      "hangingItems",
+      "satelliteInstallation",
+      "applianceMaintenance"
+    ]
+  },
+  {
+    "id": "newhome",
+    "name": "newHomeServices",
+    "description": "newHomeServicesDescription",
+    "icon": "home",
+    "color": "#E91E63",
+    "services": [
+      "furnitureMoving",
+      "packingUnpacking",
+      "furnitureWrapping",
+      "newHomeArrangement",
+      "newApartmentCleaning",
+      "preOccupancyRepairs",
+      "kitchenSetup",
+      "applianceInstallation"
+    ]
+  },
+  {
+    "id": "miscellaneous",
+    "name": "miscellaneousErrands",
+    "description": "miscellaneousErrandsDescription",
+    "icon": "miscellaneous_services",
+    "color": "#00BCD4",
+    "services": [
+      "documentDelivery",
+      "shoppingDelivery",
+      "specialErrands",
+      "billPayment",
+      "prescriptionPickup"
+    ]
+  }
+]

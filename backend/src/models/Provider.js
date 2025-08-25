@@ -41,10 +41,10 @@ const providerSchema = new mongoose.Schema({
     default: null
   },
   age: {
-    type: Number,
-    min: 0,
-    max: 120,
-    default: null
+  type: Number,
+  required: true,
+  min: 0,
+  max: 120
   },
   
   // Addresses (from User model)
@@ -55,7 +55,15 @@ const providerSchema = new mongoose.Schema({
         enum: ['home', 'work', 'other'],
         default: 'home'
       },
-      street: { type: String, default: '' },
+      street: { 
+        type: String, 
+        required: true,
+        trim: true,
+        validate: {
+          validator: function(v){ return typeof v === 'string' && v.trim().length > 0; },
+          message: 'Address street is required.'
+        }
+      },
       city: { type: String, default: '' },
       area: { type: String, default: '' },
       coordinates: {

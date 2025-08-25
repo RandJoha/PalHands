@@ -1,0 +1,1689 @@
+{
+  "generatedAt": "2025-08-25T16:47:30.301Z",
+  "categories": [
+    {
+      "id": "cleaning",
+      "name": "cleaningServices",
+      "description": "cleaningServicesDescription",
+      "icon": "cleaning_services",
+      "color": "#4CAF50",
+      "services": [
+        "bedroomCleaning",
+        "livingRoomCleaning",
+        "kitchenCleaning",
+        "bathroomCleaning",
+        "windowCleaning",
+        "doorCabinetCleaning",
+        "floorCleaning",
+        "carpetCleaning",
+        "furnitureCleaning",
+        "gardenCleaning",
+        "entranceCleaning",
+        "stairCleaning",
+        "garageCleaning",
+        "postEventCleaning",
+        "postConstructionCleaning",
+        "apartmentCleaning",
+        "regularCleaning"
+      ]
+    },
+    {
+      "id": "organizing",
+      "name": "organizingServices",
+      "description": "organizingServicesDescription",
+      "icon": "folder_open",
+      "color": "#2196F3",
+      "services": [
+        "bedroomOrganizing",
+        "kitchenOrganizing",
+        "closetOrganizing",
+        "storageOrganizing",
+        "livingRoomOrganizing",
+        "postPartyOrganizing",
+        "fullHouseOrganizing",
+        "childrenOrganizing"
+      ]
+    },
+    {
+      "id": "cooking",
+      "name": "homeCookingServices",
+      "description": "homeCookingServicesDescription",
+      "icon": "restaurant",
+      "color": "#FF9800",
+      "services": [
+        "mainDishes",
+        "desserts",
+        "specialRequests"
+      ]
+    },
+    {
+      "id": "childcare",
+      "name": "childCareServices",
+      "description": "childCareServicesDescription",
+      "icon": "child_care",
+      "color": "#9C27B0",
+      "services": [
+        "homeBabysitting",
+        "schoolAccompaniment",
+        "homeworkHelp",
+        "educationalActivities",
+        "childrenMealPrep",
+        "sickChildCare"
+      ]
+    },
+    {
+      "id": "elderly",
+      "name": "personalElderlyCare",
+      "description": "personalElderlyCareDescription",
+      "icon": "elderly",
+      "color": "#607D8B",
+      "services": [
+        "homeElderlyCare",
+        "medicalTransport",
+        "healthMonitoring",
+        "medicationAssistance",
+        "emotionalSupport",
+        "mobilityAssistance"
+      ]
+    },
+    {
+      "id": "maintenance",
+      "name": "maintenanceRepair",
+      "description": "maintenanceRepairDescription",
+      "icon": "build",
+      "color": "#795548",
+      "services": [
+        "electricalWork",
+        "plumbingWork",
+        "aluminumWork",
+        "carpentryWork",
+        "painting",
+        "hangingItems",
+        "satelliteInstallation",
+        "applianceMaintenance"
+      ]
+    },
+    {
+      "id": "newhome",
+      "name": "newHomeServices",
+      "description": "newHomeServicesDescription",
+      "icon": "home",
+      "color": "#E91E63",
+      "services": [
+        "furnitureMoving",
+        "packingUnpacking",
+        "furnitureWrapping",
+        "newHomeArrangement",
+        "newApartmentCleaning",
+        "preOccupancyRepairs",
+        "kitchenSetup",
+        "applianceInstallation"
+      ]
+    },
+    {
+      "id": "miscellaneous",
+      "name": "miscellaneousErrands",
+      "description": "miscellaneousErrandsDescription",
+      "icon": "miscellaneous_services",
+      "color": "#00BCD4",
+      "services": [
+        "documentDelivery",
+        "shoppingDelivery",
+        "specialErrands",
+        "billPayment",
+        "prescriptionPickup"
+      ]
+    }
+  ],
+  "providers": [
+    {
+      "firstName": "Rami",
+      "lastName": "Services",
+      "email": "provider.rami.0@palhands.com",
+      "phone": "+970591000000",
+      "city": "Ramallah",
+      "experienceYears": 1,
+      "languages": [
+        "Arabic"
+      ],
+      "hourlyRate": 45,
+      "services": [
+        "bedroomCleaning",
+        "doorCabinetCleaning",
+        "kitchenCleaning"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "Maya",
+      "lastName": "Haddad",
+      "email": "provider.maya.1@palhands.com",
+      "phone": "+970591000001",
+      "city": "Nablus",
+      "experienceYears": 2,
+      "languages": [
+        "Arabic",
+        "English"
+      ],
+      "hourlyRate": 51,
+      "services": [
+        "bathroomCleaning",
+        "garageCleaning"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "Omar",
+      "lastName": "Khalil",
+      "email": "provider.omar.2@palhands.com",
+      "phone": "+970591000002",
+      "city": "Jerusalem",
+      "experienceYears": 3,
+      "languages": [
+        "Arabic",
+        "Hebrew"
+      ],
+      "hourlyRate": 58,
+      "services": [
+        "floorCleaning",
+        "closetOrganizing"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "Sara",
+      "lastName": "Nasser",
+      "email": "provider.sara.3@palhands.com",
+      "phone": "+970591000003",
+      "city": "Hebron",
+      "experienceYears": 4,
+      "languages": [
+        "Arabic",
+        "Turkish"
+      ],
+      "hourlyRate": 50,
+      "services": [
+        "gardenCleaning",
+        "desserts",
+        "medicalTransport"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "Khaled",
+      "lastName": "Mansour",
+      "email": "provider.khaled.4@palhands.com",
+      "phone": "+970591000004",
+      "city": "Bethlehem",
+      "experienceYears": 5,
+      "languages": [
+        "Arabic"
+      ],
+      "hourlyRate": 49,
+      "services": [
+        "garageCleaning",
+        "sickChildCare"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "Yara",
+      "lastName": "Saleh",
+      "email": "provider.yara.5@palhands.com",
+      "phone": "+970591000005",
+      "city": "Gaza",
+      "experienceYears": 6,
+      "languages": [
+        "Arabic",
+        "English"
+      ],
+      "hourlyRate": 53,
+      "services": [
+        "apartmentCleaning",
+        "electricalWork"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "Hadi",
+      "lastName": "Suleiman",
+      "email": "provider.hadi.6@palhands.com",
+      "phone": "+970591000006",
+      "city": "Ramallah",
+      "experienceYears": 7,
+      "languages": [
+        "Arabic",
+        "Hebrew"
+      ],
+      "hourlyRate": 60,
+      "services": [
+        "kitchenOrganizing",
+        "applianceMaintenance",
+        "carpetCleaning"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "Noor",
+      "lastName": "Ali",
+      "email": "provider.noor.7@palhands.com",
+      "phone": "+970591000007",
+      "city": "Nablus",
+      "experienceYears": 8,
+      "languages": [
+        "Arabic",
+        "Turkish"
+      ],
+      "hourlyRate": 55,
+      "services": [
+        "livingRoomOrganizing",
+        "kitchenSetup"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "Lina",
+      "lastName": "Faris",
+      "email": "provider.lina.8@palhands.com",
+      "phone": "+970591000008",
+      "city": "Jerusalem",
+      "experienceYears": 9,
+      "languages": [
+        "Arabic"
+      ],
+      "hourlyRate": 53,
+      "services": [
+        "childrenOrganizing",
+        "bedroomCleaning"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "Osama",
+      "lastName": "T",
+      "email": "provider.osama.9@palhands.com",
+      "phone": "+970591000009",
+      "city": "Hebron",
+      "experienceYears": 10,
+      "languages": [
+        "Arabic",
+        "English"
+      ],
+      "hourlyRate": 57,
+      "services": [
+        "specialRequests",
+        "carpetCleaning",
+        "electricalWork"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "Adam",
+      "lastName": "Q",
+      "email": "provider.adam.10@palhands.com",
+      "phone": "+970591000010",
+      "city": "Bethlehem",
+      "experienceYears": 1,
+      "languages": [
+        "Arabic",
+        "Hebrew"
+      ],
+      "hourlyRate": 60,
+      "services": [
+        "homeworkHelp",
+        "postConstructionCleaning"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "Layla",
+      "lastName": "Z",
+      "email": "provider.layla.11@palhands.com",
+      "phone": "+970591000011",
+      "city": "Gaza",
+      "experienceYears": 2,
+      "languages": [
+        "Arabic",
+        "Turkish"
+      ],
+      "hourlyRate": 71,
+      "services": [
+        "sickChildCare",
+        "livingRoomOrganizing"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "Sami",
+      "lastName": "R",
+      "email": "provider.sami.12@palhands.com",
+      "phone": "+970591000012",
+      "city": "Ramallah",
+      "experienceYears": 3,
+      "languages": [
+        "Arabic"
+      ],
+      "hourlyRate": 67,
+      "services": [
+        "healthMonitoring",
+        "homeBabysitting",
+        "garageCleaning"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "Dana",
+      "lastName": "M",
+      "email": "provider.dana.13@palhands.com",
+      "phone": "+970591000013",
+      "city": "Nablus",
+      "experienceYears": 4,
+      "languages": [
+        "Arabic",
+        "English"
+      ],
+      "hourlyRate": 63,
+      "services": [
+        "mobilityAssistance",
+        "medicalTransport"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "Fares",
+      "lastName": "K",
+      "email": "provider.fares.14@palhands.com",
+      "phone": "+970591000014",
+      "city": "Jerusalem",
+      "experienceYears": 5,
+      "languages": [
+        "Arabic",
+        "Hebrew"
+      ],
+      "hourlyRate": 63,
+      "services": [
+        "aluminumWork"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "محمد",
+      "lastName": "العابد",
+      "email": "provider.pro15.15@palhands.com",
+      "phone": "+970591000015",
+      "city": "Hebron",
+      "experienceYears": 6,
+      "languages": [
+        "Arabic",
+        "Turkish"
+      ],
+      "hourlyRate": 74,
+      "services": [
+        "hangingItems",
+        "packingUnpacking"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "سارة",
+      "lastName": "يوسف",
+      "email": "provider.pro16.16@palhands.com",
+      "phone": "+970591000016",
+      "city": "Bethlehem",
+      "experienceYears": 7,
+      "languages": [
+        "Arabic"
+      ],
+      "hourlyRate": 76,
+      "services": [
+        "furnitureMoving",
+        "documentDelivery"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "ليلى",
+      "lastName": "حسن",
+      "email": "provider.pro17.17@palhands.com",
+      "phone": "+970591000017",
+      "city": "Gaza",
+      "experienceYears": 8,
+      "languages": [
+        "Arabic",
+        "English"
+      ],
+      "hourlyRate": 66,
+      "services": [
+        "newHomeArrangement",
+        "kitchenCleaning"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "أحمد",
+      "lastName": "درويش",
+      "email": "provider.pro18.18@palhands.com",
+      "phone": "+970591000018",
+      "city": "Ramallah",
+      "experienceYears": 9,
+      "languages": [
+        "Arabic",
+        "Hebrew"
+      ],
+      "hourlyRate": 80,
+      "services": [
+        "kitchenSetup",
+        "gardenCleaning",
+        "bedroomOrganizing"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "نور",
+      "lastName": "الهدى",
+      "email": "provider.pro19.19@palhands.com",
+      "phone": "+970591000019",
+      "city": "Nablus",
+      "experienceYears": 10,
+      "languages": [
+        "Arabic",
+        "Turkish"
+      ],
+      "hourlyRate": 83,
+      "services": [
+        "shoppingDelivery",
+        "regularCleaning"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "مريم",
+      "lastName": "خليل",
+      "email": "provider.pro20.20@palhands.com",
+      "phone": "+970591000020",
+      "city": "Jerusalem",
+      "experienceYears": 1,
+      "languages": [
+        "Arabic"
+      ],
+      "hourlyRate": 79,
+      "services": [
+        "prescriptionPickup",
+        "fullHouseOrganizing"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "رامي",
+      "lastName": "ناصر",
+      "email": "provider.pro21.21@palhands.com",
+      "phone": "+970591000021",
+      "city": "Hebron",
+      "experienceYears": 2,
+      "languages": [
+        "Arabic",
+        "English"
+      ],
+      "hourlyRate": 69,
+      "services": [
+        "kitchenCleaning",
+        "homeworkHelp",
+        "furnitureWrapping"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "عمر",
+      "lastName": "عوض",
+      "email": "provider.pro22.22@palhands.com",
+      "phone": "+970591000022",
+      "city": "Bethlehem",
+      "experienceYears": 3,
+      "languages": [
+        "Arabic",
+        "Hebrew"
+      ],
+      "hourlyRate": 86,
+      "services": [
+        "doorCabinetCleaning",
+        "medicationAssistance"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "هالة",
+      "lastName": "سمير",
+      "email": "provider.pro23.23@palhands.com",
+      "phone": "+970591000023",
+      "city": "Gaza",
+      "experienceYears": 4,
+      "languages": [
+        "Arabic",
+        "Turkish"
+      ],
+      "hourlyRate": 85,
+      "services": [
+        "furnitureCleaning",
+        "painting"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "رنا",
+      "lastName": "أحمد",
+      "email": "provider.pro24.24@palhands.com",
+      "phone": "+970591000024",
+      "city": "Ramallah",
+      "experienceYears": 5,
+      "languages": [
+        "Arabic"
+      ],
+      "hourlyRate": 85,
+      "services": [
+        "stairCleaning",
+        "newHomeArrangement",
+        "postPartyOrganizing"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "Rami",
+      "lastName": "Services",
+      "email": "provider.rami.25@palhands.com",
+      "phone": "+970591000025",
+      "city": "Nablus",
+      "experienceYears": 6,
+      "languages": [
+        "Arabic",
+        "English"
+      ],
+      "hourlyRate": 75,
+      "services": [
+        "postConstructionCleaning",
+        "specialErrands"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "Maya",
+      "lastName": "Haddad",
+      "email": "provider.maya.26@palhands.com",
+      "phone": "+970591000026",
+      "city": "Jerusalem",
+      "experienceYears": 7,
+      "languages": [
+        "Arabic",
+        "Hebrew"
+      ],
+      "hourlyRate": 85,
+      "services": [
+        "bedroomOrganizing",
+        "windowCleaning"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "Omar",
+      "lastName": "Khalil",
+      "email": "provider.omar.27@palhands.com",
+      "phone": "+970591000027",
+      "city": "Hebron",
+      "experienceYears": 8,
+      "languages": [
+        "Arabic",
+        "Turkish"
+      ],
+      "hourlyRate": 73,
+      "services": [
+        "storageOrganizing",
+        "stairCleaning",
+        "applianceInstallation"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "Sara",
+      "lastName": "Nasser",
+      "email": "provider.sara.28@palhands.com",
+      "phone": "+970591000028",
+      "city": "Bethlehem",
+      "experienceYears": 9,
+      "languages": [
+        "Arabic"
+      ],
+      "hourlyRate": 82,
+      "services": [
+        "fullHouseOrganizing",
+        "kitchenOrganizing"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "Khaled",
+      "lastName": "Mansour",
+      "email": "provider.khaled.29@palhands.com",
+      "phone": "+970591000029",
+      "city": "Gaza",
+      "experienceYears": 10,
+      "languages": [
+        "Arabic",
+        "English"
+      ],
+      "hourlyRate": 88,
+      "services": [
+        "desserts",
+        "mainDishes"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "Yara",
+      "lastName": "Saleh",
+      "email": "provider.yara.30@palhands.com",
+      "phone": "+970591000030",
+      "city": "Ramallah",
+      "experienceYears": 1,
+      "languages": [
+        "Arabic",
+        "Hebrew"
+      ],
+      "hourlyRate": 89,
+      "services": [
+        "schoolAccompaniment",
+        "childrenMealPrep",
+        "specialRequests"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "Hadi",
+      "lastName": "Suleiman",
+      "email": "provider.hadi.31@palhands.com",
+      "phone": "+970591000031",
+      "city": "Nablus",
+      "experienceYears": 2,
+      "languages": [
+        "Arabic",
+        "Turkish"
+      ],
+      "hourlyRate": 86,
+      "services": [
+        "childrenMealPrep",
+        "mobilityAssistance"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "Noor",
+      "lastName": "Ali",
+      "email": "provider.noor.32@palhands.com",
+      "phone": "+970591000032",
+      "city": "Jerusalem",
+      "experienceYears": 3,
+      "languages": [
+        "Arabic"
+      ],
+      "hourlyRate": 96,
+      "services": [
+        "medicalTransport",
+        "satelliteInstallation"
+      ],
+      "isActive": true,
+      "isVerified": true
+    },
+    {
+      "firstName": "Lina",
+      "lastName": "Faris",
+      "email": "provider.lina.33@palhands.com",
+      "phone": "+970591000033",
+      "city": "Hebron",
+      "experienceYears": 4,
+      "languages": [
+        "Arabic",
+        "English"
+      ],
+      "hourlyRate": 93,
+      "services": [
+        "emotionalSupport",
+        "preOccupancyRepairs",
+        "prescriptionPickup"
+      ],
+      "isActive": true,
+      "isVerified": true
+    }
+  ],
+  "services": [
+    {
+      "id": "68ac8f341d3221850ec8937f",
+      "title": "Bedroom Cleaning",
+      "category": "cleaning",
+      "subcategory": "bedroomCleaning",
+      "provider": "68ac8f251d3221850ec89318",
+      "location": {
+        "serviceArea": "Ramallah",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 45,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f341d3221850ec89383",
+      "title": "Door Cabinet Cleaning",
+      "category": "cleaning",
+      "subcategory": "doorCabinetCleaning",
+      "provider": "68ac8f251d3221850ec89318",
+      "location": {
+        "serviceArea": "Ramallah",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 45,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f351d3221850ec89387",
+      "title": "Kitchen Cleaning",
+      "category": "cleaning",
+      "subcategory": "kitchenCleaning",
+      "provider": "68ac8f251d3221850ec89318",
+      "location": {
+        "serviceArea": "Ramallah",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 45,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f351d3221850ec8938b",
+      "title": "Bathroom Cleaning",
+      "category": "cleaning",
+      "subcategory": "bathroomCleaning",
+      "provider": "68ac8f251d3221850ec8931b",
+      "location": {
+        "serviceArea": "Nablus",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 51,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f351d3221850ec8938f",
+      "title": "Garage Cleaning",
+      "category": "cleaning",
+      "subcategory": "garageCleaning",
+      "provider": "68ac8f251d3221850ec8931b",
+      "location": {
+        "serviceArea": "Nablus",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 51,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f351d3221850ec89393",
+      "title": "Floor Cleaning",
+      "category": "cleaning",
+      "subcategory": "floorCleaning",
+      "provider": "68ac8f261d3221850ec8931e",
+      "location": {
+        "serviceArea": "Jerusalem",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 58,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f351d3221850ec89397",
+      "title": "Closet Organizing",
+      "category": "organizing",
+      "subcategory": "closetOrganizing",
+      "provider": "68ac8f261d3221850ec8931e",
+      "location": {
+        "serviceArea": "Jerusalem",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 58,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f351d3221850ec8939b",
+      "title": "Garden Cleaning",
+      "category": "cleaning",
+      "subcategory": "gardenCleaning",
+      "provider": "68ac8f261d3221850ec89321",
+      "location": {
+        "serviceArea": "Hebron",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 50,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f361d3221850ec8939f",
+      "title": "Desserts",
+      "category": "cooking",
+      "subcategory": "desserts",
+      "provider": "68ac8f261d3221850ec89321",
+      "location": {
+        "serviceArea": "Hebron",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 50,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f361d3221850ec893a3",
+      "title": "Medical Transport",
+      "category": "elderly",
+      "subcategory": "medicalTransport",
+      "provider": "68ac8f261d3221850ec89321",
+      "location": {
+        "serviceArea": "Hebron",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 50,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f361d3221850ec893a7",
+      "title": "Garage Cleaning",
+      "category": "cleaning",
+      "subcategory": "garageCleaning",
+      "provider": "68ac8f271d3221850ec89324",
+      "location": {
+        "serviceArea": "Bethlehem",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 49,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f361d3221850ec893ab",
+      "title": "Sick Child Care",
+      "category": "childcare",
+      "subcategory": "sickChildCare",
+      "provider": "68ac8f271d3221850ec89324",
+      "location": {
+        "serviceArea": "Bethlehem",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 49,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f361d3221850ec893af",
+      "title": "Apartment Cleaning",
+      "category": "cleaning",
+      "subcategory": "apartmentCleaning",
+      "provider": "68ac8f271d3221850ec89327",
+      "location": {
+        "serviceArea": "Gaza",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 53,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f371d3221850ec893b3",
+      "title": "Electrical Work",
+      "category": "maintenance",
+      "subcategory": "electricalWork",
+      "provider": "68ac8f271d3221850ec89327",
+      "location": {
+        "serviceArea": "Gaza",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 53,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f371d3221850ec893b7",
+      "title": "Kitchen Organizing",
+      "category": "organizing",
+      "subcategory": "kitchenOrganizing",
+      "provider": "68ac8f281d3221850ec8932a",
+      "location": {
+        "serviceArea": "Ramallah",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 60,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f371d3221850ec893bb",
+      "title": "Appliance Maintenance",
+      "category": "maintenance",
+      "subcategory": "applianceMaintenance",
+      "provider": "68ac8f281d3221850ec8932a",
+      "location": {
+        "serviceArea": "Ramallah",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 60,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f371d3221850ec893bf",
+      "title": "Carpet Cleaning",
+      "category": "cleaning",
+      "subcategory": "carpetCleaning",
+      "provider": "68ac8f281d3221850ec8932a",
+      "location": {
+        "serviceArea": "Ramallah",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 60,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f371d3221850ec893c3",
+      "title": "Living Room Organizing",
+      "category": "organizing",
+      "subcategory": "livingRoomOrganizing",
+      "provider": "68ac8f281d3221850ec8932d",
+      "location": {
+        "serviceArea": "Nablus",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 55,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f371d3221850ec893c7",
+      "title": "Kitchen Setup",
+      "category": "newhome",
+      "subcategory": "kitchenSetup",
+      "provider": "68ac8f281d3221850ec8932d",
+      "location": {
+        "serviceArea": "Nablus",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 55,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f381d3221850ec893cb",
+      "title": "Children Organizing",
+      "category": "organizing",
+      "subcategory": "childrenOrganizing",
+      "provider": "68ac8f291d3221850ec89330",
+      "location": {
+        "serviceArea": "Jerusalem",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 53,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f381d3221850ec893cf",
+      "title": "Bedroom Cleaning",
+      "category": "cleaning",
+      "subcategory": "bedroomCleaning",
+      "provider": "68ac8f291d3221850ec89330",
+      "location": {
+        "serviceArea": "Jerusalem",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 53,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f381d3221850ec893d3",
+      "title": "Special Requests",
+      "category": "cooking",
+      "subcategory": "specialRequests",
+      "provider": "68ac8f291d3221850ec89333",
+      "location": {
+        "serviceArea": "Hebron",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 57,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f381d3221850ec893d7",
+      "title": "Carpet Cleaning",
+      "category": "cleaning",
+      "subcategory": "carpetCleaning",
+      "provider": "68ac8f291d3221850ec89333",
+      "location": {
+        "serviceArea": "Hebron",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 57,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f381d3221850ec893db",
+      "title": "Electrical Work",
+      "category": "maintenance",
+      "subcategory": "electricalWork",
+      "provider": "68ac8f291d3221850ec89333",
+      "location": {
+        "serviceArea": "Hebron",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 57,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f381d3221850ec893df",
+      "title": "Homework Help",
+      "category": "childcare",
+      "subcategory": "homeworkHelp",
+      "provider": "68ac8f291d3221850ec89336",
+      "location": {
+        "serviceArea": "Bethlehem",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 60,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f391d3221850ec893e3",
+      "title": "Post Construction Cleaning",
+      "category": "cleaning",
+      "subcategory": "postConstructionCleaning",
+      "provider": "68ac8f291d3221850ec89336",
+      "location": {
+        "serviceArea": "Bethlehem",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 60,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f391d3221850ec893e7",
+      "title": "Sick Child Care",
+      "category": "childcare",
+      "subcategory": "sickChildCare",
+      "provider": "68ac8f2a1d3221850ec89339",
+      "location": {
+        "serviceArea": "Gaza",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 71,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f391d3221850ec893eb",
+      "title": "Living Room Organizing",
+      "category": "organizing",
+      "subcategory": "livingRoomOrganizing",
+      "provider": "68ac8f2a1d3221850ec89339",
+      "location": {
+        "serviceArea": "Gaza",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 71,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f391d3221850ec893ef",
+      "title": "Health Monitoring",
+      "category": "elderly",
+      "subcategory": "healthMonitoring",
+      "provider": "68ac8f2a1d3221850ec8933c",
+      "location": {
+        "serviceArea": "Ramallah",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 67,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f391d3221850ec893f3",
+      "title": "Home Babysitting",
+      "category": "childcare",
+      "subcategory": "homeBabysitting",
+      "provider": "68ac8f2a1d3221850ec8933c",
+      "location": {
+        "serviceArea": "Ramallah",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 67,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f391d3221850ec893f7",
+      "title": "Garage Cleaning",
+      "category": "cleaning",
+      "subcategory": "garageCleaning",
+      "provider": "68ac8f2a1d3221850ec8933c",
+      "location": {
+        "serviceArea": "Ramallah",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 67,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f3a1d3221850ec893fb",
+      "title": "Mobility Assistance",
+      "category": "elderly",
+      "subcategory": "mobilityAssistance",
+      "provider": "68ac8f2b1d3221850ec8933f",
+      "location": {
+        "serviceArea": "Nablus",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 63,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f3a1d3221850ec893ff",
+      "title": "Medical Transport",
+      "category": "elderly",
+      "subcategory": "medicalTransport",
+      "provider": "68ac8f2b1d3221850ec8933f",
+      "location": {
+        "serviceArea": "Nablus",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 63,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f3a1d3221850ec89403",
+      "title": "Aluminum Work",
+      "category": "maintenance",
+      "subcategory": "aluminumWork",
+      "provider": "68ac8f2b1d3221850ec89342",
+      "location": {
+        "serviceArea": "Jerusalem",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 63,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f3a1d3221850ec89407",
+      "title": "Hanging Items",
+      "category": "maintenance",
+      "subcategory": "hangingItems",
+      "provider": "68ac8f2c1d3221850ec89345",
+      "location": {
+        "serviceArea": "Hebron",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 74,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f3a1d3221850ec8940b",
+      "title": "Packing Unpacking",
+      "category": "newhome",
+      "subcategory": "packingUnpacking",
+      "provider": "68ac8f2c1d3221850ec89345",
+      "location": {
+        "serviceArea": "Hebron",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 74,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f3b1d3221850ec8940f",
+      "title": "Furniture Moving",
+      "category": "newhome",
+      "subcategory": "furnitureMoving",
+      "provider": "68ac8f2c1d3221850ec89348",
+      "location": {
+        "serviceArea": "Bethlehem",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 76,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f3b1d3221850ec89413",
+      "title": "Document Delivery",
+      "category": "miscellaneous",
+      "subcategory": "documentDelivery",
+      "provider": "68ac8f2c1d3221850ec89348",
+      "location": {
+        "serviceArea": "Bethlehem",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 76,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f3b1d3221850ec89417",
+      "title": "New Home Arrangement",
+      "category": "newhome",
+      "subcategory": "newHomeArrangement",
+      "provider": "68ac8f2d1d3221850ec8934b",
+      "location": {
+        "serviceArea": "Gaza",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 66,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f3b1d3221850ec8941b",
+      "title": "Kitchen Cleaning",
+      "category": "cleaning",
+      "subcategory": "kitchenCleaning",
+      "provider": "68ac8f2d1d3221850ec8934b",
+      "location": {
+        "serviceArea": "Gaza",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 66,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f3b1d3221850ec8941f",
+      "title": "Kitchen Setup",
+      "category": "newhome",
+      "subcategory": "kitchenSetup",
+      "provider": "68ac8f2d1d3221850ec8934e",
+      "location": {
+        "serviceArea": "Ramallah",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 80,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f3b1d3221850ec89423",
+      "title": "Garden Cleaning",
+      "category": "cleaning",
+      "subcategory": "gardenCleaning",
+      "provider": "68ac8f2d1d3221850ec8934e",
+      "location": {
+        "serviceArea": "Ramallah",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 80,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f3c1d3221850ec89427",
+      "title": "Bedroom Organizing",
+      "category": "organizing",
+      "subcategory": "bedroomOrganizing",
+      "provider": "68ac8f2d1d3221850ec8934e",
+      "location": {
+        "serviceArea": "Ramallah",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 80,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f3c1d3221850ec8942b",
+      "title": "Shopping Delivery",
+      "category": "miscellaneous",
+      "subcategory": "shoppingDelivery",
+      "provider": "68ac8f2d1d3221850ec89351",
+      "location": {
+        "serviceArea": "Nablus",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 83,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f3c1d3221850ec8942f",
+      "title": "Regular Cleaning",
+      "category": "cleaning",
+      "subcategory": "regularCleaning",
+      "provider": "68ac8f2d1d3221850ec89351",
+      "location": {
+        "serviceArea": "Nablus",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 83,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f3c1d3221850ec89433",
+      "title": "Prescription Pickup",
+      "category": "miscellaneous",
+      "subcategory": "prescriptionPickup",
+      "provider": "68ac8f2e1d3221850ec89354",
+      "location": {
+        "serviceArea": "Jerusalem",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 79,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f3c1d3221850ec89437",
+      "title": "Full House Organizing",
+      "category": "organizing",
+      "subcategory": "fullHouseOrganizing",
+      "provider": "68ac8f2e1d3221850ec89354",
+      "location": {
+        "serviceArea": "Jerusalem",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 79,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f3c1d3221850ec8943b",
+      "title": "Kitchen Cleaning",
+      "category": "cleaning",
+      "subcategory": "kitchenCleaning",
+      "provider": "68ac8f2e1d3221850ec89357",
+      "location": {
+        "serviceArea": "Hebron",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 69,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f3d1d3221850ec8943f",
+      "title": "Homework Help",
+      "category": "childcare",
+      "subcategory": "homeworkHelp",
+      "provider": "68ac8f2e1d3221850ec89357",
+      "location": {
+        "serviceArea": "Hebron",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 69,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    },
+    {
+      "id": "68ac8f3d1d3221850ec89443",
+      "title": "Furniture Wrapping",
+      "category": "newhome",
+      "subcategory": "furnitureWrapping",
+      "provider": "68ac8f2e1d3221850ec89357",
+      "location": {
+        "serviceArea": "Hebron",
+        "radius": 20,
+        "onSite": true,
+        "remote": false
+      },
+      "price": {
+        "amount": 69,
+        "type": "hourly",
+        "currency": "ILS"
+      }
+    }
+  ]
+}
