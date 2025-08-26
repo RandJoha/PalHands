@@ -9,6 +9,8 @@ import '../../../../core/constants/app_strings.dart';
 
 // Shared imports
 import '../../../../shared/services/language_service.dart';
+import '../../../../shared/services/booking_service.dart';
+import '../../../../shared/models/booking.dart';
 
 class BookingManagementWidget extends StatefulWidget {
   const BookingManagementWidget({super.key});
@@ -19,7 +21,8 @@ class BookingManagementWidget extends StatefulWidget {
 
 class _BookingManagementWidgetState extends State<BookingManagementWidget> {
   bool _isLoading = false;
-  List<Map<String, dynamic>> _bookings = [];
+  List<BookingModel> _bookings = [];
+  final _bookingService = BookingService();
 
   @override
   void initState() {
@@ -28,52 +31,16 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
   }
 
   Future<void> _loadBookings() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
-
-    // Mock data
-    setState(() {
-      _bookings = [
-        {
-          'id': 'BK001',
-          'client': {'firstName': 'Ahmed', 'lastName': 'Hassan', 'email': 'ahmed@email.com'},
-          'provider': {'firstName': 'Fatima', 'lastName': 'Ali', 'email': 'fatima@email.com'},
-          'service': {'title': 'Home Cleaning', 'category': 'cleaning'},
-          'status': 'confirmed',
-          'schedule': {'date': '2024-02-15', 'startTime': '09:00', 'endTime': '12:00'},
-          'pricing': {'totalAmount': 150, 'currency': 'ILS'},
-          'payment': {'status': 'paid', 'method': 'cash'},
-          'createdAt': '2024-02-10T10:30:00Z',
-        },
-        {
-          'id': 'BK002',
-          'client': {'firstName': 'Omar', 'lastName': 'Khalil', 'email': 'omar@email.com'},
-          'provider': {'firstName': 'Layla', 'lastName': 'Hassan', 'email': 'layla@email.com'},
-          'service': {'title': 'Elderly Care', 'category': 'elderly_support'},
-          'status': 'pending',
-          'schedule': {'date': '2024-02-16', 'startTime': '08:00', 'endTime': '16:00'},
-          'pricing': {'totalAmount': 200, 'currency': 'ILS'},
-          'payment': {'status': 'pending', 'method': 'credit_card'},
-          'createdAt': '2024-02-11T14:15:00Z',
-        },
-        {
-          'id': 'BK003',
-          'client': {'firstName': 'Sara', 'lastName': 'Mohammed', 'email': 'sara@email.com'},
-          'provider': {'firstName': 'Youssef', 'lastName': 'Ibrahim', 'email': 'youssef@email.com'},
-          'service': {'title': 'Home Maintenance', 'category': 'maintenance'},
-          'status': 'completed',
-          'schedule': {'date': '2024-02-14', 'startTime': '10:00', 'endTime': '14:00'},
-          'pricing': {'totalAmount': 120, 'currency': 'ILS'},
-          'payment': {'status': 'paid', 'method': 'bank_transfer'},
-          'createdAt': '2024-02-09T09:45:00Z',
-        },
-      ];
-      _isLoading = false;
-    });
+    setState(() => _isLoading = true);
+    try {
+      final results = await _bookingService.getAllBookingsAdmin(page: 1, limit: 50);
+      setState(() {
+        _bookings = results;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -152,12 +119,12 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
     final screenWidth = MediaQuery.of(context).size.width;
     
     // Calculate statistics
-    final totalBookings = _bookings.length;
-    final pendingBookings = _bookings.where((b) => b['status'] == 'pending').length;
-    final completedBookings = _bookings.where((b) => b['status'] == 'completed').length;
-    final totalRevenue = _bookings
-        .where((b) => b['payment']['status'] == 'paid')
-        .fold(0.0, (sum, b) => sum + b['pricing']['totalAmount']);
+  final totalBookings = _bookings.length;
+  final pendingBookings = _bookings.where((b) => b.status == 'pending').length;
+  final completedBookings = _bookings.where((b) => b.status == 'completed').length;
+  final totalRevenue = _bookings
+    .where((b) => (b.payment?.status ?? 'pending') == 'paid')
+    .fold(0.0, (sum, b) => sum + b.pricing.totalAmount);
 
     final stats = [
       {
@@ -378,7 +345,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
     );
   }
 
-  Widget _buildBookingRow(Map<String, dynamic> booking, LanguageService languageService) {
+  Widget _buildBookingRow(BookingModel booking, LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
     
     return Container(
@@ -394,10 +361,10 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
       child: Row(
         children: [
           // Booking ID - Balanced sizing
-          Expanded(
+      Expanded(
             flex: 1,
             child: Text(
-              booking['id'],
+        booking.bookingId ?? booking.id,
               style: GoogleFonts.cairo(
                 fontSize: screenWidth > 1400 ? 14 : screenWidth > 1024 ? 13 : 12,
                 fontWeight: FontWeight.w600,
@@ -415,12 +382,12 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
                   width: screenWidth > 1400 ? 36 : screenWidth > 1024 ? 32 : 28,
                   height: screenWidth > 1400 ? 36 : screenWidth > 1024 ? 32 : 28,
                   decoration: BoxDecoration(
-                    color: _getServiceColor(booking['service']['category']).withValues(alpha: 0.1),
+                    color: _getServiceColor(booking.serviceDetails.category ?? '').withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Icon(
-                    _getServiceIcon(booking['service']['category']),
-                    color: _getServiceColor(booking['service']['category']),
+                    _getServiceIcon(booking.serviceDetails.category ?? ''),
+                    color: _getServiceColor(booking.serviceDetails.category ?? ''),
                     size: screenWidth > 1400 ? 18 : screenWidth > 1024 ? 16 : 14,
                   ),
                 ),
@@ -430,7 +397,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        booking['service']['title'],
+                        booking.serviceDetails.title,
                         style: GoogleFonts.cairo(
                           fontSize: screenWidth > 1400 ? 14 : screenWidth > 1024 ? 13 : 12,
                           fontWeight: FontWeight.w600,
@@ -440,7 +407,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
                         maxLines: 1,
                       ),
                       Text(
-                        _getLocalizedCategoryLabel(booking['service']['category'], languageService),
+                        _getLocalizedCategoryLabel(booking.serviceDetails.category ?? '', languageService),
                         style: GoogleFonts.cairo(
                           fontSize: screenWidth > 1400 ? 12 : screenWidth > 1024 ? 11 : 10,
                           color: AppColors.textLight,
@@ -448,6 +415,30 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                       ),
+                      if ((booking.location.address).isNotEmpty) ...[
+                        Text(
+                          booking.location.address,
+                          style: GoogleFonts.cairo(
+                            fontSize: screenWidth > 1400 ? 11 : screenWidth > 1024 ? 10 : 9,
+                            color: AppColors.textLight,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ],
+                      if (((booking.location.instructions ?? booking.notes) ?? '').isNotEmpty) ...[
+                        Text(
+                          booking.location.instructions?.isNotEmpty == true
+                              ? booking.location.instructions!
+                              : (booking.notes ?? ''),
+                          style: GoogleFonts.cairo(
+                            fontSize: screenWidth > 1400 ? 11 : screenWidth > 1024 ? 10 : 9,
+                            color: AppColors.textLight,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -460,7 +451,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
             Expanded(
               flex: 1,
               child: Text(
-                '${booking['client']['firstName']} ${booking['client']['lastName']}',
+                booking.clientName ?? '-',
                 style: GoogleFonts.cairo(
                   fontSize: screenWidth > 1400 ? 14 : screenWidth > 1024 ? 13 : 12,
                   color: AppColors.textDark,
@@ -475,7 +466,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
             Expanded(
               flex: 1,
               child: Text(
-                '${booking['provider']['firstName']} ${booking['provider']['lastName']}',
+                booking.providerName ?? '-',
                 style: GoogleFonts.cairo(
                   fontSize: screenWidth > 1400 ? 14 : screenWidth > 1024 ? 13 : 12,
                   color: AppColors.textDark,
@@ -493,14 +484,14 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    booking['schedule']['date'],
+                    booking.schedule.date,
                     style: GoogleFonts.cairo(
                       fontSize: screenWidth > 1400 ? 13 : screenWidth > 1024 ? 12 : 11,
                       color: AppColors.textDark,
                     ),
                   ),
                   Text(
-                    '${booking['schedule']['startTime']} - ${booking['schedule']['endTime']}',
+                    '${booking.schedule.startTime} - ${booking.schedule.endTime}',
                     style: GoogleFonts.cairo(
                       fontSize: screenWidth > 1400 ? 12 : screenWidth > 1024 ? 11 : 10,
                       color: AppColors.textLight,
@@ -516,7 +507,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
             Expanded(
               flex: 1,
               child: Text(
-                '₪${booking['pricing']['totalAmount']}',
+                '₪${booking.pricing.totalAmount.toStringAsFixed(0)}',
                 style: GoogleFonts.cairo(
                   fontSize: screenWidth > 1400 ? 14 : screenWidth > 1024 ? 13 : 12,
                   fontWeight: FontWeight.w600,
@@ -535,7 +526,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
                 vertical: screenWidth > 1400 ? 4 : 3,
               ),
               decoration: BoxDecoration(
-                color: _getStatusColor(booking['status']).withValues(alpha: 0.1),
+                color: _getStatusColor(booking.status).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Row(
@@ -545,17 +536,17 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
                     width: 6,
                     height: 6,
                     decoration: BoxDecoration(
-                      color: _getStatusColor(booking['status']),
+                      color: _getStatusColor(booking.status),
                       shape: BoxShape.circle,
                     ),
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    _getLocalizedStatusLabel(booking['status'], languageService).toUpperCase(),
+                    _getLocalizedStatusLabel(booking.status, languageService).toUpperCase(),
                     style: GoogleFonts.cairo(
                       fontSize: screenWidth > 1400 ? 10 : 9,
                       fontWeight: FontWeight.w600,
-                      color: _getStatusColor(booking['status']),
+                      color: _getStatusColor(booking.status),
                     ),
                   ),
                 ],
@@ -588,10 +579,14 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
         return AppStrings.getString('confirmed', languageService.currentLanguage);
       case 'pending':
         return AppStrings.getString('pending', languageService.currentLanguage);
+      case 'in_progress':
+        return AppStrings.getString('inProgress', languageService.currentLanguage);
       case 'completed':
         return AppStrings.getString('completed', languageService.currentLanguage);
       case 'cancelled':
         return AppStrings.getString('cancelled', languageService.currentLanguage);
+      case 'disputed':
+        return AppStrings.getString('disputed', languageService.currentLanguage);
       default:
         return status;
     }
@@ -629,10 +624,14 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
         return Colors.green;
       case 'pending':
         return Colors.orange;
+      case 'in_progress':
+        return Colors.blue;
       case 'completed':
         return Colors.blue;
       case 'cancelled':
         return Colors.red;
+      case 'disputed':
+        return Colors.purple;
       default:
         return AppColors.textLight;
     }

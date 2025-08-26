@@ -7,4 +7,7 @@ router.get('/', providersController.listProviders);
 router.get('/category/:category', providersController.getProvidersByCategory);
 router.get('/:id', providersController.getProviderById);
 
+// Provider dashboard stats (can be public for now; tighten later if needed)
+router.get('/:id/bookings/stats', providersController.getProviderStats);
+
 module.exports = router;

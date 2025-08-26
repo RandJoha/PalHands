@@ -1,4 +1,5 @@
 const Provider = require('../models/Provider');
+const Booking = require('../models/Booking');
 const { ok, error } = require('../utils/response');
 
 /**
@@ -221,5 +222,74 @@ async function getProvidersByCategory(req, res) {
 module.exports = {
   listProviders,
   getProviderById,
-  getProvidersByCategory
+  getProvidersByCategory,
+  getProviderStats
 };
+
+/**
+ * Provider dashboard stats: counts by status and recent bookings
+ */
+async function getProviderStats(req, res) {
+  try {
+    const providerId = req.params.id;
+
+    // Ensure provider exists (and optionally is active)
+    const provider = await Provider.findById(providerId).select('_id isActive totalBookings completedBookings');
+    if (!provider) return error(res, 404, 'Provider not found');
+
+    // Aggregation for counts by status
+    const pipeline = [
+      { $match: { provider: provider._id } },
+      { $group: { _id: '$status', count: { $sum: 1 } } }
+    ];
+    const grouped = await Booking.aggregate(pipeline);
+    const counts = {
+      total: 0,
+      pending: 0,
+      confirmed: 0,
+      in_progress: 0,
+      completed: 0,
+      cancelled: 0,
+      disputed: 0
+    };
+    grouped.forEach(g => {
+      counts[g._id] = g.count;
+      counts.total += g.count;
+    });
+
+    // Recent bookings (last 10)
+    const recent = await Booking.find({ provider: provider._id })
+      .populate('client', 'firstName lastName')
+      .populate('service', 'title category')
+      .sort({ createdAt: -1 })
+      .limit(10);
+
+    const recentTransformed = recent.map(b => ({
+      id: b._id,
+      bookingId: b.bookingId,
+      clientName: b.client ? `${b.client.firstName} ${b.client.lastName}`.trim() : '—',
+      serviceTitle: b.service ? b.service.title : b.serviceDetails?.title,
+      category: b.service ? b.service.category : b.serviceDetails?.category,
+      date: b.schedule?.date,
+      startTime: b.schedule?.startTime,
+      endTime: b.schedule?.endTime,
+      totalAmount: b.pricing?.totalAmount,
+      currency: b.pricing?.currency || 'ILS',
+      status: b.status,
+      createdAt: b.createdAt
+    }));
+
+    return ok(res, {
+      provider: {
+        id: provider._id,
+        totalBookings: provider.totalBookings || counts.total,
+        completedBookings: provider.completedBookings || counts.completed
+      },
+      counts,
+      recent: recentTransformed
+    });
+  } catch (e) {
+    console.error('getProviderStats error', e);
+    return error(res, 500, 'Failed to fetch provider stats');
+  }
+}

@@ -30,8 +30,22 @@ const updateStatusValidator = celebrate({
 
 router.post('/', auth, checkRole(['client','provider','admin']), createBookingValidator, bookingsController.createBooking);
 router.get('/', auth, bookingsController.listMyBookings);
+// Admin listing
+router.get('/admin/all', auth, checkRole(['admin']), bookingsController.listAllBookings);
 // Important: define the 'code' route before the generic ':id' route
 router.get('/:id', auth, bookingsController.getBookingById);
 router.put('/:id/status', auth, updateStatusValidator, bookingsController.updateBookingStatus);
+
+// New business endpoints
+const reasonValidator = celebrate({
+  [Segments.BODY]: Joi.object({ reason: Joi.string().allow('').optional() })
+});
+
+router.post('/:id/cancel', auth, reasonValidator, bookingsController.cancelBooking);
+router.post('/:id/confirm', auth, checkRole(['provider']), bookingsController.confirmBooking);
+router.post('/:id/complete', auth, checkRole(['provider']), bookingsController.completeBooking);
+router.post('/:id/cancellation-requests/:requestId/respond', auth, celebrate({
+  [Segments.BODY]: Joi.object({ action: Joi.string().valid('accept','decline').required() })
+}), bookingsController.respondCancellationRequest);
 
 module.exports = router;

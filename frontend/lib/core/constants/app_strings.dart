@@ -390,6 +390,62 @@ class AppStrings {
     'ar': 'الإعدادات',
   };
 
+  // Booking lifecycle and cancellation (new)
+  static const Map<String, String> cancelBooking = {
+    'en': 'Cancel Booking',
+    'ar': 'إلغاء الحجز',
+  };
+
+  static const Map<String, String> sendCancellationRequest = {
+    'en': 'Send Cancellation Request',
+    'ar': 'إرسال طلب إلغاء',
+  };
+
+  static const Map<String, String> cancellationRequest = {
+    'en': 'Cancellation Request',
+    'ar': 'طلب إلغاء',
+  };
+
+  static const Map<String, String> reasonOptional = {
+    'en': 'Reason (optional)',
+    'ar': 'السبب (اختياري)',
+  };
+
+  static const Map<String, String> confirmSendCancellationRequest = {
+    'en': 'Cancelling may require provider approval. Add a reason (optional) and confirm.',
+    'ar': 'الإلغاء قد يتطلب موافقة مقدم الخدمة. أضف سببًا (اختياريًا) ثم أكد.',
+  };
+
+  static const Map<String, String> awaitingProviderApproval = {
+    'en': 'Awaiting provider approval',
+    'ar': 'بانتظار موافقة مقدم الخدمة',
+  };
+
+  static const Map<String, String> cancellationNotPossible = {
+    'en': 'Cancellation not possible',
+    'ar': 'لا يمكن الإلغاء',
+  };
+
+  static const Map<String, String> cancelWithinWindowMessage = {
+    'en': 'You can’t cancel within the allowed window. You can send a cancellation request instead.',
+    'ar': 'لا يمكنك الإلغاء ضمن الفترة المحددة. يمكنك إرسال طلب إلغاء بدلاً من ذلك.',
+  };
+
+  static const Map<String, String> earliestBookingDate = {
+    'en': 'Earliest booking date is in 48 hours',
+    'ar': 'أقرب موعد للحجز بعد 48 ساعة',
+  };
+
+  static const Map<String, String> accept = {
+    'en': 'Accept',
+    'ar': 'قبول',
+  };
+
+  static const Map<String, String> decline = {
+    'en': 'Decline',
+    'ar': 'رفض',
+  };
+
   // Services
   static const Map<String, String> allServices = {
     'en': 'All Services',
@@ -415,11 +471,6 @@ class AppStrings {
   static const Map<String, String> bookNow = {
     'en': 'Book Now',
     'ar': 'احجز الآن',
-  };
-
-  static const Map<String, String> cancelBooking = {
-    'en': 'Cancel Booking',
-    'ar': 'إلغاء الحجز',
   };
 
   // Booking Actions
@@ -4428,6 +4479,16 @@ class AppStrings {
       'myBookings': myBookings,
       'bookNow': bookNow,
       'cancelBooking': cancelBooking,
+  'sendCancellationRequest': sendCancellationRequest,
+  'cancellationRequest': cancellationRequest,
+  'reasonOptional': reasonOptional,
+  'confirmSendCancellationRequest': confirmSendCancellationRequest,
+  'awaitingProviderApproval': awaitingProviderApproval,
+  'cancellationNotPossible': cancellationNotPossible,
+  'cancelWithinWindowMessage': cancelWithinWindowMessage,
+  'earliestBookingDate': earliestBookingDate,
+  'accept': accept,
+  'decline': decline,
       // Booking Actions
       'track': track,
       'reschedule': reschedule,

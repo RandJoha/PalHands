@@ -11,6 +11,8 @@ import '../../../../core/constants/app_strings.dart';
 
 // Shared imports
 import '../../../../shared/services/language_service.dart';
+import '../../../../shared/services/booking_service.dart';
+import '../../../../shared/models/booking.dart';
 
 // Widget imports
 import '../../../admin/presentation/widgets/language_toggle_widget.dart';
@@ -47,6 +49,10 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   late AnimationController _sidebarAnimationController;
   late AnimationController _contentAnimationController;
   late Animation<double> _contentAnimation;
+  // Bookings state (client dashboard)
+  int _selectedFilter = 0; // 0=All, 1=Pending, 2=Upcoming, 3=Completed, 4=Cancelled
+  List<BookingModel> _myBookings = const [];
+  bool _loadingBookings = false;
 
   // Menu items - will be localized
   List<UserMenuItem> _getMenuItems() {
@@ -135,6 +141,8 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     final idx = widget.initialIndex!.clamp(0, max);
     setState(() => _selectedIndex = idx);
   }
+  // Preload bookings when opening My Bookings by default
+  _maybeLoadBookings(initial: true);
   }
 
   @override
@@ -753,11 +761,12 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     final languageService = Provider.of<LanguageService>(context, listen: false);
     final filters = [
       AppStrings.getString('all', languageService.currentLanguage),
-      AppStrings.getString('upcoming', languageService.currentLanguage),
+      AppStrings.getString('pending', languageService.currentLanguage),
+      AppStrings.getString('confirmed', languageService.currentLanguage),
       AppStrings.getString('completed', languageService.currentLanguage),
       AppStrings.getString('cancelled', languageService.currentLanguage),
     ];
-    int selectedFilter = 0; // This would be state in a real app
+  final selectedFilter = _selectedFilter;
     
     return Wrap(
       spacing: isMobile ? 8.0 : 12.0,
@@ -777,7 +786,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           ),
           selected: isSelected,
           onSelected: (selected) {
-            // Handle filter selection
+            setState(() => _selectedFilter = index);
           },
           backgroundColor: AppColors.white,
           selectedColor: AppColors.primary,
@@ -793,44 +802,112 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
 
   Widget _buildBookingsList(bool isMobile, bool isTablet, double screenWidth) {
     final languageService = Provider.of<LanguageService>(context, listen: false);
-    final bookings = [
-      {
-        'service': AppStrings.getString('homeCleaning', languageService.currentLanguage),
-        'provider': 'Fatima Al-Zahra',
-        'date': AppStrings.getString('tomorrow10AM', languageService.currentLanguage),
-        'status': AppStrings.getString('confirmed', languageService.currentLanguage),
-        'statusColor': AppColors.success,
-        'price': '₪150',
-        'address': '${AppStrings.getString('mainStreet', languageService.currentLanguage)}, ${AppStrings.getString('jerusalem', languageService.currentLanguage)}',
-      },
-      {
-        'service': AppStrings.getString('elderlyCare', languageService.currentLanguage),
-        'provider': 'Mariam Hassan',
-        'date': AppStrings.getString('friday2PM', languageService.currentLanguage),
-        'status': AppStrings.getString('pending', languageService.currentLanguage),
-        'statusColor': AppColors.warning,
-        'price': '₪200',
-        'address': '${AppStrings.getString('oakAvenue', languageService.currentLanguage)}, ${AppStrings.getString('telAviv', languageService.currentLanguage)}',
-      },
-      {
-        'service': AppStrings.getString('babysitting', languageService.currentLanguage),
-        'provider': 'Aisha Mohammed',
-        'date': AppStrings.getString('yesterday3PM', languageService.currentLanguage),
-        'status': AppStrings.getString('completed', languageService.currentLanguage),
-        'statusColor': AppColors.info,
-        'price': '₪120',
-        'address': '${AppStrings.getString('pineRoad', languageService.currentLanguage)}, ${AppStrings.getString('haifa', languageService.currentLanguage)}',
-      },
-    ];
-
+    if (_loadingBookings) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    final filtered = _filteredBookingsForCurrentTab();
+    // Show filtered count badge similar to provider list
+    final header = Row(
+      children: [
+        Expanded(child: const SizedBox()),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppColors.border,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            '${filtered.length}',
+            style: GoogleFonts.cairo(
+              fontSize: isMobile ? 12.0 : 13.0,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+      ],
+    );
+    
+    if (filtered.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          header,
+          const SizedBox(height: 12),
+          Center(
+            child: Text(
+              AppStrings.getString('noBookingsFound', languageService.currentLanguage),
+              style: GoogleFonts.cairo(color: AppColors.textSecondary),
+            ),
+          ),
+        ],
+      );
+    }
+    final items = filtered.map(_vmFromBooking).toList();
     return Column(
-      children: bookings.map((booking) {
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        header,
+        SizedBox(height: isMobile ? 12.0 : 16.0),
+        ...items.map((vm) {
         return Container(
           margin: EdgeInsets.only(bottom: isMobile ? 16.0 : 20.0),
-          child: _buildDetailedBookingCard(booking, isMobile, isTablet, screenWidth),
+          child: _buildDetailedBookingCard(vm, isMobile, isTablet, screenWidth),
         );
-      }).toList(),
+        }).toList(),
+      ],
     );
+  }
+
+  Future<void> _maybeLoadBookings({bool initial = false}) async {
+    // Only auto-load on My Bookings tab
+    if (initial && _selectedIndex != 0) return;
+    setState(() => _loadingBookings = true);
+    try {
+      final svc = BookingService();
+      _myBookings = await svc.getMyBookings();
+    } catch (_) {
+      _myBookings = const [];
+    } finally {
+      if (mounted) setState(() => _loadingBookings = false);
+    }
+  }
+
+  List<BookingModel> _filteredBookingsForCurrentTab() {
+    if (_selectedFilter == 3) {
+      return _myBookings.where((b) => b.status.toLowerCase() == 'completed').toList();
+    }
+    if (_selectedFilter == 4) {
+      return _myBookings.where((b) => b.status.toLowerCase() == 'cancelled').toList();
+    }
+    if (_selectedFilter == 2) {
+      return _myBookings.where((b) => b.status.toLowerCase() == 'confirmed').toList();
+    }
+    if (_selectedFilter == 1) {
+      return _myBookings.where((b) => b.status.toLowerCase() == 'pending').toList();
+    }
+  // Default 'All' excludes cancelled to match UX: cancelled disappear by default
+  return _myBookings.where((b) => b.status.toLowerCase() != 'cancelled').toList();
+  }
+
+  Map<String, dynamic> _vmFromBooking(BookingModel b) {
+    final statusInfo = BookingService.getStatusInfo(b.status);
+    final displayDate = BookingService.formatBookingTime(b.schedule);
+    final hasPendingCancel = b.cancellationRequests.any((r) => r.status.toLowerCase() == 'pending');
+    return {
+      'id': b.id,
+      'service': b.serviceDetails.title,
+      'provider': b.providerName ?? '',
+      'date': displayDate,
+      'status': statusInfo['label'],
+      'statusRaw': b.status,
+      'statusColor': statusInfo['color'],
+      'price': '₪${b.pricing.totalAmount.toStringAsFixed(0)}',
+      'address': b.location.address,
+      'instructions': b.location.instructions ?? '',
+      'notes': b.notes ?? '',
+      'hasPendingCancel': hasPendingCancel,
+    };
   }
 
   Widget _buildDetailedBookingCard(Map<String, dynamic> booking, bool isMobile, bool isTablet, double screenWidth) {
@@ -884,6 +961,27 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                   ),
                 ),
               ),
+              if (booking['hasPendingCancel'] == true) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 8.0 : 10.0,
+                    vertical: isMobile ? 4.0 : 4.0,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(isMobile ? 8.0 : 12.0),
+                  ),
+                  child: Text(
+                    AppStrings.getString('awaitingProviderApproval', languageService.currentLanguage),
+                    style: GoogleFonts.cairo(
+                      fontSize: isMobile ? 10.0 : 12.0,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.amber.shade800,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
           SizedBox(height: isMobile ? 12.0 : 16.0),
@@ -896,6 +994,24 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             isMobile,
           ),
           const SizedBox(height: 8.0),
+          if ((booking['instructions'] as String).isNotEmpty) ...[
+            _buildBookingDetailRow(
+              Icons.notes,
+              AppStrings.getString('specialInstructions', languageService.currentLanguage),
+              booking['instructions'],
+              isMobile,
+            ),
+            const SizedBox(height: 8.0),
+          ],
+          if ((booking['notes'] as String).isNotEmpty) ...[
+            _buildBookingDetailRow(
+              Icons.sticky_note_2,
+              AppStrings.getString('additionalNotesOptional', languageService.currentLanguage),
+              booking['notes'],
+              isMobile,
+            ),
+            const SizedBox(height: 8.0),
+          ],
           _buildBookingDetailRow(
             Icons.calendar_today,
             AppStrings.getString('dateTime', languageService.currentLanguage),
@@ -912,14 +1028,14 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           const SizedBox(height: 8.0),
           _buildBookingDetailRow(
             Icons.attach_money,
-            AppStrings.getString('price', languageService.currentLanguage),
+            AppStrings.getString('estimatedCost', languageService.currentLanguage),
             booking['price'],
             isMobile,
           ),
           SizedBox(height: isMobile ? 16.0 : 20.0),
           
           // Action buttons
-          _buildBookingActions(isMobile, isTablet, screenWidth),
+          _buildBookingActions(isMobile, isTablet, screenWidth, bookingId: booking['id'] as String?),
         ],
       ),
     );
@@ -956,13 +1072,11 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     );
   }
 
-  Widget _buildBookingActions(bool isMobile, bool isTablet, double screenWidth) {
+  Widget _buildBookingActions(bool isMobile, bool isTablet, double screenWidth, { String? bookingId }) {
     final languageService = Provider.of<LanguageService>(context, listen: false);
     final actions = [
-      {'icon': Icons.cancel, 'label': AppStrings.getString('cancel', languageService.currentLanguage), 'color': AppColors.error},
-      {'icon': Icons.schedule, 'label': AppStrings.getString('reschedule', languageService.currentLanguage), 'color': AppColors.warning},
-      {'icon': Icons.chat, 'label': AppStrings.getString('contact', languageService.currentLanguage), 'color': AppColors.primary},
-      // Removed Tracking action per requirements
+      {'key': 'cancel', 'icon': Icons.cancel, 'label': AppStrings.getString('cancel', languageService.currentLanguage), 'color': AppColors.error},
+      // Reschedule and Contact left for later per requirements
     ];
 
     return Wrap(
@@ -970,9 +1084,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       runSpacing: isMobile ? 8.0 : 12.0,
       children: actions.map((action) {
         return OutlinedButton.icon(
-          onPressed: () {
-            // Handle action
-          },
+          onPressed: () => _onBookingActionPressed(action['key'] as String, bookingId: bookingId),
           icon: Icon(
             action['icon'] as IconData,
             size: isMobile ? 16.0 : 18.0,
@@ -996,6 +1108,122 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         );
       }).toList(),
     );
+  }
+
+  Future<void> _onBookingActionPressed(String key, { String? bookingId }) async {
+    if (key != 'cancel') return;
+    String? targetId = bookingId;
+    if (targetId == null || targetId.isEmpty) {
+      final list = _filteredBookingsForCurrentTab();
+      final target = list.firstWhere((b) => ['pending','confirmed'].contains(b.status.toLowerCase()), orElse: () => list.isNotEmpty ? list.first : (null as dynamic));
+      if (target == null) return;
+      targetId = target.id;
+    }
+    final svc = BookingService();
+    final languageService = Provider.of<LanguageService>(context, listen: false);
+    // Determine if within allowed cancellation window (cancel immediately) vs outside (needs request)
+    // We estimate locally: compare minutes-until-start with thresholds
+    // Defaults: 2880 minutes (48h) in production; 1 minute in non-production testing
+    int cancelThresholdMins = 2880;
+    // If you prefer an explicit dev override, you can wire via flavors or env; here we infer using assert
+    assert(() {
+      cancelThresholdMins = 1;
+      return true;
+    }());
+
+    // We need the schedule to compute minutes, fetch the booking briefly
+    BookingModel? targetBooking;
+    try {
+      targetBooking = await svc.getBookingById(targetId);
+    } catch (_) {}
+    String? reason;
+    bool promptReason = true; // default to prompt
+    if (targetBooking != null) {
+      try {
+        final dt = DateTime.tryParse(targetBooking.schedule.date);
+        if (dt != null) {
+          final parts = (targetBooking.schedule.startTime).split(':');
+          final hh = int.tryParse(parts.first) ?? 0;
+          final mm = int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0;
+          final start = DateTime(dt.year, dt.month, dt.day, hh, mm);
+          final mins = start.difference(DateTime.now()).inMinutes;
+          if (mins >= cancelThresholdMins) {
+            // Within allowed window: cancel immediately, no reason dialog
+            promptReason = false;
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (promptReason) {
+      reason = await showDialog<String?>(
+        context: context,
+        builder: (ctx) {
+          final controller = TextEditingController();
+          return AlertDialog(
+            title: Text(AppStrings.getString('cancelBooking', languageService.currentLanguage)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(AppStrings.getString('confirmSendCancellationRequest', languageService.currentLanguage)),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: controller,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    hintText: AppStrings.getString('reasonOptional', languageService.currentLanguage),
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(null),
+                child: Text(AppStrings.getString('cancel', languageService.currentLanguage)),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(ctx).pop(controller.text.trim().isEmpty ? null : controller.text.trim()),
+                child: Text(AppStrings.getString('sendCancellationRequest', languageService.currentLanguage)),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
+    try {
+      final res = await svc.cancelBookingAction(targetId, reason: reason);
+      if (res.containsKey('booking')) {
+        await _maybeLoadBookings();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppStrings.getString('cancelBooking', languageService.currentLanguage) + ' ✓')),
+          );
+        }
+      } else {
+        await _maybeLoadBookings();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppStrings.getString('sendCancellationRequest', languageService.currentLanguage) + ' ✓')),
+          );
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(AppStrings.getString('cancellationNotPossible', languageService.currentLanguage)),
+          content: Text(AppStrings.getString('cancelWithinWindowMessage', languageService.currentLanguage)),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('OK')),
+          ],
+        ),
+      );
+    }
   }
 
   // Chat Messages Section
@@ -2714,11 +2942,6 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       'gaza','rafah','khan yunis','deir al-balah','north gaza'
     ];
     String? city = (current?['city'] as String?);
-    // Normalize city to lowercase and validate against allowed list to avoid Dropdown value mismatch
-    if (city != null) {
-      final lc = city.toLowerCase().trim();
-      city = cities.contains(lc) ? lc : null;
-    }
     String? selectedStreet = (current?['street'] as String?);
     final area = TextEditingController(text: (current?['area'] ?? '').toString());
     bool makeDefault = current?['isDefault'] == true || existing.isEmpty; // first one becomes default
@@ -2761,7 +2984,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     const SizedBox(height: 16),
                     // City dropdown with localized labels
                     DropdownButtonFormField<String>(
-                      value: (city != null && cities.contains(city)) ? city : null,
+                      value: city,
                       decoration: const InputDecoration(labelText: 'City'),
                       items: [
                         for (final c in cities)
@@ -2780,8 +3003,8 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     const SizedBox(height: 16),
                     // Street dropdown (only show if city is selected)
                     if (city != null) ...[
-                      DropdownButtonFormField<String>(
-                         value: (_getStreetsForCity(city).contains(selectedStreet)) ? selectedStreet : null,
+                                             DropdownButtonFormField<String>(
+                         value: selectedStreet,
                          decoration: const InputDecoration(
                            labelText: 'Street *',
                            helperText: 'Please select a street',
@@ -2854,7 +3077,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       final payload = {
         'type': type,
         'street': selectedStreet ?? '',
-  'city': (city ?? '').toLowerCase().trim(),
+        'city': (city ?? '').trim(),
         'area': area.text.trim(),
         'isDefault': makeDefault,
       };
@@ -2928,8 +3151,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       final nextIndex = (counters[type] ?? 0) + 1;
       counters[type] = nextIndex;
       final numberedLabel = countForType > 1 ? '$baseLabel $nextIndex' : baseLabel;
-  final cityKey = (m['city'] is String) ? (m['city'] as String).toLowerCase().trim() : '';
-  final line = [m['street'], cityKey, m['area']]
+      final line = [m['street'], m['city'], m['area']]
           .whereType<String>()
           .where((s) => s.trim().isNotEmpty)
           .join(', ');

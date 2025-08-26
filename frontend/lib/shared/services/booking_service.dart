@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/booking.dart';
 import 'base_api_service.dart';
@@ -11,15 +12,18 @@ class BookingService with BaseApiService {
   factory BookingService() => _instance;
   BookingService._internal();
 
-  // Get authentication token from AuthService
-  Map<String, String> get _authHeaders {
-    final token = AuthService().token;
-    if (token != null) {
-      return {
-        'Authorization': 'Bearer $token',
-        ...ApiConfig.defaultHeaders,
-      };
-    }
+  // Build auth headers from persisted token (avoids relying on a new AuthService instance)
+  Future<Map<String, String>> _getAuthHeaders() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      if (token != null && token.isNotEmpty) {
+        return {
+          'Authorization': 'Bearer $token',
+          ...ApiConfig.defaultHeaders,
+        };
+      }
+    } catch (_) {}
     return ApiConfig.defaultHeaders;
   }
 
@@ -29,7 +33,7 @@ class BookingService with BaseApiService {
       final response = await post(
         ApiConfig.bookingsEndpoint,
         body: request.toJson(),
-        headers: _authHeaders,
+  headers: await _getAuthHeaders(),
       );
 
       if (kDebugMode) {
@@ -63,7 +67,7 @@ class BookingService with BaseApiService {
               ? '?${Uri(queryParameters: queryParams).query}' 
               : '');
 
-      final response = await get(endpoint, headers: _authHeaders);
+  final response = await get(endpoint, headers: await _getAuthHeaders());
 
       if (kDebugMode) {
         print('📋 Fetched bookings: ${response['data']?.length ?? 0} items');
@@ -81,12 +85,45 @@ class BookingService with BaseApiService {
     }
   }
 
+  /// Admin: list all bookings (paginated)
+  Future<List<BookingModel>> getAllBookingsAdmin({
+    String? status,
+    int? page,
+    int? limit,
+  }) async {
+    try {
+      final queryParams = <String, String>{};
+      if (status != null) queryParams['status'] = status;
+      if (page != null) queryParams['page'] = page.toString();
+      if (limit != null) queryParams['limit'] = limit.toString();
+
+      final endpoint = '${ApiConfig.bookingsEndpoint}/admin/all' +
+          (queryParams.isNotEmpty
+              ? '?${Uri(queryParameters: queryParams).query}'
+              : '');
+
+      final response = await get(endpoint, headers: await _getAuthHeaders());
+
+      if (kDebugMode) {
+        print('📊 Admin fetched bookings: ${response['data']?.length ?? response['bookings']?.length ?? 0} items');
+      }
+
+      final List<dynamic> bookingsData = response['data'] ?? response['bookings'] ?? [];
+      return bookingsData.map((json) => BookingModel.fromJson(json)).toList();
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error fetching admin bookings: $e');
+      }
+      rethrow;
+    }
+  }
+
   /// Get a specific booking by ID
   Future<BookingModel> getBookingById(String bookingId) async {
     try {
       final response = await get(
         '${ApiConfig.bookingsEndpoint}/$bookingId',
-        headers: _authHeaders,
+  headers: await _getAuthHeaders(),
       );
 
       if (kDebugMode) {
@@ -113,7 +150,7 @@ class BookingService with BaseApiService {
       final response = await put(
         '${ApiConfig.bookingsEndpoint}/$bookingId/status',
         body: request.toJson(),
-        headers: _authHeaders,
+  headers: await _getAuthHeaders(),
       );
 
       if (kDebugMode) {
@@ -130,24 +167,52 @@ class BookingService with BaseApiService {
     }
   }
 
-  /// Cancel a booking
-  Future<BookingModel> cancelBooking(String bookingId) async {
-    return updateBookingStatus(bookingId, 'cancelled');
+  /// Cancel a booking with threshold-aware backend handling.
+  /// Returns a map:
+  /// - { 'booking': BookingModel } on direct cancel (200)
+  /// - { 'request': Map } on 202 pending cancellation request
+  Future<Map<String, dynamic>> cancelBookingAction(String bookingId, { String? reason }) async {
+    final response = await post(
+      '${ApiConfig.bookingsEndpoint}/$bookingId/cancel',
+      body: { if (reason != null) 'reason': reason },
+      headers: await _getAuthHeaders(),
+    );
+    if (response is Map && response['data'] is Map && (response['data'] as Map).containsKey('request')) {
+      return { 'request': response['data']['request'] };
+    }
+    final data = response['data'] ?? response;
+    return { 'booking': BookingModel.fromJson(data) };
   }
 
   /// Confirm a booking (provider action)
   Future<BookingModel> confirmBooking(String bookingId) async {
-    return updateBookingStatus(bookingId, 'confirmed');
+    final response = await post(
+      '${ApiConfig.bookingsEndpoint}/$bookingId/confirm',
+      headers: await _getAuthHeaders(),
+    );
+    final data = response['data'] ?? response;
+    return BookingModel.fromJson(data);
   }
 
-  /// Mark booking as in progress
-  Future<BookingModel> startBooking(String bookingId) async {
-    return updateBookingStatus(bookingId, 'in_progress');
-  }
-
-  /// Complete a booking
+  /// Complete a booking (provider action)
   Future<BookingModel> completeBooking(String bookingId) async {
-    return updateBookingStatus(bookingId, 'completed');
+    final response = await post(
+      '${ApiConfig.bookingsEndpoint}/$bookingId/complete',
+      headers: await _getAuthHeaders(),
+    );
+    final data = response['data'] ?? response;
+    return BookingModel.fromJson(data);
+  }
+
+  /// Respond to a cancellation request (provider or client counterparty)
+  Future<BookingModel> respondCancellationRequest(String bookingId, String requestId, String action) async {
+    final response = await post(
+      '${ApiConfig.bookingsEndpoint}/$bookingId/cancellation-requests/$requestId/respond',
+      body: { 'action': action },
+      headers: await _getAuthHeaders(),
+    );
+    final data = response['data'] ?? response;
+    return BookingModel.fromJson(data);
   }
 
   /// Get booking status color for UI

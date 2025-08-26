@@ -82,11 +82,16 @@ class ProviderService with BaseApiService {
 
       final response = await get(endpoint, headers: _authHeaders);
 
-      if (kDebugMode) {
-        print('🏢 Fetched providers: ${response['data']?.length ?? 0} items');
+      // Extract providers array from various backend shapes
+      dynamic raw = response['data'] ?? response['providers'] ?? response['results'];
+      if (raw is Map<String, dynamic>) {
+        raw = raw['data'] ?? raw['providers'] ?? raw['items'] ?? raw['results'] ?? [];
       }
+      final List<dynamic> providersData = (raw is List) ? raw : <dynamic>[];
 
-      final List<dynamic> providersData = response['data'] ?? response['providers'] ?? [];
+      if (kDebugMode) {
+        print('🏢 Fetched providers: ${providersData.length} items');
+      }
       return providersData
           .map((json) => ProviderModel.fromJson(json))
           .toList();
@@ -171,11 +176,16 @@ class ProviderService with BaseApiService {
 
       final response = await get(endpoint, headers: _authHeaders);
 
-      if (kDebugMode) {
-        print('🏢 Fetched providers for category $category: ${response['data']?.length ?? 0} items');
+      // Extract providers array from various backend shapes
+      dynamic raw = response['data'] ?? response['providers'] ?? response['results'];
+      if (raw is Map<String, dynamic>) {
+        raw = raw['data'] ?? raw['providers'] ?? raw['items'] ?? raw['results'] ?? [];
       }
+      final List<dynamic> providersData = (raw is List) ? raw : <dynamic>[];
 
-      final List<dynamic> providersData = response['data'] ?? response['providers'] ?? [];
+      if (kDebugMode) {
+        print('🏢 Fetched providers for category $category: ${providersData.length} items');
+      }
       return providersData
           .map((json) => ProviderModel.fromJson(json))
           .toList();

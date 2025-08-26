@@ -13,7 +13,7 @@ const bookingSchema = new mongoose.Schema({
   },
   provider: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+  ref: 'Provider',
     required: true
   },
   service: {
@@ -113,6 +113,30 @@ const bookingSchema = new mongoose.Schema({
     cancelledAt: Date,
     refundAmount: Number
   },
+  cancellationRequests: [{
+    status: {
+      type: String,
+      enum: ['pending','accepted','declined','expired'],
+      default: 'pending'
+    },
+    requestedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true
+    },
+    requestedByRole: {
+      type: String,
+      enum: ['client','provider'],
+      required: true
+    },
+    requestedTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true
+    },
+    reason: String,
+    requestedAt: { type: Date, default: Date.now },
+    respondedAt: Date,
+    expiresAt: Date
+  }],
   completion: {
     completedAt: Date,
     clientConfirmation: {
@@ -174,5 +198,6 @@ bookingSchema.index({ provider: 1, createdAt: -1 });
 bookingSchema.index({ status: 1, 'schedule.date': 1 });
 bookingSchema.index({ provider: 1, 'schedule.startUtc': 1, 'schedule.endUtc': 1 });
 bookingSchema.index({ bookingId: 1 });
+bookingSchema.index({ 'cancellationRequests.status': 1 });
 
 module.exports = mongoose.model('Booking', bookingSchema); 

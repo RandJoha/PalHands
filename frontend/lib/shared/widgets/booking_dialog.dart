@@ -12,6 +12,8 @@ import '../services/booking_service.dart';
 import '../services/language_service.dart';
 import 'app_toast.dart';
 import '../services/auth_service.dart';
+import '../services/services_service.dart';
+import '../services/services_service.dart' as svc;
 
 class BookingDialog extends StatefulWidget {
   final ProviderModel provider;
@@ -30,6 +32,7 @@ class BookingDialog extends StatefulWidget {
 class _BookingDialogState extends State<BookingDialog> {
   final _formKey = GlobalKey<FormState>();
   final BookingService _bookingService = BookingService();
+  final ServicesService _servicesService = ServicesService();
 
   // Form controllers
   final _addressController = TextEditingController();
@@ -42,17 +45,27 @@ class _BookingDialogState extends State<BookingDialog> {
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
   String? _selectedService;
+  String? _selectedServiceId; // backend service _id
+  List<svc.ServiceModel> _providerServices = const [];
   bool _loading = false;
+  // Same-day booking is not allowed per product rules
+  // Dev/testing override removed per request
+  final bool _devAllowSameDay = false;
 
   @override
   void initState() {
     super.initState();
     _selectedService = widget.selectedService ?? widget.provider.services.first;
-    // Set default date to tomorrow
-    _selectedDate = DateTime.now().add(const Duration(days: 1));
+  // Default date: 48h ahead (UI guard; backend enforces exact minutes)
+  final now = DateTime.now();
+  _selectedDate = now.add(const Duration(days: 2));
     // Set default times
     _startTime = const TimeOfDay(hour: 9, minute: 0);
     _endTime = const TimeOfDay(hour: 12, minute: 0);
+
+  // Load provider services from backend to get real service IDs
+  // Ignore errors and gracefully fall back to provider.services list
+  _loadProviderServices();
   }
 
   @override
@@ -64,10 +77,15 @@ class _BookingDialogState extends State<BookingDialog> {
   }
 
   Future<void> _selectDate() async {
-    final picked = await showDatePicker(
+  // UI guard: 48h minimum
+  final now = DateTime.now();
+  final minUiDate = now.add(const Duration(days: 2));
+  final picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate ?? DateTime.now().add(const Duration(days: 1)),
-      firstDate: DateTime.now(),
+    initialDate: _selectedDate != null && _selectedDate!.isAfter(minUiDate)
+      ? _selectedDate!
+      : minUiDate,
+    firstDate: minUiDate,
       lastDate: DateTime.now().add(const Duration(days: 90)),
     );
     
@@ -108,6 +126,53 @@ class _BookingDialogState extends State<BookingDialog> {
     }
   }
 
+  Future<void> _loadProviderServices() async {
+    try {
+      final providerId = widget.provider.id;
+      if (providerId.isEmpty || providerId.startsWith('svc_')) {
+        // Skip fetching if the provider id looks like a mock/fallback
+        return;
+      }
+      final items = await _servicesService.getServicesByProvider(providerId);
+      if (!mounted) return;
+      setState(() {
+        // Keep only services whose subcategory exists in provider.services
+        final keys = widget.provider.services.map((e) => e.toLowerCase()).toList();
+        var filtered = items.where((s) =>
+            s.subcategory != null && keys.contains(s.subcategory!.toLowerCase())
+        ).toList();
+        // Preserve the order as shown on provider card chips
+        filtered.sort((a, b) {
+          final ia = keys.indexOf((a.subcategory ?? '').toLowerCase());
+          final ib = keys.indexOf((b.subcategory ?? '').toLowerCase());
+          return ia.compareTo(ib);
+        });
+        _providerServices = filtered.isNotEmpty ? filtered : items;
+        // Preselect by incoming selectedService key when possible
+        if (_providerServices.isNotEmpty) {
+          // Match using subcategory first (exact service key used on provider card),
+          // then fall back to category/title.
+          final sel = widget.selectedService;
+          final matched = (sel != null && sel.isNotEmpty)
+              ? _providerServices.firstWhere(
+                  (s) {
+                    final sub = (s.subcategory ?? '').toLowerCase();
+                    final cat = (s.category).toLowerCase();
+                    final title = (s.title).toLowerCase();
+                    final target = sel.toLowerCase();
+                    return sub == target || cat == target || title == target;
+                  },
+                  orElse: () => _providerServices.first,
+                )
+              : _providerServices.first;
+          _selectedServiceId = matched.id;
+        }
+      });
+    } catch (_) {
+      // Silent fallback; dropdown will use provider.services (strings)
+    }
+  }
+
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
   }
@@ -118,12 +183,29 @@ class _BookingDialogState extends State<BookingDialog> {
 
   double _calculateEstimatedCost() {
     if (_startTime == null || _endTime == null) return 0.0;
-    
     final startMinutes = _startTime!.hour * 60 + _startTime!.minute;
     final endMinutes = _endTime!.hour * 60 + _endTime!.minute;
-    final hours = (endMinutes - startMinutes) / 60.0;
-    
-    return hours * widget.provider.hourlyRate;
+    final durationMinutes = (endMinutes - startMinutes).clamp(0, 24 * 60);
+    // Try to use selected backend service price type if available
+    svc.ServiceModel? selected;
+    if (_providerServices.isNotEmpty) {
+      try {
+        selected = _providerServices.firstWhere(
+          (s) => s.id == _selectedServiceId,
+          orElse: () => _providerServices.first,
+        );
+      } catch (_) {
+        selected = _providerServices.first;
+      }
+    }
+    final priceType = (selected?.price.type ?? 'hourly');
+    final amount = (selected?.price.amount ?? widget.provider.hourlyRate).toDouble();
+    if (priceType == 'hourly') {
+      final hours = durationMinutes / 60.0;
+      return hours * amount;
+    }
+    // fixed/daily: use base amount as a simple estimate
+    return amount;
   }
 
   Future<void> _submitBooking() async {
@@ -133,14 +215,45 @@ class _BookingDialogState extends State<BookingDialog> {
       return;
     }
 
+    // Require login
+    final auth = Provider.of<AuthService>(context, listen: false);
+    if (!auth.isAuthenticated) {
+      AppToast.show(context, message: 'Please login to place a booking');
+      return;
+    }
+
     setState(() {
       _loading = true;
     });
 
     try {
-      // For now, we'll use a dummy service ID. In a real implementation,
-      // you'd need to fetch the actual service ID from the backend
-      const serviceId = 'dummy_service_id';
+      // Determine serviceId to send to backend
+      String? serviceId = _selectedServiceId;
+      if ((serviceId == null || serviceId.isEmpty) && _providerServices.isNotEmpty) {
+        serviceId = _providerServices.first.id;
+      }
+      // As a final fallback, attempt to resolve by fetching provider services once
+      if (serviceId == null || serviceId.isEmpty) {
+        try {
+          final items = await _servicesService.getServicesByProvider(widget.provider.id);
+          // Try to match selected subcategory key to a service document
+          if (items.isNotEmpty) {
+            final selKey = _selectedService;
+            if (selKey != null && selKey.isNotEmpty) {
+              final match = items.firstWhere(
+                (s) => (s.subcategory ?? '').toLowerCase() == selKey.toLowerCase(),
+                orElse: () => items.first,
+              );
+              serviceId = match.id;
+            } else {
+              serviceId = items.first.id;
+            }
+          }
+        } catch (_) {}
+      }
+      if (serviceId == null || serviceId.isEmpty) {
+        throw Exception('No service available for this provider');
+      }
 
       final schedule = Schedule(
         date: _selectedDate!.toIso8601String().split('T')[0],
@@ -464,22 +577,51 @@ class _BookingDialogState extends State<BookingDialog> {
         ),
     const SizedBox(height: 8),
         DropdownButtonFormField<String>(
-          value: _selectedService,
+          value: _providerServices.isNotEmpty ? _selectedServiceId : _selectedService,
           decoration: InputDecoration(
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.0),
             ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           ),
-          items: widget.provider.services
-              .map((service) => DropdownMenuItem(
-                    value: service,
-          child: Text(AppStrings.getString(service, lang)),
-                  ))
-              .toList(),
+          items: () {
+            if (_providerServices.isNotEmpty) {
+              return _providerServices
+                  .map((s) => DropdownMenuItem<String>(
+                        value: s.id,
+                        child: Text(
+                          // Prefer localized subcategory label (matches provider card chips),
+                          // then fall back to category label, then title/id.
+                          () {
+                            final sub = s.subcategory;
+                            final fromSub = sub != null && sub.isNotEmpty
+                                ? AppStrings.getString(sub, lang)
+                                : '';
+                            if (fromSub.isNotEmpty) return fromSub;
+                            final fromCat = AppStrings.getString(s.category, lang);
+                            if (fromCat.isNotEmpty) return fromCat;
+                            return s.title.isNotEmpty ? s.title : s.id;
+                          }(),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ))
+                  .toList();
+            }
+            // Fallback to provider.services (string keys)
+            return widget.provider.services
+                .map((service) => DropdownMenuItem<String>(
+                      value: service,
+                      child: Text(AppStrings.getString(service, lang), overflow: TextOverflow.ellipsis),
+                    ))
+                .toList();
+          }(),
           onChanged: (value) {
             setState(() {
-              _selectedService = value;
+              if (_providerServices.isNotEmpty) {
+                _selectedServiceId = value;
+              } else {
+                _selectedService = value;
+              }
             });
           },
           validator: (value) {
@@ -505,6 +647,14 @@ class _BookingDialogState extends State<BookingDialog> {
           ),
         ),
     const SizedBox(height: 8),
+    // Helper text about earliest booking date (UI hint; backend enforces exact rule)
+    Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Text(
+        AppStrings.getString('earliestBookingDate', lang),
+        style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+      ),
+    ),
     _DateTimeRow(
       dateLabel: _selectedDate != null
         ? _formatDate(_selectedDate!)

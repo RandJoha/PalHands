@@ -49,7 +49,13 @@ class ServiceModel {
       description: json['description'] ?? '',
       category: json['category'] ?? '',
       subcategory: json['subcategory'],
-      providerId: json['provider']?.toString() ?? '',
+      providerId: () {
+        final p = json['provider'];
+        if (p is Map<String, dynamic>) {
+          return (p['_id'] ?? p['id'] ?? '').toString();
+        }
+        return p?.toString() ?? '';
+      }(),
       price: PriceModel.fromJson(json['price'] ?? {}),
       location: LocationModel.fromJson(json['location'] ?? {}),
       images: (json['images'] as List?)?.map((e) => e['url']?.toString() ?? '').toList() ?? [],
@@ -217,11 +223,15 @@ class ServicesService with BaseApiService {
 
       final response = await get(endpoint, headers: _authHeaders);
 
-      if (kDebugMode) {
-        print('🛠️ Fetched services: ${response['services']?.length ?? 0} items');
+      dynamic raw = response['services'] ?? response['data'];
+      if (raw is Map<String, dynamic>) {
+        raw = raw['services'] ?? raw['data'] ?? raw['items'] ?? [];
       }
+      final List<dynamic> servicesData = (raw is List) ? raw : <dynamic>[];
 
-      final List<dynamic> servicesData = response['services'] ?? response['data'] ?? [];
+      if (kDebugMode) {
+        print('🛠️ Fetched services: ${servicesData.length} items');
+      }
       return servicesData
           .map((json) => ServiceModel.fromJson(json))
           .toList();
@@ -317,11 +327,15 @@ class ServicesService with BaseApiService {
 
       final response = await get(endpoint, headers: _authHeaders);
 
-      if (kDebugMode) {
-        print('🛠️ Fetched featured services: ${response['services']?.length ?? 0} items');
+      dynamic raw = response['services'] ?? response['data'];
+      if (raw is Map<String, dynamic>) {
+        raw = raw['services'] ?? raw['data'] ?? raw['items'] ?? [];
       }
+      final List<dynamic> servicesData = (raw is List) ? raw : <dynamic>[];
 
-      final List<dynamic> servicesData = response['services'] ?? response['data'] ?? [];
+      if (kDebugMode) {
+        print('🛠️ Fetched featured services: ${servicesData.length} items');
+      }
       final services = servicesData
           .map((json) => ServiceModel.fromJson(json))
           .toList();

@@ -167,6 +167,13 @@ class BookingModel {
 	final String status;
 	final PaymentInfo? payment;
 	final String? notes;
+	// Optional provider info (populated by backend list endpoint)
+	final String? providerId;
+	final String? providerName;
+	// Optional client info (for admin/provider listings)
+	final String? clientId;
+	final String? clientName;
+	final List<CancellationRequest> cancellationRequests;
 
 	BookingModel({
 		required this.id,
@@ -178,6 +185,11 @@ class BookingModel {
 		required this.status,
 		this.payment,
 		this.notes,
+		this.providerId,
+		this.providerName,
+		this.clientId,
+		this.clientName,
+		this.cancellationRequests = const [],
 	});
 
 	factory BookingModel.fromJson(Map<String, dynamic> json) {
@@ -199,7 +211,59 @@ class BookingModel {
 			pricing: Pricing.fromJson(pricingJson),
 			status: (json['status'] ?? 'pending').toString(),
 			payment: paymentJson.isNotEmpty ? PaymentInfo.fromJson(paymentJson) : null,
-			notes: (json['notes'])?.toString(),
+			notes: (() {
+				final n = json['notes'];
+				if (n is Map<String, dynamic>) {
+					return (n['clientNotes'] ?? n['note'] ?? n['notes'])?.toString();
+				}
+				return n?.toString();
+			})(),
+			providerId: (() {
+				final p = json['provider'];
+				if (p is Map<String, dynamic>) {
+					return (p['_id'] ?? p['id'])?.toString();
+				}
+				if (p != null) return p.toString();
+				return null;
+			})(),
+			providerName: (() {
+				final p = json['provider'];
+				if (p is Map<String, dynamic>) {
+					final first = (p['firstName'] ?? '').toString();
+					final last = (p['lastName'] ?? '').toString();
+					final name = [first, last].where((e) => e.isNotEmpty).join(' ').trim();
+					return name.isNotEmpty ? name : null;
+				}
+				return null;
+			})(),
+				clientId: (() {
+					final c = json['client'];
+					if (c is Map<String, dynamic>) {
+						return (c['_id'] ?? c['id'])?.toString();
+					}
+					if (c != null) return c.toString();
+					return null;
+				})(),
+				clientName: (() {
+					final c = json['client'];
+					if (c is Map<String, dynamic>) {
+						final first = (c['firstName'] ?? '').toString();
+						final last = (c['lastName'] ?? '').toString();
+						final name = [first, last].where((e) => e.isNotEmpty).join(' ').trim();
+						return name.isNotEmpty ? name : null;
+					}
+					return null;
+				})(),
+				cancellationRequests: (() {
+					final list = json['cancellationRequests'];
+					if (list is List) {
+						return list
+							.map((e) => e is Map<String, dynamic> ? CancellationRequest.fromJson(e) : null)
+							.whereType<CancellationRequest>()
+							.toList();
+					}
+					return <CancellationRequest>[];
+				})(),
 		);
 	}
 
@@ -212,8 +276,39 @@ class BookingModel {
 				'pricing': pricing.toJson(),
 				'status': status,
 				if (payment != null) 'payment': payment!.toJson(),
-				if (notes != null) 'notes': notes,
+			if (notes != null) 'notes': notes,
+	if (providerId != null) 'provider': providerId,
+	if (clientId != null) 'client': clientId,
 			};
+}
+
+class CancellationRequest {
+	final String id;
+	final String status; // pending | accepted | declined | expired
+	final String? requestedByRole; // client | provider
+	final String? requestedTo; // id
+	final String? reason;
+	final DateTime? requestedAt;
+
+	CancellationRequest({
+		required this.id,
+		required this.status,
+		this.requestedByRole,
+		this.requestedTo,
+		this.reason,
+		this.requestedAt,
+	});
+
+	factory CancellationRequest.fromJson(Map<String, dynamic> json) {
+		return CancellationRequest(
+			id: (json['_id'] ?? json['id'] ?? '').toString(),
+			status: (json['status'] ?? 'pending').toString(),
+			requestedByRole: json['requestedByRole']?.toString(),
+			requestedTo: (json['requestedTo'])?.toString(),
+			reason: json['reason']?.toString(),
+			requestedAt: json['requestedAt'] != null ? DateTime.tryParse(json['requestedAt'].toString()) : null,
+		);
+	}
 }
 
 class CreateBookingRequest {
