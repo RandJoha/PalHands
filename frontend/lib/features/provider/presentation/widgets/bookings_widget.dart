@@ -9,6 +9,7 @@ import '../../../../core/constants/app_strings.dart';
 // Shared imports
 import '../../../../shared/services/language_service.dart';
 import '../../../../shared/services/booking_service.dart';
+import '../../../../shared/services/auth_service.dart';
 import '../../../../shared/models/booking.dart';
 
 class BookingsWidget extends StatefulWidget {
@@ -201,6 +202,8 @@ class _BookingsWidgetState extends State<BookingsWidget> {
   }
 
   Widget _buildBookingDetailCard(BookingModel b, bool isMobile, bool isTablet) {
+    final auth = Provider.of<AuthService>(context, listen: false);
+    final role = (auth.currentUser?['role'] ?? '').toString();
     final languageService = Provider.of<LanguageService>(context, listen: false);
     final statusInfo = BookingService.getStatusInfo(b.status);
     final displayDate = BookingService.formatBookingTime(b.schedule);
@@ -359,10 +362,19 @@ class _BookingsWidgetState extends State<BookingsWidget> {
             ),
           ],
           SizedBox(height: isMobile ? 12.0 : 16.0),
+          // Show client row only when the viewer is a provider
+          if (role == 'provider')
+            _buildBookingDetailRow(
+              Icons.person,
+              AppStrings.getString('client', languageService.currentLanguage),
+              b.clientName ?? '-',
+              isMobile,
+            ),
+          // Always show provider row so admins/clients can see who the booking is with
           _buildBookingDetailRow(
-            Icons.person,
-            AppStrings.getString('client', languageService.currentLanguage),
-            b.clientName ?? '-',
+            Icons.store_mall_directory,
+            AppStrings.getString('provider', languageService.currentLanguage),
+            b.providerName ?? '-',
             isMobile,
           ),
           const SizedBox(height: 8.0),
@@ -444,17 +456,30 @@ class _BookingsWidgetState extends State<BookingsWidget> {
 
   Widget _buildActionButtons(BookingModel b, bool isMobile) {
     final languageService = Provider.of<LanguageService>(context, listen: false);
+    final role = (Provider.of<AuthService>(context, listen: false).currentUser?['role'] ?? '').toString();
     final status = b.status.toLowerCase();
     final hasPendingCancel = b.cancellationRequests.any((r) => (r.status ?? '').toLowerCase() == 'pending');
 
     final List<Map<String, Object>> actions = [];
-    if (status == 'pending') {
-      actions.add({'key': 'confirm', 'icon': Icons.check_circle, 'label': AppStrings.getString('confirmed', languageService.currentLanguage), 'color': AppColors.success});
-      actions.add({'key': 'cancel', 'icon': Icons.cancel, 'label': AppStrings.getString('cancel', languageService.currentLanguage), 'color': AppColors.error});
-    } else if (status == 'confirmed' || status == 'in_progress') {
-      actions.add({'key': 'complete', 'icon': Icons.done_all, 'label': AppStrings.getString('completed', languageService.currentLanguage), 'color': AppColors.secondary});
-      if (!hasPendingCancel) {
+    if (role == 'provider') {
+      if (status == 'pending') {
+        actions.add({'key': 'confirm', 'icon': Icons.check_circle, 'label': AppStrings.getString('confirmed', languageService.currentLanguage), 'color': AppColors.success});
         actions.add({'key': 'cancel', 'icon': Icons.cancel, 'label': AppStrings.getString('cancel', languageService.currentLanguage), 'color': AppColors.error});
+      } else if (status == 'confirmed' || status == 'in_progress') {
+        actions.add({'key': 'complete', 'icon': Icons.done_all, 'label': AppStrings.getString('completed', languageService.currentLanguage), 'color': AppColors.secondary});
+        if (!hasPendingCancel) {
+          actions.add({'key': 'cancel', 'icon': Icons.cancel, 'label': AppStrings.getString('cancel', languageService.currentLanguage), 'color': AppColors.error});
+        }
+      }
+    } else if (role == 'admin') {
+      // Admin can set statuses directly
+      if (status == 'pending') {
+        actions.add({'key': 'admin_cancel', 'icon': Icons.cancel, 'label': AppStrings.getString('cancel', languageService.currentLanguage), 'color': AppColors.error});
+      } else if (status == 'confirmed') {
+        actions.add({'key': 'admin_complete', 'icon': Icons.done_all, 'label': AppStrings.getString('completed', languageService.currentLanguage), 'color': AppColors.secondary});
+        if (!hasPendingCancel) {
+          actions.add({'key': 'admin_cancel', 'icon': Icons.cancel, 'label': AppStrings.getString('cancel', languageService.currentLanguage), 'color': AppColors.error});
+        }
       }
     }
 
@@ -491,13 +516,22 @@ class _BookingsWidgetState extends State<BookingsWidget> {
 
   Future<void> _onProviderActionPressed(String key, BookingModel target) async {
     final svc = BookingService();
+    final role = (Provider.of<AuthService>(context, listen: false).currentUser?['role'] ?? '').toString();
     try {
-      if (key == 'confirm' && target.status.toLowerCase() == 'pending') {
-        await svc.confirmBooking(target.id);
-      } else if (key == 'complete' && ['confirmed','in_progress'].contains(target.status.toLowerCase())) {
-        await svc.completeBooking(target.id);
-      } else if (key == 'cancel') {
-        await svc.cancelBookingAction(target.id);
+      if (role == 'admin') {
+        if (key == 'admin_complete') {
+          await svc.updateBookingStatus(target.id, 'completed');
+        } else if (key == 'admin_cancel') {
+          await svc.updateBookingStatus(target.id, 'cancelled');
+        }
+      } else {
+        if (key == 'confirm' && target.status.toLowerCase() == 'pending') {
+          await svc.confirmBooking(target.id);
+        } else if (key == 'complete' && ['confirmed','in_progress'].contains(target.status.toLowerCase())) {
+          await svc.completeBooking(target.id);
+        } else if (key == 'cancel') {
+          await svc.cancelBookingAction(target.id);
+        }
       }
       // refresh
       final list = await BookingService().getMyBookings(page: 1, limit: 50);

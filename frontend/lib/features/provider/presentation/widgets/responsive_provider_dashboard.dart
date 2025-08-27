@@ -15,6 +15,7 @@ import 'my_services_widget.dart';
 import 'bookings_widget.dart';
 import 'earnings_widget.dart';
 import 'reviews_widget.dart';
+import 'bookings_as_client_widget.dart';
 
 import '../../../admin/presentation/widgets/language_toggle_widget.dart';
 import '../../../profile/presentation/widgets/profile_settings_rich_widget.dart';
@@ -37,9 +38,15 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
       'widget': const MyServicesWidget(),
     },
     {
-      'title': 'bookings',
+      'title': 'myClientBookings',
       'icon': Icons.calendar_today,
       'widget': const BookingsWidget(),
+    },
+    // New: bookings created by this provider acting as a client
+    {
+      'title': 'myBookings',
+      'icon': Icons.event_note,
+      'widget': const BookingsAsClientWidget(),
     },
     {
       'title': 'earnings',

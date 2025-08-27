@@ -8,8 +8,13 @@ const bookingSchema = new mongoose.Schema({
   },
   client: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    refPath: 'clientRef',
     required: true
+  },
+  clientRef: {
+    type: String,
+    enum: ['User','Provider'],
+    default: 'User'
   },
   provider: {
     type: mongoose.Schema.Types.ObjectId,

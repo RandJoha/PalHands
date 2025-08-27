@@ -32,7 +32,7 @@ function minutesUntilStart(bookingOrParams) {
 async function createBooking(req, res) {
   try {
   const actor = req.user;
-  const { serviceId, schedule, location, notes, clientId } = req.body;
+  const { serviceId, schedule, location, notes, clientId, clientType } = req.body;
 
     const service = await Service.findById(serviceId).populate('provider');
     if (!service || !service.isActive) return error(res, 404, 'Service not available');
@@ -40,10 +40,11 @@ async function createBooking(req, res) {
   const priceType = service.price?.type || 'hourly';
   const baseAmount = service.price.amount;
 
-    // Resolve client for the booking
-    // - client role: client is self
-    // - provider/admin: may pass clientId; if not, default to actor (for quick ops)
-    const resolvedClientId = clientId || actor._id;
+  // Resolve client for the booking (User or Provider)
+  // - Anyone can book. A provider/admin can pass clientId and clientType ('User'|'Provider').
+  // - If not provided, default to actor and infer type from actor.role
+  let resolvedClientId = clientId || actor._id;
+  let resolvedClientRef = (clientType === 'Provider' || clientType === 'User') ? clientType : (actor.role === 'provider' ? 'Provider' : 'User');
 
     // Timezone-aware start/end
     const tz = schedule.timezone || 'Asia/Jerusalem';
@@ -90,6 +91,7 @@ async function createBooking(req, res) {
 
   const booking = await Booking.create({
       client: resolvedClientId,
+      clientRef: resolvedClientRef,
       provider: service.provider._id,
       service: service._id,
       serviceDetails: { title: service.title, description: service.description, category: service.category },
@@ -135,14 +137,25 @@ async function createBooking(req, res) {
 async function listMyBookings(req, res) {
   try {
     const user = req.user;
-    const { status, page, limit } = req.query || {};
-    const filter = user.role === 'provider' ? { provider: user._id } : { client: user._id };
+    const { status, page, limit, as } = req.query || {};
+    // Default for providers: show bookings where they are the provider. If as=client, show bookings they made as a client (clientRef='Provider').
+    let filter;
+    if (user.role === 'provider') {
+      if (as === 'client') {
+        filter = { client: user._id, clientRef: 'Provider' };
+      } else {
+        filter = { provider: user._id };
+      }
+    } else {
+      filter = { client: user._id };
+    }
     if (status) filter.status = status;
     const pg = Math.max(parseInt(page) || 1, 1);
     const sz = Math.min(Math.max(parseInt(limit) || 50, 1), 100);
 
     let q = Booking.find(filter)
-      .populate('client', 'firstName lastName email')
+      // Use refPath from schema; no explicit model override needed
+      .populate({ path: 'client', select: 'firstName lastName email' })
       .populate({ path: 'provider', select: 'firstName lastName email', model: 'Provider' })
       .populate({ path: 'service', select: 'title category provider', populate: { path: 'provider', select: 'firstName lastName email', model: 'Provider' } })
       .sort({ createdAt: -1 })
@@ -171,7 +184,7 @@ async function listMyBookings(req, res) {
 async function getBookingById(req, res) {
   try {
     let booking = await Booking.findById(req.params.id)
-      .populate('client', 'firstName lastName email')
+      .populate({ path: 'client', select: 'firstName lastName email' })
       .populate({ path: 'provider', select: 'firstName lastName email', model: 'Provider' })
       .populate({ path: 'service', select: 'title category provider', populate: { path: 'provider', select: 'firstName lastName email', model: 'Provider' } });
     if (!booking) return error(res, 404, 'Booking not found');
@@ -242,7 +255,7 @@ async function listAllBookings(req, res) {
     const sz = Math.min(Math.max(parseInt(limit) || 50, 1), 100);
 
     const bookings = await Booking.find(filter)
-      .populate('client', 'firstName lastName email')
+      .populate({ path: 'client', select: 'firstName lastName email' })
       .populate({ path: 'provider', select: 'firstName lastName email', model: 'Provider' })
       .populate({ path: 'service', select: 'title category provider', populate: { path: 'provider', select: 'firstName lastName email', model: 'Provider' } })
       .sort({ createdAt: -1 })

@@ -7,6 +7,7 @@ const { celebrate, Joi, Segments } = require('celebrate');
 const createBookingValidator = celebrate({
   [Segments.BODY]: Joi.object({
   clientId: Joi.string().hex().length(24).optional(),
+  clientType: Joi.string().valid('User','Provider').optional(),
     serviceId: Joi.string().hex().length(24).required(),
     schedule: Joi.object({
   date: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).required(),
@@ -28,7 +29,7 @@ const updateStatusValidator = celebrate({
   [Segments.BODY]: Joi.object({ status: Joi.string().valid('pending','confirmed','completed','cancelled').required() })
 });
 
-router.post('/', auth, checkRole(['client','provider','admin']), createBookingValidator, bookingsController.createBooking);
+router.post('/', auth, createBookingValidator, bookingsController.createBooking);
 router.get('/', auth, bookingsController.listMyBookings);
 // Admin listing
 router.get('/admin/all', auth, checkRole(['admin']), bookingsController.listAllBookings);

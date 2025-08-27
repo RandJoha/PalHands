@@ -55,12 +55,14 @@ class BookingService with BaseApiService {
     String? status,
     int? page,
     int? limit,
+    bool asClient = false,
   }) async {
     try {
       final queryParams = <String, String>{};
-      if (status != null) queryParams['status'] = status;
+  if (status != null) queryParams['status'] = status;
       if (page != null) queryParams['page'] = page.toString();
       if (limit != null) queryParams['limit'] = limit.toString();
+  if (asClient) queryParams['as'] = 'client';
 
       final endpoint = ApiConfig.bookingsEndpoint +
           (queryParams.isNotEmpty 

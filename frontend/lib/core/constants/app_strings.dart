@@ -468,6 +468,16 @@ class AppStrings {
     'ar': 'حجوزاتي',
   };
 
+  // Provider: Bookings made as a client
+  static const Map<String, String> myBookingsAsClient = {
+    'en': 'My Bookings (as Client)',
+    'ar': 'حجوزاتي (كعميل)',
+  };
+  static const Map<String, String> myClientBookings = {
+    'en': 'My Client Bookings',
+    'ar': 'حجوزاتي كعميل',
+  };
+
   static const Map<String, String> bookNow = {
     'en': 'Book Now',
     'ar': 'احجز الآن',
@@ -4476,7 +4486,9 @@ class AppStrings {
       'allServices': allServices,
       'popularServices': popularServices,
       'searchServices': searchServices,
-      'myBookings': myBookings,
+  'myBookings': myBookings,
+  'myBookingsAsClient': myBookingsAsClient,
+  'myClientBookings': myClientBookings,
       'bookNow': bookNow,
       'cancelBooking': cancelBooking,
   'sendCancellationRequest': sendCancellationRequest,

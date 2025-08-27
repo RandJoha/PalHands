@@ -19,6 +19,8 @@ import 'reports_widget.dart';
 import 'analytics_widget.dart';
 import 'system_settings_widget.dart';
 import '../../../profile/presentation/widgets/profile_settings_rich_widget.dart';
+import '../../../provider/presentation/widgets/bookings_widget.dart';
+import '../../../provider/presentation/widgets/bookings_as_client_widget.dart';
 
 // Admin models
 import '../../domain/models/admin_menu_item.dart';
@@ -47,30 +49,36 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
         index: 1,
       ),
       AdminMenuItem(
-        title: AppStrings.getString('bookingManagement', languageCode),
+        title: AppStrings.getString('myClientBookings', languageCode),
         icon: Icons.calendar_today,
         index: 2,
+      ),
+  // New: My Bookings (admin acting as client)
+      AdminMenuItem(
+        title: AppStrings.getString('myBookings', languageCode),
+        icon: Icons.event_note,
+        index: 3,
       ),
       AdminMenuItem(
         title: AppStrings.getString('reportsDisputes', languageCode),
         icon: Icons.report_problem,
-        index: 3,
+        index: 4,
       ),
       AdminMenuItem(
         title: AppStrings.getString('analytics', languageCode),
         icon: Icons.analytics,
-        index: 4,
+        index: 5,
       ),
       AdminMenuItem(
         title: AppStrings.getString('systemSettings', languageCode),
         icon: Icons.settings,
-        index: 5,
+        index: 6,
       ),
       // New: Profile Settings (reuse client profile page)
       AdminMenuItem(
         title: AppStrings.getString('profileSettings', languageCode),
         icon: Icons.person,
-        index: 6,
+        index: 7,
       ),
     ];
   }
@@ -355,12 +363,15 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
       case 2:
         return const BookingManagementWidget();
       case 3:
-        return const ReportsWidget();
+  // Admin acting as client: show bookings the admin made as a client
+  return const BookingsAsClientWidget(titleKey: 'myBookings');
       case 4:
-        return const AnalyticsWidget();
+        return const ReportsWidget();
       case 5:
-        return const SystemSettingsWidget();
+        return const AnalyticsWidget();
       case 6:
+        return const SystemSettingsWidget();
+      case 7:
         return const ProfileSettingsRichWidget();
       default:
         return const UserManagementWidget();
