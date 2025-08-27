@@ -128,10 +128,11 @@ The Provider Dashboard is a comprehensive management interface designed for serv
 - Service management functionality
 - Add service interface
 
-#### **BookingsWidget**
-- Booking statistics overview
-- Recent bookings list
-- Booking action buttons
+#### **Bookings** (Updated Aug 2025)
+- There are two booking views:
+  - **My Client Bookings**: Jobs where the provider is the service provider. Cards show the client name. Default “All” filter excludes cancelled.
+  - **My Bookings**: Bookings the provider made acting as a client (`GET /api/bookings?as=client`). Cards show the booked provider’s name.
+- Actions follow four statuses only: pending, confirmed, completed, cancelled.
 
 #### **EarningsWidget**
 - Earnings overview cards

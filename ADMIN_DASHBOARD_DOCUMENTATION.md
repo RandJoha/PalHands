@@ -24,13 +24,15 @@ The Admin Dashboard is a comprehensive administrative interface designed for pla
 - **Service Filtering**: Filter by category, status, and location
 - **Service Actions**: Enable/disable, feature, edit, and delete services
 
-### **3. Booking Management** ✅ **Implemented**
-- **Booking Overview**: All platform bookings and transactions
-- **Booking Details**: Detailed booking information and history
-- **Booking Actions**: Manage and resolve booking issues
-- **Booking Analytics**: Booking trends and performance metrics
-- **Payment Tracking**: Monitor payment status and transaction history
-- **Dispute Resolution**: Handle booking disputes and conflicts
+### **3. Booking Management** ✅ **Implemented (Updated Aug 2025)**
+- Two booking domains in UI:
+  - **My Client Bookings**: Global booking management (all users). Admin can view/update any booking.
+  - **My Bookings**: Bookings the admin created while acting as a client; cards show the booked provider’s name.
+- Status lifecycle: pending → confirmed → completed; cancelled at any stage. Only these four statuses are supported.
+- Admin capabilities:
+  - Full status override (with audit). UI shows an “Admin update” chip when an admin changed status.
+  - Cancellation threshold bypass (policy-based) with logged reason.
+  - Create bookings on behalf of users (acting as client); backend persists polymorphic client via refPath.
 
 ### **4. Reports & Disputes** 🚧 **In Development**
 - **Report Management**: View and manage user reports
@@ -61,10 +63,11 @@ The Admin Dashboard is a comprehensive administrative interface designed for pla
 ### **Current Navigation (Updated)**
 1. **User Management** - Default landing tab after login
 2. **Service Management** - Service categories and provider management
-3. **Booking Management** - Platform bookings and transactions
-4. **Reports & Disputes** - User reports and dispute resolution
-5. **Analytics & Growth** - Platform analytics and metrics
-6. **System Settings** - System configuration and settings
+3. **My Client Bookings** - Global bookings management (admin view of all)
+4. **My Bookings** - Admin acting-as-client bookings
+5. **Reports & Disputes** - User reports and dispute resolution
+6. **Analytics & Growth** - Platform analytics and metrics
+7. **System Settings** - System configuration and settings
 
 ### **Removed Features**
 - **Dashboard Overview**: Removed to streamline navigation and reduce redundancy

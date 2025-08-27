@@ -30,6 +30,52 @@ PalHands/
     └── assets/             # Static Assets
 ```
 
+## 🔄 Current Status Highlights (Aug 2025)
+
+This section reflects the latest decisions and shipped behavior from the booking-hardening work.
+
+- Booking status lifecycle is limited to four states: pending, confirmed, completed, cancelled. Any references to in-progress in older docs are legacy and no longer used.
+- Role-agnostic booking creation: admins and providers can create bookings “as a client”. The backend persists a polymorphic client reference using refPath (User|Provider) and returns fully populated bookings.
+- Admin dashboard now has two booking domains:
+  - My Client Bookings: global booking management (all users, full override).
+  - My Bookings: bookings the admin created as a client; cards show the booked provider’s name.
+- Provider dashboard shows two tabs:
+  - My Client Bookings: jobs where they are the provider (cards show client name; provider name is hidden).
+  - My Bookings: bookings the provider made as a client (cards show the provider’s name).
+- Frontend uses centralized Authorization header across all API calls.
+- Provider default “All” filter excludes cancelled bookings to avoid surfacing closed items.
+- Admin overrides are allowed and audited. UI marks them with a small “Admin update” chip. Cancellation thresholds are enforced for users; admins can bypass with audit logging.
+
+### Booking Model (current)
+
+```javascript
+{
+  client: {
+    _id: ObjectId,
+    refPath: 'clientRef' // 'User' | 'Provider'
+  },
+  clientRef: { type: String, enum: ['User','Provider'] },
+  provider: ObjectId,              // ref: Provider (User)
+  service: ObjectId,               // ref: Service
+  serviceDetails: { /* snapshot at booking time */ },
+  schedule: { date: String, startTime: String, endTime: String, duration: Number },
+  location: { address: String, city: String, area: String, coordinates: Object },
+  pricing: { totalAmount: Number, currency: String },
+  status: { type: String, enum: ['pending','confirmed','completed','cancelled'] },
+  cancellationRequests: [ { id: ObjectId, status: 'pending'|'accepted'|'declined', reason: String } ],
+  adminActions: [ { admin: ObjectId, action: String, notes: String, at: Date } ],
+  notes: String,
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### Endpoints of note (booking)
+- POST /api/bookings — accepts clientType (User|Provider) to support acting-as-client; response is fully populated.
+- GET /api/bookings — role-aware; for providers, add `?as=client` to list bookings they made as a client.
+- GET /api/bookings/:id — returns populated client (via refPath) and provider.
+- PUT /api/bookings/:id/status — four-state transitions; admin can override with audit.
+
 ## 🎨 **Design System & Branding**
 
 ### **Color Palette**

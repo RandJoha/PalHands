@@ -157,7 +157,7 @@ QA
 
 ---
 
-## Phase 3 — Bookings Module ✅ COMPLETED
+## Phase 3 — Bookings Module ✅ COMPLETED (Updated Aug 2025)
 
 **Backend Status**: ✅ 100% Complete
 - POST `/api/bookings` (create) ✅
@@ -175,11 +175,13 @@ QA
   - ✅ FE: Booking details view → GET /bookings/:id
   - ✅ FE: Actions per status (cancel, confirm, start, complete)
 - **Provider Dashboard → Bookings** ✅
-  - ✅ FE: List bookings for my services → GET /bookings (provider context)
-  - ✅ FE: Accept/Reject/Update status → PUT /bookings/:id/status
-  - ✅ FE: Provider-specific actions (reschedule, add notes)
+  - ✅ FE: List jobs (as provider) → GET /bookings
+  - ✅ FE: List bookings made as client → GET /bookings?as=client
+  - ✅ FE: Default “All” filter hides cancelled
+  - ✅ FE: Status actions aligned to four-status model
 
 **Additional Integrations Completed**:
+- ✅ Centralized Authorization header handling in BookingService for all API calls
 - ✅ **Service Categories**: Backend `/api/servicecategories` + Frontend `ServiceCategoriesService`
 - ✅ **Services**: Backend `/api/services` + Frontend `ServicesService`
 - ✅ **Providers**: Backend `/api/providers` + Frontend `ProviderService` updated
@@ -187,6 +189,9 @@ QA
 - ✅ **Compilation Issues**: Fixed AppToast calls, Color imports, and all linter errors
 
 **Current Status**: Phase 3 is fully complete and ready for end-to-end testing
+Notes:
+- Booking lifecycle limited to: pending, confirmed, completed, cancelled.
+- Admin overrides allowed with audit; UI marks admin-initiated updates.
 
 QA
 - [ ] E2E create/list/status-change; ownership/role guard failures rendered properly
