@@ -110,39 +110,7 @@ class _AdminSidebarState extends State<AdminSidebar> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Back to Main Menu Button
-          if (!widget.isCollapsed) ...[
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/home');
-                },
-                icon: const Icon(
-                  Icons.home,
-                  color: Colors.white,
-                  size: 14,
-                ),
-                label: Text(
-                  AppStrings.getString('backToMainMenu', languageService.currentLanguage),
-                  style: GoogleFonts.cairo(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Colors.white, width: 1),
-                  backgroundColor: Colors.transparent,
-                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
+          // Removed redundant Back to Main Menu button (home icon exists in header)
           // Existing header content
           Row(
             children: [

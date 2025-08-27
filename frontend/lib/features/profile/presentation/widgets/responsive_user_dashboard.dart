@@ -905,7 +905,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       'price': '₪${b.pricing.totalAmount.toStringAsFixed(0)}',
       'address': b.location.address,
       'instructions': b.location.instructions ?? '',
-      'notes': b.notes ?? '',
+  'notes': b.notes ?? '',
       'hasPendingCancel': hasPendingCancel,
     };
   }
@@ -930,6 +930,24 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if ((booking['notes'] as String).toLowerCase().contains('admin set to') || (booking['notes'] as String).toLowerCase().contains('admin cancelled')) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.blueGrey.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.shield, size: 14, color: Colors.blueGrey),
+                  const SizedBox(width: 6),
+                  Text('Admin update', style: GoogleFonts.cairo(fontSize: 12, color: Colors.blueGrey)),
+                ],
+              ),
+            ),
+          ],
           // Header with service and status
           Row(
             children: [

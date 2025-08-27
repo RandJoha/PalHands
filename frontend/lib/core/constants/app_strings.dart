@@ -5597,6 +5597,10 @@ class AppStrings {
         'en': 'Filter',
         'ar': 'تصفية',
       },
+      'actions': {
+        'en': 'Actions',
+        'ar': 'إجراءات',
+      },
       'sort': {
         'en': 'Sort',
         'ar': 'ترتيب',

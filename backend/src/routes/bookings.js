@@ -25,7 +25,7 @@ const createBookingValidator = celebrate({
 });
 
 const updateStatusValidator = celebrate({
-  [Segments.BODY]: Joi.object({ status: Joi.string().valid('confirmed','in_progress','completed','cancelled','disputed').required() })
+  [Segments.BODY]: Joi.object({ status: Joi.string().valid('pending','confirmed','completed','cancelled').required() })
 });
 
 router.post('/', auth, checkRole(['client','provider','admin']), createBookingValidator, bookingsController.createBooking);

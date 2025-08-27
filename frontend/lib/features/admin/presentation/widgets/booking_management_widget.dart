@@ -122,11 +122,8 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
   final totalBookings = _bookings.length;
   final pendingBookings = _bookings.where((b) => b.status == 'pending').length;
   final completedBookings = _bookings.where((b) => b.status == 'completed').length;
-  final totalRevenue = _bookings
-    .where((b) => (b.payment?.status ?? 'pending') == 'paid')
-    .fold(0.0, (sum, b) => sum + b.pricing.totalAmount);
 
-    final stats = [
+  final stats = [
       {
         'title': AppStrings.getString('totalBookings', languageService.currentLanguage),
         'value': totalBookings.toString(),
@@ -144,12 +141,6 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
         'value': completedBookings.toString(),
         'icon': Icons.check_circle,
         'color': Colors.green,
-      },
-      {
-        'title': AppStrings.getString('revenue', languageService.currentLanguage),
-        'value': '₪${totalRevenue.toStringAsFixed(0)}',
-        'icon': Icons.attach_money,
-        'color': Colors.purple,
       },
     ];
 
@@ -299,7 +290,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
             ),
             child: Row(
               children: [
-                Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('bookingId', languageService.currentLanguage))),
+                Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('createdAt', languageService.currentLanguage))),
                 Expanded(flex: 2, child: _buildHeaderCell(AppStrings.getString('service', languageService.currentLanguage))),
                 if (screenWidth > 768) ...[
                   Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('client', languageService.currentLanguage))),
@@ -312,7 +303,8 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
                   Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('amount', languageService.currentLanguage))),
                 ],
                 Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('status', languageService.currentLanguage))),
-                // View-only: no actions column
+                SizedBox(width: screenWidth > 768 ? 12 : 8),
+                if (screenWidth > 480) _buildHeaderCell(AppStrings.getString('actions', languageService.currentLanguage)),
               ],
             ),
           ),
@@ -360,16 +352,31 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
       ),
       child: Row(
         children: [
-          // Booking ID - Balanced sizing
+          // Created At - Balanced sizing
       Expanded(
             flex: 1,
-            child: Text(
-        booking.bookingId ?? booking.id,
-              style: GoogleFonts.cairo(
-                fontSize: screenWidth > 1400 ? 14 : screenWidth > 1024 ? 13 : 12,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textDark,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  booking.createdAt != null
+                      ? _formatDateTime(booking.createdAt!)
+                      : '-',
+                  style: GoogleFonts.cairo(
+                    fontSize: screenWidth > 1400 ? 14 : screenWidth > 1024 ? 13 : 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                Text(
+                  booking.bookingId ?? booking.id,
+                  style: GoogleFonts.cairo(
+                    fontSize: screenWidth > 1400 ? 11 : screenWidth > 1024 ? 10 : 9,
+                    color: AppColors.textLight,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ),
           
@@ -554,10 +561,73 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
             ),
           ),
           
-          // View-only: actions removed per requirements
+          // Admin actions: quick cancel + status set menu; plus an indicator if admin changed it
+          if (screenWidth > 480)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if ((booking.notes ?? '').isNotEmpty || (booking.bookingId?.startsWith('BK') ?? false))
+                  Tooltip(
+                    message: 'Admin action possible',
+                    child: Icon(Icons.shield, size: 16, color: Colors.blueGrey.withValues(alpha: 0.8)),
+                  ),
+                const SizedBox(width: 6),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.redAccent, size: 18),
+                  tooltip: AppStrings.getString('cancel', languageService.currentLanguage),
+                  onPressed: () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: Text(AppStrings.getString('confirm', languageService.currentLanguage)),
+                        content: Text(AppStrings.getString('areYouSure', languageService.currentLanguage)),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: Text(AppStrings.getString('no', languageService.currentLanguage)),
+                          ),
+                          ElevatedButton(
+                            onPressed: () => Navigator.pop(ctx, true),
+                            child: Text(AppStrings.getString('yes', languageService.currentLanguage)),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirm == true) {
+                      try {
+                        await _bookingService.cancelBookingAction(booking.id);
+                        await _loadBookings();
+                      } catch (_) {}
+                    }
+                  },
+                ),
+                PopupMenuButton<String>(
+                  tooltip: AppStrings.getString('actions', languageService.currentLanguage),
+                  onSelected: (value) async {
+                    try {
+                      await _bookingService.updateBookingStatus(booking.id, value);
+                      await _loadBookings();
+                    } catch (_) {}
+                  },
+                  itemBuilder: (ctx) => const [
+                    PopupMenuItem(value: 'pending', child: Text('Set Pending')),
+                    PopupMenuItem(value: 'confirmed', child: Text('Set Confirmed')),
+                    PopupMenuItem(value: 'completed', child: Text('Set Completed')),
+                    PopupMenuItem(value: 'cancelled', child: Text('Set Cancelled')),
+                  ],
+                  icon: const Icon(Icons.more_horiz, size: 18, color: AppColors.textLight),
+                ),
+              ],
+            ),
         ],
       ),
     );
+  }
+
+  String _formatDateTime(DateTime dt) {
+    // Local short format: yyyy-MM-dd HH:mm
+    final two = (int n) => n.toString().padLeft(2, '0');
+    return '${dt.year}-${two(dt.month)}-${two(dt.day)} ${two(dt.hour)}:${two(dt.minute)}';
   }
 
   String _getLocalizedCategoryLabel(String category, LanguageService languageService) {
@@ -579,14 +649,10 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
         return AppStrings.getString('confirmed', languageService.currentLanguage);
       case 'pending':
         return AppStrings.getString('pending', languageService.currentLanguage);
-      case 'in_progress':
-        return AppStrings.getString('inProgress', languageService.currentLanguage);
       case 'completed':
         return AppStrings.getString('completed', languageService.currentLanguage);
       case 'cancelled':
         return AppStrings.getString('cancelled', languageService.currentLanguage);
-      case 'disputed':
-        return AppStrings.getString('disputed', languageService.currentLanguage);
       default:
         return status;
     }
@@ -624,14 +690,10 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
         return Colors.green;
       case 'pending':
         return Colors.orange;
-      case 'in_progress':
-        return Colors.blue;
       case 'completed':
         return Colors.blue;
       case 'cancelled':
         return Colors.red;
-      case 'disputed':
-        return Colors.purple;
       default:
         return AppColors.textLight;
     }

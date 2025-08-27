@@ -76,12 +76,10 @@ const bookingSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: [
-      'pending',
-      'confirmed',
-      'in_progress',
-      'completed',
-      'cancelled',
-      'disputed'
+  'pending',
+  'confirmed',
+  'completed',
+  'cancelled'
     ],
     default: 'pending'
   },
@@ -104,6 +102,15 @@ const bookingSchema = new mongoose.Schema({
     providerNotes: String,
     adminNotes: String
   },
+  adminActions: [{
+    actor: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    role: { type: String, enum: ['admin','provider','client'] },
+    action: String, // e.g., 'status_update' | 'cancel'
+    fromStatus: String,
+    toStatus: String,
+    note: String,
+    at: { type: Date, default: Date.now }
+  }],
   cancellation: {
     cancelledBy: {
       type: mongoose.Schema.Types.ObjectId,

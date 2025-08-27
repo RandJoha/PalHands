@@ -17,6 +17,11 @@ module.exports = {
   allowedStatusFor(user, booking) {
     const allowed = new Set();
     if (!user || !booking) return allowed;
+    // Admin can set any status
+    if (user.role === 'admin') {
+      ['pending','confirmed','completed','cancelled'].forEach(s=>allowed.add(s));
+      return allowed;
+    }
     const clientId = normalizeId(booking.client);
     const providerId = normalizeId(booking.provider);
     const userId = user._id.toString();
@@ -24,7 +29,7 @@ module.exports = {
       allowed.add('cancelled');
     }
     if (user.role === 'provider' && providerId === userId) {
-      ['confirmed','in_progress','completed','cancelled','disputed'].forEach(s=>allowed.add(s));
+      ['confirmed','completed','cancelled'].forEach(s=>allowed.add(s));
     }
     return allowed;
   },

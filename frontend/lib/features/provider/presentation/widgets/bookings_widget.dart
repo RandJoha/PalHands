@@ -137,7 +137,8 @@ class _BookingsWidgetState extends State<BookingsWidget> {
       case 4: // cancelled
         return _bookings.where((b) => b.status.toLowerCase() == 'cancelled').toList();
       default:
-        return _bookings;
+  // Default 'All' hides cancelled to avoid resurrecting closed items
+  return _bookings.where((b) => b.status.toLowerCase() != 'cancelled').toList();
     }
   }
 
@@ -230,6 +231,24 @@ class _BookingsWidgetState extends State<BookingsWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if ((notes.toLowerCase()).contains('admin set to') || (notes.toLowerCase()).contains('admin cancelled')) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.blueGrey.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.shield, size: 14, color: Colors.blueGrey),
+                  const SizedBox(width: 6),
+                  Text('Admin update', style: GoogleFonts.cairo(fontSize: 12, color: Colors.blueGrey)),
+                ],
+              ),
+            ),
+          ],
           Row(
             children: [
               Expanded(

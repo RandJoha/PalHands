@@ -56,7 +56,7 @@ async function createBooking(req, res) {
     // Compute duration and total amount
     const durationMinutes = Math.max(0, endDateTime.diff(startDateTime, 'minutes').minutes);
     let totalAmount = baseAmount;
-    if (priceType === 'hourly') {
+  if (priceType === 'hourly') {
       const hours = durationMinutes / 60;
       totalAmount = Math.round(baseAmount * hours);
     }
@@ -81,7 +81,7 @@ async function createBooking(req, res) {
     // Anti double-booking for provider (overlap with non-cancelled)
     const overlap = await Booking.findOne({
       provider: service.provider._id,
-      status: { $in: ['pending','confirmed','in_progress'] },
+      status: { $in: ['pending','confirmed'] },
       $or: [
         { 'schedule.startUtc': { $lt: endDateTime.toUTC().toJSDate() }, 'schedule.endUtc': { $gt: startDateTime.toUTC().toJSDate() } }
       ]
@@ -198,10 +198,25 @@ async function updateBookingStatus(req, res) {
     const previousStatus = booking.status;
     booking.status = req.body.status;
     booking.updatedAt = Date.now();
+    // Admin audit trail
+    if (req.user.role === 'admin') {
+      booking.adminActions = booking.adminActions || [];
+      booking.adminActions.push({
+        actor: req.user._id,
+        role: 'admin',
+        action: 'status_update',
+        fromStatus: previousStatus,
+        toStatus: booking.status,
+        note: req.body?.note || ''
+      });
+      booking.notes = booking.notes || {};
+      const info = `Admin set to ${booking.status}`;
+      booking.notes.adminNotes = booking.notes.adminNotes ? `${booking.notes.adminNotes}\n${info}` : info;
+    }
     await booking.save();
 
     // If first time moving to completed, increment provider.completedBookings
-    if (previousStatus !== 'completed' && booking.status === 'completed') {
+  if (previousStatus !== 'completed' && booking.status === 'completed') {
       try {
         await require('../models/Provider').updateOne(
           { _id: booking.provider },
@@ -253,12 +268,21 @@ async function cancelBooking(req, res) {
 
     const mins = minutesUntilStart(booking);
     const now = DateTime.now();
-    if (mins !== null && mins >= CANCELLATION_MIN_LEAD_MINUTES) {
-      // Direct cancel
-      booking.status = 'cancelled';
+  // Admins can cancel immediately; others require threshold window
+  if (req.user.role === 'admin' || (mins !== null && mins >= CANCELLATION_MIN_LEAD_MINUTES)) {
+  // Direct cancel
+  const prevStatus = booking.status;
+  booking.status = 'cancelled';
       booking.cancellation = booking.cancellation || {};
       booking.cancellation.cancelledBy = req.user._id;
       booking.cancellation.cancelledAt = now.toJSDate();
+      if (req.user.role === 'admin') {
+        booking.adminActions = booking.adminActions || [];
+  booking.adminActions.push({ actor: req.user._id, role: 'admin', action: 'cancel', fromStatus: prevStatus, toStatus: 'cancelled' });
+        booking.notes = booking.notes || {};
+        const info = 'Admin cancelled the booking';
+        booking.notes.adminNotes = booking.notes.adminNotes ? `${booking.notes.adminNotes}\n${info}` : info;
+      }
       await booking.save();
       return ok(res, booking, 'Booking cancelled');
     }
@@ -329,7 +353,7 @@ async function confirmBooking(req, res) {
     if (!booking) return error(res, 404, 'Booking not found');
     // Provider only
     if (req.user.role !== 'provider' || req.user._id.toString() !== booking.provider.toString()) return error(res, 403, 'Only the assigned provider can confirm');
-    if (booking.status !== 'pending') return error(res, 409, 'Only pending bookings can be confirmed');
+  if (booking.status !== 'pending') return error(res, 409, 'Only pending bookings can be confirmed');
     booking.status = 'confirmed';
     await booking.save();
     return ok(res, booking, 'Booking confirmed');
@@ -342,8 +366,8 @@ async function completeBooking(req, res) {
   try {
     const booking = await Booking.findById(req.params.id);
     if (!booking) return error(res, 404, 'Booking not found');
-    if (req.user.role !== 'provider' || req.user._id.toString() !== booking.provider.toString()) return error(res, 403, 'Only the assigned provider can complete');
-    if (!['confirmed','in_progress'].includes(booking.status)) return error(res, 409, 'Only confirmed/in_progress bookings can be completed');
+  if (req.user.role !== 'provider' || req.user._id.toString() !== booking.provider.toString()) return error(res, 403, 'Only the assigned provider can complete');
+  if (booking.status !== 'confirmed') return error(res, 409, 'Only confirmed bookings can be completed');
     const prev = booking.status;
     booking.status = 'completed';
     booking.completion = booking.completion || {};
@@ -352,7 +376,7 @@ async function completeBooking(req, res) {
     await booking.save();
     // increment counter if transitioned to completed
     if (prev !== 'completed') {
-      try {
+  try {
         await require('../models/Provider').updateOne({ _id: booking.provider }, { $inc: { completedBookings: 1 } });
       } catch {}
     }

@@ -230,12 +230,6 @@ class BookingService with BaseApiService {
           'label': 'Confirmed',
           'description': 'Provider confirmed the booking',
         };
-      case 'in_progress':
-        return {
-          'color': const Color(0xFF2196F3), // Blue
-          'label': 'In Progress',
-          'description': 'Service is being performed',
-        };
       case 'completed':
         return {
           'color': const Color(0xFF607D8B), // Blue Grey
@@ -247,12 +241,6 @@ class BookingService with BaseApiService {
           'color': const Color(0xFFF44336), // Red
           'label': 'Cancelled',
           'description': 'Booking was cancelled',
-        };
-      case 'disputed':
-        return {
-          'color': const Color(0xFF9C27B0), // Purple
-          'label': 'Disputed',
-          'description': 'There is a dispute for this booking',
         };
       default:
         return {

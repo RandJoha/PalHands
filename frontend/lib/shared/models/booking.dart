@@ -160,6 +160,7 @@ class ServiceDetails {
 class BookingModel {
 	final String id;
 	final String? bookingId;
+	final DateTime? createdAt;
 	final ServiceDetails serviceDetails;
 	final Schedule schedule;
 	final Location location;
@@ -178,6 +179,7 @@ class BookingModel {
 	BookingModel({
 		required this.id,
 		this.bookingId,
+		this.createdAt,
 		required this.serviceDetails,
 		required this.schedule,
 		required this.location,
@@ -205,6 +207,7 @@ class BookingModel {
 		return BookingModel(
 			id: idVal.toString(),
 			bookingId: (json['bookingId'])?.toString(),
+		createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'].toString()) : null,
 			serviceDetails: ServiceDetails.fromJson(serviceJson),
 			schedule: Schedule.fromJson(scheduleJson),
 			location: Location.fromJson(locationJson),
@@ -270,6 +273,7 @@ class BookingModel {
 	Map<String, dynamic> toJson() => {
 				'_id': id,
 				if (bookingId != null) 'bookingId': bookingId,
+		if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
 				'serviceDetails': serviceDetails.toJson(),
 				'schedule': schedule.toJson(),
 				'location': location.toJson(),
