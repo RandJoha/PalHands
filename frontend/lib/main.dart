@@ -23,6 +23,7 @@ import 'features/contact/presentation/pages/contact_screen.dart';
 import 'features/admin/presentation/pages/admin_dashboard_screen.dart';
 import 'features/profile/presentation/pages/user_dashboard_screen.dart';
 import 'features/provider/presentation/pages/provider_dashboard_screen.dart';
+import 'debug_admin_login.dart';
 
 // Services
 import 'shared/services/language_service.dart';
@@ -131,6 +132,7 @@ class PalHandsApp extends StatelessWidget {
                   '/login': (context) => const LoginScreen(),
                   '/signup': (context) => const SignupScreen(),
                   '/provider': (context) => const ProviderDashboardScreen(),
+                  '/debug-admin': (context) => const DebugAdminLoginPage(),
                 },
                 // Handle deep links with query parameters (e.g., /reset-password?token=...)
                 onGenerateRoute: (settings) {
@@ -181,6 +183,8 @@ class PalHandsApp extends StatelessWidget {
                       return MaterialPageRoute(builder: (_) => const SignupScreen(), settings: settings);
                     case '/provider':
                       return MaterialPageRoute(builder: (_) => const ProviderDashboardScreen(), settings: settings);
+                    case '/debug-admin':
+                      return MaterialPageRoute(builder: (_) => const DebugAdminLoginPage(), settings: settings);
                   }
                   // Unknown route -> home
                   return MaterialPageRoute(builder: (_) => const AuthWrapper(), settings: settings);
