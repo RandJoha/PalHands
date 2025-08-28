@@ -110,6 +110,10 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  deactivationReason: {
+    type: String,
+    default: null
+  },
   rating: {
     average: {
       type: Number,

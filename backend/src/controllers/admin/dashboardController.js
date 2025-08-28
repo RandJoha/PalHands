@@ -63,10 +63,7 @@ const getDashboardOverview = async (req, res) => {
 
     // Report statistics
     const pendingReports = await Report.countDocuments({ status: 'pending' });
-    const urgentReports = await Report.countDocuments({ 
-      status: 'pending', 
-      priority: 'urgent' 
-    });
+    const urgentReports = 0; // Priority removed, no urgent reports
 
     // Recent admin actions
     const recentActions = await AdminAction.find()
@@ -127,7 +124,7 @@ const getDashboardOverview = async (req, res) => {
 // Get user management data
 const getUserManagementData = async (req, res) => {
   try {
-    const { page = 1, limit = 20, search, role, status } = req.query;
+    const { page = 1, limit = 20, search, role, status, excludeRole } = req.query;
     const skip = (page - 1) * limit;
 
     // Build filter
@@ -140,9 +137,19 @@ const getUserManagementData = async (req, res) => {
         { phone: { $regex: search, $options: 'i' } }
       ];
     }
-    if (role) filter.role = role;
+    
+    // Handle role filtering - prioritize specific role over excludeRole
+    if (role && role !== 'all') {
+      filter.role = role;
+    } else if (excludeRole) {
+      filter.role = { $ne: excludeRole };
+    }
+    
     if (status !== undefined) filter.isActive = status === 'active';
 
+    console.log('🔍 User management filter:', filter);
+    console.log('🔍 Query params:', { page, limit, search, role, status, excludeRole });
+    
     const users = await User.find(filter)
       .select('-password')
       .sort({ createdAt: -1 })
@@ -150,6 +157,9 @@ const getUserManagementData = async (req, res) => {
       .limit(parseInt(limit));
 
     const total = await User.countDocuments(filter);
+    
+    console.log('🔍 Found users:', users.length);
+    console.log('🔍 Total count:', total);
 
     res.json({
       success: true,
@@ -175,7 +185,7 @@ const getUserManagementData = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { isActive, role, isVerified } = req.body;
+    const { isActive, role, isVerified, deactivationReason } = req.body;
 
     const user = await User.findById(userId);
     if (!user) {
@@ -186,7 +196,16 @@ const updateUser = async (req, res) => {
     }
 
     // Update fields
-    if (isActive !== undefined) user.isActive = isActive;
+    if (isActive !== undefined) {
+      user.isActive = isActive;
+      // Set deactivation reason when deactivating
+      if (!isActive && deactivationReason) {
+        user.deactivationReason = deactivationReason;
+      } else if (isActive) {
+        // Clear deactivation reason when reactivating
+        user.deactivationReason = null;
+      }
+    }
     if (role) user.role = role;
     if (isVerified !== undefined) user.isVerified = isVerified;
 

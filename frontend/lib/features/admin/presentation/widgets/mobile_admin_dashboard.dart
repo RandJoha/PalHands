@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 
 // Core imports
 import '../../../../core/constants/app_colors.dart';
@@ -16,7 +17,7 @@ import 'service_management_widget.dart';
 import 'booking_management_widget.dart';
 import 'reports_widget.dart';
 import 'analytics_widget.dart';
-import 'system_settings_widget.dart';
+import 'notification_widget.dart';
 import '../../../profile/presentation/widgets/profile_settings_rich_widget.dart';
 
 // Admin models
@@ -31,6 +32,49 @@ class MobileAdminDashboard extends StatefulWidget {
 
 class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
   int _selectedIndex = 0;
+  int _unreadNotificationCount = 0;
+  final NotificationService _notificationService = NotificationService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUnreadNotificationCount();
+    
+    // Refresh notification count every 30 seconds
+    Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (mounted) {
+        _loadUnreadNotificationCount();
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh count when dashboard becomes active
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _loadUnreadNotificationCount();
+      }
+    });
+  }
+
+  Future<void> _loadUnreadNotificationCount() async {
+    try {
+      final response = await _notificationService.getUnreadCount();
+      if (response['success'] == true && mounted) {
+        setState(() {
+          _unreadNotificationCount = response['data']['unreadCount'] ?? 0;
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to load unread notification count: $e');
+      }
+    }
+  }
 
   List<AdminMenuItem> _getMenuItems(String languageCode) {
     return [
@@ -59,9 +103,10 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
         icon: Icons.analytics,
         index: 4,
       ),
+      // New: Notifications
       AdminMenuItem(
-        title: AppStrings.getString('systemSettings', languageCode),
-        icon: Icons.settings,
+        title: 'Notifications',
+        icon: Icons.notifications,
         index: 5,
       ),
       // New: Profile Settings (reuse client profile page)
@@ -225,24 +270,42 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
 
         // Notifications - Smaller
         IconButton(
-          onPressed: () {
-            // TODO: Show notifications
-          },
+                            onPressed: () {
+                    setState(() {
+                      _selectedIndex = 5; // Switch to notifications tab
+                    });
+                    // Refresh unread count when notifications tab is opened
+                    _loadUnreadNotificationCount();
+                  },
           icon: Stack(
             children: [
               const Icon(Icons.notifications_outlined, size: 20),
-              Positioned(
-                right: 0,
-                top: 0,
-                child: Container(
-                  width: 6,
-                  height: 6,
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
+              // Notification indicator - shows actual unread count
+              if (_unreadNotificationCount > 0)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 14,
+                      minHeight: 14,
+                    ),
+                    child: Text(
+                      _unreadNotificationCount > 99 ? '99+' : _unreadNotificationCount.toString(),
+                      style: GoogleFonts.cairo(
+                        color: Colors.white,
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
@@ -492,7 +555,7 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
       unselectedLabelStyle: GoogleFonts.cairo(
         fontSize: 10,
       ),
-  currentIndex: _selectedIndex.clamp(0, 6), // Updated to support 7 items (0-6)
+        currentIndex: _selectedIndex.clamp(0, 6), // Updated to support 7 items (0-6)
       onTap: (index) {
         setState(() {
           _selectedIndex = index;
@@ -520,8 +583,8 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
           label: AppStrings.getString('analytics', languageService.currentLanguage),
         ),
         BottomNavigationBarItem(
-          icon: const Icon(Icons.settings, size: 20),
-          label: AppStrings.getString('systemSettings', languageService.currentLanguage),
+          icon: const Icon(Icons.notifications, size: 20),
+          label: 'Notifications',
         ),
         BottomNavigationBarItem(
           icon: const Icon(Icons.person, size: 20),
@@ -544,7 +607,7 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
       case 4:
         return const AnalyticsWidget();
       case 5:
-        return const SystemSettingsWidget();
+        return const NotificationWidget();
       case 6:
         return const ProfileSettingsRichWidget();
       default:
