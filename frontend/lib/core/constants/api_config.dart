@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class ApiConfig {
   // Environment detection
   static const String _environment = String.fromEnvironment('ENVIRONMENT', defaultValue: 'dev');
@@ -7,8 +9,16 @@ class ApiConfig {
   static const String devBaseUrl = 'http://127.0.0.1:3000';
   static const String prodBaseUrl = 'https://api.palhands.com'; // Change this to your production URL
   
+  // Force backend URL for web development
+  static const String webDevBackendUrl = 'http://localhost:3000';
+  
   // Get the appropriate base URL based on environment
   static String get currentBaseUrl {
+    // For web development, always use the backend URL
+    if (kIsWeb && _environment == 'dev') {
+      return webDevBackendUrl;
+    }
+    
     switch (_environment) {
       case 'prod':
         return prodBaseUrl;

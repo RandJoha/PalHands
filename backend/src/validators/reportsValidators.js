@@ -32,7 +32,7 @@ const createReportValidator = celebrate({
       reporterName: Joi.string().min(2).max(80).required(),
       reporterEmail: Joi.string().email().required(),
       reportedEmail: Joi.string().email().optional()
-    }).when('reportCategory', { is: 'user_issue', then: Joi.required(), otherwise: Joi.forbidden() }),
+    }).when('reportCategory', { is: 'user_issue', then: Joi.optional(), otherwise: Joi.forbidden() }),
 
     // Feature suggestion specifics
     ideaTitle: Joi.string().min(3).max(150)
@@ -63,7 +63,7 @@ const listMyReportsValidator = celebrate({
   [Segments.QUERY]: Joi.object({
     page: Joi.number().integer().min(1).default(1),
     limit: Joi.number().integer().min(1).max(100).default(20),
-    status: Joi.string().valid('pending', 'under_review', 'awaiting_user', 'investigating', 'resolved', 'dismissed').optional(),
+    status: Joi.string().valid('pending', 'under_review', 'resolved', 'dismissed', 'active').optional(),
     reportCategory: Joi.string().valid('user_issue', 'technical_issue', 'feature_suggestion', 'service_category_request', 'other').optional(),
     issueType: Joi.string().valid('unsafe', 'harassment', 'misleading', 'inappropriate_behavior', 'fraud', 'spam', 'payment_issue', 'safety_concern', 'poor_quality', 'no_show', 'other').optional(),
     hasEvidence: Joi.boolean().optional(),
@@ -81,8 +81,7 @@ const adminListValidator = celebrate({
   [Segments.QUERY]: Joi.object({
     page: Joi.number().integer().min(1).default(1),
     limit: Joi.number().integer().min(1).max(100).default(20),
-    status: Joi.string().valid('pending', 'under_review', 'awaiting_user', 'investigating', 'resolved', 'dismissed').optional(),
-    priority: Joi.string().valid('low', 'medium', 'high', 'urgent').optional(),
+    status: Joi.string().valid('pending', 'under_review', 'resolved', 'dismissed', 'active').optional(),
     reportCategory: Joi.string().valid('user_issue', 'technical_issue', 'feature_suggestion', 'service_category_request', 'other').optional(),
     issueType: Joi.string().valid('unsafe', 'harassment', 'misleading', 'inappropriate_behavior', 'fraud', 'spam', 'payment_issue', 'safety_concern', 'poor_quality', 'no_show', 'other').optional(),
     hasEvidence: Joi.boolean().optional(),
@@ -95,7 +94,7 @@ const adminListValidator = celebrate({
 // Admin update validator includes FSM and resolution
 const adminUpdateValidator = celebrate({
   [Segments.BODY]: Joi.object({
-    status: Joi.string().valid('pending', 'under_review', 'awaiting_user', 'investigating', 'resolved', 'dismissed').optional(),
+    status: Joi.string().valid('pending', 'under_review', 'resolved', 'dismissed').optional(),
     assignedAdmin: objectId.optional(),
     adminNote: Joi.string().max(1000).optional(),
     resolution: Joi.object({

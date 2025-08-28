@@ -109,8 +109,8 @@ class _ReportsWidgetState extends State<ReportsWidget> {
       // Filter out resolved and dismissed reports by default unless specifically requested
       String? effectiveStatus = _selectedStatus;
       if (_selectedStatus == null || _selectedStatus!.isEmpty) {
-        // Temporarily show all reports to debug the issue
-        effectiveStatus = null; // Show all reports including resolved/dismissed
+        // Show only active reports (not resolved or dismissed) by default
+        effectiveStatus = 'active';
       }
       
       final response = await _reportsService.listAllReports(

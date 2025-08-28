@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'dart:io';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/services/language_service.dart';
@@ -28,6 +29,7 @@ class ContactForm extends StatefulWidget {
 class _ContactFormState extends State<ContactForm> {
   final _formKey = GlobalKey<FormState>();
   final Map<String, TextEditingController> _controllers = {};
+  final Map<String, File?> _selectedFiles = {};
   String? _selectedDropdownValue;
 
   @override
@@ -55,6 +57,12 @@ class _ContactFormState extends State<ContactForm> {
     super.dispose();
   }
 
+  void _onFileSelected(String fieldKey, File? file) {
+    setState(() {
+      _selectedFiles[fieldKey] = file;
+    });
+  }
+
   void _submitForm() {
     if (_formKey.currentState!.validate() && widget.consentChecked) {
       final formData = <String, dynamic>{
@@ -69,6 +77,13 @@ class _ContactFormState extends State<ContactForm> {
       // Add dropdown value
       if (_selectedDropdownValue != null) {
         formData['issueType'] = _selectedDropdownValue;
+      }
+
+      // Add selected files
+      for (final entry in _selectedFiles.entries) {
+        if (entry.value != null) {
+          formData[entry.key] = entry.value!.path;
+        }
       }
 
       // Add consent
@@ -141,6 +156,9 @@ class _ContactFormState extends State<ContactForm> {
                             _selectedDropdownValue = value;
                           });
                         },
+                        onFileSelected: field.type == FieldType.file 
+                          ? (file) => _onFileSelected(field.labelKey, file)
+                          : null,
                       ),
                     );
                   }),

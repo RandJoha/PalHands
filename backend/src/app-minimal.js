@@ -85,6 +85,24 @@ try {
 }
 
 try {
+  const reportsRoutes = require('./routes/reports');
+  app.use('/api/reports', reportsRoutes);
+  console.log('✅ Reports routes loaded');
+} catch (error) {
+  console.error('❌ Reports routes failed:', error.message);
+}
+
+try {
+  const adminRoutes = require('./routes/admin');
+  app.use('/api/admin', adminRoutes);
+  console.log('✅ Admin routes loaded');
+} catch (error) {
+  console.error('❌ Admin routes failed:', error.message);
+}
+
+
+
+try {
   const availabilityRoutes = require('./routes/availability');
   app.use('/api/availability', availabilityRoutes);
   console.log('✅ Availability routes loaded');
