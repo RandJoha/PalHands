@@ -4,12 +4,25 @@ const reportSchema = new mongoose.Schema({
   reporter: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: function() {
+      // Allow anonymous submissions for all categories except user_issue when no contact info provided
+      if (this.reportCategory === 'user_issue') {
+        // For user_issue, require either reporter (authenticated) or contact info (anonymous)
+        return !this.contactEmail || !this.contactName;
+      }
+      return !['feature_suggestion', 'technical_issue', 'service_category_request', 'other'].includes(this.reportCategory);
+    }
   },
   reporterRole: {
     type: String,
     enum: ['client', 'provider', 'admin'],
-    default: 'client'
+    required: function() {
+      // Only required when reporter is present
+      return this.reporter != null;
+    },
+    default: function() {
+      return this.reporter ? 'client' : undefined;
+    }
   },
   // Classify the type of submission to support both entity-related reports and general feedback
   reportCategory: {
@@ -103,11 +116,7 @@ const reportSchema = new mongoose.Schema({
     at: { type: Date, default: Date.now },
     by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
   }],
-  priority: {
-    type: String,
-    enum: ['low', 'medium', 'high', 'urgent'],
-    default: 'medium'
-  },
+
   assignedAdmin: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
@@ -165,7 +174,7 @@ reportSchema.pre('save', function(next) {
 });
 
 // Index for efficient querying
-reportSchema.index({ status: 1, priority: 1, createdAt: -1 });
+reportSchema.index({ status: 1, createdAt: -1 });
 reportSchema.index({ reportedType: 1, reportedId: 1 });
 reportSchema.index({ reporter: 1, createdAt: -1 });
 reportSchema.index({ assignedAdmin: 1, status: 1 });
