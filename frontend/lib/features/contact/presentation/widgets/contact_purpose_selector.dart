@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/services/language_service.dart';
+import '../../../../shared/services/auth_service.dart';
 import '../../data/contact_data.dart';
 
 class ContactPurposeSelector extends StatelessWidget {
@@ -46,6 +47,7 @@ class ContactPurposeSelector extends StatelessWidget {
                       child: _buildPurposeCard(
                         data,
                         languageService,
+                        context,
                       ),
                     ),
                   );
@@ -75,11 +77,16 @@ class ContactPurposeSelector extends StatelessWidget {
   Widget _buildPurposeCard(
     ContactPurposeData purposeData,
     LanguageService languageService,
+    BuildContext context,
   ) {
     final isSelected = selectedPurpose == purposeData.purpose;
     
     return GestureDetector(
-      onTap: () => onPurposeSelected(purposeData.purpose),
+      onTap: () {
+                // Allow all report types for both authenticated and anonymous users
+        // Authentication is handled at submission time
+        onPurposeSelected(purposeData.purpose);
+      },
       child: Container(
         height: 110,
         padding: const EdgeInsets.all(12),
