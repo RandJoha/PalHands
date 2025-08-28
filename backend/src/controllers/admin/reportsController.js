@@ -1,14 +1,22 @@
 const Report = require('../../models/Report');
+const User = require('../../models/User');
+const NotificationService = require('../../services/notificationService');
 
 // GET /api/admin/reports
 const listReports = async (req, res) => {
   try {
-    const { page = 1, limit = 20, status, priority, reportCategory, issueType, hasEvidence, assignedAdmin, awaiting_user, sort = 'createdAt:desc' } = req.query;
+    const { page = 1, limit = 20, status, reportCategory, issueType, hasEvidence, assignedAdmin, awaiting_user, sort = 'createdAt:desc' } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const filter = {};
-    if (status) filter.status = status;
-    if (priority) filter.priority = priority;
+    if (status) {
+      if (status === 'active') {
+        // Filter out resolved and dismissed reports
+        filter.status = { $nin: ['resolved', 'dismissed'] };
+      } else {
+        filter.status = status;
+      }
+    }
     if (reportCategory) filter.reportCategory = reportCategory;
     if (issueType) filter.issueType = issueType;
     if (assignedAdmin) filter.assignedAdmin = assignedAdmin;
@@ -26,6 +34,18 @@ const listReports = async (req, res) => {
       .limit(parseInt(limit));
 
     const total = await Report.countDocuments(filter);
+    
+    console.log('📋 Admin reports query:', {
+      filter: filter,
+      total: total,
+      returned: reports.length,
+      reports: reports.map(r => ({
+        id: r._id,
+        category: r.reportCategory,
+        status: r.status,
+        description: r.description?.substring(0, 50) + '...'
+      }))
+    });
 
     res.json({
       success: true,
@@ -46,7 +66,7 @@ const listReports = async (req, res) => {
 
 // Allowed status transitions
 const allowedTransitions = {
-  pending: ['under_review', 'dismissed'],
+  pending: ['under_review', 'dismissed', 'resolved'],
   under_review: ['awaiting_user', 'investigating', 'resolved', 'dismissed'],
   awaiting_user: ['under_review', 'resolved', 'dismissed'],
   investigating: ['resolved', 'dismissed'],
@@ -70,8 +90,17 @@ const updateReport = async (req, res) => {
       if (!allowed.includes(status)) {
         return res.status(400).json({ success: false, message: `Illegal status transition from ${report.status} to ${status}` });
       }
+      const oldStatus = report.status;
       report.statusHistory.push({ from: report.status, to: status, by: req.user._id });
       report.status = status;
+      
+      // Send notification about status change
+      try {
+        await NotificationService.notifyReportUpdate(report, oldStatus, status, req.user._id);
+      } catch (notificationError) {
+        console.error('Failed to send notification for report update:', notificationError);
+        // Don't fail the update if notification fails
+      }
     }
     if (assignedAdmin) {
       const User = require('../../models/User');
@@ -166,9 +195,17 @@ const dismissReport = async (req, res) => {
 
 const stats = async (req, res) => {
   try {
-    const { since } = req.query;
+    const { since, status, reportCategory, issueType, hasEvidence } = req.query;
     const match = {};
     if (since) match.createdAt = { $gte: new Date(since) };
+    if (status) match.status = status;
+    if (reportCategory) match.reportCategory = reportCategory;
+    if (issueType) match.issueType = issueType;
+    if (hasEvidence !== undefined) {
+      match.evidence = hasEvidence === 'true' || hasEvidence === true 
+        ? { $exists: true, $ne: [] } 
+        : { $in: [[], null] };
+    }
 
     const [byStatus, byCategory, byIssueType] = await Promise.all([
       Report.aggregate([{ $match: match }, { $group: { _id: '$status', count: { $sum: 1 } } }]),

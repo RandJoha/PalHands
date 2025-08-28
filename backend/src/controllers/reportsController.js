@@ -1,45 +1,90 @@
 const Report = require('../models/Report');
+const NotificationService = require('../services/notificationService');
 
 // POST /api/reports
 const createReport = async (req, res) => {
   try {
-  const { reportCategory = 'user_issue', reportedType, reportedId, reportedName, issueType, description, reportedUserRole, contactEmail, contactName, subject, requestedCategory, evidence = [], serviceName, categoryFit, importanceReason, partyInfo, ideaTitle, communityBenefit, device, os, appVersion, relatedBookingId, reportedServiceId, idempotencyKey: bodyIdemKey } = req.body;
+    const { reportCategory = 'user_issue', reportedType, reportedId, reportedName, issueType, description, reportedUserRole, contactEmail, contactName, subject, requestedCategory, evidence = [], serviceName, categoryFit, importanceReason, partyInfo, ideaTitle, communityBenefit, device, os, appVersion, relatedBookingId, reportedServiceId, idempotencyKey: bodyIdemKey } = req.body;
     const headerIdemKey = req.get('Idempotency-Key');
     const idempotencyKey = bodyIdemKey || headerIdemKey;
-    // Idempotent create (optional)
-    if (idempotencyKey) {
+    
+    // Check if user is authenticated
+    const isAuthenticated = req.user != null;
+    
+    // For certain categories, allow anonymous submissions
+    const allowAnonymous = ['feature_suggestion', 'technical_issue', 'service_category_request', 'other'].includes(reportCategory);
+    
+    // For user_issue reports, require either authentication or valid contact info
+    if (reportCategory === 'user_issue' && !isAuthenticated) {
+      if (!contactEmail || !contactName) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Contact email and name are required for anonymous user issue reports.' 
+        });
+      }
+    } else if (!isAuthenticated && !allowAnonymous) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Authentication required for this type of report. Please log in to submit user issue reports.' 
+      });
+    }
+    
+    // Idempotent create (optional) - only for authenticated users
+    if (idempotencyKey && isAuthenticated) {
       const existing = await Report.findOne({ reporter: req.user._id, idempotencyKey });
       if (existing) return res.status(200).json({ success: true, message: 'Report already created', data: existing });
     }
 
-    const report = await Report.create({
-      reporter: req.user._id,
-      reporterRole: req.user.role,
+    const reportData = {
       reportCategory,
-  reportedType,
-  reportedId,
-  reportedUserRole,
-  reportedName,
-  issueType,
+      reportedType,
+      reportedId,
+      reportedUserRole,
+      reportedName,
+      issueType,
       description,
       contactEmail,
       contactName,
       subject,
-  requestedCategory,
-  serviceName,
-  categoryFit,
-  importanceReason,
-  ideaTitle,
-  communityBenefit,
-  device,
-  os,
-  appVersion,
-  partyInfo,
-  relatedBookingId,
-  reportedServiceId,
-  idempotencyKey,
-  evidence: Array.isArray(evidence) ? evidence : []
+      requestedCategory,
+      serviceName,
+      categoryFit,
+      importanceReason,
+      ideaTitle,
+      communityBenefit,
+      device,
+      os,
+      appVersion,
+      partyInfo,
+      relatedBookingId,
+      reportedServiceId,
+      idempotencyKey,
+      evidence: Array.isArray(evidence) ? evidence : []
+    };
+
+    // Add user info if authenticated
+    if (isAuthenticated) {
+      reportData.reporter = req.user._id;
+      reportData.reporterRole = req.user.role;
+    }
+
+    const report = await Report.create(reportData);
+    
+    console.log('✅ Report created successfully:', {
+      id: report._id,
+      category: report.reportCategory,
+      description: report.description,
+      status: report.status,
+      createdAt: report.createdAt
     });
+
+    // Send notification to all admins about the new report
+    try {
+      await NotificationService.notifyNewReport(report);
+    } catch (notificationError) {
+      console.error('Failed to send notification for new report:', notificationError);
+      // Don't fail the report creation if notification fails
+    }
 
     return res.status(201).json({ success: true, message: 'Report created', data: report });
   } catch (error) {
