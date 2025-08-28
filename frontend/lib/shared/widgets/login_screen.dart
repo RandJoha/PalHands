@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'app_toast.dart';
+
+// Services
+import '../services/base_api_service.dart';
 
 // Core imports
 import '../../core/constants/app_colors.dart';
@@ -42,7 +46,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // Enhanced error handling with secure messages
   String _getSecureErrorMessage(dynamic error) {
-    // For login, always show the same generic message to avoid leaking information
+    // Check if this is a deactivation error from ApiException
+    if (error is ApiException && error.message.contains('deactivated by an administrator')) {
+      return error.message; // Show the specific deactivation message
+    }
+    
+    // Check if this is a deactivation error from string
+    if (error is String && error.contains('deactivated by an administrator')) {
+      return error; // Show the specific deactivation message
+    }
+    
+    // For other login errors, show generic message to avoid leaking information
     return 'Incorrect email or password';
   }
 
@@ -65,17 +79,34 @@ class _LoginScreenState extends State<LoginScreen> {
             Navigator.of(context).pushReplacementNamed('/');
           }
         } else {
+          // Debug: Print the response to see what we're getting
+          if (kDebugMode) {
+            print('🔍 Login response: $response');
+            print('🔍 Response message: ${response['message']}');
+            print('🔍 Response error: ${response['error']}');
+          }
+          
           // Rate limit friendly message if backend returned 429
           final status = response['statusCode'] as int?;
           final friendly = (status == 429)
               ? 'Too many attempts. Please try again later.'
-              : _getSecureErrorMessage(response['error'] ?? 'Login failed');
+              : _getSecureErrorMessage(response['message'] ?? 'Login failed');
           // Login failed - show secure error message
           if (mounted) {
               AppToast.show(context, message: friendly, type: AppToastType.error, actionLabel: 'Dismiss', onAction: () => ScaffoldMessenger.of(context).hideCurrentSnackBar());
           }
         }
       } catch (e) {
+        // Debug: Print the exception to see what we're getting
+        if (kDebugMode) {
+          print('🔍 Login exception: $e');
+          print('🔍 Exception type: ${e.runtimeType}');
+          if (e is ApiException) {
+            print('🔍 ApiException message: ${e.message}');
+            print('🔍 ApiException statusCode: ${e.statusCode}');
+          }
+        }
+        
         // Network or other error - show secure error message
         if (mounted) {
             AppToast.show(context, message: _getSecureErrorMessage(e), type: AppToastType.error);

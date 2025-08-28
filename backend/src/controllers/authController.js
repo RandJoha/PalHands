@@ -207,7 +207,10 @@ const login = asyncHandler(async (req, res) => {
       if (provider) {
         // Check if provider is active
         if (!provider.isActive) {
-          return error(res, 401, 'Account is deactivated', [], 'UNAUTHORIZED');
+          const message = provider.deactivationReason 
+            ? `Your account has been deactivated by an administrator. Reason: ${provider.deactivationReason}`
+            : 'Your account has been deactivated by an administrator. Please contact support for more information.';
+          return error(res, 401, message, [], 'UNAUTHORIZED');
         }
 
         // Verify password
@@ -256,7 +259,10 @@ const login = asyncHandler(async (req, res) => {
     if (user) {
       // Check if user is active
       if (!user.isActive) {
-        return error(res, 401, 'Account is deactivated', [], 'UNAUTHORIZED');
+        const message = user.deactivationReason 
+          ? `Your account has been deactivated by an administrator. Reason: ${user.deactivationReason}`
+          : 'Your account has been deactivated by an administrator. Please contact support for more information.';
+        return error(res, 401, message, [], 'UNAUTHORIZED');
       }
 
       // Verify password

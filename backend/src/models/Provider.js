@@ -118,6 +118,10 @@ const providerSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  deactivationReason: {
+    type: String,
+    default: null
+  },
   isVerified: {
     type: Boolean,
     default: false

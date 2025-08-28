@@ -26,6 +26,21 @@ class AppStrings {
     'ar': 'سجل دخولك للمتابعة إلى حسابك',
   };
 
+  static const Map<String, String> loginRequired = {
+    'en': 'Login Required',
+    'ar': 'تسجيل الدخول مطلوب',
+  };
+
+  static const Map<String, String> loginRequiredMessage = {
+    'en': 'You need to be logged in to submit a contact form. Please log in to continue.',
+    'ar': 'تحتاج إلى تسجيل الدخول لإرسال نموذج الاتصال. يرجى تسجيل الدخول للمتابعة.',
+  };
+
+  static const Map<String, String> reportsAndDisputes = {
+    'en': 'Reports & Disputes',
+    'ar': 'التقارير والنزاعات',
+  };
+
   // Authentication
   static const Map<String, String> login = {
     'en': 'Login',
@@ -3356,9 +3371,56 @@ class AppStrings {
     'ar': 'الإجراءات',
   };
 
+
+
   static const Map<String, String> edit = {
     'en': 'Edit',
     'ar': 'تعديل',
+  };
+
+  static const Map<String, String> cancel = {
+    'en': 'Cancel',
+    'ar': 'إلغاء',
+  };
+
+  static const Map<String, String> verified = {
+    'en': 'Verified',
+    'ar': 'متحقق',
+  };
+
+  static const Map<String, String> yes = {
+    'en': 'Yes',
+    'ar': 'نعم',
+  };
+
+  static const Map<String, String> no = {
+    'en': 'No',
+    'ar': 'لا',
+  };
+
+  static const Map<String, String> update = {
+    'en': 'Update',
+    'ar': 'تحديث',
+  };
+
+  static const Map<String, String> userUpdatedSuccessfully = {
+    'en': 'User updated successfully',
+    'ar': 'تم تحديث المستخدم بنجاح',
+  };
+
+  static const Map<String, String> updateFailed = {
+    'en': 'Update failed',
+    'ar': 'فشل التحديث',
+  };
+
+  static const Map<String, String> deactivationReason = {
+    'en': 'Deactivation Reason (Optional)',
+    'ar': 'سبب الإلغاء (اختياري)',
+  };
+
+  static const Map<String, String> enterDeactivationReason = {
+    'en': 'Enter reason for deactivation...',
+    'ar': 'أدخل سبب الإلغاء...',
   };
 
   static const Map<String, String> view = {
@@ -3646,11 +3708,7 @@ class AppStrings {
     'ar': 'قادم',
   };
 
-  // Booking action strings
-  static const Map<String, String> cancel = {
-    'en': 'Cancel',
-    'ar': 'إلغاء',
-  };
+
 
   static const Map<String, String> contact = {
     'en': 'Contact',
@@ -4350,6 +4408,9 @@ class AppStrings {
       'appTagline': appTagline,
       'welcomeBack': welcomeBack,
       'loginToContinue': loginToContinue,
+      'loginRequired': loginRequired,
+      'loginRequiredMessage': loginRequiredMessage,
+      'reportsAndDisputes': reportsAndDisputes,
       'login': login,
       'register': register,
       'signUp': signUp,
@@ -5069,6 +5130,7 @@ class AppStrings {
       'unsafe': unsafe,
       'misleading': misleading,
       'otherIssue': otherIssue,
+      'other': otherIssue,
       'ideaTitle': ideaTitle,
       'ideaDescription': ideaDescription,
       'howItHelpsCommunity': howItHelpsCommunity,
