@@ -1,5 +1,4 @@
 const User = require('../models/User');
-const Provider = require('../models/Provider');
 const asyncHandler = require('../utils/asyncHandler');
 const { ok, created, error } = require('../utils/response');
 
@@ -17,38 +16,34 @@ const normalizeCity = (c) => {
 
 const updateProfile = asyncHandler(async (req, res) => {
   const { firstName, lastName, phone, address, addresses, profileImage, email, age } = req.body;
-  const userId = req.user._id;
+    const userId = req.user._id;
 
-  // Decide which collection to update based on authenticated principal
-  const isProvider = req.user && req.user.role === 'provider';
-  const Model = isProvider ? Provider : User;
+    // Find user
+    const user = await User.findById(userId);
+  if (!user) return error(res, 404, 'User not found', [], 'NOT_FOUND');
 
-  // Find principal document
-  const doc = await Model.findById(userId);
-  if (!doc) return error(res, 404, 'User not found', [], 'NOT_FOUND');
-
-  // Update fields if provided
-  if (firstName) doc.firstName = firstName;
-  if (lastName) doc.lastName = lastName;
-  if (phone) {
-    // Check if phone is already taken by another principal in same collection
-    const existing = await Model.findOne({ phone, _id: { $ne: userId } });
-    if (existing) return error(res, 400, 'Phone number already registered', [], 'CONFLICT');
-    doc.phone = phone;
-  }
-  if (typeof age !== 'undefined') {
-    doc.age = age;
-  }
-  if (email && email.toLowerCase() !== doc.email) {
+    // Update fields if provided
+    if (firstName) user.firstName = firstName;
+    if (lastName) user.lastName = lastName;
+    if (phone) {
+      // Check if phone is already taken by another user
+      const existingUser = await User.findOne({ phone, _id: { $ne: userId } });
+  if (existingUser) return error(res, 400, 'Phone number already registered', [], 'CONFLICT');
+      user.phone = phone;
+    }
+    if (typeof age !== 'undefined') {
+      user.age = age;
+    }
+    if (email && email.toLowerCase() !== user.email) {
       // Do NOT immediately change email; store as pending and send a dedicated email-change link
       const nextEmail = email.toLowerCase();
       // Unique check against existing users' primary email and any pendingEmail
-      const conflict = await Model.findOne({
+      const conflict = await User.findOne({
         _id: { $ne: userId },
         $or: [ { email: nextEmail }, { pendingEmail: nextEmail } ]
       });
       if (conflict) return error(res, 400, 'Email already registered', [], 'CONFLICT');
-      doc.pendingEmail = nextEmail;
+      user.pendingEmail = nextEmail;
       if (process.env.ENABLE_EMAIL_VERIFICATION === 'true') {
         const crypto = require('crypto');
         user.emailChangeToken = crypto.randomBytes(24).toString('hex');
@@ -70,13 +65,13 @@ const updateProfile = asyncHandler(async (req, res) => {
     }
     if (address) {
       // Maintain legacy single address field
-      doc.address = {
+      user.address = {
         ...address,
         city: normalizeCity(address.city)
       };
       // If addresses array not provided but legacy address is, ensure at least one entry exists
-      if (!Array.isArray(addresses) && (!Array.isArray(doc.addresses) || doc.addresses.length === 0)) {
-        doc.addresses = [{
+      if (!Array.isArray(addresses) && (!Array.isArray(user.addresses) || user.addresses.length === 0)) {
+        user.addresses = [{
           type: (address.type && ['home','work','other'].includes(address.type)) ? address.type : 'home',
           street: address.street || '',
           city: address.city || '',
@@ -107,15 +102,15 @@ const updateProfile = asyncHandler(async (req, res) => {
       }
       // If none marked default, set first one
       if (!foundDefault && sanitized.length > 0) sanitized[0].isDefault = true;
-      doc.addresses = sanitized;
+      user.addresses = sanitized;
     }
-  if (profileImage) doc.profileImage = profileImage;
+  if (profileImage) user.profileImage = profileImage;
 
-  // Update timestamp
-  doc.updatedAt = new Date();
+    // Update timestamp
+    user.updatedAt = new Date();
 
     try {
-  await doc.save();
+      await user.save();
     } catch (e) {
       // Handle duplicate key errors (race conditions)
       if (e && e.code === 11000) {
@@ -128,25 +123,25 @@ const updateProfile = asyncHandler(async (req, res) => {
 
     // Return updated user data (without password) with clean structure
     const userResponse = {
-      _id: doc._id,
+      _id: user._id,
       // Personal info
-      firstName: doc.firstName,
-      lastName: doc.lastName,
-      email: doc.email,
-      pendingEmail: doc.pendingEmail,
-      phone: doc.phone,
-      age: doc.age,
-      profileImage: doc.profileImage,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      pendingEmail: user.pendingEmail,
+      phone: user.phone,
+      age: user.age,
+      profileImage: user.profileImage,
       // Account info
-      role: doc.role,
-      isVerified: doc.isVerified,
-      isActive: doc.isActive,
-      rating: doc.rating,
+      role: user.role,
+      isVerified: user.isVerified,
+      isActive: user.isActive,
+      rating: user.rating,
       // Addresses
-      addresses: doc.addresses,
+      addresses: user.addresses,
       // Metadata
-      createdAt: doc.createdAt,
-      updatedAt: doc.updatedAt
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
     };
 
   return ok(res, { user: userResponse }, 'Profile updated successfully');
