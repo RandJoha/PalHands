@@ -75,7 +75,7 @@ class ContactData {
             hintKey: 'issueType',
             type: FieldType.dropdown,
             required: true,
-            options: ['unsafe', 'misleading', 'otherIssue'],
+            options: ['unsafe', 'misleading', 'other'],
           ),
           ContactFormField(
             labelKey: 'attachScreenshot',

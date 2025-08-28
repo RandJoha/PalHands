@@ -17,11 +17,11 @@ const {
 } = require('../controllers/reportsController');
 const { createReportLimiter } = require('../middleware/rateLimiters');
 
-// Auth required for all report routes
-router.use(authenticate);
-
-// Create a new report
+// Create a new report - allow anonymous for feature suggestions
 router.post('/', createReportLimiter, createReportValidator, createReport);
+
+// Auth required for all other report routes
+router.use(authenticate);
 
 // List my reports
 router.get('/me', listMyReportsValidator, listMyReports);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +10,8 @@ import '../../../../core/constants/app_strings.dart';
 
 // Shared imports
 import '../../../../shared/services/language_service.dart';
+import '../../../../shared/services/user_service.dart';
+import '../../../../shared/services/auth_service.dart';
 
 class UserManagementWidget extends StatefulWidget {
   const UserManagementWidget({super.key});
@@ -25,6 +28,8 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
   String _selectedStatus = 'all';
   final int _currentPage = 1;
   final int _totalPages = 1;
+  
+  final UserService _userService = UserService();
 
   @override
   void initState() {
@@ -32,92 +37,111 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
     _loadUsers();
   }
 
+  void _onSearchChanged(String value) {
+    setState(() {
+      _searchQuery = value;
+    });
+    _loadUsers();
+  }
+
+  void _onRoleChanged(String? value) {
+    if (value != null) {
+      setState(() {
+        _selectedRole = value;
+      });
+      if (kDebugMode) {
+        print('🔍 Role filter changed to: $value');
+      }
+      _loadUsers();
+    }
+  }
+
+  void _onStatusChanged(String? value) {
+    if (value != null) {
+      setState(() {
+        _selectedStatus = value;
+      });
+      _loadUsers();
+    }
+  }
+
   Future<void> _loadUsers() async {
     setState(() {
       _isLoading = true;
     });
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      // Get AuthService from Provider context
+      final authService = Provider.of<AuthService>(context, listen: false);
+      
+      if (kDebugMode) {
+        print('🔍 Loading users with filters:');
+        print('  - Search: ${_searchQuery.isNotEmpty ? _searchQuery : "None"}');
+        print('  - Role: ${_selectedRole != 'all' ? _selectedRole : "All"}');
+        print('  - Status: ${_selectedStatus != 'all' ? _selectedStatus : "All"}');
+      }
+      
+      final response = await _userService.getAllUsers(
+        search: _searchQuery.isNotEmpty ? _searchQuery : null,
+        role: _selectedRole != 'all' ? _selectedRole : null,
+        status: _selectedStatus != 'all' ? _selectedStatus : null,
+        page: _currentPage,
+        limit: 100, // Get more users
+        authService: authService,
+      );
 
-    // Mock data
-    setState(() {
-      _users = [
-        {
-          'id': '1',
-          'firstName': 'Ahmed',
-          'lastName': 'Hassan',
-          'email': 'ahmed.hassan@email.com',
-          'phone': '+970-59-123-4567',
-          'role': 'provider',
-          'isActive': true,
-          'isVerified': true,
-          'rating': {'average': 4.8, 'count': 45},
-          'createdAt': '2024-01-15T10:30:00Z',
-          'profileImage': null,
-        },
-        {
-          'id': '2',
-          'firstName': 'Fatima',
-          'lastName': 'Ali',
-          'email': 'fatima.ali@email.com',
-          'phone': '+970-59-987-6543',
-          'role': 'client',
-          'isActive': true,
-          'isVerified': false,
-          'rating': {'average': 0, 'count': 0},
-          'createdAt': '2024-01-20T14:15:00Z',
-          'profileImage': null,
-        },
-        {
-          'id': '3',
-          'firstName': 'Omar',
-          'lastName': 'Khalil',
-          'email': 'omar.khalil@email.com',
-          'phone': '+970-59-555-1234',
-          'role': 'provider',
-          'isActive': false,
-          'isVerified': true,
-          'rating': {'average': 4.2, 'count': 23},
-          'createdAt': '2024-01-10T09:45:00Z',
-          'profileImage': null,
-        },
-      ];
-      _isLoading = false;
-    });
+      if (response['success'] == true) {
+        final data = response['data'];
+        final users = data['users'] as List<dynamic>;
+        
+        setState(() {
+          _users = users.map((user) => Map<String, dynamic>.from(user)).toList();
+          _isLoading = false;
+        });
+        
+        // Debug: Print rating data for first user
+        if (kDebugMode && _users.isNotEmpty) {
+          print('🔍 First user rating: ${_users[0]['rating']}');
+          print('🔍 First user rating type: ${_users[0]['rating']?.runtimeType}');
+        }
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                response['message'] ?? 'Failed to load users',
+                style: GoogleFonts.cairo(),
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to load users: $e',
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   List<Map<String, dynamic>> get _filteredUsers {
-    return _users.where((user) {
-      // Search filter
-      if (_searchQuery.isNotEmpty) {
-        final query = _searchQuery.toLowerCase();
-        final name = '${user['firstName']} ${user['lastName']}'.toLowerCase();
-        final email = user['email'].toLowerCase();
-        final phone = user['phone'].toLowerCase();
-        
-        if (!name.contains(query) && 
-            !email.contains(query) && 
-            !phone.contains(query)) {
-          return false;
-        }
-      }
-
-      // Role filter
-      if (_selectedRole != 'all' && user['role'] != _selectedRole) {
-        return false;
-      }
-
-      // Status filter
-      if (_selectedStatus != 'all') {
-        final isActive = _selectedStatus == 'active';
-        if (user['isActive'] != isActive) {
-          return false;
-        }
-      }
-
-      return true;
-    }).toList();
+    return _users;
   }
 
   @override
@@ -220,33 +244,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
           ),
         ),
         
-        SizedBox(width: 12.w),
-        
-        // Add user button - More compact
-        ElevatedButton.icon(
-          onPressed: () {
-            // TODO: Show add user dialog
-          },
-          icon: const Icon(Icons.person_add, size: 18),
-          label: Text(
-            AppStrings.getString('addUser', languageService.currentLanguage),
-            style: GoogleFonts.cairo(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            ),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            padding: EdgeInsets.symmetric(
-              horizontal: screenWidth > 1400 ? 16 : 14, 
-              vertical: screenWidth > 1400 ? 10 : 8
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
-            ),
-          ),
-        ),
+
       ],
     );
   }
@@ -289,11 +287,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                 Expanded(
                   flex: 3,
                   child: TextField(
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value;
-                      });
-                    },
+                    onChanged: _onSearchChanged,
                     decoration: InputDecoration(
                       hintText: AppStrings.getString('searchByNameEmailPhone', languageService.currentLanguage),
                       hintStyle: GoogleFonts.cairo(
@@ -318,11 +312,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     value: _selectedRole,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedRole = value!;
-                      });
-                    },
+                    onChanged: _onRoleChanged,
                     decoration: InputDecoration(
                       labelText: AppStrings.getString('role', languageService.currentLanguage),
                       labelStyle: GoogleFonts.cairo(
@@ -341,7 +331,6 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                       DropdownMenuItem(value: 'all', child: Text(AppStrings.getString('allRoles', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
                       DropdownMenuItem(value: 'client', child: Text(AppStrings.getString('client', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
                       DropdownMenuItem(value: 'provider', child: Text(AppStrings.getString('provider', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
-                      DropdownMenuItem(value: 'admin', child: Text(AppStrings.getString('admin', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
                     ],
                   ),
                 ),
@@ -352,11 +341,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     value: _selectedStatus,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedStatus = value!;
-                      });
-                    },
+                    onChanged: _onStatusChanged,
                     decoration: InputDecoration(
                       labelText: AppStrings.getString('status', languageService.currentLanguage),
                       labelStyle: GoogleFonts.cairo(
@@ -386,11 +371,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
               children: [
                 // Search
                 TextField(
-                  onChanged: (value) {
-                    setState(() {
-                      _searchQuery = value;
-                    });
-                  },
+                  onChanged: _onSearchChanged,
                   decoration: InputDecoration(
                     hintText: AppStrings.getString('searchByNameEmailPhone', languageService.currentLanguage),
                     hintStyle: GoogleFonts.cairo(
@@ -417,11 +398,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         value: _selectedRole,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedRole = value!;
-                          });
-                        },
+                        onChanged: _onRoleChanged,
                         decoration: InputDecoration(
                           labelText: AppStrings.getString('role', languageService.currentLanguage),
                           labelStyle: GoogleFonts.cairo(
@@ -440,7 +417,6 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                           DropdownMenuItem(value: 'all', child: Text(AppStrings.getString('allRoles', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
                           DropdownMenuItem(value: 'client', child: Text(AppStrings.getString('client', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
                           DropdownMenuItem(value: 'provider', child: Text(AppStrings.getString('provider', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
-                          DropdownMenuItem(value: 'admin', child: Text(AppStrings.getString('admin', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
                         ],
                       ),
                     ),
@@ -451,11 +427,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         value: _selectedStatus,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedStatus = value!;
-                          });
-                        },
+                        onChanged: _onStatusChanged,
                         decoration: InputDecoration(
                           labelText: AppStrings.getString('status', languageService.currentLanguage),
                           labelStyle: GoogleFonts.cairo(
@@ -711,7 +683,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    user['rating']['average'].toString(),
+                    _formatRating(user['rating']),
                     style: GoogleFonts.cairo(
                       fontSize: screenWidth > 1400 ? 12 : 11,
                       color: AppColors.textDark,
@@ -743,7 +715,7 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
               children: [
                 IconButton(
                   onPressed: () {
-                    // TODO: Edit user
+                    _showEditUserDialog(user, languageService);
                   },
                   icon: Icon(
                     Icons.edit,
@@ -751,17 +723,6 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                     color: AppColors.primary,
                   ),
                   tooltip: AppStrings.getString('edit', languageService.currentLanguage),
-                ),
-                IconButton(
-                  onPressed: () {
-                    // TODO: View user details
-                  },
-                  icon: Icon(
-                    Icons.visibility,
-                    size: screenWidth > 1400 ? 18 : 16,
-                    color: AppColors.textLight,
-                  ),
-                  tooltip: AppStrings.getString('view', languageService.currentLanguage),
                 ),
               ],
             ),
@@ -797,12 +758,295 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
     }
   }
 
-  String _formatDate(String dateString) {
+    String _formatDate(String dateString) {
     try {
       final date = DateTime.parse(dateString);
       return '${date.day}/${date.month}/${date.year}';
     } catch (e) {
       return AppStrings.getString('na', 'en'); // Use English for date format
+    }
+  }
+
+  String _formatRating(dynamic rating) {
+    if (kDebugMode) {
+      print('🔍 Rating data: $rating');
+      print('🔍 Rating type: ${rating.runtimeType}');
+    }
+    
+    // Handle null rating
+    if (rating == null) {
+      return '0.0';
+    }
+    
+    // If rating is a number (direct value)
+    if (rating is num) {
+      return rating.toStringAsFixed(1);
+    }
+    
+    // If rating is a string (convert to number)
+    if (rating is String) {
+      try {
+        final numValue = double.parse(rating);
+        return numValue.toStringAsFixed(1);
+      } catch (e) {
+        return '0.0';
+      }
+    }
+    
+    // If rating is a map with 'average' field (expected structure)
+    if (rating is Map<String, dynamic>) {
+      final average = rating['average'];
+      if (average != null) {
+        if (average is num) {
+          return average.toStringAsFixed(1);
+        }
+        if (average is String) {
+          try {
+            final numValue = double.parse(average);
+            return numValue.toStringAsFixed(1);
+          } catch (e) {
+            return '0.0';
+          }
+        }
+      }
+    }
+    
+    // Default fallback
+    return '0.0';
+  }
+
+  void _showEditUserDialog(Map<String, dynamic> user, LanguageService languageService) {
+    bool isActive = user['isActive'] ?? false;
+    String selectedRole = user['role'] ?? 'client';
+    String deactivationReason = '';
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(
+                '${AppStrings.getString('edit', languageService.currentLanguage)} ${user['firstName']} ${user['lastName']}',
+                style: GoogleFonts.cairo(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDark,
+                ),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Status toggle
+                  Row(
+                    children: [
+                      Text(
+                        AppStrings.getString('status', languageService.currentLanguage),
+                        style: GoogleFonts.cairo(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                      const Spacer(),
+                      Switch(
+                        value: isActive,
+                        onChanged: (value) {
+                          setState(() {
+                            isActive = value;
+                          });
+                        },
+                        activeColor: AppColors.primary,
+                      ),
+                      Text(
+                        isActive 
+                          ? AppStrings.getString('active', languageService.currentLanguage)
+                          : AppStrings.getString('inactive', languageService.currentLanguage),
+                        style: GoogleFonts.cairo(
+                          color: isActive ? Colors.green : Colors.red,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Role dropdown
+                  Text(
+                    AppStrings.getString('role', languageService.currentLanguage),
+                    style: GoogleFonts.cairo(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    value: selectedRole,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                    items: [
+                      DropdownMenuItem(
+                        value: 'client',
+                        child: Text(AppStrings.getString('client', languageService.currentLanguage)),
+                      ),
+                      DropdownMenuItem(
+                        value: 'provider',
+                        child: Text(AppStrings.getString('provider', languageService.currentLanguage)),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        selectedRole = value!;
+                      });
+                    },
+                  ),
+                  
+                  // Deactivation reason field (only show when deactivating)
+                  if (!isActive) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      AppStrings.getString('deactivationReason', languageService.currentLanguage),
+                      style: GoogleFonts.cairo(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      decoration: InputDecoration(
+                        hintText: AppStrings.getString('enterDeactivationReason', languageService.currentLanguage),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                      maxLines: 3,
+                      onChanged: (value) {
+                        deactivationReason = value;
+                      },
+                    ),
+                  ],
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                    AppStrings.getString('cancel', languageService.currentLanguage),
+                    style: GoogleFonts.cairo(
+                      color: AppColors.textLight,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    await _updateUserStatus(
+                      userId: user['_id'],
+                      isActive: isActive,
+                      role: selectedRole,
+                      deactivationReason: deactivationReason,
+                      languageService: languageService,
+                    );
+                    Navigator.of(context).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text(
+                    AppStrings.getString('update', languageService.currentLanguage),
+                    style: GoogleFonts.cairo(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _updateUserStatus({
+    required String userId,
+    required bool isActive,
+    required String role,
+    String? deactivationReason,
+    required LanguageService languageService,
+  }) async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      // Get AuthService from Provider context
+      final authService = Provider.of<AuthService>(context, listen: false);
+
+      final response = await _userService.updateUserStatus(
+        userId: userId,
+        isActive: isActive,
+        role: role,
+        deactivationReason: deactivationReason,
+        authService: authService,
+      );
+
+      if (response['success'] == true) {
+        // Update the user in the local list
+        final userIndex = _users.indexWhere((user) => user['_id'] == userId);
+        if (userIndex != -1) {
+          setState(() {
+            _users[userIndex]['isActive'] = isActive;
+            _users[userIndex]['role'] = role;
+          });
+        }
+
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppStrings.getString('userUpdatedSuccessfully', languageService.currentLanguage),
+                style: GoogleFonts.cairo(),
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                response['message'] ?? AppStrings.getString('updateFailed', languageService.currentLanguage),
+                style: GoogleFonts.cairo(),
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppStrings.getString('updateFailed', languageService.currentLanguage),
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 } 
