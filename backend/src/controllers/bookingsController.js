@@ -15,6 +15,12 @@ function getMinutes(name, fallback) {
 }
 const BOOKING_MIN_LEAD_MINUTES = getMinutes('BOOKING_MIN_LEAD_MINUTES', 2880);
 const CANCELLATION_MIN_LEAD_MINUTES = getMinutes('CANCELLATION_MIN_LEAD_MINUTES', 2880);
+const ALLOW_ADMIN_LEAD_BYPASS = (() => {
+  const raw = process.env.ALLOW_ADMIN_LEAD_BYPASS;
+  if (typeof raw === 'string') return ['true', '1', 'yes'].includes(raw.toLowerCase());
+  // Default: allow in non-production to facilitate QA
+  return process.env.NODE_ENV !== 'production';
+})();
 
 function minutesUntilStart(bookingOrParams) {
   const { schedule, tz } = bookingOrParams;
@@ -65,7 +71,10 @@ async function createBooking(req, res) {
     // Enforce min lead time for booking creation
     const minutesLead = minutesUntilStart({ schedule: { ...schedule, startUtc: startDateTime.toUTC().toJSDate() }, tz });
     if (minutesLead !== null && minutesLead < BOOKING_MIN_LEAD_MINUTES) {
-      return error(res, 422, 'Booking must be at least the minimum lead time in advance', { code: 'booking_min_lead_time', minMinutes: BOOKING_MIN_LEAD_MINUTES });
+      const isAdmin = actor && actor.role === 'admin';
+      if (!(isAdmin && ALLOW_ADMIN_LEAD_BYPASS)) {
+        return error(res, 422, 'Booking must be at least the minimum lead time in advance', { code: 'booking_min_lead_time', minMinutes: BOOKING_MIN_LEAD_MINUTES });
+      }
     }
 
     // Check provider availability

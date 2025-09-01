@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-08-25T17:18:14.420Z",
+  "generatedAt": "2025-09-01T18:13:43.562Z",
   "categories": [
     {
       "id": "cleaning",
@@ -786,11 +786,11 @@
   ],
   "services": [
     {
-      "id": "68ac8f341d3221850ec8937f",
+      "id": "68b5e24ea7a595958f91a625",
       "title": "Bedroom Cleaning",
       "category": "cleaning",
       "subcategory": "bedroomCleaning",
-      "provider": "68ac8f251d3221850ec89318",
+      "provider": "68b5e23fa7a595958f91a5b9",
       "location": {
         "serviceArea": "Ramallah",
         "radius": 20,
@@ -804,11 +804,11 @@
       }
     },
     {
-      "id": "68ac8f341d3221850ec89383",
+      "id": "68b5e24ea7a595958f91a629",
       "title": "Door Cabinet Cleaning",
       "category": "cleaning",
       "subcategory": "doorCabinetCleaning",
-      "provider": "68ac8f251d3221850ec89318",
+      "provider": "68b5e23fa7a595958f91a5b9",
       "location": {
         "serviceArea": "Ramallah",
         "radius": 20,
@@ -822,11 +822,11 @@
       }
     },
     {
-      "id": "68ac8f351d3221850ec89387",
+      "id": "68b5e24ea7a595958f91a62d",
       "title": "Kitchen Cleaning",
       "category": "cleaning",
       "subcategory": "kitchenCleaning",
-      "provider": "68ac8f251d3221850ec89318",
+      "provider": "68b5e23fa7a595958f91a5b9",
       "location": {
         "serviceArea": "Ramallah",
         "radius": 20,
@@ -840,11 +840,11 @@
       }
     },
     {
-      "id": "68ac8f351d3221850ec8938b",
+      "id": "68b5e24fa7a595958f91a631",
       "title": "Bathroom Cleaning",
       "category": "cleaning",
       "subcategory": "bathroomCleaning",
-      "provider": "68ac8f251d3221850ec8931b",
+      "provider": "68b5e23fa7a595958f91a5bf",
       "location": {
         "serviceArea": "Nablus",
         "radius": 20,
@@ -858,11 +858,11 @@
       }
     },
     {
-      "id": "68ac8f351d3221850ec8938f",
+      "id": "68b5e24fa7a595958f91a635",
       "title": "Garage Cleaning",
       "category": "cleaning",
       "subcategory": "garageCleaning",
-      "provider": "68ac8f251d3221850ec8931b",
+      "provider": "68b5e23fa7a595958f91a5bf",
       "location": {
         "serviceArea": "Nablus",
         "radius": 20,
@@ -876,11 +876,11 @@
       }
     },
     {
-      "id": "68ac8f351d3221850ec89393",
+      "id": "68b5e24fa7a595958f91a639",
       "title": "Floor Cleaning",
       "category": "cleaning",
       "subcategory": "floorCleaning",
-      "provider": "68ac8f261d3221850ec8931e",
+      "provider": "68b5e240a7a595958f91a5c4",
       "location": {
         "serviceArea": "Jerusalem",
         "radius": 20,
@@ -894,11 +894,11 @@
       }
     },
     {
-      "id": "68ac8f351d3221850ec89397",
+      "id": "68b5e24fa7a595958f91a63d",
       "title": "Closet Organizing",
       "category": "organizing",
       "subcategory": "closetOrganizing",
-      "provider": "68ac8f261d3221850ec8931e",
+      "provider": "68b5e240a7a595958f91a5c4",
       "location": {
         "serviceArea": "Jerusalem",
         "radius": 20,
@@ -912,11 +912,11 @@
       }
     },
     {
-      "id": "68ac8f351d3221850ec8939b",
+      "id": "68b5e24fa7a595958f91a641",
       "title": "Garden Cleaning",
       "category": "cleaning",
       "subcategory": "gardenCleaning",
-      "provider": "68ac8f261d3221850ec89321",
+      "provider": "68b5e240a7a595958f91a5c7",
       "location": {
         "serviceArea": "Hebron",
         "radius": 20,
@@ -930,11 +930,11 @@
       }
     },
     {
-      "id": "68ac8f361d3221850ec8939f",
+      "id": "68b5e24fa7a595958f91a645",
       "title": "Desserts",
       "category": "cooking",
       "subcategory": "desserts",
-      "provider": "68ac8f261d3221850ec89321",
+      "provider": "68b5e240a7a595958f91a5c7",
       "location": {
         "serviceArea": "Hebron",
         "radius": 20,
@@ -948,11 +948,11 @@
       }
     },
     {
-      "id": "68ac8f361d3221850ec893a3",
+      "id": "68b5e250a7a595958f91a649",
       "title": "Medical Transport",
       "category": "elderly",
       "subcategory": "medicalTransport",
-      "provider": "68ac8f261d3221850ec89321",
+      "provider": "68b5e240a7a595958f91a5c7",
       "location": {
         "serviceArea": "Hebron",
         "radius": 20,
@@ -966,11 +966,11 @@
       }
     },
     {
-      "id": "68ac8f361d3221850ec893a7",
+      "id": "68b5e250a7a595958f91a64d",
       "title": "Garage Cleaning",
       "category": "cleaning",
       "subcategory": "garageCleaning",
-      "provider": "68ac8f271d3221850ec89324",
+      "provider": "68b5e241a7a595958f91a5ca",
       "location": {
         "serviceArea": "Bethlehem",
         "radius": 20,
@@ -984,11 +984,11 @@
       }
     },
     {
-      "id": "68ac8f361d3221850ec893ab",
+      "id": "68b5e250a7a595958f91a651",
       "title": "Sick Child Care",
       "category": "childcare",
       "subcategory": "sickChildCare",
-      "provider": "68ac8f271d3221850ec89324",
+      "provider": "68b5e241a7a595958f91a5ca",
       "location": {
         "serviceArea": "Bethlehem",
         "radius": 20,
@@ -1002,11 +1002,11 @@
       }
     },
     {
-      "id": "68ac8f361d3221850ec893af",
+      "id": "68b5e250a7a595958f91a655",
       "title": "Apartment Cleaning",
       "category": "cleaning",
       "subcategory": "apartmentCleaning",
-      "provider": "68ac8f271d3221850ec89327",
+      "provider": "68b5e241a7a595958f91a5cd",
       "location": {
         "serviceArea": "Gaza",
         "radius": 20,
@@ -1020,11 +1020,11 @@
       }
     },
     {
-      "id": "68ac8f371d3221850ec893b3",
+      "id": "68b5e250a7a595958f91a659",
       "title": "Electrical Work",
       "category": "maintenance",
       "subcategory": "electricalWork",
-      "provider": "68ac8f271d3221850ec89327",
+      "provider": "68b5e241a7a595958f91a5cd",
       "location": {
         "serviceArea": "Gaza",
         "radius": 20,
@@ -1038,11 +1038,11 @@
       }
     },
     {
-      "id": "68ac8f371d3221850ec893b7",
+      "id": "68b5e251a7a595958f91a65d",
       "title": "Kitchen Organizing",
       "category": "organizing",
       "subcategory": "kitchenOrganizing",
-      "provider": "68ac8f281d3221850ec8932a",
+      "provider": "68b5e242a7a595958f91a5d0",
       "location": {
         "serviceArea": "Ramallah",
         "radius": 20,
@@ -1056,11 +1056,11 @@
       }
     },
     {
-      "id": "68ac8f371d3221850ec893bb",
+      "id": "68b5e251a7a595958f91a661",
       "title": "Appliance Maintenance",
       "category": "maintenance",
       "subcategory": "applianceMaintenance",
-      "provider": "68ac8f281d3221850ec8932a",
+      "provider": "68b5e242a7a595958f91a5d0",
       "location": {
         "serviceArea": "Ramallah",
         "radius": 20,
@@ -1074,11 +1074,11 @@
       }
     },
     {
-      "id": "68ac8f371d3221850ec893bf",
+      "id": "68b5e251a7a595958f91a665",
       "title": "Carpet Cleaning",
       "category": "cleaning",
       "subcategory": "carpetCleaning",
-      "provider": "68ac8f281d3221850ec8932a",
+      "provider": "68b5e242a7a595958f91a5d0",
       "location": {
         "serviceArea": "Ramallah",
         "radius": 20,
@@ -1092,11 +1092,11 @@
       }
     },
     {
-      "id": "68ac8f371d3221850ec893c3",
+      "id": "68b5e251a7a595958f91a669",
       "title": "Living Room Organizing",
       "category": "organizing",
       "subcategory": "livingRoomOrganizing",
-      "provider": "68ac8f281d3221850ec8932d",
+      "provider": "68b5e242a7a595958f91a5d3",
       "location": {
         "serviceArea": "Nablus",
         "radius": 20,
@@ -1110,11 +1110,11 @@
       }
     },
     {
-      "id": "68ac8f371d3221850ec893c7",
+      "id": "68b5e251a7a595958f91a66d",
       "title": "Kitchen Setup",
       "category": "newhome",
       "subcategory": "kitchenSetup",
-      "provider": "68ac8f281d3221850ec8932d",
+      "provider": "68b5e242a7a595958f91a5d3",
       "location": {
         "serviceArea": "Nablus",
         "radius": 20,
@@ -1128,11 +1128,11 @@
       }
     },
     {
-      "id": "68ac8f381d3221850ec893cb",
+      "id": "68b5e251a7a595958f91a671",
       "title": "Children Organizing",
       "category": "organizing",
       "subcategory": "childrenOrganizing",
-      "provider": "68ac8f291d3221850ec89330",
+      "provider": "68b5e242a7a595958f91a5d6",
       "location": {
         "serviceArea": "Jerusalem",
         "radius": 20,
@@ -1146,11 +1146,11 @@
       }
     },
     {
-      "id": "68ac8f381d3221850ec893cf",
+      "id": "68b5e252a7a595958f91a675",
       "title": "Bedroom Cleaning",
       "category": "cleaning",
       "subcategory": "bedroomCleaning",
-      "provider": "68ac8f291d3221850ec89330",
+      "provider": "68b5e242a7a595958f91a5d6",
       "location": {
         "serviceArea": "Jerusalem",
         "radius": 20,
@@ -1164,11 +1164,11 @@
       }
     },
     {
-      "id": "68ac8f381d3221850ec893d3",
+      "id": "68b5e252a7a595958f91a679",
       "title": "Special Requests",
       "category": "cooking",
       "subcategory": "specialRequests",
-      "provider": "68ac8f291d3221850ec89333",
+      "provider": "68b5e243a7a595958f91a5d9",
       "location": {
         "serviceArea": "Hebron",
         "radius": 20,
@@ -1182,11 +1182,11 @@
       }
     },
     {
-      "id": "68ac8f381d3221850ec893d7",
+      "id": "68b5e252a7a595958f91a67d",
       "title": "Carpet Cleaning",
       "category": "cleaning",
       "subcategory": "carpetCleaning",
-      "provider": "68ac8f291d3221850ec89333",
+      "provider": "68b5e243a7a595958f91a5d9",
       "location": {
         "serviceArea": "Hebron",
         "radius": 20,
@@ -1200,11 +1200,11 @@
       }
     },
     {
-      "id": "68ac8f381d3221850ec893db",
+      "id": "68b5e252a7a595958f91a681",
       "title": "Electrical Work",
       "category": "maintenance",
       "subcategory": "electricalWork",
-      "provider": "68ac8f291d3221850ec89333",
+      "provider": "68b5e243a7a595958f91a5d9",
       "location": {
         "serviceArea": "Hebron",
         "radius": 20,
@@ -1218,11 +1218,11 @@
       }
     },
     {
-      "id": "68ac8f381d3221850ec893df",
+      "id": "68b5e252a7a595958f91a685",
       "title": "Homework Help",
       "category": "childcare",
       "subcategory": "homeworkHelp",
-      "provider": "68ac8f291d3221850ec89336",
+      "provider": "68b5e243a7a595958f91a5dc",
       "location": {
         "serviceArea": "Bethlehem",
         "radius": 20,
@@ -1236,11 +1236,11 @@
       }
     },
     {
-      "id": "68ac8f391d3221850ec893e3",
+      "id": "68b5e253a7a595958f91a689",
       "title": "Post Construction Cleaning",
       "category": "cleaning",
       "subcategory": "postConstructionCleaning",
-      "provider": "68ac8f291d3221850ec89336",
+      "provider": "68b5e243a7a595958f91a5dc",
       "location": {
         "serviceArea": "Bethlehem",
         "radius": 20,
@@ -1254,11 +1254,11 @@
       }
     },
     {
-      "id": "68ac8f391d3221850ec893e7",
+      "id": "68b5e253a7a595958f91a68d",
       "title": "Sick Child Care",
       "category": "childcare",
       "subcategory": "sickChildCare",
-      "provider": "68ac8f2a1d3221850ec89339",
+      "provider": "68b5e244a7a595958f91a5df",
       "location": {
         "serviceArea": "Gaza",
         "radius": 20,
@@ -1272,11 +1272,11 @@
       }
     },
     {
-      "id": "68ac8f391d3221850ec893eb",
+      "id": "68b5e253a7a595958f91a691",
       "title": "Living Room Organizing",
       "category": "organizing",
       "subcategory": "livingRoomOrganizing",
-      "provider": "68ac8f2a1d3221850ec89339",
+      "provider": "68b5e244a7a595958f91a5df",
       "location": {
         "serviceArea": "Gaza",
         "radius": 20,
@@ -1290,11 +1290,11 @@
       }
     },
     {
-      "id": "68ac8f391d3221850ec893ef",
+      "id": "68b5e253a7a595958f91a695",
       "title": "Health Monitoring",
       "category": "elderly",
       "subcategory": "healthMonitoring",
-      "provider": "68ac8f2a1d3221850ec8933c",
+      "provider": "68b5e244a7a595958f91a5e2",
       "location": {
         "serviceArea": "Ramallah",
         "radius": 20,
@@ -1308,11 +1308,11 @@
       }
     },
     {
-      "id": "68ac8f391d3221850ec893f3",
+      "id": "68b5e253a7a595958f91a699",
       "title": "Home Babysitting",
       "category": "childcare",
       "subcategory": "homeBabysitting",
-      "provider": "68ac8f2a1d3221850ec8933c",
+      "provider": "68b5e244a7a595958f91a5e2",
       "location": {
         "serviceArea": "Ramallah",
         "radius": 20,
@@ -1326,11 +1326,11 @@
       }
     },
     {
-      "id": "68ac8f391d3221850ec893f7",
+      "id": "68b5e253a7a595958f91a69d",
       "title": "Garage Cleaning",
       "category": "cleaning",
       "subcategory": "garageCleaning",
-      "provider": "68ac8f2a1d3221850ec8933c",
+      "provider": "68b5e244a7a595958f91a5e2",
       "location": {
         "serviceArea": "Ramallah",
         "radius": 20,
@@ -1344,11 +1344,11 @@
       }
     },
     {
-      "id": "68ac8f3a1d3221850ec893fb",
+      "id": "68b5e254a7a595958f91a6a1",
       "title": "Mobility Assistance",
       "category": "elderly",
       "subcategory": "mobilityAssistance",
-      "provider": "68ac8f2b1d3221850ec8933f",
+      "provider": "68b5e245a7a595958f91a5e5",
       "location": {
         "serviceArea": "Nablus",
         "radius": 20,
@@ -1362,11 +1362,11 @@
       }
     },
     {
-      "id": "68ac8f3a1d3221850ec893ff",
+      "id": "68b5e254a7a595958f91a6a5",
       "title": "Medical Transport",
       "category": "elderly",
       "subcategory": "medicalTransport",
-      "provider": "68ac8f2b1d3221850ec8933f",
+      "provider": "68b5e245a7a595958f91a5e5",
       "location": {
         "serviceArea": "Nablus",
         "radius": 20,
@@ -1380,11 +1380,11 @@
       }
     },
     {
-      "id": "68ac8f3a1d3221850ec89403",
+      "id": "68b5e254a7a595958f91a6a9",
       "title": "Aluminum Work",
       "category": "maintenance",
       "subcategory": "aluminumWork",
-      "provider": "68ac8f2b1d3221850ec89342",
+      "provider": "68b5e245a7a595958f91a5e8",
       "location": {
         "serviceArea": "Jerusalem",
         "radius": 20,
@@ -1398,11 +1398,11 @@
       }
     },
     {
-      "id": "68ac8f3a1d3221850ec89407",
+      "id": "68b5e254a7a595958f91a6ad",
       "title": "Hanging Items",
       "category": "maintenance",
       "subcategory": "hangingItems",
-      "provider": "68ac8f2c1d3221850ec89345",
+      "provider": "68b5e246a7a595958f91a5eb",
       "location": {
         "serviceArea": "Hebron",
         "radius": 20,
@@ -1416,11 +1416,11 @@
       }
     },
     {
-      "id": "68ac8f3a1d3221850ec8940b",
+      "id": "68b5e254a7a595958f91a6b1",
       "title": "Packing Unpacking",
       "category": "newhome",
       "subcategory": "packingUnpacking",
-      "provider": "68ac8f2c1d3221850ec89345",
+      "provider": "68b5e246a7a595958f91a5eb",
       "location": {
         "serviceArea": "Hebron",
         "radius": 20,
@@ -1434,11 +1434,11 @@
       }
     },
     {
-      "id": "68ac8f3b1d3221850ec8940f",
+      "id": "68b5e255a7a595958f91a6b5",
       "title": "Furniture Moving",
       "category": "newhome",
       "subcategory": "furnitureMoving",
-      "provider": "68ac8f2c1d3221850ec89348",
+      "provider": "68b5e246a7a595958f91a5ee",
       "location": {
         "serviceArea": "Bethlehem",
         "radius": 20,
@@ -1452,11 +1452,11 @@
       }
     },
     {
-      "id": "68ac8f3b1d3221850ec89413",
+      "id": "68b5e255a7a595958f91a6b9",
       "title": "Document Delivery",
       "category": "miscellaneous",
       "subcategory": "documentDelivery",
-      "provider": "68ac8f2c1d3221850ec89348",
+      "provider": "68b5e246a7a595958f91a5ee",
       "location": {
         "serviceArea": "Bethlehem",
         "radius": 20,
@@ -1470,11 +1470,11 @@
       }
     },
     {
-      "id": "68ac8f3b1d3221850ec89417",
+      "id": "68b5e255a7a595958f91a6bd",
       "title": "New Home Arrangement",
       "category": "newhome",
       "subcategory": "newHomeArrangement",
-      "provider": "68ac8f2d1d3221850ec8934b",
+      "provider": "68b5e246a7a595958f91a5f1",
       "location": {
         "serviceArea": "Gaza",
         "radius": 20,
@@ -1488,11 +1488,11 @@
       }
     },
     {
-      "id": "68ac8f3b1d3221850ec8941b",
+      "id": "68b5e255a7a595958f91a6c1",
       "title": "Kitchen Cleaning",
       "category": "cleaning",
       "subcategory": "kitchenCleaning",
-      "provider": "68ac8f2d1d3221850ec8934b",
+      "provider": "68b5e246a7a595958f91a5f1",
       "location": {
         "serviceArea": "Gaza",
         "radius": 20,
@@ -1506,11 +1506,11 @@
       }
     },
     {
-      "id": "68ac8f3b1d3221850ec8941f",
+      "id": "68b5e255a7a595958f91a6c5",
       "title": "Kitchen Setup",
       "category": "newhome",
       "subcategory": "kitchenSetup",
-      "provider": "68ac8f2d1d3221850ec8934e",
+      "provider": "68b5e247a7a595958f91a5f4",
       "location": {
         "serviceArea": "Ramallah",
         "radius": 20,
@@ -1524,11 +1524,11 @@
       }
     },
     {
-      "id": "68ac8f3b1d3221850ec89423",
+      "id": "68b5e255a7a595958f91a6c9",
       "title": "Garden Cleaning",
       "category": "cleaning",
       "subcategory": "gardenCleaning",
-      "provider": "68ac8f2d1d3221850ec8934e",
+      "provider": "68b5e247a7a595958f91a5f4",
       "location": {
         "serviceArea": "Ramallah",
         "radius": 20,
@@ -1542,11 +1542,11 @@
       }
     },
     {
-      "id": "68ac8f3c1d3221850ec89427",
+      "id": "68b5e256a7a595958f91a6cd",
       "title": "Bedroom Organizing",
       "category": "organizing",
       "subcategory": "bedroomOrganizing",
-      "provider": "68ac8f2d1d3221850ec8934e",
+      "provider": "68b5e247a7a595958f91a5f4",
       "location": {
         "serviceArea": "Ramallah",
         "radius": 20,
@@ -1560,11 +1560,11 @@
       }
     },
     {
-      "id": "68ac8f3c1d3221850ec8942b",
+      "id": "68b5e256a7a595958f91a6d1",
       "title": "Shopping Delivery",
       "category": "miscellaneous",
       "subcategory": "shoppingDelivery",
-      "provider": "68ac8f2d1d3221850ec89351",
+      "provider": "68b5e247a7a595958f91a5f7",
       "location": {
         "serviceArea": "Nablus",
         "radius": 20,
@@ -1578,11 +1578,11 @@
       }
     },
     {
-      "id": "68ac8f3c1d3221850ec8942f",
+      "id": "68b5e256a7a595958f91a6d5",
       "title": "Regular Cleaning",
       "category": "cleaning",
       "subcategory": "regularCleaning",
-      "provider": "68ac8f2d1d3221850ec89351",
+      "provider": "68b5e247a7a595958f91a5f7",
       "location": {
         "serviceArea": "Nablus",
         "radius": 20,
@@ -1596,11 +1596,11 @@
       }
     },
     {
-      "id": "68ac8f3c1d3221850ec89433",
+      "id": "68b5e256a7a595958f91a6d9",
       "title": "Prescription Pickup",
       "category": "miscellaneous",
       "subcategory": "prescriptionPickup",
-      "provider": "68ac8f2e1d3221850ec89354",
+      "provider": "68b5e248a7a595958f91a5fa",
       "location": {
         "serviceArea": "Jerusalem",
         "radius": 20,
@@ -1614,11 +1614,11 @@
       }
     },
     {
-      "id": "68ac8f3c1d3221850ec89437",
+      "id": "68b5e256a7a595958f91a6dd",
       "title": "Full House Organizing",
       "category": "organizing",
       "subcategory": "fullHouseOrganizing",
-      "provider": "68ac8f2e1d3221850ec89354",
+      "provider": "68b5e248a7a595958f91a5fa",
       "location": {
         "serviceArea": "Jerusalem",
         "radius": 20,
@@ -1632,11 +1632,11 @@
       }
     },
     {
-      "id": "68ac8f3c1d3221850ec8943b",
+      "id": "68b5e256a7a595958f91a6e1",
       "title": "Kitchen Cleaning",
       "category": "cleaning",
       "subcategory": "kitchenCleaning",
-      "provider": "68ac8f2e1d3221850ec89357",
+      "provider": "68b5e248a7a595958f91a5fd",
       "location": {
         "serviceArea": "Hebron",
         "radius": 20,
@@ -1650,11 +1650,11 @@
       }
     },
     {
-      "id": "68ac8f3d1d3221850ec8943f",
+      "id": "68b5e257a7a595958f91a6e5",
       "title": "Homework Help",
       "category": "childcare",
       "subcategory": "homeworkHelp",
-      "provider": "68ac8f2e1d3221850ec89357",
+      "provider": "68b5e248a7a595958f91a5fd",
       "location": {
         "serviceArea": "Hebron",
         "radius": 20,
@@ -1668,11 +1668,11 @@
       }
     },
     {
-      "id": "68ac8f3d1d3221850ec89443",
+      "id": "68b5e257a7a595958f91a6e9",
       "title": "Furniture Wrapping",
       "category": "newhome",
       "subcategory": "furnitureWrapping",
-      "provider": "68ac8f2e1d3221850ec89357",
+      "provider": "68b5e248a7a595958f91a5fd",
       "location": {
         "serviceArea": "Hebron",
         "radius": 20,

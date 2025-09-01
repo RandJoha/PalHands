@@ -6,17 +6,17 @@
 
 ## Sample Provider Accounts (for testing)
 
-### English Names:
-- `rami.services0@palhands.com` - Rami Services
-- `maya.haddad1@palhands.com` - Maya Haddad  
-- `omar.khalil2@palhands.com` - Omar Khalil
-- `sara.nasser3@palhands.com` - Sara Nasser
-- `khaled.mansour4@palhands.com` - Khaled Mansour
-- `yara.saleh5@palhands.com` - Yara Saleh
-- `hadi.suleiman6@palhands.com` - Hadi Suleiman
-- `noor.ali7@palhands.com` - Noor Ali
-- `lina.faris8@palhands.com` - Lina Faris
-- `osama.t.9@palhands.com` - Osama T.
+### English Names (pattern examples):
+- `provider.rami.0@palhands.com` - Rami Services
+- `provider.maya.1@palhands.com` - Maya Haddad  
+- `provider.omar.2@palhands.com` - Omar Khalil
+- `provider.sara.3@palhands.com` - Sara Nasser
+- `provider.khaled.4@palhands.com` - Khaled Mansour
+- `provider.yara.5@palhands.com` - Yara Saleh
+- `provider.hadi.6@palhands.com` - Hadi Suleiman
+- `provider.noor.7@palhands.com` - Noor Ali
+- `provider.lina.8@palhands.com` - Lina Faris
+- `provider.osama.9@palhands.com` - Osama T.
 
 ### Arabic Names:
 - `provider15@palhands.com` - محمد العابد
@@ -44,7 +44,7 @@
 - `roro@palhands.com` - Password: `roro123` (Role: client)
 
 ### Admin Account:
-- `admin@example.com` - Password: `123456` (Role: admin)
+- `admin@example.com` - Password: `Admin123!` (Role: admin)
 
 ## Database Collections:
 - **Users Collection**: Contains clients and admins
