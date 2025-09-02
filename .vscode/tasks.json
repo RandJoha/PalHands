@@ -1,0 +1,34 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "seed-availability-all",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"seed:availability:all",
+				"--prefix",
+				"backend"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "seed-availability-all",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"seed:availability:all",
+				"--prefix",
+				"backend"
+			],
+			"isBackground": false,
+			"group": "build"
+		}
+	]
+}

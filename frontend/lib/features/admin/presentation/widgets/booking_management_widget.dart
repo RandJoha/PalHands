@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 // Core imports
@@ -23,6 +24,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
   bool _isLoading = false;
   List<BookingModel> _bookings = [];
   final _bookingService = BookingService();
+  int _selectedFilter = 0; // 0=All,1=Pending,2=Confirmed,3=Completed,4=Cancelled
 
   @override
   void initState() {
@@ -33,7 +35,14 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
   Future<void> _loadBookings() async {
     setState(() => _isLoading = true);
     try {
-      final results = await _bookingService.getAllBookingsAdmin(page: 1, limit: 50);
+      final status = _statusFromFilter(_selectedFilter);
+      var results = await _bookingService.getAllBookingsAdmin(page: 1, limit: 50, status: status);
+      // Hide stale entries with missing provider/client info
+      results = results.where((b) {
+        final provOk = ((b.providerId ?? '').isNotEmpty) || ((b.providerName ?? '').isNotEmpty);
+        final clientOk = ((b.clientId ?? '').isNotEmpty) || ((b.clientName ?? '').isNotEmpty);
+        return provOk && clientOk;
+      }).toList();
       setState(() {
         _bookings = results;
         _isLoading = false;
@@ -73,14 +82,43 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
             
             SizedBox(height: screenWidth > 1400 ? 20 : screenWidth > 1024 ? 16 : 12),
             
-            // Bookings table
-            Expanded(
-              child: _buildBookingsTable(languageService),
-            ),
+            // Filters + Bookings table
+            _buildFilters(languageService),
+            const SizedBox(height: 8),
+            Expanded(child: _buildBookingsTable(languageService)),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildFilters(LanguageService languageService) {
+    final labels = ['all','pending','confirmed','completed','cancelled'];
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: List.generate(labels.length, (i){
+        final selected = _selectedFilter == i;
+        return ChoiceChip(
+          label: Text(AppStrings.getString(labels[i], languageService.currentLanguage)),
+          selected: selected,
+          onSelected: (_) async { setState(()=>_selectedFilter=i); await _loadBookings(); },
+          selectedColor: AppColors.primary.withValues(alpha: 0.12),
+          labelStyle: GoogleFonts.cairo(color: selected? AppColors.primary: AppColors.textPrimary),
+          side: BorderSide(color: selected? AppColors.primary: AppColors.border),
+        );
+      }),
+    );
+  }
+
+  String? _statusFromFilter(int f){
+    switch (f){
+      case 1: return 'pending';
+      case 2: return 'confirmed';
+      case 3: return 'completed';
+      case 4: return 'cancelled';
+      default: return null;
+    }
   }
 
   Widget _buildHeader(LanguageService languageService) {
@@ -368,14 +406,50 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
                     color: AppColors.textDark,
                   ),
                 ),
-                Text(
-                  booking.bookingId ?? booking.id,
-                  style: GoogleFonts.cairo(
-                    fontSize: screenWidth > 1400 ? 11 : screenWidth > 1024 ? 10 : 9,
-                    color: AppColors.textLight,
+                if ((booking.bookingId ?? booking.id).isNotEmpty)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Tooltip(
+                          message: booking.bookingId ?? booking.id,
+                          waitDuration: const Duration(milliseconds: 300),
+                          child: InkWell(
+                            onTap: () async {
+                              await Clipboard.setData(ClipboardData(text: booking.bookingId ?? booking.id));
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Booking ID copied')),
+                                );
+                              }
+                            },
+                            child: Text(
+                              booking.bookingId ?? booking.id,
+                              style: GoogleFonts.cairo(
+                                fontSize: screenWidth > 1400 ? 11 : screenWidth > 1024 ? 10 : 9,
+                                color: AppColors.textLight,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (screenWidth > 480)
+                        IconButton(
+                          icon: const Icon(Icons.copy, size: 14, color: AppColors.textLight),
+                          tooltip: 'Copy ID',
+                          padding: const EdgeInsets.all(0),
+                          constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                          onPressed: () async {
+                            await Clipboard.setData(ClipboardData(text: booking.bookingId ?? booking.id));
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Booking ID copied')),
+                              );
+                            }
+                          },
+                        ),
+                    ],
                   ),
-                  overflow: TextOverflow.ellipsis,
-                ),
               ],
             ),
           ),
@@ -491,14 +565,14 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    booking.schedule.date,
+                    _formatDateDisplay(booking.schedule.date),
                     style: GoogleFonts.cairo(
                       fontSize: screenWidth > 1400 ? 13 : screenWidth > 1024 ? 12 : 11,
                       color: AppColors.textDark,
                     ),
                   ),
                   Text(
-                    '${booking.schedule.startTime} - ${booking.schedule.endTime}',
+                    _formatTimeRange(booking.schedule.startTime, booking.schedule.endTime),
                     style: GoogleFonts.cairo(
                       fontSize: screenWidth > 1400 ? 12 : screenWidth > 1024 ? 11 : 10,
                       color: AppColors.textLight,
@@ -572,35 +646,6 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
                     child: Icon(Icons.shield, size: 16, color: Colors.blueGrey.withValues(alpha: 0.8)),
                   ),
                 const SizedBox(width: 6),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.redAccent, size: 18),
-                  tooltip: AppStrings.getString('cancel', languageService.currentLanguage),
-                  onPressed: () async {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        title: Text(AppStrings.getString('confirm', languageService.currentLanguage)),
-                        content: Text(AppStrings.getString('areYouSure', languageService.currentLanguage)),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(ctx, false),
-                            child: Text(AppStrings.getString('no', languageService.currentLanguage)),
-                          ),
-                          ElevatedButton(
-                            onPressed: () => Navigator.pop(ctx, true),
-                            child: Text(AppStrings.getString('yes', languageService.currentLanguage)),
-                          ),
-                        ],
-                      ),
-                    );
-                    if (confirm == true) {
-                      try {
-                        await _bookingService.cancelBookingAction(booking.id);
-                        await _loadBookings();
-                      } catch (_) {}
-                    }
-                  },
-                ),
                 PopupMenuButton<String>(
                   tooltip: AppStrings.getString('actions', languageService.currentLanguage),
                   onSelected: (value) async {
@@ -628,6 +673,33 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
     // Local short format: yyyy-MM-dd HH:mm
     final two = (int n) => n.toString().padLeft(2, '0');
     return '${dt.year}-${two(dt.month)}-${two(dt.day)} ${two(dt.hour)}:${two(dt.minute)}';
+  }
+
+  String _formatDateDisplay(String raw) {
+    // Accepts either 'yyyy-MM-dd' or ISO-like strings; returns 'yyyy-MM-dd'
+    try {
+      if (raw.contains('T')) {
+        final dt = DateTime.parse(raw).toLocal();
+        final two = (int n) => n.toString().padLeft(2, '0');
+        return '${dt.year}-${two(dt.month)}-${two(dt.day)}';
+      }
+    } catch (_) {}
+    return raw.split('T').first; // fallback to remove trailing time/Z if present
+  }
+
+  String _formatTimeRange(String start, String end) {
+    // If times are in 'HH:mm' keep; if ISO or malformed, try to parse and extract HH:mm
+    String toHm(String v) {
+      if (RegExp(r'^\d{2}:\d{2}$').hasMatch(v)) return v;
+      try {
+        final dt = DateTime.parse(v).toLocal();
+        final two = (int n) => n.toString().padLeft(2, '0');
+        return '${two(dt.hour)}:${two(dt.minute)}';
+      } catch (_) {
+        return v; // as-is fallback
+      }
+    }
+    return '${toHm(start)} - ${toHm(end)}';
   }
 
   String _getLocalizedCategoryLabel(String category, LanguageService languageService) {

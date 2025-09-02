@@ -53,6 +53,23 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   int _selectedFilter = 0; // 0=All, 1=Pending, 2=Upcoming, 3=Completed, 4=Cancelled
   List<BookingModel> _myBookings = const [];
   bool _loadingBookings = false;
+  final Set<String> _dismissedBookingIds = <String>{};
+
+  // Map selected filter index to server status parameter
+  String? _statusFromFilter(int index) {
+    switch (index) {
+      case 1:
+        return 'pending';
+      case 2:
+        return 'confirmed';
+      case 3:
+        return 'completed';
+      case 4:
+        return 'cancelled';
+      default:
+        return null; // All
+    }
+  }
 
   // Menu items - will be localized
   List<UserMenuItem> _getMenuItems() {
@@ -142,7 +159,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     setState(() => _selectedIndex = idx);
   }
   // Preload bookings when opening My Bookings by default
-  _maybeLoadBookings(initial: true);
+  _loadDismissedBookings().then((_) => _maybeLoadBookings(initial: true));
   }
 
   @override
@@ -708,6 +725,11 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     ),
                   ),
                   const Spacer(),
+                  IconButton(
+                    tooltip: _getLocalizedString('refresh'),
+                    onPressed: _refreshBookings,
+                    icon: const Icon(Icons.refresh, color: AppColors.textSecondary),
+                  ),
                   Container(
                     padding: EdgeInsets.symmetric(
                       horizontal: isMobile ? 8.0 : (isTablet ? 10.0 : 12.0), 
@@ -787,6 +809,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           selected: isSelected,
           onSelected: (selected) {
             setState(() => _selectedFilter = index);
+            _refreshBookings();
           },
           backgroundColor: AppColors.white,
           selectedColor: AppColors.primary,
@@ -843,17 +866,25 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         ],
       );
     }
-    final items = filtered.map(_vmFromBooking).toList();
+    // Group bookings by provider+date+service for same-day non-consecutive slots
+    final groups = _groupBookings(filtered);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         header,
         SizedBox(height: isMobile ? 12.0 : 16.0),
-        ...items.map((vm) {
-        return Container(
-          margin: EdgeInsets.only(bottom: isMobile ? 16.0 : 20.0),
-          child: _buildDetailedBookingCard(vm, isMobile, isTablet, screenWidth),
-        );
+        ...groups.map((g) {
+          if (g.length == 1) {
+            final vm = _vmFromBooking(g.first);
+            return Container(
+              margin: EdgeInsets.only(bottom: isMobile ? 16.0 : 20.0),
+              child: _buildDetailedBookingCard(vm, isMobile, isTablet, screenWidth),
+            );
+          }
+          return Container(
+            margin: EdgeInsets.only(bottom: isMobile ? 16.0 : 20.0),
+            child: _buildGroupedBookingCard(g, isMobile, isTablet, screenWidth),
+          );
         }).toList(),
       ],
     );
@@ -862,15 +893,59 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   Future<void> _maybeLoadBookings({bool initial = false}) async {
     // Only auto-load on My Bookings tab
     if (initial && _selectedIndex != 0) return;
+    await _refreshBookings();
+  }
+
+  Future<void> _refreshBookings() async {
     setState(() => _loadingBookings = true);
     try {
       final svc = BookingService();
-      _myBookings = await svc.getMyBookings();
+      final status = _statusFromFilter(_selectedFilter);
+      var list = await svc.getMyBookings(status: status, page: 1, limit: 50);
+      // Filter out invalid/stale entries missing provider info and any user-dismissed bookings
+      list = list.where((b) {
+        final provOk = ((b.providerId ?? '').trim().isNotEmpty) || ((b.providerName ?? '').trim().isNotEmpty);
+        return provOk && !_dismissedBookingIds.contains(b.id);
+      }).toList();
+      _myBookings = list;
     } catch (_) {
       _myBookings = const [];
     } finally {
       if (mounted) setState(() => _loadingBookings = false);
     }
+  }
+
+  Future<void> _loadDismissedBookings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final list = prefs.getStringList('dismissed_bookings') ?? const <String>[];
+      _dismissedBookingIds
+        ..clear()
+        ..addAll(list);
+    } catch (_) {}
+  }
+
+  Future<void> _saveDismissedBookings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList('dismissed_bookings', _dismissedBookingIds.toList());
+    } catch (_) {}
+  }
+
+  void _dismissGroup(List<BookingModel> group) {
+    setState(() {
+      _dismissedBookingIds.addAll(group.map((b) => b.id));
+      _myBookings = _myBookings.where((b) => !_dismissedBookingIds.contains(b.id)).toList();
+    });
+    _saveDismissedBookings();
+  }
+
+  void _dismissSingle(String bookingId) {
+    setState(() {
+      _dismissedBookingIds.add(bookingId);
+      _myBookings = _myBookings.where((b) => b.id != bookingId).toList();
+    });
+    _saveDismissedBookings();
   }
 
   List<BookingModel> _filteredBookingsForCurrentTab() {
@@ -908,6 +983,206 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   'notes': b.notes ?? '',
       'hasPendingCancel': hasPendingCancel,
     };
+  }
+
+  // Group by providerId (relationship view across dates/services)
+  List<List<BookingModel>> _groupBookings(List<BookingModel> items) {
+    final Map<String, List<BookingModel>> map = {};
+    for (final b in items) {
+      final provId = (b.providerId ?? '').trim();
+      final provName = (b.providerName ?? '').trim();
+      final key = provId.isNotEmpty
+          ? 'prov:$provId'
+          : (provName.isNotEmpty ? 'provName:$provName' : 'booking:${b.id}');
+      (map[key] ??= <BookingModel>[]).add(b);
+    }
+    final groups = map.values.toList();
+    // Newest first by latest created in group
+    groups.sort((a,b){
+      final da = a.map((x)=>x.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).fold<DateTime>(DateTime.fromMillisecondsSinceEpoch(0),(p,n)=> n.isAfter(p)?n:p);
+      final db = b.map((x)=>x.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).fold<DateTime>(DateTime.fromMillisecondsSinceEpoch(0),(p,n)=> n.isAfter(p)?n:p);
+      return db.compareTo(da);
+    });
+    // Sort items inside a group by date then start time
+    for (final g in groups) {
+      g.sort((x,y){
+        final dx = x.schedule.date;
+        final dy = y.schedule.date;
+        final c = dx.compareTo(dy);
+        if (c != 0) return c;
+        return x.schedule.startTime.compareTo(y.schedule.startTime);
+      });
+    }
+    return groups;
+  }
+
+  Widget _buildGroupedBookingCard(List<BookingModel> group, bool isMobile, bool isTablet, double screenWidth) {
+    final languageService = Provider.of<LanguageService>(context, listen: false);
+    final b0 = group.first;
+    final statusAllSame = group.every((b) => b.status.toLowerCase() == b0.status.toLowerCase());
+  final statusInfo = BookingService.getStatusInfo(statusAllSame ? b0.status : 'multiple');
+
+    // Aggregate times by date
+    final Map<String, List<BookingModel>> byDate = {};
+    for (final b in group) { (byDate[b.schedule.date] ??= <BookingModel>[]).add(b); }
+  // dates are handled within each service section below
+  // (dateLines no longer directly used here; sectioned by service below)
+
+    final total = group.fold<double>(0.0, (sum, b) => sum + b.pricing.totalAmount);
+    final price = '₪${total.toStringAsFixed(0)}';
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(isMobile ? 12.0 : 16.0),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 8, offset: const Offset(0,2))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  group.length == 1 ? b0.serviceDetails.title : 'Multiple Services',
+                  style: GoogleFonts.cairo(
+                    fontSize: isMobile ? 18.0 : 20.0,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: isMobile ? 8.0 : 12.0, vertical: isMobile ? 4.0 : 6.0),
+                decoration: BoxDecoration(color: (statusInfo['color'] as Color).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(isMobile ? 8.0 : 12.0)),
+                child: Text(statusAllSame ? statusInfo['label'] : 'Multiple', style: GoogleFonts.cairo(fontSize: isMobile ? 12.0 : 14.0, fontWeight: FontWeight.w600, color: statusInfo['color'] as Color)),
+              ),
+              if (_selectedFilter == 4)
+                IconButton(
+                  tooltip: _getLocalizedString('remove'),
+                  onPressed: () => _dismissGroup(group),
+                  icon: const Icon(Icons.close, size: 18, color: AppColors.textSecondary),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          _detailRow(Icons.person, AppStrings.getString('providerName', languageService.currentLanguage), b0.providerName ?? '', isMobile),
+          const SizedBox(height: 8),
+          // Address and total shown at top of the group
+          _detailRow(Icons.location_on, AppStrings.getString('address', languageService.currentLanguage), b0.location.address, isMobile),
+          const SizedBox(height: 8),
+          _detailRow(Icons.attach_money, AppStrings.getString('estimatedCost', languageService.currentLanguage), price, isMobile),
+          const SizedBox(height: 12),
+          // Service sections within this provider
+          ...(() {
+            final Map<String, List<BookingModel>> byService = {};
+            for (final b in group) { (byService[b.serviceDetails.title] ??= <BookingModel>[]).add(b); }
+            final entries = byService.entries.toList()..sort((a,b)=> a.key.compareTo(b.key));
+            return entries.map((entry) {
+              final serviceTitle = entry.key;
+              final items = entry.value..sort((x,y){
+                final dc = x.schedule.date.compareTo(y.schedule.date);
+                if (dc != 0) return dc;
+                return x.schedule.startTime.compareTo(y.schedule.startTime);
+              });
+              // Build date lines for this service
+              final Map<String, List<BookingModel>> byDate = {};
+              for (final b in items) { (byDate[b.schedule.date] ??= <BookingModel>[]).add(b); }
+              final dateLines = byDate.entries.toList()..sort((a,b)=> a.key.compareTo(b.key));
+              final dateTextSvc = dateLines.map((e){
+                final times = (e.value..sort((x,y)=> x.schedule.startTime.compareTo(y.schedule.startTime)))
+                    .map((b)=>'${b.schedule.startTime} - ${b.schedule.endTime}')
+                    .join(', ');
+                return '${_formatDate(e.key)} • $times';
+              }).join('; ');
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  Text(serviceTitle, style: GoogleFonts.cairo(fontSize: isMobile ? 16 : 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                  const SizedBox(height: 6),
+                  _detailRow(Icons.calendar_today, AppStrings.getString('dateTime', languageService.currentLanguage), dateTextSvc, isMobile),
+                  const SizedBox(height: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: items.map((b){
+                      final canCancel = ['pending','confirmed'].contains(b.status.toLowerCase());
+                      final line = '${b.schedule.startTime} - ${b.schedule.endTime} • ₪${b.pricing.totalAmount.toStringAsFixed(0)}';
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Row(children:[
+                          // Per-booking status chip
+                          (() {
+                            final mini = BookingService.getStatusInfo(b.status);
+                            return Container(
+                              margin: const EdgeInsets.only(right: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: (mini['color'] as Color).withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                mini['label'],
+                                style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.w600, color: mini['color'] as Color),
+                              ),
+                            );
+                          })(),
+                          Expanded(child: Text(line, style: GoogleFonts.cairo(fontSize: isMobile ? 13 : 14, color: AppColors.textPrimary))),
+                          if (canCancel)
+                            OutlinedButton.icon(
+                              onPressed: () async {
+                                try {
+                                  await BookingService().cancelBookingAction(b.id);
+                                  await _refreshBookings();
+                                } catch(_){ }
+                              },
+                              icon: const Icon(Icons.cancel, color: AppColors.error, size: 18),
+                              label: Text(AppStrings.getString('cancel', languageService.currentLanguage), style: GoogleFonts.cairo(color: AppColors.error)),
+                              style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.error)),
+                            )
+                        ]),
+                      );
+                    }).toList(),
+                  )
+                ],
+              );
+            }).toList();
+          })(),
+        ],
+      ),
+    );
+  }
+
+  // Reuse a local detail row to avoid colliding with existing helper
+  Widget _detailRow(IconData icon, String label, String value, bool isMobile) {
+    return Row(children:[
+      Icon(icon, color: AppColors.textSecondary, size: isMobile ? 16.0 : 18.0),
+      const SizedBox(width: 8.0),
+      Text('$label: ', style: GoogleFonts.cairo(fontSize: isMobile ? 14.0 : 16.0, fontWeight: FontWeight.w500, color: AppColors.textSecondary)),
+      Expanded(child: Text(value, style: GoogleFonts.cairo(fontSize: isMobile ? 14.0 : 16.0, color: AppColors.textPrimary))),
+    ]);
+  }
+
+  String _formatDate(String ymd) {
+    // Handles both 'yyyy-MM-dd' and ISO strings like 'yyyy-MM-ddTHH:mm:ssZ'
+    try {
+      if (ymd.contains('T')) {
+        final dt = DateTime.parse(ymd).toLocal();
+        return '${dt.day}/${dt.month}/${dt.year}';
+      }
+    } catch (_) {}
+    final parts = ymd.split('-');
+    if (parts.length == 3) {
+      final y = int.tryParse(parts[0]) ?? parts[0];
+      final m = int.tryParse(parts[1]) ?? parts[1];
+      final dRaw = parts[2];
+      final d = int.tryParse(dRaw.replaceAll(RegExp(r'[^0-9]'), '')) ?? dRaw;
+      return '$d/$m/$y';
+    }
+    return ymd;
   }
 
   Widget _buildDetailedBookingCard(Map<String, dynamic> booking, bool isMobile, bool isTablet, double screenWidth) {
@@ -979,6 +1254,12 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                   ),
                 ),
               ),
+              if (_selectedFilter == 4 && (booking['id'] as String?) != null)
+                IconButton(
+                  tooltip: _getLocalizedString('remove'),
+                  onPressed: () => _dismissSingle(booking['id'] as String),
+                  icon: const Icon(Icons.close, size: 18, color: AppColors.textSecondary),
+                ),
               if (booking['hasPendingCancel'] == true) ...[
                 const SizedBox(width: 8),
                 Container(
@@ -1053,7 +1334,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           SizedBox(height: isMobile ? 16.0 : 20.0),
           
           // Action buttons
-          _buildBookingActions(isMobile, isTablet, screenWidth, bookingId: booking['id'] as String?),
+          _buildBookingActions(isMobile, isTablet, screenWidth, bookingId: booking['id'] as String?, statusRaw: booking['statusRaw'] as String?),
         ],
       ),
     );
@@ -1090,14 +1371,16 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     );
   }
 
-  Widget _buildBookingActions(bool isMobile, bool isTablet, double screenWidth, { String? bookingId }) {
+  Widget _buildBookingActions(bool isMobile, bool isTablet, double screenWidth, { String? bookingId, String? statusRaw }) {
     final languageService = Provider.of<LanguageService>(context, listen: false);
-    final actions = [
-      {'key': 'cancel', 'icon': Icons.cancel, 'label': AppStrings.getString('cancel', languageService.currentLanguage), 'color': AppColors.error},
-      // Reschedule and Contact left for later per requirements
-    ];
+    final canCancel = (statusRaw != null) && ['pending','confirmed'].contains(statusRaw.toLowerCase());
+    final actions = <Map<String, dynamic>>[];
+    if (canCancel) {
+      actions.add({'key': 'cancel', 'icon': Icons.cancel, 'label': AppStrings.getString('cancel', languageService.currentLanguage), 'color': AppColors.error});
+    }
 
-    return Wrap(
+  if (actions.isEmpty) return const SizedBox.shrink();
+  return Wrap(
       spacing: isMobile ? 8.0 : 12.0,
       runSpacing: isMobile ? 8.0 : 12.0,
       children: actions.map((action) {
@@ -1132,10 +1415,11 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     if (key != 'cancel') return;
     String? targetId = bookingId;
     if (targetId == null || targetId.isEmpty) {
-      final list = _filteredBookingsForCurrentTab();
-      final target = list.firstWhere((b) => ['pending','confirmed'].contains(b.status.toLowerCase()), orElse: () => list.isNotEmpty ? list.first : (null as dynamic));
-      if (target == null) return;
-      targetId = target.id;
+  final list = _filteredBookingsForCurrentTab();
+  if (list.isEmpty) return;
+  final idx = list.indexWhere((b) => ['pending','confirmed'].contains(b.status.toLowerCase()));
+  final target = idx >= 0 ? list[idx] : list.first;
+  targetId = target.id;
     }
     final svc = BookingService();
     final languageService = Provider.of<LanguageService>(context, listen: false);
@@ -1215,14 +1499,14 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     try {
       final res = await svc.cancelBookingAction(targetId, reason: reason);
       if (res.containsKey('booking')) {
-        await _maybeLoadBookings();
+        await _refreshBookings();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(AppStrings.getString('cancelBooking', languageService.currentLanguage) + ' ✓')),
           );
         }
       } else {
-        await _maybeLoadBookings();
+        await _refreshBookings();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(AppStrings.getString('sendCancellationRequest', languageService.currentLanguage) + ' ✓')),

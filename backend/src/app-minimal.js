@@ -84,6 +84,14 @@ try {
   console.error('❌ Providers routes failed:', error.message);
 }
 
+try {
+  const availabilityRoutes = require('./routes/availability');
+  app.use('/api/availability', availabilityRoutes);
+  console.log('✅ Availability routes loaded');
+} catch (error) {
+  console.error('❌ Availability routes failed:', error.message);
+}
+
 // Simple error handler
 app.use((err, req, res, next) => {
   console.error('Error:', err);

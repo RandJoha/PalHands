@@ -14,7 +14,14 @@ The **User Dashboard** is a comprehensive client management interface for PalHan
 - **Advanced State Management**: BLoC pattern with proper state handling
 
 ### **Dashboard Sections**
-1. **My Bookings** - Booking management with filtering and actions (Default Tab)
+1. **My Bookings** - Advanced booking management with calendar interface and grouping (Default Tab)
+   - **Calendar-Based Booking**: Interactive month/day view calendar for booking selection
+   - **Provider Availability**: Real-time availability display with 48-hour lead time enforcement
+   - **Smart Grouping**: Bookings grouped by provider relationship across dates and services
+   - **Multi-Service Support**: Service sections within provider groups for clear organization
+   - **Status Management**: Visual status indicators (pending=yellow, confirmed=red, available=green)
+   - **Per-Slot Actions**: Individual cancel actions for each booking slot
+  - **Cancelled Dismiss (local)**: On the Cancelled filter, a small “X” lets the user hide a cancelled row locally (non-destructive)
 2. **Chat Messages** - Real-time messaging interface
 3. **Payments** - Payment history and management
 4. **My Reviews** - Review system with rating management
@@ -43,6 +50,13 @@ The **User Dashboard** is a comprehensive client management interface for PalHan
   - Improved user experience by focusing on actionable features
   - Reduced cognitive load for users
   - My Bookings now serves as the default landing tab
+
+### What’s New (Sep 2025)
+- Cancelled filter includes local dismiss in client dashboard; no backend delete.
+- Booking ID interactions improved in admin views (hover-to-see, click-to-copy). Dates/times normalized.
+- Admin Booking Monitoring cleaned up (removed stray “x” near status).
+
+Note: On the provider side, the “My Client Bookings” view may still show separate groups for the same client; this is a known UI issue and will be fixed.
 
 ## 🏗️ **Architecture**
 
@@ -378,20 +392,79 @@ Widget _buildDashboardHome() {
 ### **2. My Bookings**
 
 #### **Features**
-- Filter tabs (All, Upcoming, Completed, Cancelled)
-- Booking cards with service details
-- Action buttons (Cancel, Reschedule, Contact, Track)
-- Status indicators with color coding
+- **Calendar-Based Booking Interface**: Interactive month/day view calendar for selecting appointment times
+- **Provider Availability Display**: Real-time availability with color-coded slots (green=available, yellow=pending, red=confirmed)
+- **Smart Grouping System**: Bookings automatically grouped by provider relationship across dates and services
+- **Multi-Service Organization**: Service sections within provider groups with individual date/time listings
+- **Advanced Filtering**: Filter tabs (All, Pending, Confirmed, Completed, Cancelled) with dynamic counts
+- **48-Hour Lead Time**: Automatic enforcement of minimum booking lead time
+- **Per-Slot Actions**: Individual cancel actions for each booking time slot
+- **Status Management**: Visual status indicators with real-time updates
+- **Multi-Day Support**: Booking selections can span multiple days with proper validation
+- **Cost Calculation**: Dynamic cost estimation based on selected time segments
 
-#### **Implementation**
+#### **Calendar Implementation**
 ```dart
-Widget _buildMyBookings() {
-  return LayoutBuilder(
-    builder: (context, constraints) {
-      final isMobile = constraints.maxWidth <= 768;
-      final isTablet = constraints.maxWidth > 768 && constraints.maxWidth <= 1200;
-      
-      return Column(
+Widget _buildBookingCalendar() {
+  return Container(
+    child: Column(
+      children: [
+        // Month view with availability badges
+        _buildMonthView(),
+        SizedBox(height: 16),
+        // Day view with time slots
+        _buildDayView(),
+        SizedBox(height: 16),
+        // Selected slots summary
+        _buildSelectedSummary(),
+      ],
+    ),
+  );
+}
+```
+
+#### **Grouping System**
+```dart
+// Group bookings by provider (relationship view)
+List<List<BookingModel>> _groupBookings(List<BookingModel> items) {
+  final Map<String, List<BookingModel>> map = {};
+  for (final b in items) {
+    final prov = b.providerId ?? 'prov';
+    (map[prov] ??= <BookingModel>[]).add(b);
+  }
+  
+  // Sort by latest activity, then by date/time within groups
+  final groups = map.values.toList();
+  groups.sort((a,b) => getLatestActivity(b).compareTo(getLatestActivity(a)));
+  
+  for (final g in groups) {
+    g.sort((x,y) {
+      final dateCompare = x.schedule.date.compareTo(y.schedule.date);
+      if (dateCompare != 0) return dateCompare;
+      return x.schedule.startTime.compareTo(y.schedule.startTime);
+    });
+  }
+  return groups;
+}
+```
+
+#### **Service Section Layout**
+```dart
+Widget _buildGroupedBookingCard(List<BookingModel> group) {
+  return Container(
+    child: Column(
+      children: [
+        // Provider header with total cost
+        _buildProviderHeader(group),
+        
+        // Service sections
+        ...group.groupBy(service).map((service, bookings) {
+          return _buildServiceSection(service, bookings);
+        }),
+      ],
+    ),
+  );
+}
         children: [
           _buildBookingFilters(isMobile, isTablet),
           SizedBox(height: isMobile ? 16.0 : 24.0),

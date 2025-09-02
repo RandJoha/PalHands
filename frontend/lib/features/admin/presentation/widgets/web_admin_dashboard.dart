@@ -19,7 +19,6 @@ import 'reports_widget.dart';
 import 'analytics_widget.dart';
 import 'system_settings_widget.dart';
 import '../../../profile/presentation/widgets/profile_settings_rich_widget.dart';
-import '../../../provider/presentation/widgets/bookings_widget.dart';
 import '../../../provider/presentation/widgets/bookings_as_client_widget.dart';
 
 // Admin models
@@ -49,7 +48,7 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
         index: 1,
       ),
       AdminMenuItem(
-        title: AppStrings.getString('myClientBookings', languageCode),
+        title: AppStrings.getString('bookingManagement', languageCode),
         icon: Icons.calendar_today,
         index: 2,
       ),

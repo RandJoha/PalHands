@@ -30,14 +30,14 @@ PalHands/
     └── assets/             # Static Assets
 ```
 
-## 🔄 Current Status Highlights (Aug 2025)
+## 🔄 Current Status Highlights (September 2025)
 
 This section reflects the latest decisions and shipped behavior from the booking-hardening work.
 
 - Booking status lifecycle is limited to four states: pending, confirmed, completed, cancelled. Any references to in-progress in older docs are legacy and no longer used.
 - Role-agnostic booking creation: admins and providers can create bookings “as a client”. The backend persists a polymorphic client reference using refPath (User|Provider) and returns fully populated bookings.
 - Admin dashboard now has two booking domains:
-  - My Client Bookings: global booking management (all users, full override).
+  - Booking Management: global booking management (all users, full override).
   - My Bookings: bookings the admin created as a client; cards show the booked provider’s name.
 - Provider dashboard shows two tabs:
   - My Client Bookings: jobs where they are the provider (cards show client name; provider name is hidden).
@@ -45,6 +45,15 @@ This section reflects the latest decisions and shipped behavior from the booking
 - Frontend uses centralized Authorization header across all API calls.
 - Provider default “All” filter excludes cancelled bookings to avoid surfacing closed items.
 - Admin overrides are allowed and audited. UI marks them with a small “Admin update” chip. Cancellation thresholds are enforced for users; admins can bypass with audit logging.
+
+Additional September 2025 polish
+- Booking Monitoring table cleaned up (removed stray inline cancel near status); cancellation available via Actions menu only.
+- Booking ID UX improved (hover to see full; click to copy) in admin table.
+- Dates/times normalized to local display (no ISO “Z”).
+- Cancelled filter supports local dismiss in client dashboard and in Admin → My Bookings (acting-as-client); non-destructive.
+
+Known issue
+- Provider “My Client Bookings” still splits some bookings by the same client; grouping key unification pending (UI-only).
 
 ### Booking Model (current)
 

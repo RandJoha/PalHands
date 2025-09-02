@@ -13,7 +13,16 @@ const createServiceValidator = celebrate({
     title: Joi.string().trim().required(),
     description: Joi.string().trim().required(),
     category: Joi.string().valid(
-      'cleaning','laundry','caregiving','furniture_moving','elderly_support','aluminum_work','carpentry','home_nursing','maintenance','other'
+      'cleaning',
+      'organizing',
+      'cooking',
+      'childcare',
+      'elderly',
+      'maintenance',
+      'newhome',
+      'miscellaneous',
+      // Legacy categories
+      'laundry','caregiving','furniture_moving','elderly_support','aluminum_work','carpentry','home_nursing','other'
     ).required(),
     subcategory: Joi.string().trim().allow('').optional(),
     price: Joi.object({
@@ -50,7 +59,16 @@ const updateServiceValidator = celebrate({
     title: Joi.string().trim().optional(),
     description: Joi.string().trim().optional(),
     category: Joi.string().valid(
-      'cleaning','laundry','caregiving','furniture_moving','elderly_support','aluminum_work','carpentry','home_nursing','maintenance','other'
+      'cleaning',
+      'organizing',
+      'cooking',
+      'childcare',
+      'elderly',
+      'maintenance',
+      'newhome',
+      'miscellaneous',
+      // Legacy categories
+      'laundry','caregiving','furniture_moving','elderly_support','aluminum_work','carpentry','home_nursing','other'
     ).optional(),
     subcategory: Joi.string().trim().allow('').optional(),
     price: Joi.object({

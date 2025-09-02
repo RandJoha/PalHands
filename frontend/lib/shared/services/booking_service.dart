@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/booking.dart';
 import 'base_api_service.dart';
-import 'auth_service.dart';
 import '../../core/constants/api_config.dart';
 
 class BookingService with BaseApiService {
@@ -46,6 +45,14 @@ class BookingService with BaseApiService {
       if (kDebugMode) {
         print('❌ Error creating booking: $e');
       }
+      // If it's a 401, clear token to force re-login on next action
+      if (e is ApiException && e.statusCode == 401) {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove('auth_token');
+          await prefs.remove('auth_user');
+        } catch (_) {}
+      }
       rethrow;
     }
   }
@@ -82,6 +89,14 @@ class BookingService with BaseApiService {
     } catch (e) {
       if (kDebugMode) {
         print('❌ Error fetching bookings: $e');
+      }
+      // Clear on 401
+      if (e is ApiException && e.statusCode == 401) {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove('auth_token');
+          await prefs.remove('auth_user');
+        } catch (_) {}
       }
       rethrow;
     }
@@ -179,7 +194,7 @@ class BookingService with BaseApiService {
       body: { if (reason != null) 'reason': reason },
       headers: await _getAuthHeaders(),
     );
-    if (response is Map && response['data'] is Map && (response['data'] as Map).containsKey('request')) {
+  if ((response['data'] is Map) && (response['data'] as Map).containsKey('request')) {
       return { 'request': response['data']['request'] };
     }
     final data = response['data'] ?? response;
@@ -232,6 +247,12 @@ class BookingService with BaseApiService {
           'label': 'Confirmed',
           'description': 'Provider confirmed the booking',
         };
+      case 'in_progress':
+        return {
+          'color': const Color(0xFF2196F3), // Blue
+          'label': 'In Progress',
+          'description': 'Service is currently in progress',
+        };
       case 'completed':
         return {
           'color': const Color(0xFF607D8B), // Blue Grey
@@ -243,6 +264,12 @@ class BookingService with BaseApiService {
           'color': const Color(0xFFF44336), // Red
           'label': 'Cancelled',
           'description': 'Booking was cancelled',
+        };
+      case 'multiple':
+        return {
+          'color': const Color(0xFF9E9E9E), // Grey
+          'label': 'Multiple',
+          'description': 'Group contains multiple statuses',
         };
       default:
         return {

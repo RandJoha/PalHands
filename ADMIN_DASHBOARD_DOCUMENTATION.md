@@ -24,15 +24,23 @@ The Admin Dashboard is a comprehensive administrative interface designed for pla
 - **Service Filtering**: Filter by category, status, and location
 - **Service Actions**: Enable/disable, feature, edit, and delete services
 
-### **3. Booking Management** ✅ **Implemented (Updated Aug 2025)**
+### **3. Booking Management** ✅ **Implemented (Updated Sep 2025)**
 - Two booking domains in UI:
-  - **My Client Bookings**: Global booking management (all users). Admin can view/update any booking.
+  - **Booking Management**: Global booking management (all users). Admin can view/update any booking.
   - **My Bookings**: Bookings the admin created while acting as a client; cards show the booked provider’s name.
 - Status lifecycle: pending → confirmed → completed; cancelled at any stage. Only these four statuses are supported.
 - Admin capabilities:
   - Full status override (with audit). UI shows an “Admin update” chip when an admin changed status.
   - Cancellation threshold bypass (policy-based) with logged reason.
   - Create bookings on behalf of users (acting as client); backend persists polymorphic client via refPath.
+
+#### What's New (Sep 2025)
+- Filters now fetch from server by status; post-action re-fetch keeps the current filter.
+- Cancelled view offers a local “dismiss” control only in Admin → My Bookings (acting-as-client). No destructive delete endpoint exists.
+- Booking Monitoring polish:
+  - Removed the stray “x” icon near the status chip; cancellation remains only under the Actions (…)
+  - Booking ID is now hoverable and copyable (click text or the copy icon). Long IDs truncate but show full value on hover.
+  - Date & Time display normalized (no trailing ISO “Z” artifacts); shows local date (yyyy-MM-dd) and HH:mm - HH:mm.
 
 ### **4. Reports & Disputes** 🚧 **In Development**
 - **Report Management**: View and manage user reports
@@ -60,10 +68,10 @@ The Admin Dashboard is a comprehensive administrative interface designed for pla
 
 ## 📊 **Navigation Structure**
 
-### **Current Navigation (Updated)**
+### **Current Navigation (Updated Sep 2025)**
 1. **User Management** - Default landing tab after login
 2. **Service Management** - Service categories and provider management
-3. **My Client Bookings** - Global bookings management (admin view of all)
+3. **Booking Management** - Global bookings management (admin view of all)
 4. **My Bookings** - Admin acting-as-client bookings
 5. **Reports & Disputes** - User reports and dispute resolution
 6. **Analytics & Growth** - Platform analytics and metrics
@@ -324,6 +332,6 @@ frontend/lib/features/admin/
 
 ---
 
-**Last Updated**: December 2024
-**Version**: 1.0.0
+**Last Updated**: September 2025
+**Version**: 1.2.0
 **Status**: ✅ Core Features Complete, Advanced Features In Development

@@ -1,11 +1,47 @@
-# 📚 **PalHands Documentation Index**
+# 📚 **PalHands Documentation Index** (Updated Sep 2025)
 
 This document serves as a comprehensive index of all PalHands project documentation files.
 
 ## 📋 **Main Documentation Files**
 
 ### **1. PROJECT_DOCUMENTATION.md** 📖
-**Purpose**: Complete project overview and implementation guide
+**Purpose***Last Updated**: January 2025
+**Status**: ✅ Complete and up-to-date
+**Recent Updates**: Advanced booking system with relationship-centric grouping, service section organization, and calendar interface implementation
+
+### **5. ADMIN_DASHBOARD_DOCUMENTATION.md** ⚙️
+**Purpose**: Comprehensive admin dashboard documentation
+**Content**:
+- Complete admin dashboard overview and implementation status
+- Updated navigation system (removed Dashboard Overview tab)
+- Core features and functionality (User Management, Service Management, Booking Management)
+- Advanced features in development (Reports & Disputes, Analytics & Growth, System Settings)
+- Technical implementation details
+- Responsive design and localization
+- Testing guide and quality assurance
+- File structure and architecture
+- Security features and access control
+- Future enhancements and roadmap
+
+**Last Updated**: September 2025
+**Status**: ✅ Core Features Complete, 🚧 Advanced Features In Development
+
+### **6. BOOKING_RULES_AND_TODO.md** 📅
+**Purpose**: Comprehensive booking system documentation
+**Content**:
+- Complete booking system architecture and implementation
+- Google Calendar-style interface with month/day views
+- Advanced grouping system (relationship-centric)
+- Service section organization within groups
+- 48-hour lead time enforcement
+- Multi-day booking support with range merging
+- Status-aware UI with color coding
+- Technical implementation details and API endpoints
+- Frontend calendar widget architecture
+- Backend availability resolution system
+
+**Last Updated**: September 2025
+**Status**: ✅ Complete and fully implemented overview and implementation guide
 **Content**:
 - Project overview and architecture
 - Technology stack and design system
@@ -21,11 +57,11 @@ This document serves as a comprehensive index of all PalHands project documentat
 - Deployment guidelines
 - **NEW**: Current critical responsive design issues (unresolved)
 
-**Last Updated**: August 2025
+**Last Updated**: January 2025
 **Status**: ✅ Complete and up-to-date
-**Recent addenda**: Password reset now uses hashed token storage with dev email fallback when SMTP is not configured. See new files: `backend/EMAIL_SETUP.md`, `backend/GET_PASSWORD_RESET_TOKEN.md`, and `backend/setup-email.ps1`.
+**Recent Updates**: Advanced calendar booking system implementation with Google Calendar-style interface, relationship-centric grouping system, service section organization, and comprehensive documentation of evolved booking features.
 
-### **2. TECHNICAL_MEMORY.md** 🧠
+### **2. BACKEND_DOCUMENTATION.md** 🔧
 **Purpose**: Comprehensive technical memory for responsive design issues and development evolution
 **Content**:
 - Current critical responsive design issues (unresolved)
@@ -39,10 +75,10 @@ This document serves as a comprehensive index of all PalHands project documentat
 - Success criteria for future fixes
 - Development cycle documentation
 
-**Last Updated**: December 2024
+**Last Updated**: September 2025
 **Status**: ✅ Active document for issue tracking and future reference
 
-### **NEW: TECH_MEMORY.md** 🧠
+### **3. USER_DASHBOARD_DOCUMENTATION.md** 👤
 **Purpose**: Backend tech memory focused on Reports module decisions and operations
 **Content**:
 - Data model highlights (categories, enums, linkage keys)
@@ -51,10 +87,42 @@ This document serves as a comprehensive index of all PalHands project documentat
 - Evidence flow and storage approach (Dev uploads, S3 in prod)
 - Deferred items and next steps
 
-**Last Updated**: August 2025
+**Last Updated**: September 2025
 **Status**: ✅ Added
 
 ## 📝 **Recent Documentation Updates**
+
+### **September 2025 - Booking Monitoring polish & filters**
+- Admin Booking Monitoring: removed stray “x” near status, normalized date/time, Booking ID now hoverable and copyable.
+- Client dashboard: local dismiss on Cancelled filter (UI-only, non-destructive). Admin acting-as-client has the same dismiss.
+- Navigation: “My Client Bookings” renamed to “Booking Management”.
+- Known issue: Provider “My Client Bookings” still splits some bookings by the same client; grouping fix pending.
+
+### **January 2025 - Advanced Booking System Implementation**
+
+#### **Calendar Interface and Grouping System**
+1. **Comprehensive Booking System Documentation**
+   - Created BOOKING_RULES_AND_TODO.md with complete system architecture
+   - Updated USER_DASHBOARD_DOCUMENTATION.md with relationship-centric grouping
+   - Updated PROVIDER_DASHBOARD_DOCUMENTATION.md with client grouping and service sections
+   - Enhanced BACKEND_DOCUMENTATION.md with availability and booking API details
+   - Updated FRONTEND_ANALYSIS.md to reflect fully implemented features
+
+2. **Key Features Documented**
+   - Google Calendar-style booking interface with month/day views
+   - 48-hour lead time enforcement (backend + frontend)
+   - Advanced grouping system: relationship-centric across dates and services
+   - Service section organization within grouped bookings
+   - Multi-day booking support with intelligent range merging
+   - Status-aware UI with color coding (available/pending/confirmed)
+   - Persistent selection across calendar navigation
+
+3. **Technical Implementation Details**
+   - Frontend calendar widget architecture and selection persistence
+   - Backend resolved availability system with timezone support
+   - API endpoint specifications for availability and booking
+   - Frontend state management with Provider pattern
+   - Sophisticated grouping algorithms for UI display
 
 ### **August 2025 - Responsive Navigation Unification (Final)**
 
@@ -243,7 +311,7 @@ This document serves as a comprehensive index of all PalHands project documentat
 
 ## 🔧 **Setup and Configuration Files**
 
-### **6. ENVIRONMENT_SETUP.md** ⚙️
+### **8. ENVIRONMENT_SETUP.md** ⚙️
 **Purpose**: Environment setup instructions
 **Content**:
 - Development environment setup
@@ -254,7 +322,7 @@ This document serves as a comprehensive index of all PalHands project documentat
 **Last Updated**: December 2024
 **Status**: ✅ Complete
 
-### **7. MONGODB_SETUP.md** 🗄️
+### **9. MONGODB_SETUP.md** 🗄️
 **Purpose**: MongoDB setup and configuration
 **Content**:
 - MongoDB Atlas setup

@@ -4,6 +4,9 @@ const timeWindowSchema = new mongoose.Schema({ start: String, end: String }, { _
 
 const availabilitySchema = new mongoose.Schema({
   provider: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
+  // Denormalized for readability in DB consoles (Atlas):
+  providerName: { type: String, default: '' },
+  providerEmail: { type: String, default: '' },
   timezone: { type: String, required: true, default: 'Asia/Jerusalem' },
   weekly: {
     monday: [timeWindowSchema],

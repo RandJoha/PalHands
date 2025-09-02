@@ -227,6 +227,11 @@ QA
 - [ ] FE: Ensure admin-only actions show/hide based on role
 - [ ] FE: Add admin actions audit breadcrumbs in UI where applicable
 
+### Notes (Sep 2025)
+- Admin Booking Monitoring polished: removed stray inline cancel icon; Booking ID hover/copy; normalized date/time.
+- Client/Admin Cancelled filters: local dismiss UI only (no backend delete).
+- Provider My Client Bookings: known UI grouping issue (same client split across cards). Planned FE fix to unify grouping keys (clientId name fallback) and merge groups.
+
 ---
 
 ## Deferrals (Do NOT wire yet)

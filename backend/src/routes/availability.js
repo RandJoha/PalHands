@@ -22,8 +22,17 @@ const upsertSchema = celebrate({
   })
 });
 
-// Get availability: any authenticated role can view
-router.get('/:providerId', auth, availabilityController.getAvailability);
+// Get raw availability: public view
+router.get('/:providerId', availabilityController.getAvailability);
+
+// Get resolved availability with bookings applied (public)
+router.get('/:providerId/resolve', celebrate({
+  [Segments.QUERY]: Joi.object({
+    from: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    to: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    step: Joi.number().integer().min(10).max(180).optional()
+  })
+}), availabilityController.getResolvedAvailability);
 
 // Update availability:
 // - provider can update only their own record

@@ -14,6 +14,15 @@ import 'app_toast.dart';
 import '../services/auth_service.dart';
 import '../services/services_service.dart';
 import '../services/services_service.dart' as svc;
+import '../services/availability_service.dart';
+// Calendar UI will be declared at bottom of this file for simplicity
+
+// Simple value class for a merged time range
+class _TimeRange {
+  final String start; // HH:mm
+  final String end;   // HH:mm
+  const _TimeRange({required this.start, required this.end});
+}
 
 class BookingDialog extends StatefulWidget {
   final ProviderModel provider;
@@ -33,6 +42,7 @@ class _BookingDialogState extends State<BookingDialog> {
   final _formKey = GlobalKey<FormState>();
   final BookingService _bookingService = BookingService();
   final ServicesService _servicesService = ServicesService();
+  final AvailabilityService _availabilityService = AvailabilityService();
 
   // Form controllers
   final _addressController = TextEditingController();
@@ -44,28 +54,34 @@ class _BookingDialogState extends State<BookingDialog> {
   DateTime? _selectedDate;
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
+  // Persist selected slot keys per day (key: 'YYYY-MM-DD' -> set of 'HH:mm-HH:mm')
+  final Map<String, Set<String>> _selectedByDate = {};
   String? _selectedService;
   String? _selectedServiceId; // backend service _id
   List<svc.ServiceModel> _providerServices = const [];
   bool _loading = false;
-  // Same-day booking is not allowed per product rules
-  // Dev/testing override removed per request
-  final bool _devAllowSameDay = false;
+  AvailabilityModel? _availability; // provider availability
+  AvailabilityResolved? _resolved;  // day+slot view
+  DateTime _calendarMonth = DateTime.now();
+  // Calendar UX state
+  String _calendarMode = 'month'; // 'month' | 'day'
+  DateTime? _dayViewDate; // when in day mode
+  // Same-day booking is not allowed per product rules (UI mirrors backend)
 
   @override
   void initState() {
     super.initState();
-    _selectedService = widget.selectedService ?? widget.provider.services.first;
-  // Default date: 48h ahead (UI guard; backend enforces exact minutes)
-  final now = DateTime.now();
-  _selectedDate = now.add(const Duration(days: 2));
-    // Set default times
-    _startTime = const TimeOfDay(hour: 9, minute: 0);
-    _endTime = const TimeOfDay(hour: 12, minute: 0);
+  _selectedService = widget.selectedService ?? widget.provider.services.first;
+  // Do not preselect date/time; user must choose explicitly
+  _selectedDate = null;
+  _startTime = null;
+  _endTime = null;
 
   // Load provider services from backend to get real service IDs
   // Ignore errors and gracefully fall back to provider.services list
   _loadProviderServices();
+  _loadAvailability();
+  _loadResolved();
   }
 
   @override
@@ -74,6 +90,95 @@ class _BookingDialogState extends State<BookingDialog> {
     _instructionsController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadAvailability() async {
+    try {
+      final a = await _availabilityService.getAvailability(widget.provider.id);
+      if (!mounted) return;
+      setState(() { _availability = a; });
+    } catch (_) {
+      // ignore
+    }
+  }
+
+  Future<void> _loadResolved() async {
+    try {
+      final from = DateTime.now().add(const Duration(days: 0));
+      final to = from.add(const Duration(days: 31));
+  final r = await _availabilityService.getResolvedAvailability(widget.provider.id, from: from, to: to, stepMinutes: 60);
+      if (!mounted) return;
+      setState(() {
+        _resolved = r;
+        _calendarMonth = DateTime(from.year, from.month, 1);
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _loadResolvedForMonth(DateTime monthStart) async {
+    try {
+      final from = DateTime(monthStart.year, monthStart.month, 1);
+      final to = DateTime(monthStart.year, monthStart.month + 1, 0);
+      final r = await _availabilityService.getResolvedAvailability(
+        widget.provider.id,
+        from: from,
+        to: to,
+        stepMinutes: 60,
+      );
+      if (!mounted) return;
+      setState(() {
+        _resolved = r;
+        _calendarMonth = from;
+      });
+    } catch (_) {
+      // ignore
+    }
+  }
+
+  void _changeMonth(int delta) {
+    final base = DateTime(DateTime.now().year, DateTime.now().month, 1);
+    final limitNext = DateTime(base.year, base.month + 1, 1); // only current and next month allowed
+    final next = DateTime(_calendarMonth.year, _calendarMonth.month + delta, 1);
+    // Guard: allow only [base, limitNext]
+    if (next.isBefore(base) || next.isAfter(limitNext)) {
+      return;
+    }
+    setState(() {
+      _calendarMonth = next;
+      _resolved = null; // indicate loading state until fetched
+      _calendarMode = 'month';
+      _dayViewDate = null;
+  // Do not clear selections on month change; persist across navigation
+    });
+    _loadResolvedForMonth(next);
+  }
+  Future<void> _openDayView(DateTime date) async {
+    // Ensure resolved has the selected date's month
+    final needsMonth = _resolved == null || _calendarMonth.year != date.year || _calendarMonth.month != date.month;
+    if (needsMonth) {
+      await _loadResolvedForMonth(DateTime(date.year, date.month, 1));
+    } else {
+      // If day isn't present (edge case after db changes), also reload month
+      final key = _dateKey(date);
+      final hasDay = (_resolved?.days.any((d) => d.date == key) ?? false);
+      if (!hasDay) {
+        await _loadResolvedForMonth(DateTime(date.year, date.month, 1));
+      }
+    }
+    if (!mounted) return;
+    setState(() {
+      _calendarMode = 'day';
+      _dayViewDate = date;
+  // keep selections; reset the focused time for new day until user selects
+  _startTime = null;
+  _endTime = null;
+    });
+  }
+  void _backToMonth() {
+    setState(() {
+      _calendarMode = 'month';
+      // keep month as-is
+    });
   }
 
   Future<void> _selectDate() async {
@@ -123,6 +228,36 @@ class _BookingDialogState extends State<BookingDialog> {
           _endTime = picked;
         }
       });
+      _validateTimeAgainstAvailability();
+    }
+  }
+
+  void _validateTimeAgainstAvailability() {
+    if (_availability == null || _selectedDate == null || _startTime == null || _endTime == null) return;
+    final date = _selectedDate!;
+    final dayName = [
+      'sunday','monday','tuesday','wednesday','thursday','friday','saturday'
+    ][date.weekday % 7];
+    final start = _formatTime(_startTime!);
+    final end = _formatTime(_endTime!);
+    // Exceptions take precedence
+    final dateKey = '${date.year.toString().padLeft(4,'0')}-${date.month.toString().padLeft(2,'0')}-${date.day.toString().padLeft(2,'0')}';
+    final ex = _availability!.exceptions[dateKey];
+    List<TimeWindow> windows;
+    if (ex != null) {
+      windows = ex; // empty list means unavailable
+    } else {
+      windows = _availability!.weekly[dayName] ?? <TimeWindow>[];
+    }
+    bool ok = true;
+    if (windows.isEmpty) {
+      // Treat empty as not allowed to avoid user confusion
+      ok = false;
+    } else {
+      ok = windows.any((w) => w.start.compareTo(start) <= 0 && w.end.compareTo(end) >= 0);
+    }
+    if (!ok) {
+      AppToast.show(context, message: 'Selected time is outside provider availability');
     }
   }
 
@@ -182,10 +317,20 @@ class _BookingDialogState extends State<BookingDialog> {
   }
 
   double _calculateEstimatedCost() {
-    if (_startTime == null || _endTime == null) return 0.0;
-    final startMinutes = _startTime!.hour * 60 + _startTime!.minute;
-    final endMinutes = _endTime!.hour * 60 + _endTime!.minute;
-    final durationMinutes = (endMinutes - startMinutes).clamp(0, 24 * 60);
+    // Prefer summing all selected segments across days; fall back to single focused slot
+    final segs = _computeSelectedSegments();
+    int totalMinutes = 0;
+    if (segs.isNotEmpty) {
+      for (final ranges in segs.values) {
+        for (final r in ranges) {
+          totalMinutes += _minutesBetween(r.start, r.end);
+        }
+      }
+    } else if (_startTime != null && _endTime != null) {
+      final startMinutes = _startTime!.hour * 60 + _startTime!.minute;
+      final endMinutes = _endTime!.hour * 60 + _endTime!.minute;
+      totalMinutes = (endMinutes - startMinutes).clamp(0, 24 * 60);
+    }
     // Try to use selected backend service price type if available
     svc.ServiceModel? selected;
     if (_providerServices.isNotEmpty) {
@@ -201,23 +346,27 @@ class _BookingDialogState extends State<BookingDialog> {
     final priceType = (selected?.price.type ?? 'hourly');
     final amount = (selected?.price.amount ?? widget.provider.hourlyRate).toDouble();
     if (priceType == 'hourly') {
-      final hours = durationMinutes / 60.0;
+      final hours = totalMinutes / 60.0;
       return hours * amount;
     }
-    // fixed/daily: use base amount as a simple estimate
-    return amount;
+    // fixed/daily: multiply by number of segments if any, else single
+    final segmentsCount = segs.isNotEmpty ? segs.values.fold<int>(0, (acc, v) => acc + v.length) : 1;
+    return amount * segmentsCount;
   }
 
   Future<void> _submitBooking() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedDate == null || _startTime == null || _endTime == null) {
+    final segs = _computeSelectedSegments();
+    final hasMulti = segs.isNotEmpty;
+    if (!hasMulti && (_selectedDate == null || _startTime == null || _endTime == null)) {
       AppToast.show(context, message: 'Please select date and time');
       return;
     }
 
-    // Require login
-    final auth = Provider.of<AuthService>(context, listen: false);
-    if (!auth.isAuthenticated) {
+  // Require login and a valid token
+  final auth = Provider.of<AuthService>(context, listen: false);
+  final hasToken = (auth.token != null && auth.token!.isNotEmpty);
+  if (!auth.isAuthenticated || !hasToken) {
       AppToast.show(context, message: 'Please login to place a booking');
       return;
     }
@@ -227,6 +376,9 @@ class _BookingDialogState extends State<BookingDialog> {
     });
 
     try {
+  // Final UI-side guard: enforce availability if known (for each segment)
+  _validateAllSegmentsAgainstAvailability(segs);
+
       // Determine serviceId to send to backend
       String? serviceId = _selectedServiceId;
       if ((serviceId == null || serviceId.isEmpty) && _providerServices.isNotEmpty) {
@@ -252,15 +404,8 @@ class _BookingDialogState extends State<BookingDialog> {
         } catch (_) {}
       }
       if (serviceId == null || serviceId.isEmpty) {
-        throw Exception('No service available for this provider');
+        throw Exception('No service available for this provider. Please choose a different service.');
       }
-
-      final schedule = Schedule(
-        date: _selectedDate!.toIso8601String().split('T')[0],
-        startTime: _formatTime(_startTime!),
-        endTime: _formatTime(_endTime!),
-        timezone: 'Asia/Jerusalem',
-      );
 
       final location = Location(
         address: _addressController.text,
@@ -268,19 +413,59 @@ class _BookingDialogState extends State<BookingDialog> {
             ? _instructionsController.text 
             : null,
       );
-
-      final request = CreateBookingRequest(
-        serviceId: serviceId,
-        schedule: schedule,
-        location: location,
-        notes: _notesController.text.isNotEmpty ? _notesController.text : null,
-      );
-
-      await _bookingService.createBooking(request);
       
+      final tz = _availability?.timezone ?? 'Asia/Jerusalem';
+      int success = 0, fail = 0;
+      if (hasMulti) {
+        for (final entry in segs.entries) {
+          final dateKey = entry.key;
+          for (final r in entry.value) {
+            try {
+              final schedule = Schedule(
+                date: dateKey,
+                startTime: r.start,
+                endTime: r.end,
+                timezone: tz,
+              );
+              final request = CreateBookingRequest(
+                serviceId: serviceId,
+                schedule: schedule,
+                location: location,
+                notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+              );
+              await _bookingService.createBooking(request);
+              success++;
+            } catch (_) {
+              fail++;
+            }
+          }
+        }
+      } else {
+        final schedule = Schedule(
+          date: _selectedDate!.toIso8601String().split('T')[0],
+          startTime: _formatTime(_startTime!),
+          endTime: _formatTime(_endTime!),
+          timezone: tz,
+        );
+        final request = CreateBookingRequest(
+          serviceId: serviceId,
+          schedule: schedule,
+          location: location,
+          notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+        );
+        await _bookingService.createBooking(request);
+        success = 1;
+      }
+
       if (mounted) {
         Navigator.of(context).pop();
-        AppToast.show(context, message: 'Booking created successfully!');
+        if (fail == 0) {
+          AppToast.show(context, message: success > 1 ? 'Created $success bookings' : 'Booking created successfully!');
+        } else if (success > 0) {
+          AppToast.show(context, message: 'Created $success bookings; $fail failed');
+        } else {
+          AppToast.show(context, message: 'Failed to create bookings');
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -291,6 +476,61 @@ class _BookingDialogState extends State<BookingDialog> {
         setState(() {
           _loading = false;
         });
+      }
+    }
+  }
+
+  // Compute selected ranges per date, merging adjacent slots into a single segment
+  Map<String, List<_TimeRange>> _computeSelectedSegments() {
+    Map<String, List<_TimeRange>> out = {};
+    if (_selectedByDate.isEmpty) return out;
+    String start(String key) => key.split('-')[0];
+    String end(String key) => key.split('-')[1];
+    for (final entry in _selectedByDate.entries) {
+      final sorted = entry.value.toList()..sort((a,b)=>a.compareTo(b));
+      if (sorted.isEmpty) continue;
+      List<_TimeRange> ranges = [];
+      String curStart = start(sorted.first);
+      String curEnd = end(sorted.first);
+      for (int i=1;i<sorted.length;i++) {
+        final s = start(sorted[i]);
+        final e = end(sorted[i]);
+        if (s == curEnd) {
+          // contiguous, extend current
+          curEnd = e;
+        } else {
+          ranges.add(_TimeRange(start: curStart, end: curEnd));
+          curStart = s; curEnd = e;
+        }
+      }
+      ranges.add(_TimeRange(start: curStart, end: curEnd));
+      out[entry.key] = ranges;
+    }
+    return out;
+  }
+
+  int _minutesBetween(String start, String end) {
+    final sp = start.split(':');
+    final ep = end.split(':');
+    final sm = (int.tryParse(sp[0]) ?? 0) * 60 + (int.tryParse(sp[1]) ?? 0);
+    final em = (int.tryParse(ep[0]) ?? 0) * 60 + (int.tryParse(ep[1]) ?? 0);
+    return (em - sm).clamp(0, 24*60);
+  }
+
+  void _validateAllSegmentsAgainstAvailability(Map<String, List<_TimeRange>> segs) {
+    if (_availability == null) return;
+    if (segs.isEmpty) {
+      _validateTimeAgainstAvailability();
+      return;
+    }
+    for (final entry in segs.entries) {
+      final dateParts = entry.key.split('-').map((e) => int.tryParse(e) ?? 0).toList();
+      final d = DateTime(dateParts[0], dateParts[1], dateParts[2]);
+      for (final r in entry.value) {
+        _selectedDate = d;
+        _startTime = _parseHHmm(r.start);
+        _endTime = _parseHHmm(r.end);
+        _validateTimeAgainstAvailability();
       }
     }
   }
@@ -472,16 +712,7 @@ class _BookingDialogState extends State<BookingDialog> {
     );
   }
 
-  String _formatAddress(Map<String, dynamic> a, String lang) {
-    final parts = <String>[];
-    final city = (a['city'] ?? '').toString();
-    final street = (a['street'] ?? '').toString();
-    final area = (a['area'] ?? '').toString();
-    if (street.isNotEmpty) parts.add(AppStrings.getString(street, lang));
-    if (area.isNotEmpty) parts.add(area);
-    if (city.isNotEmpty) parts.add(AppStrings.getString(city, lang));
-    return parts.join(', ');
-  }
+  
 
   Widget _buildProviderInfo() {
     return Container(
@@ -619,6 +850,13 @@ class _BookingDialogState extends State<BookingDialog> {
             setState(() {
               if (_providerServices.isNotEmpty) {
                 _selectedServiceId = value;
+                // Keep a user-friendly selected key for fallback resolution
+                try {
+                  final svcItem = _providerServices.firstWhere((s) => s.id == value);
+                  _selectedService = (svcItem.subcategory != null && svcItem.subcategory!.isNotEmpty)
+                      ? svcItem.subcategory
+                      : svcItem.title;
+                } catch (_) {}
               } else {
                 _selectedService = value;
               }
@@ -655,22 +893,145 @@ class _BookingDialogState extends State<BookingDialog> {
         style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
       ),
     ),
-    _DateTimeRow(
-      dateLabel: _selectedDate != null
-        ? _formatDate(_selectedDate!)
-        : AppStrings.getString('selectDate', lang),
-      onPickDate: _selectDate,
-      startLabel: _startTime != null
-        ? _formatTime(_startTime!)
-        : AppStrings.getString('startTime', lang),
-      endLabel: _endTime != null
-        ? _formatTime(_endTime!)
-        : AppStrings.getString('endTime', lang),
-      onPickStart: () => _selectTime(true),
-      onPickEnd: () => _selectTime(false),
+    if (_availability != null) Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Text(
+        'Availability loaded for provider (${_availability!.timezone}). Times outside availability will be rejected.',
+        style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+      ),
     ),
+    // Calendar with resolved availability (falls back to pickers if not loaded)
+    if (_resolved != null) ...[
+      // Month navigation
+      if (_calendarMode == 'month') ...[
+        Row(
+          children: [
+            Builder(builder: (context) {
+              // Compute navigation availability (only current + next month)
+              final base = DateTime(DateTime.now().year, DateTime.now().month, 1);
+              final canPrev = _calendarMonth.isAfter(base);
+              return IconButton(
+              icon: const Icon(Icons.chevron_left),
+              tooltip: 'Previous month',
+                onPressed: canPrev ? () => _changeMonth(-1) : null,
+              );
+            }),
+            Expanded(
+              child: Center(
+                child: Text(
+                  '${_calendarMonth.year}-${_calendarMonth.month.toString().padLeft(2,'0')}',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+            Builder(builder: (context) {
+              final base = DateTime(DateTime.now().year, DateTime.now().month, 1);
+              final limitNext = DateTime(base.year, base.month + 1, 1);
+              final canNext = _calendarMonth.isBefore(limitNext);
+              return IconButton(
+              icon: const Icon(Icons.chevron_right),
+              tooltip: 'Next month',
+                onPressed: canNext ? () => _changeMonth(1) : null,
+              );
+            }),
+          ],
+        ),
+        _CalendarSection(
+          month: _calendarMonth,
+          resolved: _resolved!,
+      onSelect: (date, slot) {
+            setState(() {
+              _selectedDate = date;
+        final dateKey = _dateKey(date);
+        final key = '${slot.start}-${slot.end}';
+        final set = _selectedByDate.putIfAbsent(dateKey, () => <String>{});
+        if (set.contains(key)) set.remove(key); else set.add(key);
+        _startTime = _parseHHmm(slot.start);
+        _endTime = _parseHHmm(slot.end);
+            });
+          },
+          onOpenDay: (date) => _openDayView(date),
+        ),
+        const SizedBox(height: 8),
+  _Legend(),
+        const SizedBox(height: 6),
+        Builder(builder: (context) {
+          final dateKey = _selectedDate != null ? _dateKey(_selectedDate!) : null;
+          final count = dateKey != null ? (_selectedByDate[dateKey]?.length ?? 0) : 0;
+          final hasSelection = count > 0 && _startTime != null && _endTime != null;
+          return Text(
+            hasSelection
+                ? 'Selected (${count}): ${_formatDate(_selectedDate!)} • ${_formatTime(_startTime!)} - ${_formatTime(_endTime!)}'
+                : 'Select a day to view available times',
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade800),
+          );
+        }),
+      ] else ...[
+        _DaySlotList(
+          date: _dayViewDate ?? DateTime.now(),
+          resolved: _resolved!,
+          selectedKeys: _selectedByDate[_dateKey(_dayViewDate ?? DateTime.now())] ?? const <String>{},
+          onToggle: (slot) {
+            final d = _dayViewDate ?? DateTime.now();
+            setState(() {
+              _selectedDate = d;
+              final key = _dateKey(d);
+              final m = _selectedByDate.putIfAbsent(key, () => <String>{});
+              final slotKey = '${slot.start}-${slot.end}';
+              if (m.contains(slotKey)) {
+                m.remove(slotKey);
+              } else {
+                m.add(slotKey);
+              }
+              // Update focused start/end to this single slot
+              _startTime = _parseHHmm(slot.start);
+              _endTime = _parseHHmm(slot.end);
+            });
+          },
+          onBack: _backToMonth,
+        ),
+      ],
+    ] else ...[
+      _DateTimeRow(
+        dateLabel: _selectedDate != null
+          ? _formatDate(_selectedDate!)
+          : AppStrings.getString('selectDate', lang),
+        onPickDate: _selectDate,
+        startLabel: _startTime != null
+          ? _formatTime(_startTime!)
+          : AppStrings.getString('startTime', lang),
+        endLabel: _endTime != null
+          ? _formatTime(_endTime!)
+          : AppStrings.getString('endTime', lang),
+        onPickStart: () => _selectTime(true),
+        onPickEnd: () => _selectTime(false),
+      ),
+    ],
       ],
     );
+  }
+
+  TimeOfDay _parseHHmm(String s) {
+    final parts = s.split(':');
+    final h = int.tryParse(parts[0]) ?? 0;
+    final m = int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0;
+    return TimeOfDay(hour: h, minute: m);
+  }
+
+  // Helpers to compute previous/next slot string key using step minutes from resolved
+  // (no-op)
+
+  // Removed unused helpers related to chain selection.
+
+  String _formatAddress(Map<String, dynamic> a, String lang) {
+    final parts = <String>[];
+    final city = (a['city'] ?? '').toString();
+    final street = (a['street'] ?? '').toString();
+    final area = (a['area'] ?? '').toString();
+    if (street.isNotEmpty) parts.add(AppStrings.getString(street, lang));
+    if (area.isNotEmpty) parts.add(area);
+    if (city.isNotEmpty) parts.add(AppStrings.getString(city, lang));
+    return parts.join(', ');
   }
 
   Widget _buildAddressField(List<Map<String, dynamic>> savedAddresses, String lang) {
@@ -680,11 +1041,11 @@ class _BookingDialogState extends State<BookingDialog> {
         Text(
           AppStrings.getString('serviceAddress', lang),
           style: TextStyle(
-      fontSize: 15,
+            fontSize: 15,
             fontWeight: FontWeight.w600,
           ),
         ),
-    const SizedBox(height: 8),
+        const SizedBox(height: 8),
         if (savedAddresses.isNotEmpty)
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -764,18 +1125,18 @@ class _BookingDialogState extends State<BookingDialog> {
         Text(
           AppStrings.getString('specialInstructions', lang),
           style: TextStyle(
-      fontSize: 15,
+            fontSize: 15,
             fontWeight: FontWeight.w600,
           ),
         ),
-    const SizedBox(height: 8),
+        const SizedBox(height: 8),
         TextFormField(
           controller: _instructionsController,
           decoration: InputDecoration(
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.0),
             ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           ),
           maxLines: 2,
         ),
@@ -795,11 +1156,11 @@ class _BookingDialogState extends State<BookingDialog> {
         Text(
           AppStrings.getString('additionalNotesOptional', lang),
           style: TextStyle(
-      fontSize: 15,
+            fontSize: 15,
             fontWeight: FontWeight.w600,
           ),
         ),
-    const SizedBox(height: 8),
+        const SizedBox(height: 8),
         TextFormField(
           controller: _notesController,
           decoration: InputDecoration(
@@ -807,7 +1168,7 @@ class _BookingDialogState extends State<BookingDialog> {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.0),
             ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           ),
           maxLines: 3,
         ),
@@ -845,6 +1206,135 @@ class _BookingDialogState extends State<BookingDialog> {
           ),
         ],
       ),
+    );
+  }
+
+}
+
+// Helper to format DateTime as yyyy-MM-dd
+String _dateKey(DateTime d) {
+  return '${d.year.toString().padLeft(4,'0')}-${d.month.toString().padLeft(2,'0')}-${d.day.toString().padLeft(2,'0')}';
+}
+
+// --- Inline calendar and slot list for resolved availability ---
+class _CalendarSection extends StatelessWidget {
+  final DateTime month;
+  final AvailabilityResolved resolved;
+  final void Function(DateTime date, AvailabilitySlot slot) onSelect;
+  final void Function(DateTime date)? onOpenDay; // open day timeline
+  const _CalendarSection({required this.month, required this.resolved, required this.onSelect, this.onOpenDay});
+
+  @override
+  Widget build(BuildContext context) {
+    final byDate = {for (final d in resolved.days) d.date: d};
+    final first = DateTime(month.year, month.month, 1);
+    final last = DateTime(month.year, month.month + 1, 0);
+
+    List<Widget> rows = [];
+    // Week header
+    rows.add(Row(
+      children: const ['S','M','T','W','T','F','S']
+          .map((l) => Expanded(child: Center(child: Text(l, style: TextStyle(fontWeight: FontWeight.bold)))))
+          .toList(),
+    ));
+    rows.add(const SizedBox(height: 8));
+
+    DateTime cursor = first;
+    int lead = cursor.weekday % 7; // 0=Sun
+    List<Widget> current = [];
+    for (int i=0; i<lead; i++) current.add(const Expanded(child: SizedBox(height: 40)));
+
+    while (!cursor.isAfter(last)) {
+      final dayDate = DateTime(cursor.year, cursor.month, cursor.day);
+      final key = _dateKey(dayDate);
+      final day = byDate[key];
+      final availCount = day?.slots.length ?? 0;
+      final bookedCount = day?.booked.length ?? 0; // includes pending + confirmed
+      final hasAny = (availCount + bookedCount) > 0;
+      current.add(Expanded(
+        child: GestureDetector(
+          onTap: !hasAny ? null : () async {
+            // Prefer open day view if provided; else show sheet of slots
+            if (onOpenDay != null) {
+              onOpenDay!(dayDate);
+            } else {
+              final slot = await _pickSlot(context, dayDate, day!.slots);
+              if (slot != null) onSelect(dayDate, slot);
+            }
+          },
+          child: Container(
+            height: 40,
+            margin: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              color: availCount > 0 ? Colors.green.shade50 : Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: availCount > 0 ? Colors.green.shade600 : Colors.grey.shade400),
+            ),
+            child: Stack(children: [
+              Align(alignment: Alignment.center, child: Text('${dayDate.day}')),
+              if (availCount > 0)
+                Positioned(right: 4, top: 4, child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(color: Colors.green.shade600, borderRadius: BorderRadius.circular(10)),
+                  child: Text('$availCount', style: const TextStyle(color: Colors.white, fontSize: 10)),
+                )),
+              if (bookedCount > 0)
+                Positioned(right: 4, bottom: 4, child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(color: Colors.red.shade600, borderRadius: BorderRadius.circular(10)),
+                  child: Text('$bookedCount', style: const TextStyle(color: Colors.white, fontSize: 10)),
+                )),
+            ]),
+          ),
+        ),
+      ));
+      if (current.length == 7) {
+        rows.add(Row(children: current));
+        current = [];
+      }
+      cursor = cursor.add(const Duration(days: 1));
+    }
+    if (current.isNotEmpty) {
+      while (current.length < 7) { current.add(const Expanded(child: SizedBox(height: 40))); }
+      rows.add(Row(children: current));
+    }
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      ...rows,
+    ]);
+  }
+
+  Future<AvailabilitySlot?> _pickSlot(BuildContext context, DateTime date, List<AvailabilitySlot> slots) async {
+    return await showModalBottomSheet<AvailabilitySlot>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Text('Available on ${date.day}/${date.month}/${date.year}', style: const TextStyle(fontWeight: FontWeight.bold)),
+              ),
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: slots.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (_, i) {
+                    final s = slots[i];
+                    return ListTile(
+                      title: Text('${s.start} - ${s.end}'),
+                      onTap: () => Navigator.of(context).pop(s),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      }
     );
   }
 }
@@ -955,3 +1445,99 @@ class _ChipField extends StatelessWidget {
     );
   }
 }
+
+// Simple color legend for slot states
+class _Legend extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    Widget item(Color color, String label) => Row(children: [
+      Container(width: 12, height: 12, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+      const SizedBox(width: 6),
+      Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade800)),
+      const SizedBox(width: 12),
+    ]);
+    return Row(children: [
+  item(Colors.green.shade600, 'Available'),
+  item(Colors.orange.shade600, 'Pending'),
+  item(Colors.red.shade600, 'Booked'),
+  item(Colors.orange.shade300, 'Selected'),
+  item(Colors.grey.shade400, 'Not available'),
+    ]);
+  }
+}
+
+// Day slot list: shows only selected day's slots with multi-select toggle
+class _DaySlotList extends StatelessWidget {
+  final DateTime date;
+  final AvailabilityResolved resolved;
+  final Set<String> selectedKeys;
+  final void Function(AvailabilitySlot slot) onToggle;
+  final VoidCallback onBack;
+  const _DaySlotList({required this.date, required this.resolved, required this.selectedKeys, required this.onToggle, required this.onBack});
+
+  @override
+  Widget build(BuildContext context) {
+    final key = _dateKey(date);
+    final day = {for (final d in resolved.days) d.date: d}[key];
+    final slots = day?.slots ?? const <AvailabilitySlot>[];
+    final booked = day?.booked ?? const <AvailabilitySlot>[];
+
+    String k(AvailabilitySlot s) => '${s.start}-${s.end}';
+    final byAvail = { for (final s in slots) k(s): s };
+    final byBooked = { for (final s in booked) k(s): s };
+    final allKeys = <String>{...byAvail.keys, ...byBooked.keys}.toList()
+      ..sort((a,b)=>a.compareTo(b));
+
+  bool isSelected(AvailabilitySlot s) => selectedKeys.contains('${s.start}-${s.end}');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(children: [
+          IconButton(onPressed: onBack, icon: const Icon(Icons.chevron_left)),
+          Expanded(child: Center(child: Text('Select time on ${date.day}/${date.month}/${date.year}', style: const TextStyle(fontWeight: FontWeight.w600)))),
+          const SizedBox(width: 40),
+        ]),
+        const SizedBox(height: 8),
+        if (allKeys.isEmpty)
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Text('No available slots on this day', style: TextStyle(color: Colors.grey.shade700)),
+          )
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final key in allKeys)
+                Builder(builder: (context) {
+                  final s = byAvail[key] ?? byBooked[key]!;
+                  final sel = isSelected(s);
+                  final idx = booked.indexWhere((x) => k(x) == key);
+                  final bookedState = idx >= 0;
+                  final status = bookedState ? booked[idx].status : null;
+                  final pending = status == 'pending';
+                  final confirmed = status == 'confirmed';
+      final bg = confirmed
+                      ? Colors.red.shade600
+                      : pending
+                          ? Colors.orange.shade600
+        : (sel ? Colors.orange.shade300 : Colors.green.shade600);
+                  final enabled = !bookedState;
+                  return InkWell(
+                    onTap: enabled ? () => onToggle(s) : null,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(16)),
+                      child: Text('${s.start}-${s.end}', style: const TextStyle(color: Colors.white)),
+                    ),
+                  );
+                }),
+            ],
+          ),
+      ],
+    );
+  }
+}
+
+// (Old day timeline removed in favor of focused slot list)

@@ -18,10 +18,16 @@ The Provider Dashboard is a comprehensive management interface designed for serv
 - **Service Actions**: Edit and delete functionality for existing services
 
 ### **3. Booking Management**
+- **Advanced Grouping System**: Bookings grouped by client relationship across dates and services
+- **Service Section Organization**: Multiple services per client grouped under expandable sections
 - **Booking Statistics**: Overview of pending, confirmed, completed, and cancelled bookings
 - **Recent Bookings**: List of recent bookings with client details and service information
-- **Booking Actions**: Accept, reject, and reschedule functionality
+- **Booking Actions**: Accept, reject, and reschedule functionality with per-slot granular controls
 - **Status Tracking**: Real-time status updates and notifications
+- **Multi-Service Support**: Clear separation of different services within client groups
+- **Relationship View**: Focus on client relationships rather than individual transactions
+- **Per-Slot Actions**: Individual booking actions (confirm, complete, cancel) for each time slot
+- **Date Aggregation**: Smart date grouping with service breakdowns for better organization
 
 ### **4. Earnings Management**
 - **Earnings Overview**: Total, monthly, weekly, and daily earnings with growth indicators
@@ -128,11 +134,18 @@ The Provider Dashboard is a comprehensive management interface designed for serv
 - Service management functionality
 - Add service interface
 
-#### **Bookings** (Updated Aug 2025)
+#### **Bookings** (Updated Sep 2025)
 - There are two booking views:
   - **My Client Bookings**: Jobs where the provider is the service provider. Cards show the client name. Default “All” filter excludes cancelled.
   - **My Bookings**: Bookings the provider made acting as a client (`GET /api/bookings?as=client`). Cards show the booked provider’s name.
 - Actions follow four statuses only: pending, confirmed, completed, cancelled.
+
+##### Recent fixes
+- Per-row status chips; robust grouping keys; server-side filtering and Refresh.
+- Cancel action hidden for already-cancelled rows.
+
+##### Known issue (tracking)
+- My Client Bookings grouping is still incorrect in some cases: separate cards appear for the same client instead of being grouped by client across dates/services. This is UI-only; actions still target single bookings. A fix is planned to unify grouping keys and merge groups with the same client identity.
 
 #### **EarningsWidget**
 - Earnings overview cards
@@ -285,6 +298,6 @@ frontend/lib/features/provider/
 
 ---
 
-**Last Updated**: December 2024
-**Version**: 1.1.0
-**Status**: ✅ Complete and Fully Implemented
+**Last Updated**: September 2025
+**Version**: 1.2.0
+**Status**: ✅ Implemented; minor UI grouping fix pending
