@@ -174,6 +174,7 @@ class BookingModel {
 	// Optional client info (for admin/provider listings)
 	final String? clientId;
 	final String? clientName;
+	final bool emergency;
 	final List<CancellationRequest> cancellationRequests;
 
 	BookingModel({
@@ -190,7 +191,8 @@ class BookingModel {
 		this.providerId,
 		this.providerName,
 		this.clientId,
-		this.clientName,
+			this.clientName,
+			this.emergency = false,
 		this.cancellationRequests = const [],
 	});
 
@@ -257,6 +259,13 @@ class BookingModel {
 					}
 					return null;
 				})(),
+				emergency: (() {
+					final e = json['emergency'] ?? json['isEmergency'] ?? false;
+					if (e is bool) return e;
+					if (e is String) return e.toLowerCase() == 'true';
+					if (e is num) return e != 0;
+					return false;
+				})(),
 				cancellationRequests: (() {
 					final list = json['cancellationRequests'];
 					if (list is List) {
@@ -320,12 +329,14 @@ class CreateBookingRequest {
 	final Schedule schedule;
 	final Location location;
 	final String? notes;
+	final bool? emergency;
 
 	CreateBookingRequest({
 		required this.serviceId,
 		required this.schedule,
 		required this.location,
 		this.notes,
+		this.emergency,
 	});
 
 	Map<String, dynamic> toJson() => {
@@ -333,6 +344,7 @@ class CreateBookingRequest {
 				'schedule': schedule.toJson(),
 				'location': location.toJson(),
 				if (notes != null) 'notes': notes,
+		if (emergency != null) 'emergency': emergency,
 			};
 }
 

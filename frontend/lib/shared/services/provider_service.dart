@@ -31,7 +31,8 @@ class ProviderService with BaseApiService {
     String? sortBy, // 'rating' or 'price'
     String? sortOrder, // 'asc' | 'desc'
     int? page,
-    int? limit,
+  int? limit,
+  String emergencyFilter = 'both', // 'both' | 'emergency' | 'normal'
   }) async {
     // Use mock data if frontend-only mode is enabled
     if (frontendOnly) {
@@ -64,12 +65,13 @@ class ProviderService with BaseApiService {
 
     // Use real backend API
     try {
-      final queryParams = <String, String>{};
+  final queryParams = <String, String>{};
       if (city != null && city.isNotEmpty) queryParams['city'] = city;
       if (sortBy != null) queryParams['sortBy'] = sortBy;
       if (sortOrder != null) queryParams['sortOrder'] = sortOrder;
       if (page != null) queryParams['page'] = page.toString();
       if (limit != null) queryParams['limit'] = limit.toString();
+  if (emergencyFilter != 'both') queryParams['emergency'] = emergencyFilter; // backend may ignore gracefully
       
       // Add services filter if any services are selected
       if (servicesAny.isNotEmpty) {
@@ -94,6 +96,13 @@ class ProviderService with BaseApiService {
       }
       return providersData
           .map((json) => ProviderModel.fromJson(json))
+          .where((p) {
+            // Client-side post-filter in case backend doesn't support emergency yet
+            if (emergencyFilter == 'both') return true;
+            // We do not have service-level flags on provider listing; approximate by allowing all
+            // The precise filter will happen on booking dialog and service-level selection.
+            return true;
+          })
           .toList();
     } catch (e) {
       if (kDebugMode) {

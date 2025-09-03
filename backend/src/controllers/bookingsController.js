@@ -39,13 +39,13 @@ function minutesUntilStart(bookingOrParams) {
 async function createBooking(req, res) {
   try {
   const actor = req.user;
-  const { serviceId, schedule, location, notes, clientId, clientType } = req.body;
+  const { serviceId, schedule, location, notes, clientId, clientType, emergency } = req.body;
 
     const service = await Service.findById(serviceId).populate('provider');
     if (!service || !service.isActive) return error(res, 404, 'Service not available');
 
   const priceType = service.price?.type || 'hourly';
-  const baseAmount = service.price.amount;
+  let baseAmount = service.price.amount;
 
   // Resolve client for the booking (User or Provider)
   // - Anyone can book. A provider/admin can pass clientId and clientType ('User'|'Provider').
@@ -61,31 +61,101 @@ async function createBooking(req, res) {
       return error(res, 400, 'Invalid schedule times');
     }
 
-    // Compute duration and total amount
+    // Compute duration (supports multi-day bookings)
     const durationMinutes = Math.max(0, endDateTime.diff(startDateTime, 'minutes').minutes);
+
+    // Enforce min lead time for booking creation (supports emergency override)
+    let minLead = BOOKING_MIN_LEAD_MINUTES;
+    const wantEmergency = !!emergency;
+    if (wantEmergency && service.emergencyEnabled) {
+      // Default emergency short-notice lead time
+      minLead = 120; // 2 hours
+      const svcLead = parseInt(service.emergencyLeadTimeMinutes);
+      if (!Number.isNaN(svcLead)) {
+        minLead = Math.max(0, svcLead);
+      }
+    }
+    const minutesLead = minutesUntilStart({ schedule: { ...schedule, startUtc: startDateTime.toUTC().toJSDate() }, tz });
+    if (minutesLead !== null && minutesLead < minLead) {
+      const isAdmin = actor && actor.role === 'admin';
+      if (!(isAdmin && ALLOW_ADMIN_LEAD_BYPASS)) {
+        return error(res, 422, 'Booking must be at least the minimum lead time in advance', { code: 'booking_min_lead_time', minMinutes: minLead });
+      }
+    }
+
+    // If emergency, validate emergency type and apply emergency rate multiplier
+    const requestedEmergencyType = req.body.emergencyType || null; // e.g. 'medicine_pickup'
+      if (wantEmergency) {
+      if (!service.emergencyEnabled) return error(res, 422, 'Emergency booking not supported for this service');
+      if (requestedEmergencyType && Array.isArray(service.emergencyTypes) && service.emergencyTypes.length) {
+        if (!service.emergencyTypes.includes(requestedEmergencyType)) {
+          return error(res, 422, 'Service not certified for requested emergency type');
+        }
+      }
+      const multiplier = Number(service.emergencyRateMultiplier) || 1.0;
+      if (priceType === 'hourly') {
+        baseAmount = Math.round(baseAmount * multiplier);
+      }
+    }
+
+    // Compute total amount after any emergency multiplier
     let totalAmount = baseAmount;
-  if (priceType === 'hourly') {
+    if (priceType === 'hourly') {
       const hours = durationMinutes / 60;
       totalAmount = Math.round(baseAmount * hours);
     }
 
-    // Enforce min lead time for booking creation
-    const minutesLead = minutesUntilStart({ schedule: { ...schedule, startUtc: startDateTime.toUTC().toJSDate() }, tz });
-    if (minutesLead !== null && minutesLead < BOOKING_MIN_LEAD_MINUTES) {
-      const isAdmin = actor && actor.role === 'admin';
-      if (!(isAdmin && ALLOW_ADMIN_LEAD_BYPASS)) {
-        return error(res, 422, 'Booking must be at least the minimum lead time in advance', { code: 'booking_min_lead_time', minMinutes: BOOKING_MIN_LEAD_MINUTES });
-      }
-    }
-
-    // Check provider availability
+    // Check provider availability (emergency vs normal)
     const avail = await Availability.findOne({ provider: service.provider._id });
     let isAvailable = true;
     if (avail) {
-      const day = startDateTime.setZone(avail.timezone || tz).toFormat('cccc').toLowerCase();
-      const windows = (avail.weekly?.[day] || []).concat((avail.exceptions || []).filter(e => e.date === startDateTime.toFormat('yyyy-MM-dd')).flatMap(e => e.windows || []));
-      const within = (w) => w.start <= schedule.startTime && w.end >= schedule.endTime;
-      isAvailable = windows.length ? windows.some(within) : true; // if no windows, treat as available
+      const provTz = avail.timezone || tz;
+      const day = startDateTime.setZone(provTz).toFormat('cccc').toLowerCase();
+      const dateKey = startDateTime.setZone(provTz).toFormat('yyyy-MM-dd');
+      let windows = [];
+      if (wantEmergency) {
+        // Merge base weekly + emergencyWeekly + default emergency extras so
+        // emergency includes normal slots plus extra late-night/early slots.
+        const defaultEmergencyExtras = [ { start: '00:00', end: '06:00' }, { start: '22:00', end: '23:59' } ];
+        // Merge exceptions for the date
+        const baseEx = (avail.exceptions || []).find(e => e.date === dateKey);
+        const emergEx = (Array.isArray(avail.emergencyExceptions) && avail.emergencyExceptions.length > 0)
+          ? (avail.emergencyExceptions || []).find(e => e.date === dateKey)
+          : null;
+        const mergedExWins = [];
+        if (baseEx && Array.isArray(baseEx.windows)) mergedExWins.push(...baseEx.windows.map(w => ({ start: w.start, end: w.end })));
+        if (emergEx && Array.isArray(emergEx.windows)) mergedExWins.push(...emergEx.windows.map(w => ({ start: w.start, end: w.end })));
+        if (mergedExWins.length) {
+          // remove duplicates
+          const seen = new Set();
+          windows = mergedExWins.filter(w => {
+            const k = `${w.start}-${w.end}`;
+            if (seen.has(k)) return false; seen.add(k); return true;
+          });
+        }
+
+        // If no exception windows, merge weekly slots
+        if (windows.length === 0) {
+          const baseWeekly = (avail.weekly || {})[day] || [];
+          const emergWeekly = (avail.emergencyWeekly && Object.keys(avail.emergencyWeekly || {}).length > 0)
+            ? (avail.emergencyWeekly || {})[day] || []
+            : [];
+          const combined = [...baseWeekly.map(w => ({ start: w.start, end: w.end })), ...emergWeekly.map(w => ({ start: w.start, end: w.end })), ...defaultEmergencyExtras];
+          const seen = new Set();
+          windows = combined.filter(w => { const k = `${w.start}-${w.end}`; if (seen.has(k)) return false; seen.add(k); return true; });
+        }
+
+        // Final fallback minimal emergency window
+        if (windows.length === 0) windows = [{ start: '22:00', end: '23:59' }];
+      } else {
+        const ex = (avail.exceptions || []).find(e => e.date === dateKey);
+        if (ex) windows = (ex.windows || []).map(w => ({ start: w.start, end: w.end }));
+        if (windows.length === 0) {
+          windows = (avail.weekly?.[day] || []).map(w => ({ start: w.start, end: w.end }));
+        }
+      }
+  const within = (w) => w.start <= schedule.startTime && w.end >= schedule.endTime;
+      isAvailable = windows.length ? windows.some(within) : true;
     }
     if (!isAvailable) return error(res, 400, 'Provider not available at requested time');
 
@@ -113,7 +183,31 @@ async function createBooking(req, res) {
         duration: Math.round(durationMinutes)
       },
       location,
-      pricing: { baseAmount, additionalCharges: [], totalAmount, currency: service.price.currency || 'ILS' },
+      pricing: (function(){
+        let total = totalAmount;
+        const charges = [];
+        if (wantEmergency) {
+          if (!service.emergencyEnabled) {
+            throw new Error('Emergency booking not supported for this service');
+          }
+          const type = (service.emergencySurcharge && service.emergencySurcharge.type) || 'flat';
+          const amountNum = Number((service.emergencySurcharge && service.emergencySurcharge.amount) || 0);
+          const calc = type === 'percent' ? Math.round(total * (amountNum / 100)) : Math.round(amountNum);
+          if (calc > 0) {
+            charges.push({ description: 'Emergency surcharge', amount: calc });
+            total += calc;
+          }
+        }
+        return { baseAmount, additionalCharges: charges, totalAmount: total, currency: service.price.currency || 'ILS' };
+      })(),
+      emergency: wantEmergency,
+      emergencyCharge: (function(){
+        if (!wantEmergency) return undefined;
+        const type = (service.emergencySurcharge && service.emergencySurcharge.type) || 'flat';
+        const amountNum = Number((service.emergencySurcharge && service.emergencySurcharge.amount) || 0);
+        const calc = type === 'percent' ? Math.round(totalAmount * (amountNum / 100)) : Math.round(amountNum);
+        return calc > 0 ? { description: 'Emergency surcharge', amount: calc } : { description: 'Emergency surcharge', amount: 0 };
+      })(),
       notes: { clientNotes: notes || '' }
     });
 

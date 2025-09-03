@@ -1060,6 +1060,14 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 decoration: BoxDecoration(color: (statusInfo['color'] as Color).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(isMobile ? 8.0 : 12.0)),
                 child: Text(statusAllSame ? statusInfo['label'] : 'Multiple', style: GoogleFonts.cairo(fontSize: isMobile ? 12.0 : 14.0, fontWeight: FontWeight.w600, color: statusInfo['color'] as Color)),
               ),
+              const SizedBox(width: 8),
+              if (group.any((b) => b.emergency)) ...[
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: isMobile ? 8.0 : 10.0, vertical: isMobile ? 4.0 : 6.0),
+                  decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(isMobile ? 8.0 : 12.0)),
+                  child: Text('Emergency', style: GoogleFonts.cairo(fontSize: isMobile ? 12.0 : 13.0, fontWeight: FontWeight.w700, color: Colors.red)),
+                ),
+              ],
               if (_selectedFilter == 4)
                 IconButton(
                   tooltip: _getLocalizedString('remove'),
@@ -1130,6 +1138,14 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                               ),
                             );
                           })(),
+                          if (b.emergency) ...[
+                            Container(
+                              margin: const EdgeInsets.only(right: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
+                              child: Text('Emergency', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.red)),
+                            ),
+                          ],
                           Expanded(child: Text(line, style: GoogleFonts.cairo(fontSize: isMobile ? 13 : 14, color: AppColors.textPrimary))),
                           if (canCancel)
                             OutlinedButton.icon(

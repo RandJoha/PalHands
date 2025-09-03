@@ -17,9 +17,24 @@ const availabilitySchema = new mongoose.Schema({
     saturday: [timeWindowSchema],
     sunday: [timeWindowSchema]
   },
+  // Optional, dedicated emergency schedule separate from normal weekly windows
+  emergencyWeekly: {
+    monday: [timeWindowSchema],
+    tuesday: [timeWindowSchema],
+    wednesday: [timeWindowSchema],
+    thursday: [timeWindowSchema],
+    friday: [timeWindowSchema],
+    saturday: [timeWindowSchema],
+    sunday: [timeWindowSchema]
+  },
   exceptions: [{
     date: { type: String, required: true }, // YYYY-MM-DD in provider TZ
     windows: [timeWindowSchema] // empty means unavailable
+  }],
+  // Optional, dedicated emergency exceptions
+  emergencyExceptions: [{
+    date: { type: String, required: true }, // YYYY-MM-DD in provider TZ
+    windows: [timeWindowSchema] // empty means unavailable for emergency mode
   }]
 }, { timestamps: true });
 

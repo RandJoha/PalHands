@@ -30,7 +30,9 @@ router.get('/:providerId/resolve', celebrate({
   [Segments.QUERY]: Joi.object({
     from: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).optional(),
     to: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).optional(),
-    step: Joi.number().integer().min(10).max(180).optional()
+  step: Joi.number().integer().min(10).max(180).optional(),
+  emergency: Joi.boolean().optional(),
+  serviceId: Joi.string().hex().length(24).optional()
   })
 }), availabilityController.getResolvedAvailability);
 

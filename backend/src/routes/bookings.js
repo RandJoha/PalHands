@@ -21,7 +21,8 @@ const createBookingValidator = celebrate({
       coordinates: Joi.object({ latitude: Joi.number(), longitude: Joi.number() }).optional(),
       instructions: Joi.string().allow('').optional()
     }).required(),
-    notes: Joi.string().allow('').optional()
+  notes: Joi.string().allow('').optional(),
+  emergency: Joi.boolean().optional()
   })
 });
 

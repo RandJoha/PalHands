@@ -78,6 +78,14 @@ const bookingSchema = new mongoose.Schema({
       default: 'ILS'
     }
   },
+  emergency: {
+    type: Boolean,
+    default: false
+  },
+  emergencyCharge: {
+    description: { type: String, default: 'Emergency surcharge' },
+    amount: { type: Number, default: 0 }
+  },
   status: {
     type: String,
     enum: [

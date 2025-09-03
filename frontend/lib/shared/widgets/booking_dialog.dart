@@ -14,6 +14,7 @@ import 'app_toast.dart';
 import '../services/auth_service.dart';
 import '../services/services_service.dart';
 import '../services/services_service.dart' as svc;
+import '../config/emergency_services.dart';
 import '../services/availability_service.dart';
 // Calendar UI will be declared at bottom of this file for simplicity
 
@@ -67,6 +68,36 @@ class _BookingDialogState extends State<BookingDialog> {
   String _calendarMode = 'month'; // 'month' | 'day'
   DateTime? _dayViewDate; // when in day mode
   // Same-day booking is not allowed per product rules (UI mirrors backend)
+  bool _emergency = false; // emergency booking mode
+  bool get _supportsEmergency {
+    // If we have service documents for this provider, prefer checking them
+    if (_providerServices.isNotEmpty) {
+      if (_selectedServiceId != null && _selectedServiceId!.isNotEmpty) {
+        final selected = _providerServices.firstWhere(
+          (s) => s.id == _selectedServiceId,
+          orElse: () => _providerServices.first,
+        );
+        final slug = (selected.slug.isNotEmpty) ? selected.slug : svc.ServiceModel.generateSlug(selected.title);
+        return selected.emergencyEnabled && kEmergencyServiceSlugs.contains(slug);
+      }
+      return _providerServices.any((s) {
+        final slug = (s.slug.isNotEmpty) ? s.slug : svc.ServiceModel.generateSlug(s.title);
+        return s.emergencyEnabled && kEmergencyServiceSlugs.contains(slug);
+      });
+    }
+
+    // Fallback when service documents are not available: inspect the provider
+    // service keys (strings shown on provider card). If any of those keys map
+    // to a known emergency slug, allow the toggle. This mirrors Khaled's UX
+    // when services are linked properly.
+    try {
+      final keys = widget.provider.services.map((e) => e.toString().toLowerCase()).toList();
+      for (final s in kEmergencyServiceSlugs) {
+        if (keys.contains(s.toLowerCase())) return true;
+      }
+    } catch (_) {}
+    return false;
+  }
 
   @override
   void initState() {
@@ -106,7 +137,14 @@ class _BookingDialogState extends State<BookingDialog> {
     try {
       final from = DateTime.now().add(const Duration(days: 0));
       final to = from.add(const Duration(days: 31));
-  final r = await _availabilityService.getResolvedAvailability(widget.provider.id, from: from, to: to, stepMinutes: 60);
+  final r = await _availabilityService.getResolvedAvailability(
+    widget.provider.id,
+    from: from,
+    to: to,
+    stepMinutes: 60,
+    emergency: _emergency,
+    serviceId: _selectedServiceId,
+  );
       if (!mounted) return;
       setState(() {
         _resolved = r;
@@ -119,11 +157,13 @@ class _BookingDialogState extends State<BookingDialog> {
     try {
       final from = DateTime(monthStart.year, monthStart.month, 1);
       final to = DateTime(monthStart.year, monthStart.month + 1, 0);
-      final r = await _availabilityService.getResolvedAvailability(
+    final r = await _availabilityService.getResolvedAvailability(
         widget.provider.id,
         from: from,
         to: to,
-        stepMinutes: 60,
+  stepMinutes: 60,
+  emergency: _emergency,
+  serviceId: _selectedServiceId,
       );
       if (!mounted) return;
       setState(() {
@@ -133,6 +173,19 @@ class _BookingDialogState extends State<BookingDialog> {
     } catch (_) {
       // ignore
     }
+  }
+
+  void _toggleEmergency(bool value) {
+    if (!_supportsEmergency) {
+      // Ignore toggle if not supported
+      return;
+    }
+    setState(() {
+      _emergency = value;
+      // Refresh resolved availability with emergency consideration
+      _resolved = null;
+    });
+    _loadResolvedForMonth(_calendarMonth);
   }
 
   void _changeMonth(int delta) {
@@ -344,10 +397,37 @@ class _BookingDialogState extends State<BookingDialog> {
       }
     }
     final priceType = (selected?.price.type ?? 'hourly');
-    final amount = (selected?.price.amount ?? widget.provider.hourlyRate).toDouble();
+    double amount = (selected?.price.amount ?? widget.provider.hourlyRate).toDouble();
+    // Apply emergency multiplier if selected and supported. If we don't have
+    // a selected service document (selected==null), attempt to infer a
+    // multiplier from provider-level info by checking provider.services keys
+    // against our whitelist and applying a conservative multiplier.
+    if (_emergency) {
+      if (selected != null && selected.emergencyEnabled) {
+        final multiplier = selected.emergencyRateMultiplier;
+        amount = (amount * multiplier);
+      } else {
+        // fallback multiplier to mirror Khaled's UX
+        final keys = widget.provider.services.map((e) => e.toLowerCase()).toList();
+        if (keys.any((k) => kEmergencyServiceSlugs.contains(k) )) {
+          amount = amount * 1.6;
+        }
+      }
+    }
     if (priceType == 'hourly') {
       final hours = totalMinutes / 60.0;
-      return hours * amount;
+      double total = hours * amount;
+      // Apply emergency surcharge (flat or percent)
+      if (_emergency && selected != null && selected.emergencyEnabled) {
+        final type = selected.emergencySurchargeType;
+        final amt = selected.emergencySurchargeAmount;
+        if (type == 'percent') {
+          total += (total * (amt / 100.0));
+        } else {
+          total += amt;
+        }
+      }
+      return total;
     }
     // fixed/daily: multiply by number of segments if any, else single
     final segmentsCount = segs.isNotEmpty ? segs.values.fold<int>(0, (acc, v) => acc + v.length) : 1;
@@ -432,6 +512,7 @@ class _BookingDialogState extends State<BookingDialog> {
                 schedule: schedule,
                 location: location,
                 notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+                emergency: _emergency,
               );
               await _bookingService.createBooking(request);
               success++;
@@ -452,6 +533,7 @@ class _BookingDialogState extends State<BookingDialog> {
           schedule: schedule,
           location: location,
           notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+          emergency: _emergency,
         );
         await _bookingService.createBooking(request);
         success = 1;
@@ -716,7 +798,7 @@ class _BookingDialogState extends State<BookingDialog> {
 
   Widget _buildProviderInfo() {
     return Container(
-    padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12.0),
@@ -725,18 +807,18 @@ class _BookingDialogState extends State<BookingDialog> {
       child: Row(
         children: [
           CircleAvatar(
-      radius: 24,
+            radius: 24,
             backgroundColor: AppColors.primary,
             child: Text(
               widget.provider.name.substring(0, 1).toUpperCase(),
               style: TextStyle(
-        fontSize: 16,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
             ),
           ),
-      const SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -744,11 +826,11 @@ class _BookingDialogState extends State<BookingDialog> {
                 Text(
                   widget.provider.name,
                   style: TextStyle(
-          fontSize: 16,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-        const SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Builder(
                   builder: (context) {
                     final languageCode = Provider.of<LanguageService>(context, listen: false).currentLanguage;
@@ -768,15 +850,29 @@ class _BookingDialogState extends State<BookingDialog> {
                     );
                   },
                 ),
-        const SizedBox(height: 4),
+                const SizedBox(height: 4),
+                // Hourly rate (updates when emergency toggled)
                 Builder(
                   builder: (context) {
                     final languageCode = Provider.of<LanguageService>(context, listen: false).currentLanguage;
-                    final rate = widget.provider.hourlyRate.toStringAsFixed(0);
+                    // Compute displayed hourly rate depending on selected service and emergency toggle
+                    double baseRate = widget.provider.hourlyRate.toDouble();
+                    svc.ServiceModel? selected;
+                    if (_providerServices.isNotEmpty && _selectedServiceId != null) {
+                      try {
+                        selected = _providerServices.firstWhere((s) => s.id == _selectedServiceId);
+                      } catch (_) { selected = null; }
+                    }
+                    final svcPrice = selected?.price.amount;
+                    if (svcPrice != null) baseRate = svcPrice.toDouble();
+                    double displayRate = baseRate;
+                    if (_emergency && selected != null && selected.emergencyEnabled) {
+                      displayRate = baseRate * selected.emergencyRateMultiplier;
+                    }
+                    final rateText = displayRate.toStringAsFixed(0);
                     final per = AppStrings.getString('hourly', languageCode);
-                    // For RTL, show label then amount; for LTR, amount then label
                     final isRtl = Directionality.of(context) == TextDirection.rtl;
-                    final text = isRtl ? '$per /₪$rate' : '₪$rate/$per';
+                    final text = isRtl ? '$per /₪$rateText' : '₪$rateText/$per';
                     return Text(
                       text,
                       style: TextStyle(
@@ -889,7 +985,9 @@ class _BookingDialogState extends State<BookingDialog> {
     Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Text(
-        AppStrings.getString('earliestBookingDate', lang),
+        _emergency
+            ? (lang == 'ar' ? 'الطوارئ: قد تتوفر مواعيد في نفس اليوم وفق توفر المزود' : 'Emergency: same-day slots may be available if the provider supports it')
+            : AppStrings.getString('earliestBookingDate', lang),
         style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
       ),
     ),
@@ -899,6 +997,23 @@ class _BookingDialogState extends State<BookingDialog> {
         'Availability loaded for provider (${_availability!.timezone}). Times outside availability will be rejected.',
         style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
       ),
+    ),
+    Row(
+      children: [
+        Switch(
+          value: _emergency && _supportsEmergency,
+          onChanged: _supportsEmergency ? (v) => _toggleEmergency(v) : null,
+        ),
+        const SizedBox(width: 8),
+        Text('Emergency (short notice)', style: TextStyle(color: Colors.grey.shade800)),
+        if (!_supportsEmergency) ...[
+          const SizedBox(width: 8),
+          Tooltip(
+            message: 'Not available for this service',
+            child: Icon(Icons.info_outline, size: 16, color: Colors.grey.shade600),
+          )
+        ]
+      ],
     ),
     // Calendar with resolved availability (falls back to pickers if not loaded)
     if (_resolved != null) ...[

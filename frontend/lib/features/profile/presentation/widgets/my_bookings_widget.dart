@@ -153,6 +153,7 @@ class _MyBookingsWidgetState extends State<MyBookingsWidget> {
           status: 'Pending',
           statusColor: AppColors.warning,
           price: '₪200',
+          emergency: true,
         ),
         SizedBox(height: 16.h),
         _buildBookingItem(
@@ -174,6 +175,7 @@ class _MyBookingsWidgetState extends State<MyBookingsWidget> {
     required String status,
     required Color statusColor,
     required String price,
+  bool emergency = false,
   }) {
     return Container(
       padding: EdgeInsets.all(20.w),
@@ -240,7 +242,8 @@ class _MyBookingsWidgetState extends State<MyBookingsWidget> {
                     ),
                   ),
                   SizedBox(height: 4.h),
-                  Container(
+                  Row(children: [
+                    Container(
                     padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                     decoration: BoxDecoration(
                       color: statusColor.withValues(alpha: 0.1),
@@ -255,6 +258,15 @@ class _MyBookingsWidgetState extends State<MyBookingsWidget> {
                       ),
                     ),
                   ),
+                    if (emergency) ...[
+                      SizedBox(width: 8.w),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8.r)),
+                        child: Text('Emergency', style: GoogleFonts.cairo(fontSize: 12.sp, fontWeight: FontWeight.w700, color: Colors.red)),
+                      ),
+                    ],
+                  ]),
                 ],
               ),
             ],

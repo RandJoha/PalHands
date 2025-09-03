@@ -118,4 +118,15 @@ router.post('/:id/images/attach', auth, checkRole(['admin']), celebrate({
 }), servicesController.attachServiceImages);
 router.post('/:id/images/cleanup', auth, checkRole(['admin']), servicesController.cleanupServiceImages);
 
+// Admin-only: emergency config for a service
+router.post('/:id/emergency', auth, checkRole(['admin']), celebrate({
+  [Segments.BODY]: Joi.object({
+    emergencyEnabled: Joi.boolean().optional(),
+    emergencyRateMultiplier: Joi.number().min(1).optional(),
+    emergencyLeadTimeMinutes: Joi.number().min(0).optional(),
+    emergencySurcharge: Joi.object({ type: Joi.string().valid('flat','percent').required(), amount: Joi.number().min(0).required() }).optional(),
+    emergencyTypes: Joi.array().items(Joi.string()).optional()
+  }).min(1)
+}), servicesController.setServiceEmergency);
+
 module.exports = router;

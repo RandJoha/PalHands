@@ -206,6 +206,7 @@ class _BookingsAsClientWidgetState extends State<BookingsAsClientWidget> {
     }).join('; ');
     final total = group.fold<double>(0.0, (sum, b) => sum + b.pricing.totalAmount);
     final price = '₪${total.toStringAsFixed(0)}';
+  final groupHasEmergency = group.any((b) => b.emergency);
     final providerName = b0.providerName ?? '';
     final address = b0.location.address;
     final notes = b0.notes ?? '';
@@ -252,6 +253,12 @@ class _BookingsAsClientWidgetState extends State<BookingsAsClientWidget> {
           _row(Icons.location_on, AppStrings.getString('address', Provider.of<LanguageService>(context, listen:false).currentLanguage), address, isMobile),
           const SizedBox(height: 8),
           _row(Icons.attach_money, AppStrings.getString('estimatedCost', Provider.of<LanguageService>(context, listen:false).currentLanguage), price, isMobile),
+          if (groupHasEmergency) const SizedBox(height:6),
+          if (groupHasEmergency) Container(
+            padding: const EdgeInsets.symmetric(horizontal:8, vertical:4),
+            decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.red.withOpacity(0.3))),
+            child: Text('Emergency', style: GoogleFonts.cairo(fontSize: isMobile ? 10 : 12, fontWeight: FontWeight.w700, color: Colors.red)),
+          ),
           const SizedBox(height: 12),
           // Per-slot actions
           Column(

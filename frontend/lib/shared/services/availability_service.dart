@@ -76,11 +76,15 @@ class AvailabilityService with BaseApiService {
     DateTime? from,
     DateTime? to,
   int stepMinutes = 60,
+  bool emergency = false,
+  String? serviceId,
   }) async {
     try {
       final params = <String, String>{
         'step': stepMinutes.toString(),
       };
+  if (emergency) params['emergency'] = 'true';
+      if (serviceId != null && serviceId.isNotEmpty) params['serviceId'] = serviceId;
       if (from != null) params['from'] = _dateKey(from);
       if (to != null) params['to'] = _dateKey(to);
       final qp = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');

@@ -222,4 +222,27 @@ async function cleanupServiceImages(req, res) {
   }
 }
 
-module.exports = { listServices, getServiceById, createService, updateService, deleteService, uploadServiceImages, presignServiceImages, attachServiceImages, cleanupServiceImages };
+// Admin: set emergency configuration for a service
+async function setServiceEmergency(req, res) {
+  try {
+    const service = await Service.findById(req.params.id);
+    if (!service) return error(res, 404, 'Service not found');
+    // Only admins (route guarded) or owner can set; double-check policies
+    if (!servicePolicies.canModify(req.user, service)) return error(res, 403, 'Not allowed');
+
+    const { emergencyEnabled, emergencyRateMultiplier, emergencySurcharge, emergencyTypes, emergencyLeadTimeMinutes } = req.body || {};
+    if (typeof emergencyEnabled === 'boolean') service.emergencyEnabled = emergencyEnabled;
+    if (typeof emergencyRateMultiplier === 'number') service.emergencyRateMultiplier = emergencyRateMultiplier;
+    if (emergencySurcharge && typeof emergencySurcharge === 'object') service.emergencySurcharge = emergencySurcharge;
+    if (Array.isArray(emergencyTypes)) service.emergencyTypes = emergencyTypes;
+    if (typeof emergencyLeadTimeMinutes === 'number') service.emergencyLeadTimeMinutes = emergencyLeadTimeMinutes;
+    service.updatedAt = Date.now();
+    await service.save();
+    return ok(res, service, 'Service emergency configuration updated');
+  } catch (e) {
+    console.error('setServiceEmergency error', e);
+    return error(res, 400, e.message || 'Failed to update emergency config');
+  }
+}
+
+module.exports = { listServices, getServiceById, createService, updateService, deleteService, uploadServiceImages, presignServiceImages, attachServiceImages, cleanupServiceImages, setServiceEmergency };

@@ -9,7 +9,7 @@ async function listProviders(req, res) {
   try {
     const { parsePagination } = require('../utils/pagination');
     const { page, limit, skip } = parsePagination(req.query);
-    const { city, services, category, sortBy, sortOrder, q } = req.query;
+  const { city, services, category, sortBy, sortOrder, q, emergency, emergencyType } = req.query;
 
     // Build filter
     const filter = { isActive: true };
@@ -43,6 +43,34 @@ async function listProviders(req, res) {
       sortOptions = { 'rating.average': sortOrder === 'asc' ? 1 : -1 };
     } else if (sortBy === 'price') {
       sortOptions = { hourlyRate: sortOrder === 'asc' ? 1 : -1 };
+    }
+
+    // If emergency filter is requested, precompute provider IDs that have at least one emergency-enabled service
+    let providerIdsEmergency = null;
+    if (emergency === 'emergency' || emergency === 'normal' || emergencyType) {
+      try {
+        const Service = require('../models/Service');
+        const match = { emergencyEnabled: true };
+        if (emergencyType) match.emergencyTypes = emergencyType;
+        const svcAgg = await Service.aggregate([
+          { $match: match },
+          { $group: { _id: '$provider' } }
+        ]);
+        providerIdsEmergency = new Set(svcAgg.map(x => String(x._id)));
+      } catch (_) {}
+    }
+
+    if (providerIdsEmergency) {
+      if (emergency === 'emergency') {
+        filter._id = { $in: Array.from(providerIdsEmergency) };
+      } else if (emergency === 'normal') {
+        filter._id = filter._id || {};
+        filter._id.$nin = Array.from(providerIdsEmergency);
+      }
+      // If only emergencyType was provided without emergency flag, narrow to providers with that type
+      if (emergencyType && !emergency) {
+        filter._id = { $in: Array.from(providerIdsEmergency) };
+      }
     }
 
     const providers = await Provider.find(filter)

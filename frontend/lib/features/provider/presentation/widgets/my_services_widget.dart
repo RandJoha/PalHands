@@ -19,13 +19,15 @@ class MyServicesWidget extends StatefulWidget {
 class _MyServicesWidgetState extends State<MyServicesWidget> {
   bool _isMultiEditMode = false;
   final Set<int> _selectedServices = {};
+  bool _showEmergencyOnly = false;
 
   final List<Map<String, dynamic>> _services = [
     {
       'id': 1,
       'name': 'homeCleaning',
       'price': '\$25/hour',
-      'status': 'active',
+  'status': 'active',
+  'emergency': false,
       'rating': 4.8,
       'bookings': 12,
     },
@@ -33,7 +35,8 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
       'id': 2,
       'name': 'elderlyCare',
       'price': '\$30/hour',
-      'status': 'active',
+  'status': 'active',
+  'emergency': true,
       'rating': 4.9,
       'bookings': 8,
     },
@@ -41,7 +44,8 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
       'id': 3,
       'name': 'homeCooking',
       'price': '\$20/hour',
-      'status': 'inactive',
+  'status': 'inactive',
+  'emergency': false,
       'rating': 4.7,
       'bookings': 5,
     },
@@ -49,7 +53,8 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
       'id': 4,
       'name': 'babysitting',
       'price': '\$18/hour',
-      'status': 'active',
+  'status': 'active',
+  'emergency': true,
       'rating': 4.6,
       'bookings': 15,
     },
@@ -216,7 +221,51 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
               ),
             ),
             SizedBox(width: isMobile ? 8.0 : (isTablet ? 12.0 : 16.0)),
-            
+            // Emergency filter toggle
+            Container(
+              height: isMobile ? 36 : (isTablet ? 40 : 44),
+              decoration: BoxDecoration(
+                color: _showEmergencyOnly ? AppColors.error : AppColors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: _showEmergencyOnly ? AppColors.error : AppColors.grey.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () {
+                    setState(() {
+                      _showEmergencyOnly = !_showEmergencyOnly;
+                    });
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.warning,
+                          size: isMobile ? 14 : (isTablet ? 15 : 16),
+                          color: _showEmergencyOnly ? AppColors.white : AppColors.grey,
+                        ),
+                        SizedBox(width: 6),
+                        Text(
+                          AppStrings.getString('emergencyOnly', languageService.currentLanguage),
+                          style: GoogleFonts.cairo(
+                            fontSize: isMobile ? 10.0 : (isTablet ? 11.0 : 12.0),
+                            fontWeight: FontWeight.w600,
+                            color: _showEmergencyOnly ? AppColors.white : AppColors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: isMobile ? 8.0 : (isTablet ? 12.0 : 16.0)),
             // Multi-edit toggle button
             Container(
               height: isMobile ? 36 : (isTablet ? 40 : 44),
@@ -414,7 +463,8 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
       mainAxisSpacing = 16.0;
     }
 
-    return GridView.builder(
+  final items = _showEmergencyOnly ? _services.where((s) => (s['emergency'] ?? false) == true).toList() : _services;
+  return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -423,9 +473,9 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
         mainAxisSpacing: mainAxisSpacing,
         childAspectRatio: childAspectRatio,
       ),
-      itemCount: _services.length,
+      itemCount: items.length,
       itemBuilder: (context, index) {
-        return _buildServiceCard(_services[index], index, languageService, isMobile, isTablet, isDesktop);
+        return _buildServiceCard(items[index], index, languageService, isMobile, isTablet, isDesktop);
       },
     );
   }

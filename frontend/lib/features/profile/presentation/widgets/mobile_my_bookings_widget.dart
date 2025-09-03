@@ -158,6 +158,7 @@ class _MobileMyBookingsWidgetState extends State<MobileMyBookingsWidget> {
           status: 'Pending',
           statusColor: AppColors.warning,
           price: '₪200',
+          emergency: true,
         ),
         const SizedBox(height: 16),
         _buildBookingItem(
@@ -179,6 +180,7 @@ class _MobileMyBookingsWidgetState extends State<MobileMyBookingsWidget> {
     required String status,
     required Color statusColor,
     required String price,
+  bool emergency = false,
   }) {
     return Container(
       width: double.infinity,
@@ -246,21 +248,31 @@ class _MobileMyBookingsWidgetState extends State<MobileMyBookingsWidget> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      status,
-                      style: GoogleFonts.cairo(
-                        fontSize: 12,
-                        color: statusColor,
-                        fontWeight: FontWeight.w600,
+                  Row(children:[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        status,
+                        style: GoogleFonts.cairo(
+                          fontSize: 12,
+                          color: statusColor,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ),
+                    if (emergency) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
+                        child: Text('Emergency', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.red)),
+                      ),
+                    ],
+                  ]),
                 ],
               ),
             ],

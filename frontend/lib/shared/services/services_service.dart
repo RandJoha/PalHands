@@ -5,6 +5,7 @@ import '../../core/constants/api_config.dart';
 
 class ServiceModel {
   final String id;
+  final String slug;
   final String title;
   final String description;
   final String category;
@@ -21,9 +22,15 @@ class ServiceModel {
   final bool featured;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool emergencyEnabled;
+  final int emergencyLeadTimeMinutes;
+  final String emergencySurchargeType; // flat | percent
+  final double emergencySurchargeAmount;
+  final double emergencyRateMultiplier;
 
   const ServiceModel({
     required this.id,
+  this.slug = '',
     required this.title,
     required this.description,
     required this.category,
@@ -40,11 +47,17 @@ class ServiceModel {
     required this.featured,
     required this.createdAt,
     required this.updatedAt,
+  this.emergencyEnabled = false,
+  this.emergencyLeadTimeMinutes = 120,
+  this.emergencySurchargeType = 'flat',
+  this.emergencySurchargeAmount = 0,
+  this.emergencyRateMultiplier = 1.5,
   });
 
   factory ServiceModel.fromJson(Map<String, dynamic> json) {
     return ServiceModel(
       id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
+  slug: (json['slug'] ?? json['code'] ?? '')?.toString() ?? '',
       title: json['title'] ?? '',
       description: json['description'] ?? '',
       category: json['category'] ?? '',
@@ -67,7 +80,28 @@ class ServiceModel {
       featured: json['featured'] ?? false,
       createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
       updatedAt: DateTime.tryParse(json['updatedAt'] ?? '') ?? DateTime.now(),
+    emergencyEnabled: (json['emergencyEnabled'] ?? false) as bool,
+    emergencyLeadTimeMinutes: (json['emergencyLeadTimeMinutes'] as num?)?.toInt() ?? 120,
+    emergencySurchargeType: (json['emergencySurcharge'] is Map)
+      ? ((json['emergencySurcharge']['type'] ?? 'flat').toString())
+      : 'flat',
+    emergencySurchargeAmount: (json['emergencySurcharge'] is Map)
+      ? (((json['emergencySurcharge']['amount']) as num?)?.toDouble() ?? 0.0)
+      : 0.0,
+  emergencyRateMultiplier: (json['emergencyRateMultiplier'] as num?)?.toDouble() ?? 1.5,
     );
+  }
+
+  // Generate a simple slug from a title (fallback when backend doesn't provide one)
+  static String generateSlug(String input) {
+    final ascii = input
+        .toLowerCase()
+        // replace non-word characters with spaces
+        .replaceAll(RegExp(r"[^\w\s-]"), '')
+        // replace whitespace and dashes with single underscore
+        .replaceAll(RegExp(r"[\s-]+"), '_')
+        .trim();
+    return ascii;
   }
 
   Map<String, dynamic> toJson() {
@@ -89,6 +123,10 @@ class ServiceModel {
       'featured': featured,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+  'emergencyEnabled': emergencyEnabled,
+  'emergencyLeadTimeMinutes': emergencyLeadTimeMinutes,
+  'emergencySurcharge': { 'type': emergencySurchargeType, 'amount': emergencySurchargeAmount },
+  'emergencyRateMultiplier': emergencyRateMultiplier,
     };
   }
 }

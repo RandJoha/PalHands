@@ -146,6 +146,27 @@ const serviceSchema = new mongoose.Schema({
   }
 });
 
+// Emergency booking configuration
+serviceSchema.add({
+  emergencyEnabled: { type: Boolean, default: false },
+  emergencyLeadTimeMinutes: { type: Number, default: 120 }, // default 2 hours
+  emergencySurcharge: {
+    type: {
+      type: String,
+      enum: ['flat', 'percent'],
+      default: 'flat'
+    },
+    amount: { type: Number, default: 0 } // flat in currency or percent value
+  }
+});
+
+// Emergency specialization: which emergency task types this service is certified for
+serviceSchema.add({
+  emergencyTypes: [{ type: String }], // e.g. ['elderly_care','medicine_pickup','acquire_item']
+  // Multiplier to apply to hourly rate when booked as emergency (e.g. 1.5 = +50%)
+  emergencyRateMultiplier: { type: Number, default: 1.5 }
+});
+
 // Index for search functionality
 serviceSchema.index({ title: 'text', description: 'text', category: 'text' });
 serviceSchema.index({ 'location.serviceArea': 1, category: 1 });
