@@ -1,4 +1,5 @@
 const Provider = require('../models/Provider');
+const User = require('../models/User');
 const { ok, error } = require('../utils/response');
 
 /**
@@ -10,8 +11,8 @@ async function listProviders(req, res) {
     const { page, limit, skip } = parsePagination(req.query);
     const { city, services, category, sortBy, sortOrder, q } = req.query;
 
-    // Build filter
-    const filter = { isActive: true };
+    // Build filter - look for users with role 'provider'
+    const filter = { role: 'provider', isActive: true };
     
     // City filter
     if (city) {
@@ -44,13 +45,17 @@ async function listProviders(req, res) {
       sortOptions = { hourlyRate: sortOrder === 'asc' ? 1 : -1 };
     }
 
-    const providers = await Provider.find(filter)
+    console.log('🔍 Searching for providers with filter:', JSON.stringify(filter, null, 2));
+
+    const providers = await User.find(filter)
       .select('-password -emailVerificationToken -passwordResetToken -passwordResetTokenHash')
       .sort(sortOptions)
       .skip(skip)
       .limit(parseInt(limit));
 
-    const total = await Provider.countDocuments(filter);
+    console.log(`📊 Found ${providers.length} providers`);
+
+    const total = await User.countDocuments(filter);
     const totalPages = Math.ceil(total / limit);
     const currentPage = totalPages ? parseInt(page) : 0;
 
@@ -58,23 +63,26 @@ async function listProviders(req, res) {
     const transformedProviders = providers.map(provider => ({
       _id: provider._id,
       id: provider._id,
+      providerId: provider.providerId || 1000 + Math.floor(Math.random() * 9000), // Generate if not exists
       name: `${provider.firstName} ${provider.lastName}`.trim(),
       city: provider.addresses && provider.addresses.length > 0 
         ? provider.addresses.find(addr => addr.isDefault)?.city || provider.addresses[0].city 
-        : '',
+        : 'Palestine',
       phone: provider.phone,
-      experienceYears: provider.experienceYears,
-      languages: provider.languages,
-      hourlyRate: provider.hourlyRate,
-      services: provider.services,
-      ratingAverage: provider.rating.average,
-      ratingCount: provider.rating.count,
+      experienceYears: provider.experienceYears || 2,
+      languages: provider.languages || ['Arabic'],
+      hourlyRate: provider.hourlyRate || 50,
+      services: provider.services || ['homeCleaning'],
+      ratingAverage: provider.rating?.average || 4.0,
+      ratingCount: provider.rating?.count || 5,
       avatarUrl: provider.profileImage,
       rating: {
-        average: provider.rating.average,
-        count: provider.rating.count
+        average: provider.rating?.average || 4.0,
+        count: provider.rating?.count || 5
       }
     }));
+
+    console.log(`✅ Returning ${transformedProviders.length} transformed providers`);
 
     return ok(res, {
       data: transformedProviders,
@@ -112,6 +120,7 @@ async function getProviderById(req, res) {
     const transformedProvider = {
       _id: provider._id,
       id: provider._id,
+      providerId: provider.providerId,
       name: `${provider.firstName} ${provider.lastName}`.trim(),
       city: provider.addresses && provider.addresses.length > 0 
         ? provider.addresses.find(addr => addr.isDefault)?.city || provider.addresses[0].city 
@@ -182,6 +191,7 @@ async function getProvidersByCategory(req, res) {
     const transformedProviders = providers.map(provider => ({
       _id: provider._id,
       id: provider._id,
+      providerId: provider.providerId,
       name: `${provider.firstName} ${provider.lastName}`.trim(),
       city: provider.addresses && provider.addresses.length > 0 
         ? provider.addresses.find(addr => addr.isDefault)?.city || provider.addresses[0].city 

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 class ProviderModel {
   final String id;
+  final int? providerId; // 4-digit unique provider ID
   final String name;
   final String city;
   final String phone;
@@ -15,6 +16,7 @@ class ProviderModel {
 
   const ProviderModel({
     required this.id,
+    this.providerId,
     required this.name,
     required this.city,
     required this.phone,
@@ -30,6 +32,7 @@ class ProviderModel {
   factory ProviderModel.fromJson(Map<String, dynamic> json) {
     return ProviderModel(
       id: json['_id']?.toString() ?? json['id']?.toString() ?? UniqueKey().toString(),
+      providerId: json['providerId'] as int?,
       name: json['name'] ?? 'Provider',
       city: json['city'] ?? json['location'] ?? 'Palestine',
       phone: json['phone'] ?? '',

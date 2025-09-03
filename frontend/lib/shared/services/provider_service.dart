@@ -86,23 +86,47 @@ class ProviderService with BaseApiService {
         print('🏢 Fetched providers: ${response['data']?.length ?? 0} items');
       }
 
-      final List<dynamic> providersData = response['data'] ?? response['providers'] ?? [];
+      // Handle nested response structure: response.data.data
+      List<dynamic> providersData = [];
+      if (response['data'] != null) {
+        if (response['data'] is Map && response['data']['data'] != null) {
+          // Nested structure: { data: { data: [...] } }
+          providersData = response['data']['data'] as List<dynamic>;
+        } else if (response['data'] is List) {
+          // Direct structure: { data: [...] }
+          providersData = response['data'] as List<dynamic>;
+        }
+      } else if (response['providers'] != null) {
+        providersData = response['providers'] as List<dynamic>;
+      }
+
+      if (kDebugMode) {
+        print('📊 Parsed providers data: ${providersData.length} items');
+      }
+
       return providersData
-          .map((json) => ProviderModel.fromJson(json))
+          .map((json) {
+            try {
+              return ProviderModel.fromJson(json as Map<String, dynamic>);
+            } catch (e) {
+              if (kDebugMode) {
+                print('❌ Error parsing provider: $e');
+                print('❌ Provider data: $json');
+              }
+              return null;
+            }
+          })
+          .where((provider) => provider != null)
+          .cast<ProviderModel>()
           .toList();
     } catch (e) {
       if (kDebugMode) {
         print('❌ Error fetching providers from backend: $e');
-        print('🔄 Falling back to mock data');
       }
       
-      // Fallback to mock data if backend fails
-      final items = _mockProviders();
-      return items.where((p) {
-        final matchesServices = servicesAny.isEmpty || p.services.any((s) => servicesAny.contains(s));
-        final matchesCity = city == null || city.isEmpty || p.city.toLowerCase() == city.toLowerCase();
-        return matchesServices && matchesCity;
-      }).toList();
+      // Don't fall back to mock data - return empty list instead
+      // This prevents the issue with invalid provider IDs
+      return [];
     }
   }
 
@@ -236,6 +260,7 @@ class ProviderService with BaseApiService {
       final baseRate = 45 + (i % 50) + rnd.nextInt(20);
       providers.add(ProviderModel(
         id: 'svc_$i',
+        providerId: 1000 + i, // Add provider ID starting from 1000
         name: name,
         city: city,
         phone: '+97059${rnd.nextInt(9999999).toString().padLeft(7, '0')}',
@@ -257,6 +282,7 @@ class ProviderService with BaseApiService {
       }
       providers.add(ProviderModel(
         id: 'pro_$j',
+        providerId: 1100 + j, // Add provider ID starting from 1100 for multi-service providers
         name: names[(j + 7) % names.length],
         city: cities[(j + 3) % cities.length],
         phone: '+97059${rnd.nextInt(9999999).toString().padLeft(7, '0')}',

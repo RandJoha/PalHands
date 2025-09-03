@@ -5,11 +5,11 @@ class ApiConfig {
   static const String _environment = String.fromEnvironment('ENVIRONMENT', defaultValue: 'dev');
   
   // Development vs Production URLs
-  static const String devBaseUrl = 'http://localhost:3000';
+  static const String devBaseUrl = 'http://localhost:3001';
   static const String prodBaseUrl = 'https://api.palhands.com'; // Change this to your production URL
   
   // Force backend URL for web development
-  static const String webDevBackendUrl = 'http://localhost:3000';
+  static const String webDevBackendUrl = 'http://localhost:3001';
   
   // Get the appropriate base URL based on environment
   static String get currentBaseUrl {

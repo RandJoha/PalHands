@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PalHands Connection Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .test { margin: 20px 0; padding: 15px; border-radius: 8px; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .loading { background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+    </style>
+</head>
+<body>
+    <h1>🔍 PalHands Connection Test</h1>
+    
+    <div id="backend-test" class="test loading">
+        <h3>📡 Backend Test</h3>
+        <p>Testing connection to http://localhost:3000...</p>
+        <button class="btn-primary" onclick="testBackend()">Test Backend</button>
+        <div id="backend-result"></div>
+    </div>
+    
+    <div id="frontend-test" class="test loading">
+        <h3>🌐 Frontend Test</h3>
+        <p>Testing connection to http://localhost:8080...</p>
+        <button class="btn-primary" onclick="testFrontend()">Test Frontend</button>
+        <div id="frontend-result"></div>
+    </div>
+    
+    <div class="test">
+        <h3>🚀 Quick Actions</h3>
+        <button class="btn-success" onclick="openFrontend()">Open Frontend</button>
+        <button class="btn-success" onclick="openDebug()">Open Debug Page</button>
+        <button class="btn-success" onclick="openBackend()">Open Backend</button>
+    </div>
+
+    <script>
+        async function testBackend() {
+            const resultDiv = document.getElementById('backend-result');
+            const testDiv = document.getElementById('backend-test');
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/chat/test');
+                const data = await response.json();
+                
+                testDiv.className = 'test success';
+                resultDiv.innerHTML = `
+                    <p><strong>✅ Backend is working!</strong></p>
+                    <p>Status: ${response.status}</p>
+                    <p>Message: ${data.message}</p>
+                    <p>Timestamp: ${data.timestamp}</p>
+                `;
+            } catch (error) {
+                testDiv.className = 'test error';
+                resultDiv.innerHTML = `
+                    <p><strong>❌ Backend connection failed!</strong></p>
+                    <p>Error: ${error.message}</p>
+                    <p>Make sure the backend server is running on port 3000</p>
+                `;
+            }
+        }
+        
+        async function testFrontend() {
+            const resultDiv = document.getElementById('frontend-result');
+            const testDiv = document.getElementById('frontend-test');
+            
+            try {
+                const response = await fetch('http://localhost:8080');
+                
+                if (response.ok) {
+                    testDiv.className = 'test success';
+                    resultDiv.innerHTML = `
+                        <p><strong>✅ Frontend is working!</strong></p>
+                        <p>Status: ${response.status}</p>
+                        <p>Frontend is accessible at http://localhost:8080</p>
+                    `;
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                testDiv.className = 'test error';
+                resultDiv.innerHTML = `
+                    <p><strong>❌ Frontend connection failed!</strong></p>
+                    <p>Error: ${error.message}</p>
+                    <p>Make sure the Flutter app is running on port 8080</p>
+                `;
+            }
+        }
+        
+        function openFrontend() {
+            window.open('http://localhost:8080', '_blank');
+        }
+        
+        function openDebug() {
+            window.open('http://localhost:8080/debug-chat', '_blank');
+        }
+        
+        function openBackend() {
+            window.open('http://localhost:3000', '_blank');
+        }
+        
+        // Auto-test on page load
+        window.onload = function() {
+            setTimeout(testBackend, 1000);
+            setTimeout(testFrontend, 2000);
+        };
+    </script>
+</body>
+</html>

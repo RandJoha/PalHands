@@ -1,121 +1,80 @@
 const Notification = require('../models/Notification');
 const User = require('../models/User');
-const Admin = require('../models/Admin');
 
 class NotificationService {
-  /**
-   * Create a notification for all admin users
-   */
-  static async notifyAllAdmins(notificationData) {
+  // Notify all admins about a new report
+  static async notifyNewReport(report) {
     try {
-      // Get all admin users
-      const adminUsers = await Admin.find().populate('user', '_id firstName lastName email');
+      // Find all admin users
+      const admins = await User.find({ role: 'admin', isActive: true });
       
-      if (!adminUsers || adminUsers.length === 0) {
-        console.log('No admin users found for notification');
+      if (admins.length === 0) {
+        console.log('No active admin users found for notifications');
         return;
       }
 
-      const notifications = adminUsers.map(admin => ({
-        recipient: admin.user._id,
-        type: notificationData.type,
-        title: notificationData.title,
-        message: notificationData.message,
-        data: notificationData.data || {},
-        priority: notificationData.priority || 'medium'
-      }));
+      // Determine notification priority based on report category
+      const priority = this.getNotificationPriority(report.reportCategory);
 
-      await Notification.insertMany(notifications);
-      
-      console.log(`✅ Notifications created for ${adminUsers.length} admin users`);
-      
-      // Return notification count for potential real-time updates
-      return {
-        success: true,
-        count: adminUsers.length,
-        notifications: notifications
-      };
-    } catch (error) {
-      console.error('❌ Error creating admin notifications:', error);
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-  }
-
-  /**
-   * Create notification for new report
-   */
-  static async notifyNewReport(report) {
-    try {
-      const reporterName = report.contactName || 
-        (report.reporter ? `${report.reporter.firstName || ''} ${report.reporter.lastName || ''}`.trim() : 'Anonymous');
-      
-      const categoryDisplay = this.getCategoryDisplayName(report.reportCategory);
-      
-      const notificationData = {
+      // Create notifications for all admins
+      const notifications = admins.map(admin => ({
+        recipient: admin._id,
         type: 'new_report',
         title: 'New Report Submitted',
-        message: `A new ${categoryDisplay} report has been submitted by ${reporterName}`,
+        message: `A new ${report.reportCategory.replace('_', ' ')} report has been submitted`,
         data: {
           reportId: report._id,
           reporterId: report.reporter,
-          reporterName: reporterName,
           reportCategory: report.reportCategory,
           status: report.status
         },
-        priority: this.getPriorityForCategory(report.reportCategory)
-      };
+        priority: priority,
+        read: false
+      }));
 
-      return await this.notifyAllAdmins(notificationData);
+      await Notification.insertMany(notifications);
+      console.log(`✅ Notified ${admins.length} admins about new report`);
     } catch (error) {
-      console.error('❌ Error creating new report notification:', error);
-      return {
-        success: false,
-        error: error.message
-      };
+      console.error('Failed to notify admins about new report:', error);
+      throw error;
     }
   }
 
-  /**
-   * Create notification for report status update
-   */
+  // Notify about report status updates
   static async notifyReportUpdate(report, oldStatus, newStatus, updatedBy) {
     try {
-      const reporterName = report.contactName || 
-        (report.reporter ? `${report.reporter.firstName || ''} ${report.reporter.lastName || ''}`.trim() : 'Anonymous');
+      // Find all admin users
+      const admins = await User.find({ role: 'admin', isActive: true });
       
-      const categoryDisplay = this.getCategoryDisplayName(report.reportCategory);
-      const statusDisplay = this.getStatusDisplayName(newStatus);
-      
-      const notificationData = {
-        type: 'report_updated',
+      if (admins.length === 0) {
+        console.log('No active admin users found for notifications');
+        return;
+      }
+
+      const notifications = admins.map(admin => ({
+        recipient: admin._id,
+        type: 'report_update',
         title: 'Report Status Updated',
-        message: `Report #${report._id.toString().slice(-6)} status changed from ${this.getStatusDisplayName(oldStatus)} to ${statusDisplay}`,
+        message: `Report status changed from ${oldStatus} to ${newStatus}`,
         data: {
           reportId: report._id,
-          reporterId: report.reporter,
-          reporterName: reporterName,
-          reportCategory: report.reportCategory,
-          status: newStatus
+          oldStatus: oldStatus,
+          newStatus: newStatus,
+          updatedBy: updatedBy
         },
-        priority: 'medium'
-      };
+        priority: 'medium',
+        read: false
+      }));
 
-      return await this.notifyAllAdmins(notificationData);
+      await Notification.insertMany(notifications);
+      console.log(`✅ Notified ${admins.length} admins about report update`);
     } catch (error) {
-      console.error('❌ Error creating report update notification:', error);
-      return {
-        success: false,
-        error: error.message
-      };
+      console.error('Failed to notify admins about report update:', error);
+      throw error;
     }
   }
 
-  /**
-   * Get notifications for a specific user
-   */
+  // Get user notifications
   static async getUserNotifications(userId, options = {}) {
     try {
       const { page = 1, limit = 20, unreadOnly = false } = options;
@@ -126,16 +85,13 @@ class NotificationService {
         filter.read = false;
       }
 
-      const notifications = await Notification.find(filter)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit);
-
-      const total = await Notification.countDocuments(filter);
-      const unreadCount = await Notification.countDocuments({ 
-        recipient: userId, 
-        read: false 
-      });
+      const [notifications, total] = await Promise.all([
+        Notification.find(filter)
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit),
+        Notification.countDocuments(filter)
+      ]);
 
       return {
         success: true,
@@ -145,22 +101,16 @@ class NotificationService {
             current: page,
             total: Math.ceil(total / limit),
             totalRecords: total
-          },
-          unreadCount
+          }
         }
       };
     } catch (error) {
-      console.error('❌ Error fetching user notifications:', error);
-      return {
-        success: false,
-        error: error.message
-      };
+      console.error('Failed to get user notifications:', error);
+      throw error;
     }
   }
 
-  /**
-   * Mark notification as read
-   */
+  // Mark notification as read
   static async markAsRead(notificationId, userId) {
     try {
       const notification = await Notification.findOneAndUpdate(
@@ -170,28 +120,17 @@ class NotificationService {
       );
 
       if (!notification) {
-        return {
-          success: false,
-          message: 'Notification not found or access denied'
-        };
+        throw new Error('Notification not found');
       }
 
-      return {
-        success: true,
-        data: notification
-      };
+      return { success: true, data: notification };
     } catch (error) {
-      console.error('❌ Error marking notification as read:', error);
-      return {
-        success: false,
-        error: error.message
-      };
+      console.error('Failed to mark notification as read:', error);
+      throw error;
     }
   }
 
-  /**
-   * Mark all notifications as read for a user
-   */
+  // Mark all notifications as read for a user
   static async markAllAsRead(userId) {
     try {
       const result = await Notification.updateMany(
@@ -199,24 +138,29 @@ class NotificationService {
         { read: true, readAt: new Date() }
       );
 
-      return {
-        success: true,
-        data: {
-          updatedCount: result.modifiedCount
-        }
-      };
+      return { success: true, data: { updatedCount: result.modifiedCount } };
     } catch (error) {
-      console.error('❌ Error marking all notifications as read:', error);
-      return {
-        success: false,
-        error: error.message
-      };
+      console.error('Failed to mark all notifications as read:', error);
+      throw error;
     }
   }
 
-  /**
-   * Delete notification
-   */
+  // Mark notifications as read by type for a user
+  static async markAsReadByType(type, userId) {
+    try {
+      const result = await Notification.updateMany(
+        { recipient: userId, type: type, read: false },
+        { read: true, readAt: new Date() }
+      );
+
+      return { success: true, data: { updatedCount: result.modifiedCount } };
+    } catch (error) {
+      console.error('Failed to mark notifications as read by type:', error);
+      throw error;
+    }
+  }
+
+  // Delete a notification
   static async deleteNotification(notificationId, userId) {
     try {
       const notification = await Notification.findOneAndDelete({
@@ -225,58 +169,62 @@ class NotificationService {
       });
 
       if (!notification) {
-        return {
-          success: false,
-          message: 'Notification not found or access denied'
-        };
+        throw new Error('Notification not found');
       }
 
-      return {
-        success: true,
-        data: notification
-      };
+      return { success: true, data: notification };
     } catch (error) {
-      console.error('❌ Error deleting notification:', error);
-      return {
-        success: false,
-        error: error.message
-      };
+      console.error('Failed to delete notification:', error);
+      throw error;
     }
   }
 
-  // Helper methods
-  static getCategoryDisplayName(category) {
-    const categories = {
-      'user_issue': 'User Issue',
-      'technical_issue': 'Technical Issue',
-      'feature_suggestion': 'Feature Suggestion',
-      'service_category_request': 'Service Category Request',
-      'other': 'Other'
-    };
-    return categories[category] || category;
+  // Get unread count for a user
+  static async getUnreadCount(userId) {
+    try {
+      console.log('🔔 Getting unread count for user:', userId.toString());
+      
+      const count = await Notification.countDocuments({
+        recipient: userId,
+        read: false
+      });
+
+      console.log('🔔 Found unread notifications:', count);
+      
+      // Also log some sample notifications for debugging
+      const sampleNotifications = await Notification.find({
+        recipient: userId,
+        read: false
+      }).limit(3);
+      
+      console.log('🔔 Sample unread notifications:');
+      sampleNotifications.forEach((notif, index) => {
+        console.log(`  ${index + 1}. Type: ${notif.type}, Title: ${notif.title}, Read: ${notif.read}`);
+      });
+
+      return { success: true, data: { unreadCount: count } };
+    } catch (error) {
+      console.error('Failed to get unread count:', error);
+      throw error;
+    }
   }
 
-  static getStatusDisplayName(status) {
-    const statuses = {
-      'pending': 'Pending',
-      'under_review': 'Under Review',
-      'awaiting_user': 'Awaiting User',
-      'investigating': 'Investigating',
-      'resolved': 'Resolved',
-      'dismissed': 'Dismissed'
-    };
-    return statuses[status] || status;
-  }
-
-  static getPriorityForCategory(category) {
-    const priorities = {
-      'user_issue': 'high',
-      'technical_issue': 'high',
-      'feature_suggestion': 'medium',
-      'service_category_request': 'medium',
-      'other': 'low'
-    };
-    return priorities[category] || 'medium';
+  // Helper method to determine notification priority
+  static getNotificationPriority(reportCategory) {
+    switch (reportCategory) {
+      case 'user_issue':
+        return 'high';
+      case 'technical_issue':
+        return 'high';
+      case 'feature_suggestion':
+        return 'medium';
+      case 'service_category_request':
+        return 'medium';
+      case 'other':
+        return 'low';
+      default:
+        return 'medium';
+    }
   }
 }
 

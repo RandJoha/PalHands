@@ -100,7 +100,21 @@ try {
   console.error('❌ Admin routes failed:', error.message);
 }
 
+try {
+  const notificationRoutes = require('./routes/notifications');
+  app.use('/api/notifications', notificationRoutes);
+  console.log('✅ Notification routes loaded');
+} catch (error) {
+  console.error('❌ Notification routes failed:', error.message);
+}
 
+try {
+  const chatRoutes = require('./routes/chat');
+  app.use('/api/chat', chatRoutes);
+  console.log('✅ Chat routes loaded');
+} catch (error) {
+  console.error('❌ Chat routes failed:', error.message);
+}
 
 // Simple error handler
 app.use((err, req, res, next) => {

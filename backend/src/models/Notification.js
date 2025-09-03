@@ -8,8 +8,8 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['new_report', 'report_updated', 'report_resolved', 'report_dismissed', 'system_alert'],
-    required: true
+    required: true,
+    enum: ['new_report', 'report_update', 'system_alert', 'new_message']
   },
   title: {
     type: String,
@@ -20,17 +20,8 @@ const notificationSchema = new mongoose.Schema({
     required: true
   },
   data: {
-    reportId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Report'
-    },
-    reporterId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    reporterName: String,
-    reportCategory: String,
-    status: String
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
   },
   read: {
     type: Boolean,
@@ -38,7 +29,7 @@ const notificationSchema = new mongoose.Schema({
   },
   priority: {
     type: String,
-    enum: ['low', 'medium', 'high', 'urgent'],
+    enum: ['low', 'medium', 'high'],
     default: 'medium'
   },
   createdAt: {
@@ -46,15 +37,17 @@ const notificationSchema = new mongoose.Schema({
     default: Date.now
   },
   readAt: {
-    type: Date
+    type: Date,
+    default: null
   }
 });
 
-// Index for efficient querying
-notificationSchema.index({ recipient: 1, read: 1, createdAt: -1 });
-notificationSchema.index({ type: 1, createdAt: -1 });
+// Indexes for efficient querying
+notificationSchema.index({ recipient: 1, read: 1 });
+notificationSchema.index({ recipient: 1, createdAt: -1 });
+notificationSchema.index({ createdAt: -1 });
 
-// Update readAt when notification is marked as read
+// Pre-save hook to set readAt when marked as read
 notificationSchema.pre('save', function(next) {
   if (this.isModified('read') && this.read && !this.readAt) {
     this.readAt = new Date();

@@ -35,6 +35,7 @@ class WebUserDashboard extends StatefulWidget {
 class _WebUserDashboardState extends State<WebUserDashboard> {
   int _selectedIndex = 0;
   bool _isSidebarCollapsed = false;
+  final GlobalKey<_ChatMessagesWidgetState> _chatMessagesKey = GlobalKey<_ChatMessagesWidgetState>();
 
   List<UserMenuItem> _getMenuItems(String languageCode) {
     return [
@@ -117,9 +118,7 @@ class _WebUserDashboardState extends State<WebUserDashboard> {
             isCollapsed: _isSidebarCollapsed,
             onItemSelected: (index) {
               if (mounted) {
-                setState(() {
-                  _selectedIndex = index;
-                });
+                _onTabChanged(index);
               }
             },
             onToggleCollapse: () {
@@ -389,8 +388,8 @@ class _WebUserDashboardState extends State<WebUserDashboard> {
     switch (_selectedIndex) {
       case 0:
         return const MyBookingsWidget();
-      case 1:
-        return const ChatMessagesWidget();
+              case 1:
+          return ChatMessagesWidget(key: _chatMessagesKey);
       case 2:
         return const PaymentsWidget();
       case 3:
@@ -405,6 +404,28 @@ class _WebUserDashboardState extends State<WebUserDashboard> {
         return const SecurityWidget();
       default:
         return const MyBookingsWidget();
+    }
+  }
+
+  // Method to refresh chat messages
+  void _refreshChatMessages() {
+    if (_selectedIndex == 1 && _chatMessagesKey.currentState != null) {
+      _chatMessagesKey.currentState!.refreshChats();
+    }
+  }
+
+  // Method to handle tab changes
+  void _onTabChanged(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    
+    // Refresh chat messages when navigating to chat tab
+    if (index == 1) {
+      // Use a small delay to ensure the widget is built
+      Future.delayed(Duration(milliseconds: 100), () {
+        _refreshChatMessages();
+      });
     }
   }
 } 

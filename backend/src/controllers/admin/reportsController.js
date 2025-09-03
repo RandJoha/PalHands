@@ -1,5 +1,6 @@
 const Report = require('../../models/Report');
 const User = require('../../models/User');
+const NotificationService = require('../../services/notificationService');
 
 // GET /api/admin/reports
 const listReports = async (req, res) => {
@@ -93,7 +94,13 @@ const updateReport = async (req, res) => {
       report.statusHistory.push({ from: report.status, to: status, by: req.user._id });
       report.status = status;
       
-      // Notification service removed
+      // Send notification about status change
+      try {
+        await NotificationService.notifyReportUpdate(report, oldStatus, status, req.user._id);
+      } catch (notificationError) {
+        console.error('Failed to send notification for report update:', notificationError);
+        // Don't fail the update if notification fails
+      }
     }
     if (assignedAdmin) {
       const User = require('../../models/User');

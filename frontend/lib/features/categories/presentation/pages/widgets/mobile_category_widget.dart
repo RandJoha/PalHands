@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 import '../../../../../core/constants/app_colors.dart';
@@ -10,9 +12,15 @@ import '../../../../../shared/widgets/booking_dialog.dart';
 import '../../../../../shared/services/responsive_service.dart';
 import '../../../../../shared/services/provider_service.dart';
 import '../../../../../shared/models/provider.dart';
+import '../../../../../shared/services/chat_service.dart';
+import '../../../../../shared/models/chat.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import '../../../../../shared/services/category_selection_store.dart';
+import '../../../../profile/presentation/widgets/chat_conversation_widget.dart';
+import '../../../../../shared/services/auth_service.dart';
+import 'package:flutter/foundation.dart';
+import '../../../../../shared/widgets/chat_form_dialog.dart';
 
 class MobileCategoryWidget extends StatefulWidget {
   const MobileCategoryWidget({super.key});
@@ -36,10 +44,15 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
   String? _error;
   List<ProviderModel> _providers = const [];
   final _providerService = ProviderService();
+  final _chatService = ChatService();
   
   // Performance optimization: debounce API calls
   Timer? _debounceTimer;
   static const Duration _debounceDuration = Duration(milliseconds: 500);
+  
+  // Cache for selected services to prevent unnecessary refreshes
+  Set<String> _cachedSelectedServices = {};
+  bool _hasInitialized = false;
 
   Set<String> get _selectedServiceKeys {
     final set = <String>{};
@@ -1152,6 +1165,16 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
 
   Future<void> _refreshProviders() async {
     if (!mounted) return;
+    
+    // Check if selected services have actually changed
+    final currentServices = _selectedServiceKeys;
+    if (_hasInitialized && setEquals(currentServices, _cachedSelectedServices)) {
+      return; // No change, don't refresh
+    }
+    
+    _cachedSelectedServices = Set.from(currentServices);
+    _hasInitialized = true;
+    
     setState(() {
       _loading = true;
       _error = null;
@@ -1159,7 +1182,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
     try {
       // Since we're in frontend-only mode, this should be instant with cached mock data
       final data = await _providerService.fetchProviders(
-        servicesAny: _selectedServiceKeys.toList(),
+        servicesAny: currentServices.toList(),
         city: _selectedCity,
         sortBy: _sortBy,
         sortOrder: _sortOrder,
@@ -1176,13 +1199,6 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
 
   Widget _buildProvidersSection(LanguageService languageService) {
     final lang = languageService.currentLanguage;
-    
-    // Load providers on first build if not already loaded
-    if (_providers.isEmpty && !_loading && _error == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _refreshProviders();
-      });
-    }
     
     return Directionality(
       textDirection: languageService.textDirection,
@@ -1231,7 +1247,31 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(p.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(p.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                        ),
+                        if (p.providerId != null) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(3),
+                              border: Border.all(color: Colors.blue.shade200),
+                            ),
+                            child: Text(
+                              '#${p.providerId}',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.blue.shade700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                     const SizedBox(height: 2),
                     Row(children: [
                       const Icon(Icons.location_on, size: 14, color: Colors.grey),
@@ -1253,16 +1293,6 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
-            runSpacing: 6,
-            children: [
-              _kv(Icons.work_history, '${p.experienceYears} ${AppStrings.getString('years', lang)}'),
-              _kv(Icons.language, _localizedLanguages(p.languages, lang).join(', ')),
-              _kv(Icons.attach_money, '${p.hourlyRate.toStringAsFixed(0)} ${AppStrings.getString('hourly', lang)}'),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 6,
             runSpacing: 6,
             children: () {
               final maxVisible = 3;
@@ -1311,11 +1341,21 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
               ),
               const SizedBox(width: 8),
               OutlinedButton.icon(
-                onPressed: () {},
+                onPressed: () {
+                  _openChatWithProvider(p);
+                },
                 icon: const Icon(Icons.chat, size: 18),
                 style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12)),
                 label: Text(AppStrings.getString('chat', lang)),
               ),
+              // Debug button for authentication testing
+              if (kDebugMode)
+                OutlinedButton.icon(
+                  onPressed: () => _debugAuthStatus(),
+                  icon: const Icon(Icons.bug_report, size: 18),
+                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12)),
+                  label: const Text('Debug Auth'),
+                ),
             ],
           )
         ],
@@ -1431,5 +1471,115 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
         ),
       ),
     );
+  }
+
+  // Open chat with provider
+  Future<void> _openChatWithProvider(ProviderModel provider) async {
+    try {
+      // Check if user is authenticated first - use Provider to get the shared AuthService instance
+      final authService = Provider.of<AuthService>(context, listen: false);
+      if (!authService.isAuthenticated) {
+        // Show login dialog
+        final shouldLogin = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: Text('Login Required'),
+            content: Text('You need to be logged in to chat with providers. Would you like to login now?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text('Login'),
+              ),
+            ],
+          ),
+        );
+
+        if (shouldLogin == true) {
+          // Navigate to login page
+          Navigator.of(context).pushNamed('/login');
+        }
+        return;
+      }
+
+      // Debug: Print authentication status
+      if (kDebugMode) {
+        print('🔍 Chat debug - Authentication check:');
+        print('  - Is authenticated: ${authService.isAuthenticated}');
+        print('  - Token present: ${authService.token != null}');
+        print('  - Token length: ${authService.token?.length ?? 0}');
+        print('  - Current user: ${authService.currentUser?['email'] ?? 'None'}');
+        if (authService.token != null) {
+          print('  - Token preview: ${authService.token!.substring(0, 30)}...');
+        }
+      }
+
+      // Show chat form dialog
+      showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (context) => ChatFormDialog(
+          provider: provider,
+          onMessageSent: () {
+            if (kDebugMode) {
+              print('🔄 Mobile category widget - Message sent callback triggered');
+            }
+            // This will refresh the chat list when the user navigates to the chat tab
+            // The actual refresh happens in the chat messages widget
+          },
+        ),
+      );
+    } catch (e) {
+      // Show error message with more details
+      String errorMessage = 'Failed to open chat';
+      if (e.toString().contains('401')) {
+        errorMessage = 'Authentication failed. Please login again.';
+      } else if (e.toString().contains('Failed to create/get chat')) {
+        errorMessage = 'Unable to start chat. Please try again.';
+      } else {
+        errorMessage = 'Error: $e';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _debugAuthStatus() {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    if (kDebugMode) {
+      print('🔍 Debug Auth Status:');
+      print('  - Is authenticated: ${authService.isAuthenticated}');
+      print('  - Token present: ${authService.token != null}');
+      print('  - Token length: ${authService.token?.length ?? 0}');
+      print('  - Current user: ${authService.currentUser?['email'] ?? 'None'}');
+      if (authService.token != null) {
+        print('  - Token preview: ${authService.token!.substring(0, 30)}...');
+      }
+    }
+    
+    if (authService.isAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('✅ Authenticated as: ${authService.currentUser?['email'] ?? 'Unknown'}'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ User is NOT authenticated.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 } 

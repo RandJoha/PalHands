@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +10,7 @@ import '../../../../core/constants/app_strings.dart';
 // Shared imports
 import '../../../../shared/services/language_service.dart';
 import '../../../../shared/services/auth_service.dart';
+import '../../../../shared/services/notification_service.dart';
 
 // Widget imports
 import 'my_services_widget.dart';
@@ -18,6 +20,7 @@ import 'reviews_widget.dart';
 
 import '../../../admin/presentation/widgets/language_toggle_widget.dart';
 import '../../../profile/presentation/widgets/profile_settings_rich_widget.dart';
+import 'provider_chat_widget.dart';
 
 class ResponsiveProviderDashboard extends StatefulWidget {
   const ResponsiveProviderDashboard({super.key});
@@ -29,6 +32,10 @@ class ResponsiveProviderDashboard extends StatefulWidget {
 class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboard> {
   int _selectedIndex = 0;
   bool _isSidebarExpanded = true;
+  
+  // Notification state
+  late NotificationService _notificationService;
+  int _unreadNotificationCount = 0;
 
   final List<Map<String, dynamic>> _menuItems = [
     {
@@ -52,9 +59,14 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
       'widget': const ReviewsWidget(),
     },
     {
+      'title': 'chat',
+      'icon': Icons.chat,
+      'widget': null, // Will be set dynamically
+    },
+    {
       'title': 'profileSettings',
       'icon': Icons.person,
-  'widget': const ProfileSettingsRichWidget(),
+      'widget': const ProfileSettingsRichWidget(),
     },
     {
       'title': 'settings',
@@ -62,6 +74,71 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
       'widget': null,
     },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Initialize notification service after build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      _notificationService = NotificationService(authService);
+      _loadUnreadNotificationCount();
+    });
+    
+    // Set up periodic refresh of notification count
+    _setupNotificationRefresh();
+  }
+
+  void _setupNotificationRefresh() {
+    // Refresh notification count every 30 seconds
+    Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (mounted) {
+        _loadUnreadNotificationCount();
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  // Load unread notification count
+  Future<void> _loadUnreadNotificationCount() async {
+    try {
+      print('🔔 Loading unread notification count...');
+      final response = await _notificationService.getUnreadCount();
+      print('🔔 Notification response: $response');
+      
+      if (response['success'] == true) {
+        final count = response['data']['unreadCount'] ?? 0;
+        print('🔔 Setting unread count to: $count');
+        setState(() {
+          _unreadNotificationCount = count;
+        });
+      } else {
+        print('🔔 Response not successful: ${response['success']}');
+      }
+    } catch (e) {
+      print('🔔 Failed to load notification count: $e');
+    }
+  }
+
+  // Callback when a chat is opened - refresh notification count
+  void _onChatOpened() async {
+    // Mark chat notifications as read
+    try {
+      await _notificationService.markAsReadByType('new_message');
+    } catch (e) {
+      print('Failed to mark chat notifications as read: $e');
+    }
+    
+    // Refresh notification count
+    _loadUnreadNotificationCount();
+  }
+
+  // Get chat widget with callback
+  Widget _getChatWidget() {
+    return ProviderChatWidget(onChatOpened: _onChatOpened);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -238,22 +315,38 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
           IconButton(
             onPressed: () {
               // TODO: Show notifications
+              // Temporary: Manual refresh for testing
+              _loadUnreadNotificationCount();
             },
+            tooltip: 'Notifications (${_unreadNotificationCount}) - Tap to refresh',
             icon: Stack(
               children: [
                 const Icon(Icons.notifications_outlined, size: 20, color: AppColors.white),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      color: AppColors.white,
-                      shape: BoxShape.circle,
+                if (_unreadNotificationCount > 0)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        _unreadNotificationCount > 99 ? '99+' : _unreadNotificationCount.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
@@ -505,23 +598,39 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
                 IconButton(
                   onPressed: () {
                     // TODO: Show notifications
+                    // Temporary: Manual refresh for testing
+                    _loadUnreadNotificationCount();
                   },
+                  tooltip: 'Notifications (${_unreadNotificationCount}) - Tap to refresh',
                   icon: Stack(
                     children: [
                       Icon(Icons.notifications_outlined, 
                            size: screenWidth > 1400 ? 26 : 24),
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        child: Container(
-                          width: 10,
-                          height: 10,
-                          decoration: const BoxDecoration(
-                            color: AppColors.primary,
-                            shape: BoxShape.circle,
+                      if (_unreadNotificationCount > 0)
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 16,
+                              minHeight: 16,
+                            ),
+                            child: Text(
+                              _unreadNotificationCount > 99 ? '99+' : _unreadNotificationCount.toString(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -742,6 +851,12 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
     }
     
     final selectedItem = _menuItems[_selectedIndex];
+    
+    // Handle chat widget specially since it needs the callback
+    if (selectedItem['title'] == 'chat') {
+      return _getChatWidget();
+    }
+    
     return selectedItem['widget'] ?? Container();
   }
 

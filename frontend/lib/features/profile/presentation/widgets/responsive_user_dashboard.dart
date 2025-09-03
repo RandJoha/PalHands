@@ -3,17 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
-import '../../../../shared/services/auth_service.dart';
-
 // Core imports
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 
 // Shared imports
 import '../../../../shared/services/language_service.dart';
+import '../../../../shared/services/auth_service.dart';
+import '../../../../shared/services/chat_service.dart';
+import '../../../../shared/models/chat.dart';
 
 // Widget imports
 import '../../../admin/presentation/widgets/language_toggle_widget.dart';
+
+// Feature imports
+import '../widgets/chat_messages_widget.dart';
+import '../widgets/mobile_chat_messages_widget.dart';
 
 // User models
 class UserMenuItem {
@@ -1005,21 +1010,24 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         final isMobile = constraints.maxWidth <= 768;
         final isTablet = constraints.maxWidth > 768 && constraints.maxWidth <= 1200;
         
+        if (isMobile) {
+          // Use mobile chat messages widget for mobile
+          return const MobileChatMessagesWidget();
+        }
+        
         return Row(
           children: [
             // Chat List (hidden on mobile)
-            if (!isMobile) ...[
-              Container(
-                width: isTablet ? 300.0 : 350.0,
-                decoration: const BoxDecoration(
-                  color: AppColors.white,
-                  border: Border(
-                    right: BorderSide(color: AppColors.border, width: 1),
-                  ),
+            Container(
+              width: isTablet ? 300.0 : 350.0,
+              decoration: const BoxDecoration(
+                color: AppColors.white,
+                border: Border(
+                  right: BorderSide(color: AppColors.border, width: 1),
                 ),
-                child: _buildChatList(isMobile, isTablet),
               ),
-            ],
+              child: _buildChatList(isMobile, isTablet),
+            ),
             
             // Chat Messages Area
             Expanded(
@@ -1032,417 +1040,29 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   }
 
   Widget _buildChatList(bool isMobile, bool isTablet) {
-    final languageService = Provider.of<LanguageService>(context, listen: false);
-    final chats = [
-      {
-        'name': 'Fatima Al-Zahra',
-        'service': AppStrings.getString('homeCleaning', languageService.currentLanguage),
-        'lastMessage': 'I will arrive in 10 minutes',
-        'time': '2 ${AppStrings.getString('minutesAgo', languageService.currentLanguage)}',
-        'unread': 2,
-        'isOnline': true,
-      },
-      {
-        'name': 'Mariam Hassan',
-        'service': AppStrings.getString('elderlyCare', languageService.currentLanguage),
-        'lastMessage': 'Thank you for the booking',
-        'time': '1 ${AppStrings.getString('hoursAgo', languageService.currentLanguage)}',
-        'unread': 0,
-        'isOnline': false,
-      },
-      {
-        'name': 'Aisha Mohammed',
-        'service': AppStrings.getString('babysitting', languageService.currentLanguage),
-        'lastMessage': 'The children are doing great',
-        'time': '3 ${AppStrings.getString('hoursAgo', languageService.currentLanguage)}',
-        'unread': 1,
-        'isOnline': true,
-      },
-    ];
-
-    return Column(
-      children: [
-        // Header
-        Container(
-          padding: EdgeInsets.all(isTablet ? 16.0 : 20.0),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.05),
-            border: const Border(
-              bottom: BorderSide(color: AppColors.border, width: 1),
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.chat,
-                color: AppColors.primary,
-                size: isTablet ? 24.0 : 28.0,
-              ),
-              const SizedBox(width: 12.0),
-              Text(
-                _getLocalizedString('messages'),
-                style: GoogleFonts.cairo(
-                  fontSize: isTablet ? 18.0 : 20.0,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-        ),
-        
-        // Chat list
-        Expanded(
-          child: ListView.builder(
-            itemCount: chats.length,
-            itemBuilder: (context, index) {
-              final chat = chats[index];
-              return _buildChatListItem(chat, isMobile, isTablet);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildChatListItem(Map<String, dynamic> chat, bool isMobile, bool isTablet) {
-    return Container(
-      padding: EdgeInsets.all(isTablet ? 12.0 : 16.0),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: AppColors.border.withValues(alpha: 0.5), width: 1),
-        ),
-      ),
-      child: Row(
-        children: [
-          // Avatar
-          Stack(
-            children: [
-              Container(
-                width: isTablet ? 48.0 : 56.0,
-                height: isTablet ? 48.0 : 56.0,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(isTablet ? 24.0 : 28.0),
-                ),
-                child: Icon(
-                  Icons.person,
-                  color: AppColors.primary,
-                  size: isTablet ? 24.0 : 28.0,
-                ),
-              ),
-              if (chat['isOnline'])
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: isTablet ? 12.0 : 14.0,
-                    height: isTablet ? 12.0 : 14.0,
-                    decoration: BoxDecoration(
-                      color: AppColors.success,
-                      borderRadius: BorderRadius.circular(isTablet ? 6.0 : 7.0),
-                      border: Border.all(color: AppColors.white, width: 2),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(width: 12.0),
-          
-          // Chat info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        chat['name'],
-                        style: GoogleFonts.cairo(
-                          fontSize: isTablet ? 16.0 : 18.0,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      chat['time'],
-                      style: GoogleFonts.cairo(
-                        fontSize: isTablet ? 12.0 : 14.0,
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4.0),
-                Text(
-                  chat['service'],
-                  style: GoogleFonts.cairo(
-                    fontSize: isTablet ? 12.0 : 14.0,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.primary,
-                  ),
-                ),
-                const SizedBox(height: 4.0),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        chat['lastMessage'],
-                        style: GoogleFonts.cairo(
-                          fontSize: isTablet ? 14.0 : 16.0,
-                          fontWeight: FontWeight.w400,
-                          color: AppColors.textSecondary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (chat['unread'] > 0)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          chat['unread'].toString(),
-                          style: GoogleFonts.cairo(
-                            fontSize: isTablet ? 10.0 : 12.0,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.white,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+    // Use the ChatMessagesWidget for the chat list instead of hardcoded data
+    return const ChatMessagesWidget();
   }
 
   Widget _buildChatMessagesArea(bool isMobile, bool isTablet) {
-    return Column(
-      children: [
-        // Chat header
-        Container(
-          padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
-          decoration: const BoxDecoration(
-            color: AppColors.white,
-            border: Border(
-              bottom: BorderSide(color: AppColors.border, width: 1),
-            ),
-          ),
-          child: Row(
-            children: [
-              if (isMobile) ...[
-                IconButton(
-                  onPressed: () {
-                    // Show chat list on mobile
-                  },
-                  icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-                ),
-                const SizedBox(width: 12.0),
-              ],
-              Container(
-                width: isMobile ? 40.0 : 48.0,
-                height: isMobile ? 40.0 : 48.0,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(isMobile ? 20.0 : 24.0),
-                ),
-                child: Icon(
-                  Icons.person,
-                  color: AppColors.primary,
-                  size: isMobile ? 20.0 : 24.0,
-                ),
-              ),
-              const SizedBox(width: 12.0),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Fatima Al-Zahra',
-                      style: GoogleFonts.cairo(
-                        fontSize: isMobile ? 16.0 : 18.0,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      _getLocalizedString('homeCleaning'),
-                      style: GoogleFonts.cairo(
-                        fontSize: isMobile ? 12.0 : 14.0,
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.circle,
-                color: AppColors.success,
-                size: isMobile ? 12.0 : 14.0,
-              ),
-            ],
-          ),
-        ),
-        
-        // Messages area
-        Expanded(
-          child: Container(
-            color: AppColors.background,
-            child: _buildMessagesList(isMobile, isTablet),
-          ),
-        ),
-        
-        // Message input
-        _buildMessageInput(isMobile, isTablet),
-      ],
-    );
+    // This method is no longer needed since ChatMessagesWidget handles everything
+    // Return an empty container as placeholder
+    return Container();
   }
 
   Widget _buildMessagesList(bool isMobile, bool isTablet) {
-    final messages = [
-      {
-        'text': 'Hello! I will arrive in 10 minutes',
-        'isMe': false,
-        'time': '10:30 AM',
-      },
-      {
-        'text': 'Perfect, thank you!',
-        'isMe': true,
-        'time': '10:31 AM',
-      },
-      {
-        'text': 'I\'m here now',
-        'isMe': false,
-        'time': '10:40 AM',
-      },
-    ];
-
-    return ListView.builder(
-      padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
-      itemCount: messages.length,
-      itemBuilder: (context, index) {
-        final message = messages[index];
-        return _buildMessageBubble(message, isMobile, isTablet);
-      },
-    );
+    // This method is no longer needed since ChatMessagesWidget handles everything
+    return Container();
   }
 
   Widget _buildMessageBubble(Map<String, dynamic> message, bool isMobile, bool isTablet) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16.0),
-      child: Row(
-        mainAxisAlignment: message['isMe'] ? MainAxisAlignment.end : MainAxisAlignment.start,
-        children: [
-          if (!message['isMe']) ...[
-            Container(
-              width: isMobile ? 32.0 : 36.0,
-              height: isMobile ? 32.0 : 36.0,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(isMobile ? 16.0 : 18.0),
-              ),
-              child: Icon(
-                Icons.person,
-                color: AppColors.primary,
-                size: isMobile ? 16.0 : 18.0,
-              ),
-            ),
-            const SizedBox(width: 8.0),
-          ],
-          Flexible(
-            child: Container(
-              padding: EdgeInsets.all(isMobile ? 12.0 : 16.0),
-              decoration: BoxDecoration(
-                color: message['isMe'] ? AppColors.primary : AppColors.white,
-                borderRadius: BorderRadius.circular(isMobile ? 16.0 : 20.0),
-                border: message['isMe'] ? null : Border.all(color: AppColors.border, width: 1),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    message['text'],
-                    style: GoogleFonts.cairo(
-                      fontSize: isMobile ? 14.0 : 16.0,
-                      fontWeight: FontWeight.w400,
-                      color: message['isMe'] ? AppColors.white : AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 4.0),
-                  Text(
-                    message['time'],
-                    style: GoogleFonts.cairo(
-                      fontSize: isMobile ? 10.0 : 12.0,
-                      fontWeight: FontWeight.w400,
-                      color: message['isMe'] ? AppColors.white.withValues(alpha: 0.7) : AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    // This method is no longer needed since ChatMessagesWidget handles everything
+    return Container();
   }
 
   Widget _buildMessageInput(bool isMobile, bool isTablet) {
-    return Container(
-      padding: EdgeInsets.all(isMobile ? 12.0 : 16.0),
-      decoration: const BoxDecoration(
-        color: AppColors.white,
-        border: Border(
-          top: BorderSide(color: AppColors.border, width: 1),
-        ),
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: () {
-              // Attach file
-            },
-            icon: const Icon(Icons.attach_file, color: AppColors.textSecondary),
-          ),
-          Expanded(
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: _getLocalizedString('type_message'),
-                hintStyle: GoogleFonts.cairo(
-                  fontSize: isMobile ? 14.0 : 16.0,
-                  color: AppColors.textSecondary,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(isMobile ? 20.0 : 24.0),
-                  borderSide: const BorderSide(color: AppColors.border),
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: isMobile ? 16.0 : 20.0,
-                  vertical: isMobile ? 12.0 : 16.0,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8.0),
-          IconButton(
-            onPressed: () {
-              // Send message
-            },
-            icon: const Icon(Icons.send, color: AppColors.primary),
-          ),
-        ],
-      ),
-    );
+    // This method is no longer needed since ChatMessagesWidget handles everything
+    return Container();
   }
 
   // Payments Section
@@ -3074,7 +2694,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               ),
               SizedBox(height: isMobile ? 8.0 : 12.0),
               Text(
-                card['count'] as String,
+                card['amount'] as String,
                 style: GoogleFonts.cairo(
                   fontSize: isMobile ? 24.0 : 32.0,
                   fontWeight: FontWeight.w700,

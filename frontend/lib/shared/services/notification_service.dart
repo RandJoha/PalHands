@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../../core/constants/api_config.dart';
-import '../../shared/services/auth_service.dart';
+import 'auth_service.dart';
 
 class NotificationModel {
   final String id;
@@ -59,20 +59,11 @@ class NotificationModel {
 }
 
 class NotificationService {
-  static final NotificationService _instance = NotificationService._internal();
-  factory NotificationService() => _instance;
-  NotificationService._internal();
-
-  final AuthService _authService = AuthService();
-
-  Map<String, String> get _authHeaders {
-    final token = _authService.token;
-    return {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    };
-  }
+  static String get _baseUrl => ApiConfig.currentApiBaseUrl;
+  
+  final AuthService? _authService;
+  
+  NotificationService([this._authService]);
 
   // Get user notifications
   Future<Map<String, dynamic>> getNotifications({
@@ -81,178 +72,159 @@ class NotificationService {
     bool unreadOnly = false,
   }) async {
     try {
-      final queryParams = {
+      final queryParams = <String, String>{
         'page': page.toString(),
         'limit': limit.toString(),
         if (unreadOnly) 'unreadOnly': 'true',
       };
 
-      final uri = Uri.parse('${ApiConfig.currentApiBaseUrl}/notifications')
+      final uri = Uri.parse('$_baseUrl/notifications')
           .replace(queryParameters: queryParams);
 
-      final response = await http.get(uri, headers: _authHeaders);
+      final response = await http.get(
+        uri,
+        headers: _authHeaders,
+      );
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['success'] == true) {
-          final notifications = (data['data']['notifications'] as List)
-              .map((json) => NotificationModel.fromJson(json))
-              .toList();
-
-          return {
-            'success': true,
-            'data': {
-              'notifications': notifications,
-              'pagination': data['data']['pagination'],
-              'unreadCount': data['data']['unreadCount'],
-            },
-          };
-        }
-        return data;
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to fetch notifications: ${response.statusCode}');
       }
-
-      return {
-        'success': false,
-        'message': 'Failed to fetch notifications (Status: ${response.statusCode})',
-      };
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Get notifications failed: $e');
-      }
-      return {
-        'success': false,
-        'message': 'Network error: $e',
-      };
+      throw Exception('Network error: $e');
     }
   }
 
   // Get unread count
   Future<Map<String, dynamic>> getUnreadCount() async {
     try {
-      final uri = Uri.parse('${ApiConfig.currentApiBaseUrl}/notifications/unread-count');
-      final response = await http.get(uri, headers: _authHeaders);
+      final uri = Uri.parse('$_baseUrl/notifications/unread-count');
+
+      if (kDebugMode) {
+        print('🔔 Fetching unread count from: $uri');
+        print('🔔 Headers: $_authHeaders');
+      }
+
+      final response = await http.get(
+        uri,
+        headers: _authHeaders,
+      );
+
+      if (kDebugMode) {
+        print('🔔 Response status: ${response.statusCode}');
+        print('🔔 Response body: ${response.body}');
+      }
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['success'] == true) {
-          return {
-            'success': true,
-            'data': {
-              'unreadCount': data['data']['unreadCount'],
-            },
-          };
-        }
-        return data;
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to fetch unread count: ${response.statusCode}');
       }
-
-      return {
-        'success': false,
-        'message': 'Failed to get unread count (Status: ${response.statusCode})',
-      };
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Get unread count failed: $e');
+        print('🔔 Error fetching unread count: $e');
       }
-      return {
-        'success': false,
-        'message': 'Network error: $e',
-      };
+      throw Exception('Network error: $e');
     }
   }
 
   // Mark notification as read
   Future<Map<String, dynamic>> markAsRead(String notificationId) async {
     try {
-      final uri = Uri.parse('${ApiConfig.currentApiBaseUrl}/notifications/$notificationId/read');
-      final response = await http.put(uri, headers: _authHeaders);
+      final uri = Uri.parse('$_baseUrl/notifications/$notificationId/read');
+
+      final response = await http.put(
+        uri,
+        headers: _authHeaders,
+      );
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['success'] == true) {
-          return {
-            'success': true,
-            'data': NotificationModel.fromJson(data['data']),
-          };
-        }
-        return data;
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to mark notification as read: ${response.statusCode}');
       }
-
-      return {
-        'success': false,
-        'message': 'Failed to mark notification as read (Status: ${response.statusCode})',
-      };
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Mark as read failed: $e');
-      }
-      return {
-        'success': false,
-        'message': 'Network error: $e',
-      };
+      throw Exception('Network error: $e');
     }
   }
 
   // Mark all notifications as read
   Future<Map<String, dynamic>> markAllAsRead() async {
     try {
-      final uri = Uri.parse('${ApiConfig.currentApiBaseUrl}/notifications/read-all');
-      final response = await http.put(uri, headers: _authHeaders);
+      final uri = Uri.parse('$_baseUrl/notifications/read-all');
+
+      final response = await http.put(
+        uri,
+        headers: _authHeaders,
+      );
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['success'] == true) {
-          return {
-            'success': true,
-            'data': data['data'],
-          };
-        }
-        return data;
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to mark all notifications as read: ${response.statusCode}');
       }
-
-      return {
-        'success': false,
-        'message': 'Failed to mark all notifications as read (Status: ${response.statusCode})',
-      };
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Mark all as read failed: $e');
+      throw Exception('Network error: $e');
+    }
+  }
+
+  // Mark notifications as read by type
+  Future<Map<String, dynamic>> markAsReadByType(String type) async {
+    try {
+      final uri = Uri.parse('$_baseUrl/notifications/read-by-type');
+
+      final response = await http.put(
+        uri,
+        headers: _authHeaders,
+        body: json.encode({'type': type}),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to mark notifications as read by type: ${response.statusCode}');
       }
-      return {
-        'success': false,
-        'message': 'Network error: $e',
-      };
+    } catch (e) {
+      throw Exception('Network error: $e');
     }
   }
 
   // Delete notification
   Future<Map<String, dynamic>> deleteNotification(String notificationId) async {
     try {
-      final uri = Uri.parse('${ApiConfig.currentApiBaseUrl}/notifications/$notificationId');
-      final response = await http.delete(uri, headers: _authHeaders);
+      final uri = Uri.parse('$_baseUrl/notifications/$notificationId');
+
+      final response = await http.delete(
+        uri,
+        headers: _authHeaders,
+      );
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['success'] == true) {
-          return {
-            'success': true,
-            'data': NotificationModel.fromJson(data['data']),
-          };
-        }
-        return data;
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to delete notification: ${response.statusCode}');
       }
-
-      return {
-        'success': false,
-        'message': 'Failed to delete notification (Status: ${response.statusCode})',
-      };
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Delete notification failed: $e');
-      }
-      return {
-        'success': false,
-        'message': 'Network error: $e',
-      };
+      throw Exception('Network error: $e');
     }
+  }
+
+  // Get authentication headers
+  Map<String, String> get _authHeaders {
+    // Use provided AuthService instance or create new one
+    final authService = _authService ?? AuthService();
+    final token = authService.token;
+    
+    if (kDebugMode) {
+      print('🔑 Notification service - Token: ${token != null ? 'Present' : 'Missing'}');
+      print('🔑 Using AuthService instance: ${_authService != null ? 'Provided' : 'New'}');
+    }
+    
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+    };
   }
 }

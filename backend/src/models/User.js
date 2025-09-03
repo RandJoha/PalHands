@@ -124,6 +124,27 @@ const userSchema = new mongoose.Schema({
       default: 0
     }
   },
+  
+  // Provider-specific fields (only used when role is 'provider')
+  services: [{
+    type: String,
+    default: []
+  }],
+  experienceYears: {
+    type: Number,
+    min: 0,
+    default: 0
+  },
+  languages: [{
+    type: String,
+    default: ['Arabic']
+  }],
+  hourlyRate: {
+    type: Number,
+    min: 0,
+    default: 0
+  },
+  
   createdAt: {
     type: Date,
     default: Date.now

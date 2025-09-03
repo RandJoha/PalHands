@@ -2909,8 +2909,8 @@ class AppStrings {
   };
 
   static const Map<String, String> serviceName = {
-    'en': 'Service Name / Person',
-    'ar': 'اسم الخدمة / الشخص',
+    'en': 'About who? write his id',
+    'ar': 'عن من؟ اكتب رقمه',
   };
 
   static const Map<String, String> whatWentWrong = {
@@ -3302,8 +3302,8 @@ class AppStrings {
   };
 
   static const Map<String, String> searchByNameEmailPhone = {
-    'en': 'Search by name, email, or phone...',
-    'ar': 'البحث بالاسم، البريد الإلكتروني، أو الهاتف...',
+    'en': 'Search by name, email, phone, or provider ID...',
+    'ar': 'البحث بالاسم، البريد الإلكتروني، الهاتف، أو رقم المزود...',
   };
 
   static const Map<String, String> role = {
