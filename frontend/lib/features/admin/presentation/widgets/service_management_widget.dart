@@ -628,13 +628,38 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
           // Provider - Balanced sizing
           Expanded(
             flex: 1,
-            child: Text(
-              '${service['provider']['firstName']} ${service['provider']['lastName']}',
-              style: GoogleFonts.cairo(
-                fontSize: screenWidth > 1400 ? 14 : screenWidth > 1024 ? 13 : 12,
-                color: AppColors.textDark,
-              ),
-              overflow: TextOverflow.ellipsis,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${service['provider']['firstName']} ${service['provider']['lastName']}',
+                    style: GoogleFonts.cairo(
+                      fontSize: screenWidth > 1400 ? 14 : screenWidth > 1024 ? 13 : 12,
+                      color: AppColors.textDark,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (service['provider']['providerId'] != null) ...[
+                  const SizedBox(width: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(3),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
+                    child: Text(
+                      '#${service['provider']['providerId']}',
+                      style: GoogleFonts.cairo(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.blue.shade700,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
           

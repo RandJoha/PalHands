@@ -1,4 +1,5 @@
 const Report = require('../models/Report');
+const NotificationService = require('../services/notificationService');
 
 // POST /api/reports
 const createReport = async (req, res) => {
@@ -77,7 +78,13 @@ const createReport = async (req, res) => {
       createdAt: report.createdAt
     });
 
-    // Notification service removed
+    // Send notification to all admins about the new report
+    try {
+      await NotificationService.notifyNewReport(report);
+    } catch (notificationError) {
+      console.error('Failed to send notification for new report:', notificationError);
+      // Don't fail the report creation if notification fails
+    }
 
     return res.status(201).json({ success: true, message: 'Report created', data: report });
   } catch (error) {

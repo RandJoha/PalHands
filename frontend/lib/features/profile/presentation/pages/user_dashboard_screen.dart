@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 // Core imports
 
@@ -10,7 +11,8 @@ import 'package:flutter/material.dart';
 import '../widgets/responsive_user_dashboard.dart';
 
 class UserDashboardScreen extends StatefulWidget {
-  const UserDashboardScreen({super.key});
+  final int? initialTabIndex;
+  const UserDashboardScreen({super.key, this.initialTabIndex});
 
   @override
   State<UserDashboardScreen> createState() => _UserDashboardScreenState();
@@ -36,6 +38,10 @@ class _UserDashboardScreenState extends State<UserDashboardScreen>
       curve: Curves.easeInOut,
     ));
     _animationController.forward();
+    
+    if (kDebugMode && widget.initialTabIndex != null) {
+      print('🎯 UserDashboardScreen - Initial tab index: ${widget.initialTabIndex}');
+    }
   }
 
   @override
@@ -49,7 +55,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen>
     return Scaffold(
       body: FadeTransition(
         opacity: _fadeAnimation,
-        child: const ResponsiveUserDashboard(),
+        child: ResponsiveUserDashboard(initialIndex: widget.initialTabIndex),
       ),
     );
   }

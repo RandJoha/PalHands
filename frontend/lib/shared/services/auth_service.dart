@@ -23,9 +23,23 @@ class AuthService extends ChangeNotifier with BaseApiService {
   // Initialize auth service and load persisted data
   Future<void> initialize() async {
     try {
+      if (kDebugMode) {
+        print('🚀 Auth service - Starting initialization...');
+      }
+      
       final prefs = await SharedPreferences.getInstance();
       final savedToken = prefs.getString(_tokenKey);
       final savedUser = prefs.getString(_userKey);
+      
+      if (kDebugMode) {
+        print('🔍 Auth service - Checking persisted data:');
+        print('  - Saved token present: ${savedToken != null}');
+        print('  - Saved user present: ${savedUser != null}');
+        if (savedToken != null) {
+          print('  - Saved token length: ${savedToken.length}');
+          print('  - Saved token preview: ${savedToken.substring(0, savedToken.length > 30 ? 30 : savedToken.length)}...');
+        }
+      }
       
       if (savedToken != null && savedUser != null) {
         _token = savedToken;
@@ -35,11 +49,18 @@ class AuthService extends ChangeNotifier with BaseApiService {
         
         if (kDebugMode) {
           print('✅ Auth service initialized with persisted data');
+          print('  - Token loaded: ${_token != null}');
+          print('  - User loaded: ${_currentUser != null}');
+          print('  - Is authenticated: $_isAuthenticated');
+          print('  - Current user email: ${_currentUser?['email'] ?? 'None'}');
         }
         // Always refresh profile in the background to sync latest fields (e.g., email changed)
         try { await getProfile(); } catch (_) {}
       } else if (savedToken != null && savedUser == null) {
         // Recover session if we have a token but no user data persisted
+        if (kDebugMode) {
+          print('🔄 Auth service - Token found but no user data, attempting recovery...');
+        }
         _token = savedToken;
         final valid = await validateToken();
         _isAuthenticated = valid;
@@ -49,11 +70,32 @@ class AuthService extends ChangeNotifier with BaseApiService {
           }
           // Fetch full profile after validating token
           try { await getProfile(); } catch (_) {}
+        } else {
+          if (kDebugMode) {
+            print('❌ Auth service - Token validation failed, clearing token');
+          }
+          await _clearPersistedData();
         }
+      } else {
+        if (kDebugMode) {
+          print('ℹ️ Auth service - No persisted data found, starting fresh');
+          print('  - Token: null');
+          print('  - User: null');
+          print('  - Is authenticated: false');
+        }
+      }
+      
+      if (kDebugMode) {
+        print('🏁 Auth service - Initialization complete');
+        print('  - Final token state: ${_token != null}');
+        print('  - Final user state: ${_currentUser != null}');
+        print('  - Final auth state: $_isAuthenticated');
       }
     } catch (e) {
       if (kDebugMode) {
         print('❌ Failed to initialize auth service: $e');
+        print('  - Error type: ${e.runtimeType}');
+        print('  - Stack trace: ${StackTrace.current}');
       }
       // Clear any corrupted data
       await _clearPersistedData();
@@ -63,16 +105,43 @@ class AuthService extends ChangeNotifier with BaseApiService {
   // Save token and user data to persistent storage
   Future<void> _savePersistedData() async {
     try {
+      if (kDebugMode) {
+        print('💾 Auth service - _savePersistedData called');
+        print('  - Token to save: ${_token != null}');
+        print('  - User to save: ${_currentUser != null}');
+      }
+      
       final prefs = await SharedPreferences.getInstance();
       if (_token != null) {
         await prefs.setString(_tokenKey, _token!);
+        if (kDebugMode) {
+          print('✅ Token saved to persistent storage');
+        }
+      } else {
+        if (kDebugMode) {
+          print('⚠️ No token to save');
+        }
       }
+      
       if (_currentUser != null) {
         await prefs.setString(_userKey, json.encode(_currentUser));
+        if (kDebugMode) {
+          print('✅ User data saved to persistent storage');
+        }
+      } else {
+        if (kDebugMode) {
+          print('⚠️ No user data to save');
+        }
+      }
+      
+      if (kDebugMode) {
+        print('✅ _savePersistedData completed successfully');
       }
     } catch (e) {
       if (kDebugMode) {
         print('❌ Failed to save persisted data: $e');
+        print('  - Error type: ${e.runtimeType}');
+        print('  - Stack trace: ${StackTrace.current}');
       }
     }
   }
@@ -117,11 +186,20 @@ class AuthService extends ChangeNotifier with BaseApiService {
         _isAuthenticated = true;
         
         // Save to persistent storage
+        if (kDebugMode) {
+          print('💾 Auth service - Saving login data to persistent storage...');
+          print('  - Token to save: ${_token != null}');
+          print('  - User to save: ${_currentUser != null}');
+        }
+        
         await _savePersistedData();
         notifyListeners();
         
         if (kDebugMode) {
           print('✅ User logged in successfully: ${_currentUser?['email']}');
+          print('  - Final token state: ${_token != null}');
+          print('  - Final user state: ${_currentUser != null}');
+          print('  - Final auth state: $_isAuthenticated');
         }
       }
 

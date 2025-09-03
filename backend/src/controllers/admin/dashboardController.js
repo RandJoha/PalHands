@@ -130,12 +130,40 @@ const getUserManagementData = async (req, res) => {
     // Build filter
     const filter = {};
     if (search) {
-      filter.$or = [
-        { firstName: { $regex: search, $options: 'i' } },
-        { lastName: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-        { phone: { $regex: search, $options: 'i' } }
-      ];
+      // Check if search is a provider ID (4-digit number)
+      const isProviderId = /^\d{4}$/.test(search);
+      
+      if (isProviderId) {
+        // If searching by provider ID, we need to find the provider first
+        const Provider = require('../../models/Provider');
+        const provider = await Provider.findOne({ providerId: parseInt(search) });
+        
+        if (provider) {
+          // Filter by the provider's user ID
+          filter._id = provider._id;
+        } else {
+          // No provider found with this ID, return empty results
+          return res.json({
+            success: true,
+            data: {
+              users: [],
+              pagination: {
+                current: parseInt(page),
+                total: 0,
+                totalRecords: 0
+              }
+            }
+          });
+        }
+      } else {
+        // Regular text search
+        filter.$or = [
+          { firstName: { $regex: search, $options: 'i' } },
+          { lastName: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } },
+          { phone: { $regex: search, $options: 'i' } }
+        ];
+      }
     }
     
     // Handle role filtering - prioritize specific role over excludeRole

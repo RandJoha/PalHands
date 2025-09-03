@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 
 // Core imports
 import '../../../../core/constants/app_colors.dart';
@@ -9,6 +10,7 @@ import '../../../../core/constants/app_strings.dart';
 // Shared imports
 import '../../../../shared/services/auth_service.dart';
 import '../../../../shared/services/language_service.dart';
+import '../../../../shared/services/notification_service.dart';
 
 // Admin widgets
 import 'admin_sidebar.dart';
@@ -17,6 +19,7 @@ import 'service_management_widget.dart';
 import 'booking_management_widget.dart';
 import 'reports_widget.dart';
 import 'analytics_widget.dart';
+import 'notification_widget.dart';
 import '../../../profile/presentation/widgets/profile_settings_rich_widget.dart';
 import '../../../provider/presentation/widgets/bookings_as_client_widget.dart';
 
@@ -33,15 +36,46 @@ class WebAdminDashboard extends StatefulWidget {
 class _WebAdminDashboardState extends State<WebAdminDashboard> {
   int _selectedIndex = 0;
   bool _isSidebarCollapsed = false;
+  int _unreadNotificationCount = 0;
+  final NotificationService _notificationService = NotificationService();
 
   @override
   void initState() {
     super.initState();
+    _loadUnreadNotificationCount();
+    
+    // Refresh notification count every 30 seconds
+    Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (mounted) {
+        _loadUnreadNotificationCount();
+      } else {
+        timer.cancel();
+      }
+    });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // Refresh count when dashboard becomes active
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _loadUnreadNotificationCount();
+      }
+    });
+  }
+
+  Future<void> _loadUnreadNotificationCount() async {
+    try {
+      final response = await _notificationService.getUnreadCount();
+      if (response['success'] == true && mounted) {
+        setState(() {
+          _unreadNotificationCount = response['data']['unreadCount'] ?? 0;
+        });
+      }
+    } catch (e) {
+      // Silently handle notification loading errors
+    }
   }
 
   List<AdminMenuItem> _getMenuItems(String languageCode) {
@@ -78,9 +112,14 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
         index: 5,
       ),
       AdminMenuItem(
+        title: 'Notifications',
+        icon: Icons.notifications,
+        index: 5,
+      ),
+      AdminMenuItem(
         title: AppStrings.getString('profileSettings', languageCode),
         icon: Icons.settings,
-        index: 5,
+        index: 6,
       ),
     ];
   }
@@ -244,6 +283,52 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
 
                 SizedBox(width: screenWidth > 1400 ? 20 : 16),
 
+                // Notifications
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _selectedIndex = 5; // Switch to notifications tab
+                    });
+                    // Refresh unread count when notifications tab is opened
+                    _loadUnreadNotificationCount();
+                  },
+                  icon: Stack(
+                    children: [
+                      Icon(Icons.notifications_outlined, 
+                           size: screenWidth > 1400 ? 26 : 24),
+                      // Notification indicator - shows actual unread count
+                      if (_unreadNotificationCount > 0)
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 16,
+                              minHeight: 16,
+                            ),
+                            child: Text(
+                              _unreadNotificationCount > 99 ? '99+' : _unreadNotificationCount.toString(),
+                              style: GoogleFonts.cairo(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  tooltip: 'Notifications',
+                ),
+
+                SizedBox(width: screenWidth > 1400 ? 20 : 16),
+
                 // Admin profile - more compact
                 Consumer<AuthService>(
                   builder: (context, authService, child) {
@@ -342,6 +427,8 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
       case 5:
         return const AnalyticsWidget();
       case 5:
+        return const NotificationWidget();
+      case 6:
         return const ProfileSettingsRichWidget();
       default:
         return const UserManagementWidget();

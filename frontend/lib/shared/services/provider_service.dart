@@ -107,16 +107,11 @@ class ProviderService with BaseApiService {
     } catch (e) {
       if (kDebugMode) {
         print('❌ Error fetching providers from backend: $e');
-        print('🔄 Falling back to mock data');
       }
       
-      // Fallback to mock data if backend fails
-      final items = _mockProviders();
-      return items.where((p) {
-        final matchesServices = servicesAny.isEmpty || p.services.any((s) => servicesAny.contains(s));
-        final matchesCity = city == null || city.isEmpty || p.city.toLowerCase() == city.toLowerCase();
-        return matchesServices && matchesCity;
-      }).toList();
+      // Don't fall back to mock data - return empty list instead
+      // This prevents the issue with invalid provider IDs
+      return [];
     }
   }
 
@@ -255,6 +250,7 @@ class ProviderService with BaseApiService {
       final baseRate = 45 + (i % 50) + rnd.nextInt(20);
       providers.add(ProviderModel(
         id: 'svc_$i',
+        providerId: 1000 + i, // Add provider ID starting from 1000
         name: name,
         city: city,
         phone: '+97059${rnd.nextInt(9999999).toString().padLeft(7, '0')}',
@@ -276,6 +272,7 @@ class ProviderService with BaseApiService {
       }
       providers.add(ProviderModel(
         id: 'pro_$j',
+        providerId: 1100 + j, // Add provider ID starting from 1100 for multi-service providers
         name: names[(j + 7) % names.length],
         city: cities[(j + 3) % cities.length],
         phone: '+97059${rnd.nextInt(9999999).toString().padLeft(7, '0')}',

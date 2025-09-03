@@ -24,6 +24,7 @@ import 'features/admin/presentation/pages/admin_dashboard_screen.dart';
 import 'features/profile/presentation/pages/user_dashboard_screen.dart';
 import 'features/provider/presentation/pages/provider_dashboard_screen.dart';
 import 'debug_admin_login.dart';
+import 'debug_chat_test.dart';
 
 // Services
 import 'shared/services/language_service.dart';
@@ -133,6 +134,7 @@ class PalHandsApp extends StatelessWidget {
                   '/signup': (context) => const SignupScreen(),
                   '/provider': (context) => const ProviderDashboardScreen(),
                   '/debug-admin': (context) => const DebugAdminLoginPage(),
+                  '/debug-chat': (context) => const DebugChatTest(),
                 },
                 // Handle deep links with query parameters (e.g., /reset-password?token=...)
                 onGenerateRoute: (settings) {
@@ -176,7 +178,15 @@ class PalHandsApp extends StatelessWidget {
                     case '/admin':
                       return MaterialPageRoute(builder: (_) => const AdminDashboardScreen(), settings: settings);
                     case '/user':
-                      return MaterialPageRoute(builder: (_) => const UserDashboardScreen(), settings: settings);
+                      final tabIndex = uri.queryParameters['tab'];
+                      int? initialTabIndex;
+                      if (tabIndex == 'chats') {
+                        initialTabIndex = 1; // Chat tab index
+                      }
+                      return MaterialPageRoute(
+                        builder: (_) => UserDashboardScreen(initialTabIndex: initialTabIndex), 
+                        settings: settings
+                      );
                     case '/login':
                       return MaterialPageRoute(builder: (_) => const LoginScreen(), settings: settings);
                     case '/signup':
@@ -185,6 +195,8 @@ class PalHandsApp extends StatelessWidget {
                       return MaterialPageRoute(builder: (_) => const ProviderDashboardScreen(), settings: settings);
                     case '/debug-admin':
                       return MaterialPageRoute(builder: (_) => const DebugAdminLoginPage(), settings: settings);
+                    case '/debug-chat':
+                      return MaterialPageRoute(builder: (_) => const DebugChatTest(), settings: settings);
                   }
                   // Unknown route -> home
                   return MaterialPageRoute(builder: (_) => const AuthWrapper(), settings: settings);
