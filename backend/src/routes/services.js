@@ -13,16 +13,7 @@ const createServiceValidator = celebrate({
     title: Joi.string().trim().required(),
     description: Joi.string().trim().required(),
     category: Joi.string().valid(
-      'cleaning',
-      'organizing',
-      'cooking',
-      'childcare',
-      'elderly',
-      'maintenance',
-      'newhome',
-      'miscellaneous',
-      // Legacy categories
-      'laundry','caregiving','furniture_moving','elderly_support','aluminum_work','carpentry','home_nursing','other'
+      'cleaning','laundry','caregiving','furniture_moving','elderly_support','aluminum_work','carpentry','home_nursing','maintenance','other'
     ).required(),
     subcategory: Joi.string().trim().allow('').optional(),
     price: Joi.object({
@@ -43,8 +34,8 @@ const createServiceValidator = celebrate({
       serviceArea: Joi.string().required(),
       radius: Joi.number().min(0).default(10),
       onSite: Joi.boolean().default(true),
-  remote: Joi.boolean().default(false),
-  geo: Joi.object({ type: Joi.string().valid('Point').required(), coordinates: Joi.array().length(2).items(Joi.number()).required() }).optional()
+      remote: Joi.boolean().default(false),
+      geo: Joi.object({ type: Joi.string().valid('Point').required(), coordinates: Joi.array().length(2).items(Joi.number()).required() }).optional()
     }).required(),
     images: Joi.array().items(Joi.object({ url: Joi.string().uri().required(), alt: Joi.string().allow('') })).optional(),
     requirements: Joi.array().items(Joi.string()).optional(),
@@ -59,16 +50,7 @@ const updateServiceValidator = celebrate({
     title: Joi.string().trim().optional(),
     description: Joi.string().trim().optional(),
     category: Joi.string().valid(
-      'cleaning',
-      'organizing',
-      'cooking',
-      'childcare',
-      'elderly',
-      'maintenance',
-      'newhome',
-      'miscellaneous',
-      // Legacy categories
-      'laundry','caregiving','furniture_moving','elderly_support','aluminum_work','carpentry','home_nursing','other'
+      'cleaning','laundry','caregiving','furniture_moving','elderly_support','aluminum_work','carpentry','home_nursing','maintenance','other'
     ).optional(),
     subcategory: Joi.string().trim().allow('').optional(),
     price: Joi.object({
@@ -82,7 +64,6 @@ const updateServiceValidator = celebrate({
       timeSlots: Joi.array().items(Joi.object({ start: Joi.string().pattern(/^\d{2}:\d{2}$/), end: Joi.string().pattern(/^\d{2}:\d{2}$/) })).optional(),
       flexible: Joi.boolean().optional()
     }).optional(),
-    location: Joi.object({ serviceArea: Joi.string().optional(), radius: Joi.number().min(0).optional(), onSite: Joi.boolean().optional(), remote: Joi.boolean().optional() }).optional(),
     location: Joi.object({
       serviceArea: Joi.string().optional(),
       radius: Joi.number().min(0).optional(),
@@ -117,16 +98,4 @@ router.post('/:id/images/attach', auth, checkRole(['admin']), celebrate({
   [Segments.BODY]: Joi.object({ images: Joi.array().items(Joi.object({ key: Joi.string().required(), alt: Joi.string().allow('').optional() })).min(1).required() })
 }), servicesController.attachServiceImages);
 router.post('/:id/images/cleanup', auth, checkRole(['admin']), servicesController.cleanupServiceImages);
-
-// Admin-only: emergency config for a service
-router.post('/:id/emergency', auth, checkRole(['admin']), celebrate({
-  [Segments.BODY]: Joi.object({
-    emergencyEnabled: Joi.boolean().optional(),
-    emergencyRateMultiplier: Joi.number().min(1).optional(),
-    emergencyLeadTimeMinutes: Joi.number().min(0).optional(),
-    emergencySurcharge: Joi.object({ type: Joi.string().valid('flat','percent').required(), amount: Joi.number().min(0).required() }).optional(),
-    emergencyTypes: Joi.array().items(Joi.string()).optional()
-  }).min(1)
-}), servicesController.setServiceEmergency);
-
 module.exports = router;

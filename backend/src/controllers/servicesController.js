@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Service = require('../models/Service');
 const { ok, created, error } = require('../utils/response');
 const { servicePolicies } = require('../policies');
@@ -36,11 +37,36 @@ async function listServices(req, res) {
     }
 
     const qFilter = geoQuery ? { ...filter, ...geoQuery } : filter;
-    const services = await Service.find(qFilter)
+    let services = await Service.find(qFilter)
       .populate('provider', 'firstName lastName email rating')
       .sort({ featured: -1, 'rating.average': -1, createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
+    // Fallback: if no services found and caller filtered by providerId, try to resolve
+    // provider.services (string IDs) and load those services (some providers reference
+    // services by string ids instead of setting Service.provider).
+    if ((!services || services.length === 0) && providerId) {
+      try {
+        const Provider = require('../models/Provider');
+        const prov = await Provider.findById(providerId).select('services');
+        if (prov && Array.isArray(prov.services) && prov.services.length) {
+          // Filter valid ObjectId strings
+          const ids = prov.services.map(s => {
+            try { return mongoose.Types.ObjectId(String(s)); } catch (_) { return null; }
+          }).filter(Boolean);
+          if (ids.length) {
+            services = await Service.find({ _id: { $in: ids } })
+              .populate('provider', 'firstName lastName email rating')
+              .sort({ featured: -1, 'rating.average': -1, createdAt: -1 })
+              .skip(skip)
+              .limit(parseInt(limit));
+          }
+        }
+      } catch (_) {
+        // ignore fallback errors
+      }
+    }
+
     const total = await Service.countDocuments(qFilter);
     const totalPages = Math.ceil(total / limit);
     const currentPage = totalPages ? parseInt(page) : 0;
@@ -227,22 +253,24 @@ async function setServiceEmergency(req, res) {
   try {
     const service = await Service.findById(req.params.id);
     if (!service) return error(res, 404, 'Service not found');
-    // Only admins (route guarded) or owner can set; double-check policies
-    if (!servicePolicies.canModify(req.user, service)) return error(res, 403, 'Not allowed');
 
-    const { emergencyEnabled, emergencyRateMultiplier, emergencySurcharge, emergencyTypes, emergencyLeadTimeMinutes } = req.body || {};
-    if (typeof emergencyEnabled === 'boolean') service.emergencyEnabled = emergencyEnabled;
-    if (typeof emergencyRateMultiplier === 'number') service.emergencyRateMultiplier = emergencyRateMultiplier;
-    if (emergencySurcharge && typeof emergencySurcharge === 'object') service.emergencySurcharge = emergencySurcharge;
-    if (Array.isArray(emergencyTypes)) service.emergencyTypes = emergencyTypes;
-    if (typeof emergencyLeadTimeMinutes === 'number') service.emergencyLeadTimeMinutes = emergencyLeadTimeMinutes;
+    // Only admins can set emergency flags — route should be guarded, but double-check
+    if (!servicePolicies.canModify(req.user, service)) return error(res, 403, 'Not authorized');
+
+    const { emergencyEnabled, emergencyRateMultiplier, emergencySurcharge, emergencyLeadTimeMinutes } = req.body;
+    if (typeof emergencyEnabled !== 'undefined') service.emergencyEnabled = !!emergencyEnabled;
+    if (typeof emergencyRateMultiplier !== 'undefined') service.emergencyRateMultiplier = parseFloat(emergencyRateMultiplier) || service.emergencyRateMultiplier;
+    if (typeof emergencySurcharge !== 'undefined') service.emergencySurcharge = parseFloat(emergencySurcharge) || service.emergencySurcharge;
+    if (typeof emergencyLeadTimeMinutes !== 'undefined') service.emergencyLeadTimeMinutes = parseInt(emergencyLeadTimeMinutes) || service.emergencyLeadTimeMinutes;
+
     service.updatedAt = Date.now();
     await service.save();
     return ok(res, service, 'Service emergency configuration updated');
   } catch (e) {
     console.error('setServiceEmergency error', e);
-    return error(res, 400, e.message || 'Failed to update emergency config');
+    return error(res, 400, e.message || 'Failed to update service emergency settings');
   }
+
 }
 
 module.exports = { listServices, getServiceById, createService, updateService, deleteService, uploadServiceImages, presignServiceImages, attachServiceImages, cleanupServiceImages, setServiceEmergency };

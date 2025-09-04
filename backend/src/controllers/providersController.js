@@ -247,10 +247,82 @@ async function getProvidersByCategory(req, res) {
   }
 }
 
+/**
+ * Get services offered by a provider
+ */
+async function getProviderServices(req, res) {
+  try {
+    const providerId = req.params.id;
+    const provider = await Provider.findById(providerId).select('services isActive');
+    if (!provider || !provider.isActive) return error(res, 404, 'Provider not found');
+    return ok(res, { data: provider.services || [] });
+  } catch (e) {
+    console.error('getProviderServices error', e);
+    return error(res, 500, 'Failed to fetch provider services');
+  }
+}
+
+/**
+ * Deactivate a service for one month (minimal safe implementation)
+ */
+async function deactivateServiceForMonth(req, res) {
+  try {
+    const { providerId, serviceId } = req.params;
+    // Minimal implementation: record intent and return success. Full implementation should
+    // add an entry to a provider availability/exception collection. For now, verify provider exists.
+    const provider = await Provider.findById(providerId).select('_id isActive');
+    if (!provider || !provider.isActive) return error(res, 404, 'Provider not found');
+    return ok(res, { message: `Service ${serviceId} marked for deactivation for a month (no-op).` });
+  } catch (e) {
+    console.error('deactivateServiceForMonth error', e);
+    return error(res, 500, 'Failed to deactivate service for month');
+  }
+}
+
+/**
+ * Activate a previously deactivated service for one month (minimal safe implementation)
+ */
+async function activateServiceForMonth(req, res) {
+  try {
+    const { providerId, serviceId } = req.params;
+    const provider = await Provider.findById(providerId).select('_id isActive');
+    if (!provider || !provider.isActive) return error(res, 404, 'Provider not found');
+    return ok(res, { message: `Service ${serviceId} marked for activation for a month (no-op).` });
+  } catch (e) {
+    console.error('activateServiceForMonth error', e);
+    return error(res, 500, 'Failed to activate service for month');
+  }
+}
+
+/**
+ * Unlink a service from a provider (remove service key from provider.services)
+ */
+async function unlinkServiceFromProvider(req, res) {
+  try {
+    const { providerId, serviceId } = req.params;
+    const provider = await Provider.findById(providerId);
+    if (!provider) return error(res, 404, 'Provider not found');
+    // Remove the service string if present
+    const idx = provider.services ? provider.services.indexOf(serviceId) : -1;
+    if (idx >= 0) {
+      provider.services.splice(idx, 1);
+      await provider.save();
+    }
+    return ok(res, { message: 'Service unlinked from provider', services: provider.services });
+  } catch (e) {
+    console.error('unlinkServiceFromProvider error', e);
+    return error(res, 500, 'Failed to unlink service from provider');
+  }
+}
+
 module.exports = {
   listProviders,
   getProviderById,
   getProvidersByCategory,
+  getProviderServices,
+  deactivateServiceForMonth,
+  activateServiceForMonth,
+  unlinkServiceFromProvider,
   getProviderStats
 };
 
