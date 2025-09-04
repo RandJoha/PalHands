@@ -9,8 +9,8 @@ class ApiConfig {
   static const String devBaseUrl = 'http://127.0.0.1:3000';
   static const String prodBaseUrl = 'https://api.palhands.com'; // Change this to your production URL
   
-  // Force backend URL for web development
-  static const String webDevBackendUrl = 'http://localhost:3001';
+  // Force backend URL for web development (use backend port 3000)
+  static const String webDevBackendUrl = 'http://127.0.0.1:3000';
   
   // Get the appropriate base URL based on environment
   static String get currentBaseUrl {

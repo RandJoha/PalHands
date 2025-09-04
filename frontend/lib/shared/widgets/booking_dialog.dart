@@ -77,19 +77,21 @@ class _BookingDialogState extends State<BookingDialog> {
           (s) => s.id == _selectedServiceId,
           orElse: () => _providerServices.first,
         );
-        final slug = (selected.slug.isNotEmpty) ? selected.slug : svc.ServiceModel.generateSlug(selected.title);
-        return selected.emergencyEnabled && kEmergencyServiceSlugs.contains(slug);
+        final slug = (selected.slug.isNotEmpty)
+            ? selected.slug
+            : svc.ServiceModel.generateSlug(selected.title);
+        // Enable emergency if either backend marks it or slug is in our emergency list
+        return (selected.emergencyEnabled == true) || kEmergencyServiceSlugs.contains(slug);
       }
       return _providerServices.any((s) {
-        final slug = (s.slug.isNotEmpty) ? s.slug : svc.ServiceModel.generateSlug(s.title);
-        return s.emergencyEnabled && kEmergencyServiceSlugs.contains(slug);
+        final slug = (s.slug.isNotEmpty)
+            ? s.slug
+            : svc.ServiceModel.generateSlug(s.title);
+        return (s.emergencyEnabled == true) || kEmergencyServiceSlugs.contains(slug);
       });
     }
 
     // Fallback when service documents are not available: inspect the provider
-    // service keys (strings shown on provider card). If any of those keys map
-    // to a known emergency slug, allow the toggle. This mirrors Khaled's UX
-    // when services are linked properly.
     try {
       final keys = widget.provider.services.map((e) => e.toString().toLowerCase()).toList();
       for (final s in kEmergencyServiceSlugs) {
@@ -177,15 +179,13 @@ class _BookingDialogState extends State<BookingDialog> {
 
   void _toggleEmergency(bool value) {
     if (!_supportsEmergency) {
-      // Ignore toggle if not supported
       return;
     }
     setState(() {
       _emergency = value;
       // Refresh resolved availability with emergency consideration
-      _resolved = null;
+      _loadResolved();
     });
-    _loadResolvedForMonth(_calendarMonth);
   }
 
   void _changeMonth(int delta) {

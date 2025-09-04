@@ -61,8 +61,10 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
   @override
   void initState() {
     super.initState();
-    // Load providers on demand instead of in initState for faster initial load
-    // _refreshProviders(); // REMOVED - will load when user interacts with filters
+    // Default: load providers on first paint so users see providers immediately
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _refreshProviders();
+    });
   }
 
   // Debounced version for filter changes to avoid excessive API calls
@@ -1107,11 +1109,18 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
             const SizedBox(height: 12),
             if (_loading) const LinearProgressIndicator(),
             if (_error != null) Text(_error!, style: const TextStyle(color: Colors.red)),
-            if (_providers.isEmpty && !_loading && _error == null) 
-              const Center(child: Padding(
-                padding: EdgeInsets.all(40),
-                child: Text('Select services to see providers', style: TextStyle(fontSize: 18)),
-              )),
+            if (_providers.isEmpty && !_loading && _error == null)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(40),
+                  child: Text(
+                    languageService.currentLanguage == 'ar'
+                        ? 'لا يوجد مزودون مطابقون حاليًا. جرّب تغيير عوامل التصفية.'
+                        : 'No providers found. Try adjusting filters.',
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                ),
+              ),
             const SizedBox(height: 12),
             LayoutBuilder(
               builder: (context, constraints) {

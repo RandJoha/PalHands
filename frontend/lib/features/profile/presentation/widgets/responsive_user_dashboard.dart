@@ -358,6 +358,10 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     _persistSelectedTab();
                     _contentAnimationController.reset();
                     _contentAnimationController.forward();
+                    // Ensure bookings are loaded when navigating to My Bookings
+                    if (index == 0) {
+                      _maybeLoadBookings();
+                    }
                   }
                 },
               ),

@@ -52,7 +52,7 @@ const getUserChats = async (req, res) => {
       });
     }
 
-    // Populate participants manually - all participants are in User collection
+  // Populate participants manually - try User first, then Provider (supports provider-only participants)
     const populatedChats = await Promise.all(chats.map(async (chat) => {
       console.log(`🔍 Populating participants for chat ${chat._id}:`);
       console.log(`  - Raw participants: ${chat.participants.map(p => p.toString())}`);
@@ -74,28 +74,56 @@ const getUserChats = async (req, res) => {
       
       const populatedParticipants = await Promise.all(validParticipants.map(async (participantId) => {
         console.log(`  - Looking up participant: ${participantId}`);
-        const user = await User.findById(participantId).select('firstName lastName email profileImage providerId role');
-        console.log(`  - Found user: ${user ? `${user.firstName} ${user.lastName}` : 'NOT FOUND'}`);
+        let user = await User.findById(participantId).select('firstName lastName email profileImage role');
         if (user) {
-          console.log(`    - First name: "${user.firstName}"`);
-          console.log(`    - Last name: "${user.lastName}"`);
-          console.log(`    - Role: ${user.role}`);
-        } else {
-          console.log(`  - ❌ User not found in database for ID: ${participantId}`);
+          console.log(`  - Found user: ${user.firstName} ${user.lastName}`);
+          return user;
         }
-        return user;
+        const provider = await Provider.findById(participantId).select('firstName lastName email profileImage');
+        if (provider) {
+          console.log(`  - Found provider: ${provider.firstName} ${provider.lastName}`);
+          return {
+            _id: provider._id,
+            firstName: provider.firstName,
+            lastName: provider.lastName || '',
+            email: provider.email,
+            profileImage: provider.profileImage,
+            role: 'provider'
+          };
+        }
+        console.log(`  - ❌ Participant not found in User or Provider for ID: ${participantId}`);
+        return null;
       }));
 
-      const populatedLastMessage = chat.lastMessage?.sender ? 
-        await User.findById(chat.lastMessage.sender).select('firstName lastName') : null;
+      // Populate last message sender (User first, then Provider)
+      let populatedLastMessage = null;
+      if (chat.lastMessage?.sender) {
+        let lmUser = await User.findById(chat.lastMessage.sender).select('firstName lastName profileImage role');
+        if (lmUser) {
+          populatedLastMessage = lmUser;
+        } else {
+          const lmProv = await Provider.findById(chat.lastMessage.sender).select('firstName lastName profileImage');
+          if (lmProv) {
+            populatedLastMessage = {
+              _id: lmProv._id,
+              firstName: lmProv.firstName,
+              lastName: lmProv.lastName || '',
+              profileImage: lmProv.profileImage,
+              role: 'provider'
+            };
+          }
+        }
+      }
 
       const result = {
         ...chat.toObject(),
         participants: populatedParticipants,
-        lastMessage: populatedLastMessage ? {
-          ...chat.lastMessage.toObject(),
-          sender: populatedLastMessage
-        } : chat.lastMessage
+        lastMessage: chat.lastMessage ? (
+          populatedLastMessage ? {
+            ...(chat.lastMessage.toObject ? chat.lastMessage.toObject() : chat.lastMessage),
+            sender: populatedLastMessage
+          } : chat.lastMessage
+        ) : null
       };
       
       console.log(`  - Populated result participants: ${result.participants.map(p => p ? `${p.firstName} ${p.lastName}` : 'NULL')}`);
@@ -118,21 +146,19 @@ const getUserChats = async (req, res) => {
       
       const unreadCount = chat.unreadCounts.get(userId.toString()) || 0;
       
-      const transformedChat = {
+  const transformedChat = {
         _id: chat._id,
         participant: otherParticipant ? {
           _id: otherParticipant._id,
           name: `${otherParticipant.firstName} ${otherParticipant.lastName}`,
           email: otherParticipant.email,
           profileImage: otherParticipant.profileImage,
-          providerId: otherParticipant.providerId,
           role: otherParticipant.role || 'provider'
         } : {
           _id: 'unknown',
           name: 'Unknown Participant',
           email: 'unknown@example.com',
           profileImage: null,
-          providerId: null,
           role: 'provider'
         },
         lastMessage: chat.lastMessage,
@@ -211,9 +237,22 @@ const getChatMessages = async (req, res) => {
       firstMessageContent: messages.length > 0 ? messages[0].content : 'None'
     });
 
-    // Populate senders manually - all senders are in User collection
+    // Populate senders manually - try User first, then Provider
     const populatedMessages = await Promise.all(messages.map(async (message) => {
-      const sender = await User.findById(message.sender).select('firstName lastName profileImage providerId');
+      let sender = await User.findById(message.sender).select('firstName lastName profileImage providerId role');
+      if (!sender) {
+        const prov = await Provider.findById(message.sender).select('firstName lastName profileImage');
+        if (prov) {
+          sender = {
+            _id: prov._id,
+            firstName: prov.firstName,
+            lastName: prov.lastName || '',
+            profileImage: prov.profileImage,
+            providerId: undefined,
+            role: 'provider'
+          };
+        }
+      }
       return {
         ...message.toObject(),
         sender
@@ -245,21 +284,33 @@ const getChatMessages = async (req, res) => {
     );
 
     // Transform messages
-    const transformedMessages = populatedMessages.map(message => ({
-      _id: message._id,
-      content: message.content,
-      messageType: message.messageType,
-      attachment: message.attachment,
-      sender: {
-        _id: message.sender._id,
-        name: `${message.sender.firstName} ${message.sender.lastName}`,
-        profileImage: message.sender.profileImage,
-        providerId: message.sender.providerId
-      },
-      isMe: message.sender._id.toString() === userId.toString(),
-      status: message.status,
-      createdAt: message.createdAt
-    }));
+    const transformedMessages = populatedMessages.map(message => {
+      const sender = message.sender
+        ? {
+            _id: message.sender._id,
+            name: `${message.sender.firstName} ${message.sender.lastName}`.trim(),
+            profileImage: message.sender.profileImage,
+            providerId: message.sender.providerId
+          }
+        : {
+            _id: null,
+            name: 'Unknown',
+            profileImage: null,
+            providerId: undefined
+          };
+      return {
+        _id: message._id,
+        content: message.content,
+        messageType: message.messageType,
+        attachment: message.attachment,
+        sender,
+        isMe: (message.sender && message.sender._id)
+          ? message.sender._id.toString() === userId.toString()
+          : false,
+        status: message.status,
+        createdAt: message.createdAt
+      };
+    });
 
     return ok(res, { 
       messages: transformedMessages.reverse(), // Reverse to get chronological order
@@ -346,7 +397,13 @@ const sendMessage = async (req, res) => {
     console.log('📊 Unread count updates:', unreadUpdates);
 
     // Populate sender info for last message
-    const sender = await User.findById(userId).select('firstName lastName profileImage providerId');
+    let sender = await User.findById(userId).select('firstName lastName profileImage');
+    if (!sender) {
+      const prov = await Provider.findById(userId).select('firstName lastName profileImage');
+      if (prov) {
+        sender = { _id: prov._id, firstName: prov.firstName, lastName: prov.lastName || '', profileImage: prov.profileImage };
+      }
+    }
     console.log('👤 Sender info:', {
       id: sender._id.toString(),
       name: `${sender.firstName} ${sender.lastName}`,
@@ -357,13 +414,8 @@ const sendMessage = async (req, res) => {
       { _id: chatId },
       {
         lastMessage: {
-          content: content,
-          sender: {
-            _id: sender._id,
-            name: `${sender.firstName} ${sender.lastName}`,
-            profileImage: sender.profileImage,
-            providerId: sender.providerId
-          },
+          text: content,
+          sender: userId,
           timestamp: new Date()
         },
         unreadCounts: unreadUpdates,
@@ -414,7 +466,13 @@ const sendMessage = async (req, res) => {
 
     // Populate sender info for response
     // All users (including providers) are stored in User collection for authentication
-    const responseSender = await User.findById(userId).select('firstName lastName profileImage providerId');
+    let responseSender = await User.findById(userId).select('firstName lastName profileImage');
+    if (!responseSender) {
+      const prov = await Provider.findById(userId).select('firstName lastName profileImage');
+      if (prov) {
+        responseSender = { _id: prov._id, firstName: prov.firstName, lastName: prov.lastName || '', profileImage: prov.profileImage };
+      }
+    }
 
     const responseMessage = {
       _id: message._id,
@@ -425,7 +483,7 @@ const sendMessage = async (req, res) => {
         _id: responseSender._id,
         name: `${responseSender.firstName} ${responseSender.lastName}`,
         profileImage: responseSender.profileImage,
-        providerId: responseSender.providerId
+  providerId: undefined
       },
       isMe: true,
       status: message.status,
@@ -460,21 +518,22 @@ const createOrGetChat = async (req, res) => {
       return error(res, 400, 'Invalid provider ID. Please select a valid provider.');
     }
 
-    // Validate participant exists
-    // Since providers are stored in User collection with role='provider',
-    // we always look in User collection for participants
-    const participant = await User.findById(participantId);
-    
-    if (!participant) {
-      console.log('Participant not found:', participantId);
+    // Validate participant exists - support both User (role=provider) and Provider collection IDs
+    let participantUser = await User.findById(participantId);
+    let participantProvider = null;
+    if (!participantUser) {
+      participantProvider = await Provider.findById(participantId);
+    }
+    if (!participantUser && !participantProvider) {
+      console.log('Participant not found in User or Provider:', participantId);
       return error(res, 404, 'Provider not found. Please select a valid provider.');
     }
-
-    console.log('Participant found:', participant._id);
+    const participantObjectId = participantUser ? participantUser._id : participantProvider._id;
+    console.log('Participant found:', participantObjectId);
 
     // Check if chat already exists
     let chat = await Chat.findOne({
-      participants: { $all: [userId, participantId] },
+      participants: { $all: [userId, participantObjectId] },
       isActive: true
     });
 
@@ -482,8 +541,8 @@ const createOrGetChat = async (req, res) => {
       console.log('Creating new chat');
       // Create new chat
       chat = new Chat({
-        participants: [userId, participantId],
-        participantTypes: [userRole === 'provider' ? 'Provider' : 'User', userRole === 'provider' ? 'User' : 'Provider'],
+        participants: [userId, participantObjectId],
+        participantTypes: [userRole === 'provider' ? 'Provider' : 'User', 'Provider'],
         bookingId: bookingId || null,
         serviceName: serviceName || null,
         unreadCounts: new Map(),
@@ -498,9 +557,14 @@ const createOrGetChat = async (req, res) => {
     }
 
     // Populate participant info manually
-    const populatedParticipants = await Promise.all(chat.participants.map(async (participantId, index) => {
-      // Since providers are stored in User collection, always use User model
-      return await User.findById(participantId).select('firstName lastName email profileImage providerId role');
+    const populatedParticipants = await Promise.all(chat.participants.map(async (pId, index) => {
+      let u = await User.findById(pId).select('firstName lastName email profileImage role');
+      if (u) return u;
+      const prov = await Provider.findById(pId).select('firstName lastName email profileImage');
+      if (prov) {
+        return { _id: prov._id, firstName: prov.firstName, lastName: prov.lastName || '', email: prov.email, profileImage: prov.profileImage, role: 'provider' };
+      }
+      return null;
     }));
 
     console.log('Populated participants:', populatedParticipants.map(p => ({ id: p._id, name: `${p.firstName} ${p.lastName}` })));
@@ -514,14 +578,13 @@ const createOrGetChat = async (req, res) => {
 
     console.log('Other participant found:', otherParticipant._id);
     
-    const responseChat = {
+  const responseChat = {
       _id: chat._id,
       participant: {
         _id: otherParticipant._id,
         name: `${otherParticipant.firstName} ${otherParticipant.lastName}`,
         email: otherParticipant.email,
         profileImage: otherParticipant.profileImage,
-        providerId: otherParticipant.providerId,
         role: otherParticipant.role || 'provider'
       },
       lastMessage: chat.lastMessage,

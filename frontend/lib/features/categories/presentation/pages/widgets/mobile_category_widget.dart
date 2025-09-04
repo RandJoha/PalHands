@@ -94,8 +94,10 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
     // _bannerController.forward();
     // _cardController.forward();
     
-    // Load providers on demand instead of in initState for faster initial load
-    // _refreshProviders(); // REMOVED - will load when user interacts with filters
+    // Default: load providers after first frame to show initial list
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _refreshProviders();
+    });
   }
 
   @override

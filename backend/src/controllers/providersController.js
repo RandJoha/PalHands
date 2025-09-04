@@ -81,7 +81,8 @@ async function listProviders(req, res) {
 
     console.log(`📊 Found ${providers.length} providers`);
 
-    const total = await User.countDocuments(filter);
+  // Count total matching providers for pagination
+  const total = await Provider.countDocuments(filter);
     const totalPages = Math.ceil(total / limit);
     const currentPage = totalPages ? parseInt(page) : 0;
 

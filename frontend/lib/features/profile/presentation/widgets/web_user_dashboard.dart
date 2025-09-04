@@ -35,7 +35,7 @@ class WebUserDashboard extends StatefulWidget {
 class _WebUserDashboardState extends State<WebUserDashboard> {
   int _selectedIndex = 0;
   bool _isSidebarCollapsed = false;
-  final GlobalKey<_ChatMessagesWidgetState> _chatMessagesKey = GlobalKey<_ChatMessagesWidgetState>();
+  final GlobalKey<ChatMessagesWidgetState> _chatMessagesKey = GlobalKey<ChatMessagesWidgetState>();
 
   List<UserMenuItem> _getMenuItems(String languageCode) {
     return [

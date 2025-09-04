@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -25,6 +26,7 @@ class _ProviderChatWidgetState extends State<ProviderChatWidget> {
   final ChatService _chatService = ChatService();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController(); // Add scroll controller
+  final FocusNode _inputFocus = FocusNode();
   
   List<ChatModel> _chats = [];
   List<ChatMessage> _messages = [];
@@ -45,6 +47,7 @@ class _ProviderChatWidgetState extends State<ProviderChatWidget> {
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose(); // Dispose scroll controller
+  _inputFocus.dispose();
     super.dispose();
   }
 
@@ -734,24 +737,40 @@ class _ProviderChatWidgetState extends State<ProviderChatWidget> {
               child: Row(
                 children: [
                   Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(24.r),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: TextField(
-                        controller: _messageController,
-                        decoration: InputDecoration(
-                          hintText: languageService.isArabic ? 'اكتب رسالة...' : 'Type a message...',
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 16.w,
-                            vertical: 12.h,
-                          ),
+                    child: RawKeyboardListener(
+                      focusNode: _inputFocus,
+                      onKey: (RawKeyEvent event) {
+                        if (event is RawKeyDownEvent) {
+                          final isEnter = event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey.keyLabel == '\\n';
+                          final isShift = event.isShiftPressed;
+                          if (isEnter && !isShift) {
+                            _sendMessage();
+                          }
+                        }
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.background,
+                          borderRadius: BorderRadius.circular(24.r),
+                          border: Border.all(color: AppColors.border),
                         ),
-                        maxLines: null,
-                        onSubmitted: (_) => _sendMessage(),
+                        child: TextField(
+                          controller: _messageController,
+                          focusNode: _inputFocus,
+                          autofocus: false,
+                          textInputAction: TextInputAction.newline,
+                          decoration: InputDecoration(
+                            hintText: languageService.isArabic ? 'اكتب رسالة...' : 'Type a message...',
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16.w,
+                              vertical: 12.h,
+                            ),
+                          ),
+                          maxLines: null,
+                          onSubmitted: (_) => _sendMessage(),
+                          onEditingComplete: () {},
+                        ),
                       ),
                     ),
                   ),

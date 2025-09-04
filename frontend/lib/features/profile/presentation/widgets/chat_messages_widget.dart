@@ -19,10 +19,11 @@ class ChatMessagesWidget extends StatefulWidget {
   const ChatMessagesWidget({super.key});
 
   @override
-  State<ChatMessagesWidget> createState() => _ChatMessagesWidgetState();
+  State<ChatMessagesWidget> createState() => ChatMessagesWidgetState();
 }
 
-class _ChatMessagesWidgetState extends State<ChatMessagesWidget> {
+// Public State class to allow external access via GlobalKey (e.g., to refresh chats)
+class ChatMessagesWidgetState extends State<ChatMessagesWidget> {
   final ChatService _chatService = ChatService();
   
   List<ChatModel> _chats = [];
@@ -68,6 +69,11 @@ class _ChatMessagesWidgetState extends State<ChatMessagesWidget> {
     }
   }
 
+  // Public method to allow parent widgets to trigger a refresh safely
+  Future<void> refreshChats() async {
+    await _loadChats();
+  }
+
   void _openChat(ChatModel chat) {
     print('Opening chat: ${chat.participant.name} (ID: ${chat.id})');
     setState(() {
@@ -105,9 +111,11 @@ class _ChatMessagesWidgetState extends State<ChatMessagesWidget> {
   }
 
   Widget _buildChat(BuildContext context, LanguageService languageService) {
-    // Simple horizontal layout - names on left, conversation on right
-    return Row(
-      children: [
+    // Fixed-width layout like the old version; horizontally scrollable to avoid overlay on small screens
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
         // Chat List (left side) - Fixed 300.w width
         Container(
           width: 300.w, // Fixed width of 300.w as requested
@@ -161,10 +169,9 @@ class _ChatMessagesWidgetState extends State<ChatMessagesWidget> {
             ],
           ),
         ),
-        
-        // Conversation Area (right side) - Fixed 1000px width
+        // Conversation Area (right side) - Fixed 1000px width (old layout)
         Container(
-          width: 1000, // Fixed width of 1000px as requested
+          width: 1000,
           decoration: BoxDecoration(
             color: AppColors.background,
           ),
@@ -177,6 +184,7 @@ class _ChatMessagesWidgetState extends State<ChatMessagesWidget> {
               : _buildEmptyConversationArea(),
         ),
       ],
+      ),
     );
   }
 

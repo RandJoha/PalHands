@@ -82,7 +82,7 @@ class ProviderService with BaseApiService {
               ? '?${Uri(queryParameters: queryParams).query}' 
               : ''}';
 
-      final response = await get(endpoint, headers: _authHeaders);
+  final response = await get(endpoint, headers: _authHeaders);
 
       // Extract providers array from various backend shapes
       dynamic raw = response['data'] ?? response['providers'] ?? response['results'];
@@ -94,7 +94,7 @@ class ProviderService with BaseApiService {
       if (kDebugMode) {
         print('🏢 Fetched providers: ${providersData.length} items');
       }
-      return providersData
+      var list = providersData
           .map((json) => ProviderModel.fromJson(json))
           .where((p) {
             // Client-side post-filter in case backend doesn't support emergency yet
@@ -104,6 +104,17 @@ class ProviderService with BaseApiService {
             return true;
           })
           .toList();
+
+      // Fallback: if strict services filter returned nothing, try category-based fetch for the first service
+      if (list.isEmpty && servicesAny.isNotEmpty) {
+        try {
+          final cat = _categoryOf(servicesAny.first);
+          if (cat != null) {
+            list = await getProvidersByCategory(cat, city: city, sortBy: sortBy, sortOrder: sortOrder, page: page, limit: limit);
+          }
+        } catch (_) {}
+      }
+      return list;
     } catch (e) {
       if (kDebugMode) {
         print('❌ Error fetching providers from backend: $e');
@@ -113,6 +124,24 @@ class ProviderService with BaseApiService {
       // This prevents the issue with invalid provider IDs
       return [];
     }
+  }
+
+  // Map a subcategory service key to its canonical category id (frontend taxonomy)
+  String? _categoryOf(String subKey) {
+    const categories = {
+      'cleaning': ['bedroomCleaning','livingRoomCleaning','kitchenCleaning','bathroomCleaning','windowCleaning','doorCabinetCleaning','floorCleaning','carpetCleaning','furnitureCleaning','gardenCleaning','entranceCleaning','stairCleaning','garageCleaning','postEventCleaning','postConstructionCleaning','apartmentCleaning','regularCleaning'],
+      'organizing': ['bedroomOrganizing','kitchenOrganizing','closetOrganizing','storageOrganizing','livingRoomOrganizing','postPartyOrganizing','fullHouseOrganizing','childrenOrganizing'],
+      'cooking': ['mainDishes','desserts','specialRequests'],
+      'childcare': ['homeBabysitting','schoolAccompaniment','homeworkHelp','educationalActivities','childrenMealPrep','sickChildCare'],
+      'elderly': ['homeElderlyCare','medicalTransport','healthMonitoring','medicationAssistance','emotionalSupport','mobilityAssistance'],
+      'maintenance': ['electricalWork','plumbingWork','aluminumWork','carpentryWork','painting','hangingItems','satelliteInstallation','applianceMaintenance'],
+      'newhome': ['furnitureMoving','packingUnpacking','furnitureWrapping','newHomeArrangement','newApartmentCleaning','preOccupancyRepairs','kitchenSetup','applianceInstallation'],
+      'miscellaneous': ['documentDelivery','shoppingDelivery','specialErrands','billPayment','prescriptionPickup']
+    };
+    for (final entry in categories.entries) {
+      if (entry.value.contains(subKey)) return entry.key;
+    }
+    return null;
   }
 
   /// Get a specific provider by ID

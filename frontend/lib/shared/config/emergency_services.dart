@@ -13,9 +13,22 @@ const List<String> kEmergencyServiceSlugs = [
 
   // Misc & errands
   'deliver_documents',
+  'documentDelivery',
+  'document_delivery',
+  'document-delivery',
   'deliver_shopping',
+  'shoppingDelivery',
+  'shopping_delivery',
+  'shopping-delivery',
   'private_drive',
+  'privateDrive',
+  'private-drive',
   'pay_bills_or_transactions',
+  'billPayment',
+  'bill_payment',
+  'bill-payment',
+  // Occasionally seen slug for the UI label "Bill Payment/Transaction Processing"
+  'bill_payment_transaction_processing',
   // Prescription Pickup appears in the codebase as several identifiers.
   // Include common variants so backend/frontend slug differences don't block emergency mode.
   'collect_prescription',
@@ -43,10 +56,10 @@ const List<String> kEmergencyServiceSlugs = [
   'water_heater_maintenance',
   'washing_machine_maintenance',
   // Miscellaneous & Errands
-  'documentDelivery',
-  'shoppingDelivery',
   'specialErrands',
-  'billPayment',
+  'special_errands',
+  'special-errands',
+  // keep canonical too
   'prescriptionPickup',
   // Care Services
   'homeBabysitting',

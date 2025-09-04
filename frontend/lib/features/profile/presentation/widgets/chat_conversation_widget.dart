@@ -15,11 +15,15 @@ import '../../../../shared/models/chat.dart';
 class ChatConversationWidget extends StatefulWidget {
   final ChatModel chat;
   final Function(ChatMessage)? onMessageSent;
+  final bool showBackButton;
+  final VoidCallback? onBack;
 
   const ChatConversationWidget({
     super.key,
     required this.chat,
     this.onMessageSent,
+    this.showBackButton = false,
+    this.onBack,
   });
 
   @override
@@ -212,9 +216,14 @@ class _ChatConversationWidgetState extends State<ChatConversationWidget> {
       ),
       child: Row(
         children: [
-          // Removed back button since this is embedded in main chat interface
-          SizedBox(width: 12.w),
-          SizedBox(width: 12.w),
+          if (widget.showBackButton)
+            IconButton(
+              icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+              onPressed: widget.onBack ?? () {},
+              tooltip: languageService.isArabic ? 'رجوع' : 'Back',
+            )
+          else
+            SizedBox(width: 12.w),
           Container(
             width: 40.w,
             height: 40.w,
