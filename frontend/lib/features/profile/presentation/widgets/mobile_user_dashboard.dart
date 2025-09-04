@@ -17,7 +17,7 @@ import '../../domain/models/user_menu_item.dart';
 
 // Mobile-specific widgets
 import 'mobile_my_bookings_widget.dart';
-import 'mobile_chat_messages_widget.dart';
+import 'chat_messages_widget.dart';
 import 'mobile_payments_widget.dart';
 import 'mobile_my_reviews_widget.dart';
 import 'mobile_profile_settings_widget.dart';
@@ -475,7 +475,7 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
       case 0:
         return const MobileMyBookingsWidget();
       case 1:
-        return const MobileChatMessagesWidget();
+        return const ChatMessagesWidget();
       case 2:
         return const MobilePaymentsWidget();
       case 3:

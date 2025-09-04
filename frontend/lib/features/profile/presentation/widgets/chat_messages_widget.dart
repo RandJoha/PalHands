@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -105,21 +106,37 @@ class ChatMessagesWidgetState extends State<ChatMessagesWidget> {
   Widget build(BuildContext context) {
     return Consumer<LanguageService>(
       builder: (context, languageService, child) {
-        return _buildChat(context, languageService);
+        // Force the chat to take all available space to avoid right-side gaps.
+        return SizedBox.expand(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isCompact = constraints.maxWidth < 768;
+              // Compact layout (mobile): show either the list or the conversation fullscreen
+              if (isCompact) {
+                return _buildCompactChat(languageService);
+              }
+
+              // Wide layout (tablet/desktop): list + conversation side by side
+              return _buildWideChat(languageService, constraints.maxWidth);
+            },
+          ),
+        );
       },
     );
   }
 
-  Widget _buildChat(BuildContext context, LanguageService languageService) {
-    // Fixed-width layout like the old version; horizontally scrollable to avoid overlay on small screens
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-        // Chat List (left side) - Fixed 300.w width
+  Widget _buildWideChat(LanguageService languageService, double maxWidth) {
+    // Calculate a flexible list width (max 360, min 280)
+    final listWidth = maxWidth.clamp(700, double.infinity) == maxWidth
+        ? 300.0
+        : (maxWidth * 0.28).clamp(280.0, 360.0);
+
+    return Row(
+      children: [
+        // Chat List
         Container(
-          width: 300.w, // Fixed width of 300.w as requested
-          decoration: BoxDecoration(
+          width: listWidth,
+          decoration: const BoxDecoration(
             color: AppColors.white,
             border: Border(
               right: BorderSide(color: AppColors.border, width: 1),
@@ -127,63 +144,87 @@ class ChatMessagesWidgetState extends State<ChatMessagesWidget> {
           ),
           child: Column(
             children: [
-              // Header
-              Container(
-                padding: EdgeInsets.all(16.w),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.05),
-                  border: Border(
-                    bottom: BorderSide(color: AppColors.border, width: 1),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.chat,
-                      color: AppColors.primary,
-                      size: 24.sp,
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Text(
-                        languageService.isArabic ? 'رسائل الدردشة' : 'Chat Messages',
-                        style: GoogleFonts.cairo(
-                          fontSize: 22.sp,
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Chat list
+              _buildListHeader(languageService),
               Expanded(
                 child: RefreshIndicator(
                   onRefresh: _loadChats,
-                  child: SingleChildScrollView(
-                    child: _buildChatThreads(languageService),
-                  ),
+                  child: SingleChildScrollView(child: _buildChatThreads(languageService)),
                 ),
               ),
             ],
           ),
         ),
-        // Conversation Area (right side) - Fixed 1000px width (old layout)
-        Container(
-          width: 1000,
-          decoration: BoxDecoration(
+        // Conversation Area
+        Expanded(
+          child: Container(
             color: AppColors.background,
+            child: _selectedChat != null
+                ? ChatConversationWidget(
+                    key: ValueKey(_selectedChat!.id),
+                    chat: _selectedChat!,
+                    onMessageSent: _handleMessageSent,
+                    showBackButton: false,
+                  )
+                : _buildEmptyConversationArea(),
           ),
-          child: _selectedChat != null
-              ? ChatConversationWidget(
-                  key: ValueKey(_selectedChat!.id), // Force rebuild when chat changes
-                  chat: _selectedChat!,
-                  onMessageSent: _handleMessageSent,
-                )
-              : _buildEmptyConversationArea(),
         ),
       ],
+    );
+  }
+
+  Widget _buildCompactChat(LanguageService languageService) {
+    // Show either list or conversation fullscreen
+    if (_selectedChat == null) {
+      return Column(
+        children: [
+          _buildListHeader(languageService),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _loadChats,
+              child: SingleChildScrollView(child: _buildChatThreads(languageService)),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return ChatConversationWidget(
+      key: ValueKey(_selectedChat!.id),
+      chat: _selectedChat!,
+      onMessageSent: _handleMessageSent,
+      showBackButton: true,
+      onBack: () => setState(() => _selectedChat = null),
+    );
+  }
+
+  Widget _buildListHeader(LanguageService languageService) {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.05),
+        border: const Border(
+          bottom: BorderSide(color: AppColors.border, width: 1),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.chat,
+            color: AppColors.primary,
+            size: 24.sp,
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Text(
+              languageService.isArabic ? 'رسائل الدردشة' : 'Chat Messages',
+              style: GoogleFonts.cairo(
+                fontSize: 22.sp,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

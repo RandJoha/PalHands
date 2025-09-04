@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 // Core imports
@@ -185,9 +186,7 @@ class _ChatConversationWidgetState extends State<ChatConversationWidget> {
   }
 
   Widget _buildChatConversation(BuildContext context, LanguageService languageService) {
-    return Container(
-      width: double.infinity,
-      height: double.infinity,
+    return SizedBox.expand(
       child: Column(
         children: [
           // Chat header
@@ -333,80 +332,107 @@ class _ChatConversationWidgetState extends State<ChatConversationWidget> {
       );
     }
 
-    return ListView.builder(
+    final isRtl = languageService.isArabic;
+  return ListView.builder(
       controller: _scrollController,
-      padding: EdgeInsets.all(16.w),
+      // Directional padding: smaller on the trailing side so bubbles can reach the edge
+      padding: EdgeInsetsDirectional.only(
+    start: isRtl ? 4.w : 8.w,
+    end: isRtl ? 8.w : 2.w,
+        top: 16.h,
+        bottom: 16.h,
+      ),
       itemCount: _messages.length,
       itemBuilder: (context, index) {
         final message = _messages[index];
-        return _buildMessageBubble(message, languageService);
+        // Force each item to occupy full width so bubbles can align to edges
+        return SizedBox(
+          width: double.infinity,
+          child: _buildMessageBubble(message, languageService),
+        );
       },
     );
   }
 
   Widget _buildMessageBubble(ChatMessage message, LanguageService languageService) {
     final isMe = message.isMe;
-    
-    return Container(
-      margin: EdgeInsets.only(bottom: 16.h),
-      child: Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (!isMe) ...[
-            Container(
-              width: 32.w,
-              height: 32.w,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16.r),
-              ),
-              child: Icon(
-                Icons.person,
-                color: AppColors.primary,
-                size: 16.sp,
-              ),
-            ),
-            SizedBox(width: 8.w),
-          ],
-          Flexible(
-            child: Container(
-              padding: EdgeInsets.all(12.w),
-              decoration: BoxDecoration(
-                color: isMe ? AppColors.primary : AppColors.white,
-                borderRadius: BorderRadius.circular(16.r),
-                border: isMe ? null : Border.all(color: AppColors.border, width: 1),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    message.content,
-                    style: GoogleFonts.cairo(
-                      fontSize: 18.sp,
-                      color: isMe ? AppColors.white : AppColors.textPrimary,
-                    ),
+  // Use LayoutBuilder to compute max bubble width from actual available space
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final total = constraints.maxWidth;
+    // Reserve space for the leading avatar on incoming messages and keep
+    // only a tiny trailing gutter so bubbles reach the visual edge.
+    final double avatar = 32.w;
+    final double spacer = 8.w;
+    final double trailingGutter = 2.w;
+    final double usedByLeading = isMe ? 0.0 : (avatar + spacer);
+    final double maxBubbleWidth = (total - usedByLeading - trailingGutter).clamp(0.0, total).toDouble();
+
+        return Container(
+          margin: EdgeInsets.only(bottom: 16.h),
+          child: Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (!isMe) ...[
+                Container(
+                  width: 32.w,
+                  height: 32.w,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(16.r),
                   ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    _formatTime(message.createdAt),
-                    style: GoogleFonts.cairo(
-                      fontSize: 14.sp,
-                      color: isMe ? AppColors.white.withValues(alpha: 0.7) : AppColors.textSecondary,
-                    ),
+                  child: Icon(
+                    Icons.person,
+                    color: AppColors.primary,
+                    size: 16.sp,
                   ),
-                ],
+                ),
+                SizedBox(width: 8.w),
+              ],
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxBubbleWidth),
+                child: Container(
+                  padding: EdgeInsets.all(12.w),
+                  decoration: BoxDecoration(
+                    color: isMe ? AppColors.primary : AppColors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: isMe ? null : Border.all(color: AppColors.border, width: 1),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        message.content,
+                        style: GoogleFonts.cairo(
+                          fontSize: 18.sp,
+                          color: isMe ? AppColors.white : AppColors.textPrimary,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        _formatTime(message.createdAt),
+                        style: GoogleFonts.cairo(
+                          fontSize: 14.sp,
+                          color: isMe ? AppColors.white.withValues(alpha: 0.7) : AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Widget _buildMessageInput(LanguageService languageService) {
     return Container(
-      padding: EdgeInsets.all(16.w),
+      // Reduce inner gutters while keeping comfortable touch targets
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
       decoration: BoxDecoration(
         color: AppColors.white,
         border: Border(
@@ -421,34 +447,46 @@ class _ChatConversationWidgetState extends State<ChatConversationWidget> {
             },
             icon: Icon(Icons.attach_file, color: AppColors.textSecondary),
           ),
+          // Proper keyboard handling: Enter to send, Shift+Enter for newline
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(20.r),
-                border: Border.all(color: AppColors.border, width: 1),
-              ),
-              child: TextField(
-                controller: _messageController,
-                style: GoogleFonts.cairo(
-                  fontSize: 18.sp,
-                  color: AppColors.textPrimary,
+            child: RawKeyboardListener(
+              focusNode: FocusNode(debugLabel: 'chat-input'),
+              onKey: (event) {
+                if (event is! RawKeyDownEvent) return;
+                final isEnter = event.logicalKey == LogicalKeyboardKey.enter ||
+                    event.logicalKey.keyLabel == '\n';
+                if (isEnter && !event.isShiftPressed && !_isSending) {
+                  _sendMessage();
+                }
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(20.r),
+                  border: Border.all(color: AppColors.border, width: 1),
                 ),
-                decoration: InputDecoration(
-                  hintText: languageService.isArabic ? 'اكتب رسالة...' : 'Type a message...',
-                  hintStyle: GoogleFonts.cairo(
+                child: TextField(
+                  controller: _messageController,
+                  style: GoogleFonts.cairo(
                     fontSize: 18.sp,
-                    color: AppColors.textSecondary,
+                    color: AppColors.textPrimary,
                   ),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 16.h,
+                  decoration: InputDecoration(
+                    hintText: languageService.isArabic ? 'اكتب رسالة...' : 'Type a message...',
+                    hintStyle: GoogleFonts.cairo(
+                      fontSize: 18.sp,
+                      color: AppColors.textSecondary,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 16.h,
+                    ),
                   ),
+                  maxLines: null,
+                  textInputAction: TextInputAction.newline,
+                  onSubmitted: (_) => _sendMessage(),
                 ),
-                maxLines: null,
-                textInputAction: TextInputAction.send,
-                onSubmitted: (_) => _sendMessage(),
               ),
             ),
           ),

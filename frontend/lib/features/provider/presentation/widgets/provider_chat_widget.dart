@@ -27,6 +27,7 @@ class _ProviderChatWidgetState extends State<ProviderChatWidget> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController(); // Add scroll controller
   final FocusNode _inputFocus = FocusNode();
+  final FocusNode _keyboardFocus = FocusNode(debugLabel: 'provider-chat-kb');
   
   List<ChatModel> _chats = [];
   List<ChatMessage> _messages = [];
@@ -48,6 +49,7 @@ class _ProviderChatWidgetState extends State<ProviderChatWidget> {
     _messageController.dispose();
     _scrollController.dispose(); // Dispose scroll controller
   _inputFocus.dispose();
+  _keyboardFocus.dispose();
     super.dispose();
   }
 
@@ -738,12 +740,11 @@ class _ProviderChatWidgetState extends State<ProviderChatWidget> {
                 children: [
                   Expanded(
                     child: RawKeyboardListener(
-                      focusNode: _inputFocus,
+                      focusNode: _keyboardFocus,
                       onKey: (RawKeyEvent event) {
                         if (event is RawKeyDownEvent) {
                           final isEnter = event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey.keyLabel == '\\n';
-                          final isShift = event.isShiftPressed;
-                          if (isEnter && !isShift) {
+                          if (isEnter && !event.isShiftPressed && !_isSending) {
                             _sendMessage();
                           }
                         }
@@ -768,6 +769,11 @@ class _ProviderChatWidgetState extends State<ProviderChatWidget> {
                             ),
                           ),
                           maxLines: null,
+                          onTap: () {
+                            if (!_keyboardFocus.hasFocus) {
+                              _keyboardFocus.requestFocus();
+                            }
+                          },
                           onSubmitted: (_) => _sendMessage(),
                           onEditingComplete: () {},
                         ),
