@@ -40,3 +40,13 @@ How to reproduce locally:
 4. Use `probeAvailabilityHttp.js` to compare `?emergency=true` vs normal availability for a provider with a weekly schedule.
 
 Status: Completed (implementation and DB tagging performed). Remaining: reconcile emergency lead-time canonical value, and consider making emergency extras configurable.
+
+---
+
+September 2025 addendum — Provider registration fix
+- Resolved 500 "Validation failed" on POST /api/auth/register for provider role by:
+  - Creating Provider documents (not User) when role='provider'.
+  - Making Provider.providerId assigned pre-save, not required at validation time.
+  - Accepting providerSelections { categories[], services[] } in the validator.
+  - Checking email/phone conflicts across users and providers.
+  - Returning 201 with token and provider payload upon success.

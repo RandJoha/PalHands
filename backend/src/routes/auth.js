@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
-const { auth } = require('../middleware/auth');
+const { auth: authenticate } = require('../middleware/auth');
 const { authLimiter, passwordResetLimiter } = require('../middleware/rateLimiters');
 const { registerValidator, loginValidator, forgotPasswordValidator, resetPasswordValidator, changePasswordDirectValidator } = require('../validators/authValidators');
 
@@ -16,12 +16,12 @@ router.post('/reset-password', passwordResetLimiter, resetPasswordValidator, aut
 router.post('/change-password-direct', passwordResetLimiter, changePasswordDirectValidator, authController.changePasswordDirect);
 
 // Protected routes (authentication required)
-router.get('/validate', auth, authController.validateToken);
-router.get('/profile', auth, authController.getProfile);
+router.get('/validate', authenticate, authController.validateToken);
+router.get('/profile', authenticate, authController.getProfile);
 // Delete account (user can delete their own account)
-router.delete('/account', auth, authController.deleteAccount);
+router.delete('/account', authenticate, authController.deleteAccount);
 // Email verification (optional)
-router.post('/request-verification', auth, authController.requestVerification);
+router.post('/request-verification', authenticate, authController.requestVerification);
 // Safer flow: GET page requires explicit user click; that page will POST to /verify
 router.get('/verify/start', authController.verifyEmailStartPage);
 router.post('/verify', authController.verifyEmail);

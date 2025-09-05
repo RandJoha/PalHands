@@ -6,7 +6,7 @@ const Availability = require('../models/Availability');
 (async () => {
   try {
     await connectDB();
-    const providers = await Provider.find({ role: 'provider' }).select('_id firstName lastName email');
+  const providers = await Provider.find({}).select('_id firstName lastName email');
     const ids = providers.map(p => p._id);
     const avas = await Availability.find({ provider: { $in: ids } }).select('provider');
     const setAvail = new Set(avas.map(a => String(a.provider)));

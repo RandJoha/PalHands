@@ -11,8 +11,8 @@ async function listProviders(req, res) {
     const { page, limit, skip } = parsePagination(req.query);
   const { city, services, category, sortBy, sortOrder, q, emergency, emergencyType } = req.query;
 
-    // Build filter - look for users with role 'provider'
-    const filter = { role: 'provider', isActive: true };
+  // Build filter - query Provider collection directly
+  const filter = { isActive: true };
     
     // City filter
     if (city) {

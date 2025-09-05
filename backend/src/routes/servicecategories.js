@@ -6,5 +6,7 @@ const serviceCategoriesController = require('../controllers/serviceCategoriesCon
 router.get('/', serviceCategoriesController.listCategories);
 router.get('/counts', serviceCategoriesController.getCategoriesWithCounts);
 router.get('/:id', serviceCategoriesController.getCategoryById);
+// Distinct service keys for a category (from services collection)
+router.get('/:id/services', serviceCategoriesController.getDistinctServicesByCategory);
 
 module.exports = router;

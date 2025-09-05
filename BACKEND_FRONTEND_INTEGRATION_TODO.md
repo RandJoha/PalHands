@@ -41,7 +41,8 @@ Frontend wiring
   - [x] FE: Enter key submits (already implemented) → verified
 - Signup Screen (Client/Provider)
   - [x] FE: Submit register → POST /auth/register; route to verification or login
-  - [x] FE: Provider extra fields (category, documents if any) respected
+  - [x] FE: Provider path registers in Provider collection; backend accepts `providerSelections { categories[], services[] }`
+  - [x] FE: Provider extra fields (category/services selection) respected and sent
 - Profile Settings (User Dashboard)
   - [x] FE: Load profile → GET /auth/profile on mount
   - [x] FE: Update profile → PUT /users/profile (optimistic UI + toast)
@@ -184,6 +185,7 @@ QA
 - ✅ Centralized Authorization header handling in BookingService for all API calls
 - ✅ **Service Categories**: Backend `/api/servicecategories` + Frontend `ServiceCategoriesService`
 - ✅ **Services**: Backend `/api/services` + Frontend `ServicesService`
+ - ✅ **Category Services**: Backend `/api/servicecategories/:id/services` wired for per-category sub-services
 - ✅ **Providers**: Backend `/api/providers` + Frontend `ProviderService` updated
 - ✅ **Models**: `BookingModel`, `ServiceCategoryModel`, `ServiceModel` created
 - ✅ **Compilation Issues**: Fixed AppToast calls, Color imports, and all linter errors

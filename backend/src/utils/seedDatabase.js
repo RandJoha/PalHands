@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { connectDB, mongoose } = require('../config/database');
 const User = require('../models/User');
+const Provider = require('../models/Provider');
 const Service = require('../models/Service');
 
 async function run() {
@@ -31,26 +32,25 @@ async function run() {
   console.log('Existing admin updated and password reset:', admin.email);
   }
 
-  const providers = [
-    { firstName: 'Lina', lastName: 'Provider', email: 'lina.provider@example.com', phone: '+970590000001', password: 'Passw0rd!', role: 'provider', isVerified: true },
-    { firstName: 'Omar', lastName: 'Provider', email: 'omar.provider@example.com', phone: '+970590000002', password: 'Passw0rd!', role: 'provider', isVerified: true }
+  // Ensure a couple of demo Providers exist for local testing (providers collection)
+  const demoProviders = [
+    { firstName: 'Lina', lastName: 'Provider', email: 'lina.provider@example.com', phone: '+970590000001', password: 'Passw0rd!', isVerified: true, addresses: [{ city: 'Ramallah', street: 'Main St', isDefault: true }], experienceYears: 3, languages: ['Arabic','English'], hourlyRate: 75, services: ['homeCleaning'] },
+    { firstName: 'Omar', lastName: 'Provider', email: 'omar.provider@example.com', phone: '+970590000002', password: 'Passw0rd!', isVerified: true, addresses: [{ city: 'Ramallah', street: '2nd St', isDefault: true }], experienceYears: 5, languages: ['Arabic'], hourlyRate: 60, services: ['homeCleaning'] }
   ];
 
-  const created = [];
-  for (const p of providers) {
-    let user = await User.findOne({ email: p.email });
-    if (!user) {
-      user = new User(p);
-      await user.save();
-      created.push(user);
-      console.log('Created provider:', user.email);
+  for (const p of demoProviders) {
+    let prov = await Provider.findOne({ email: p.email });
+    if (!prov) {
+      prov = new Provider(p);
+      await prov.save();
+      console.log('Created demo provider:', prov.email);
     } else {
-      console.log('Existing provider:', user.email);
+      console.log('Existing demo provider:', prov.email);
     }
   }
 
-  // Ensure at least one demo service per provider
-  for (const prov of await User.find({ role: 'provider' })) {
+  // Ensure at least one demo service per provider (providers collection)
+  for (const prov of await Provider.find({})) {
     const count = await Service.countDocuments({ provider: prov._id });
     if (count === 0) {
       await Service.create({
@@ -67,11 +67,11 @@ async function run() {
         requirements: [],
         equipment: []
       });
-      console.log('Seeded service for', prov.email);
+      console.log('Seeded service for provider', prov.email);
     }
   }
 
-  console.log('\nTest provider credentials:');
+  console.log('\nTest provider credentials (providers collection):');
   console.log('- Email: lina.provider@example.com | Password: Passw0rd!');
   console.log('- Email: omar.provider@example.com | Password: Passw0rd!');
   console.log('\nAdmin credentials:');

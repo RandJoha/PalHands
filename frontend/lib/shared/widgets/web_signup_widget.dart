@@ -10,6 +10,7 @@ import '../../core/constants/app_strings.dart';
 import '../services/language_service.dart';
 import '../services/auth_service.dart';
 import '../services/base_api_service.dart';
+import '../services/service_categories_service.dart';
 
 // Widget imports
 import 'animated_handshake.dart';
@@ -43,12 +44,22 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  // Preserve scroll position during selections
+  final ScrollController _scrollController = ScrollController();
   
   // Step management
   int _currentStep = 0;
   String? _selectedUserType;
-  String? _selectedMainCategory;
-  String? _selectedSubCategory;
+  // Multi-select of categories and services (from DB)
+  final ValueNotifier<Set<String>> _selectedCategoriesVN = ValueNotifier<Set<String>>(<String>{});
+  final ValueNotifier<Set<String>> _selectedServicesVN = ValueNotifier<Set<String>>(<String>{});
+  final Map<String, List<String>> _categoryServices = <String, List<String>>{};
+  // Cache categories future to avoid re-fetch flicker
+  late final Future<List<ServiceCategoryModel>> _categoriesFuture;
+  // Track pending service loads to show a lightweight loader
+  final ValueNotifier<int> _pendingServiceLoadsVN = ValueNotifier<int>(0);
+  // Shared API service instance
+  final ServiceCategoriesService _svc = ServiceCategoriesService();
   int _serviceProvidersCount = 1;
   String? _selectedLocation;
   String? _selectedStreet;
@@ -125,63 +136,149 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
     if (_selectedLocation == null) return [];
     return _cityStreets[_selectedLocation!] ?? [];
   }
-  
-  // Service categories
-  final Map<String, Map<String, dynamic>> _serviceCategories = {
-    'cleaning': {
-      'icon': '🧼',
-      'subCategories': ['houseCleaning', 'deepCleaning', 'windowCleaning', 'carpetCleaning']
-    },
-    'organizing': {
-      'icon': '🧺',
-      'subCategories': ['homeOrganization', 'closetOrganization', 'officeOrganization', 'eventPlanning']
-    },
-    'cooking': {
-      'icon': '🍲',
-      'subCategories': ['mainDishes', 'desserts', 'specialRequests', 'mealPrep']
-    },
-    'childcare': {
-      'icon': '🧒',
-      'subCategories': ['babysitting', 'tutoring', 'playActivities', 'specialNeedsCare']
-    },
-    'elderly': {
-      'icon': '🧕',
-      'subCategories': ['elderlyCare', 'personalAssistance', 'medicalSupport', 'companionship']
-    },
-    'maintenance': {
-      'icon': '🔧',
-      'subCategories': ['plumbing', 'electrical', 'carpentry', 'generalRepairs']
-    },
-    'newhome': {
-      'icon': '🏠',
-      'subCategories': ['movingAssistance', 'furnitureAssembly', 'homeSetup', 'decoration']
-    },
-    'miscellaneous': {
-      'icon': '🚗',
-      'subCategories': ['shopping', 'delivery', 'petCare', 'gardenMaintenance']
-    },
-  };
 
-  String _getCategoryName(String categoryKey, LanguageService languageService) {
-    switch (categoryKey) {
+  // Map icon string/id to a Material IconData
+  IconData _resolveCategoryIcon(String icon, {String? fallback}) {
+    final key = (icon.isNotEmpty ? icon : (fallback ?? '')).toLowerCase();
+    switch (key) {
+      case 'cleaning_services':
       case 'cleaning':
-        return AppStrings.getString('cleaningServices', languageService.currentLanguage);
+        return Icons.cleaning_services;
+      case 'folder_open':
       case 'organizing':
-        return AppStrings.getString('organizingServices', languageService.currentLanguage);
+        return Icons.folder_open;
+      case 'restaurant':
       case 'cooking':
-        return AppStrings.getString('homeCookingServices', languageService.currentLanguage);
+        return Icons.restaurant;
+      case 'child_care':
       case 'childcare':
-        return AppStrings.getString('childCareServices', languageService.currentLanguage);
+        return Icons.child_care;
       case 'elderly':
-        return AppStrings.getString('personalElderlyCare', languageService.currentLanguage);
+      case 'elderly_care':
+        return Icons.elderly;
+      case 'handyman':
       case 'maintenance':
-        return AppStrings.getString('maintenanceRepair', languageService.currentLanguage);
+        return Icons.handyman;
+      case 'home':
       case 'newhome':
-        return AppStrings.getString('newHomeServices', languageService.currentLanguage);
+        return Icons.home;
+      case 'miscellaneous_services':
       case 'miscellaneous':
-        return AppStrings.getString('miscellaneousErrands', languageService.currentLanguage);
+        return Icons.miscellaneous_services;
       default:
-        return categoryKey;
+        return Icons.build;
+    }
+  }
+
+  // Prefer colorful asset icons when available
+  String? _categoryAssetFor(String idOrKey) {
+    final k = idOrKey.toLowerCase();
+    switch (k) {
+      case 'cleaning':
+      case 'cleaningservices':
+      case 'cleaning_services':
+        return 'assets/images/cleaning_icon.png';
+      case 'cooking':
+      case 'homecookingservices':
+      case 'home_cooking_services':
+        return 'assets/images/home_cooking_icon.png';
+      case 'elderly':
+      case 'personalelderlycare':
+      case 'personal_elderly_care':
+        return 'assets/images/elderly_care_icon.png';
+      case 'childcare':
+      case 'childcareservices':
+      case 'child_care_services':
+        return 'assets/images/babysitting_icon.png';
+      default:
+        return null; // fall back to Material icon
+    }
+  }
+  
+  // Old-version colorful emoji icons (preferred when available)
+  String? _categoryEmojiFor(String idOrKey) {
+    final k = idOrKey.toLowerCase();
+    switch (k) {
+      case 'cleaning':
+      case 'cleaningservices':
+      case 'cleaning_services':
+        return '🧼';
+      case 'organizing':
+      case 'organizingservices':
+      case 'organizing_services':
+        return '🧺';
+      case 'cooking':
+      case 'homecookingservices':
+      case 'home_cooking_services':
+        return '🍲';
+      case 'childcare':
+      case 'childcareservices':
+      case 'child_care_services':
+        return '🧒';
+      case 'personalelderlycare':
+      case 'personal_elderly_care':
+      case 'elderly':
+        return '🧕';
+      case 'maintenance':
+      case 'maintenance_repair':
+      case 'maintenance_&_repair':
+      case 'maintenance & repair':
+        return '🔧';
+      default:
+        return null;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Cache categories once; prevents FutureBuilder from resetting on every setState
+  _categoriesFuture = _svc.getCategories();
+  }
+
+  void _toggleCategory(String categoryId) async {
+    final offset = _scrollController.hasClients ? _scrollController.offset : null;
+    // Update selection without rebuilding the whole page
+    final current = _selectedCategoriesVN.value;
+    if (current.contains(categoryId)) {
+      current.remove(categoryId);
+    } else {
+      current.add(categoryId);
+    }
+    _selectedCategoriesVN.value = {...current};
+
+    if (_selectedCategoriesVN.value.contains(categoryId) && !_categoryServices.containsKey(categoryId)) {
+      _pendingServiceLoadsVN.value = _pendingServiceLoadsVN.value + 1;
+      final services = await _svc.getServicesForCategory(categoryId);
+      _categoryServices[categoryId] = services;
+      _pendingServiceLoadsVN.value = _pendingServiceLoadsVN.value - 1;
+      // Nudge listeners to rebuild service chips
+      _selectedCategoriesVN.value = {..._selectedCategoriesVN.value};
+    }
+    if (offset != null && _scrollController.hasClients) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.jumpTo(offset);
+        }
+      });
+    }
+  }
+
+  void _toggleService(String key) {
+    final offset = _scrollController.hasClients ? _scrollController.offset : null;
+    final current = _selectedServicesVN.value;
+    if (current.contains(key)) {
+      current.remove(key);
+    } else {
+      current.add(key);
+    }
+    _selectedServicesVN.value = {...current};
+    if (offset != null && _scrollController.hasClients) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.jumpTo(offset);
+        }
+      });
     }
   }
 
@@ -243,6 +340,10 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
 
   @override
   void dispose() {
+  _scrollController.dispose();
+  _selectedCategoriesVN.dispose();
+  _selectedServicesVN.dispose();
+  _pendingServiceLoadsVN.dispose();
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
@@ -260,6 +361,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
       if (_formKey.currentState?.validate() != true) {
         return;
       }
+
       // Move to next step without checking category selection
       setState(() {
         _currentStep++;
@@ -269,7 +371,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
     
     // For step 1 (category selection), check if category is selected
     if (_currentStep == 1 && _selectedUserType == 'provider') {
-      if (_selectedMainCategory == null) {
+      if (_selectedCategoriesVN.value.isEmpty) {
         // Show a more prominent error message
         showDialog(
           context: context,
@@ -296,7 +398,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
                   content: Text(
                     languageService.currentLanguage == 'ar' 
                       ? 'يرجى اختيار فئة الخدمة الرئيسية للمتابعة.'
-                      : 'Please select a main service category to continue.',
+                      : 'Please select at least one main service category to continue.',
                     style: GoogleFonts.cairo(
                       fontSize: 16,
                       color: AppColors.textPrimary,
@@ -329,7 +431,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
     
     // For step 2 (sub-category selection), check if sub-category is selected
     if (_currentStep == 2 && _selectedUserType == 'provider') {
-      if (_selectedSubCategory == null) {
+      if (_selectedServicesVN.value.isEmpty) {
         // Show a more prominent error message
         showDialog(
           context: context,
@@ -345,7 +447,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
                       const Icon(Icons.warning, color: AppColors.primary, size: 24),
                       const SizedBox(width: 8),
                       Text(
-                        languageService.currentLanguage == 'ar' ? 'الفئة الفرعية مطلوبة' : 'Sub-Category Required',
+                        languageService.currentLanguage == 'ar' ? 'الخدمات مطلوبة' : 'Services Required',
                         style: GoogleFonts.cairo(
                           fontWeight: FontWeight.bold,
                           color: AppColors.primary,
@@ -356,7 +458,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
                   content: Text(
                     languageService.currentLanguage == 'ar' 
                       ? 'يرجى اختيار فئة الخدمة الفرعية للمتابعة.'
-                      : 'Please select a sub-service category to continue.',
+                      : 'Please select at least one service to continue.',
                     style: GoogleFonts.cairo(
                       fontSize: 16,
                       color: AppColors.textPrimary,
@@ -416,18 +518,6 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
     });
   }
 
-  void _selectMainCategory(String category) {
-    setState(() {
-      _selectedMainCategory = category;
-      _selectedSubCategory = null;
-    });
-  }
-
-  void _selectSubCategory(String subCategory) {
-    setState(() {
-      _selectedSubCategory = subCategory;
-    });
-  }
 
   void _submitForm() async {
     // Use the original form validation that shows field-level errors
@@ -452,7 +542,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
     }
 
     // For service providers, ensure subcategory is selected before submission
-    if (_selectedUserType == 'provider' && _selectedSubCategory == null) {
+  if (_selectedUserType == 'provider' && _selectedServicesVN.value.isEmpty) {
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -467,7 +557,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
                     const Icon(Icons.warning, color: AppColors.primary, size: 24),
                     const SizedBox(width: 8),
                     Text(
-                      languageService.currentLanguage == 'ar' ? 'الفئة الفرعية مطلوبة' : 'Sub-Category Required',
+                      languageService.currentLanguage == 'ar' ? 'الخدمات مطلوبة' : 'Services Required',
                       style: GoogleFonts.cairo(
                         fontWeight: FontWeight.bold,
                         color: AppColors.primary,
@@ -536,7 +626,11 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
         age: int.tryParse(_ageController.text.trim()),
         city: _selectedLocation,
         street: _selectedStreet,
-      );
+        providerSelections: _selectedUserType == 'provider' ? {
+          'categories': _selectedCategoriesVN.value.toList(),
+          'services': _selectedServicesVN.value.toList(),
+        } : null,
+       );
 
       if (response['success'] == true) {
         setState(() {
@@ -690,6 +784,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
               child: Container(
                 color: AppColors.background,
                 child: SingleChildScrollView(
+                  controller: _scrollController,
                   padding: EdgeInsets.all(widget.screenWidth * 0.04),
                   child: _buildFormContent(languageService),
                 ),
@@ -946,7 +1041,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
           },
         ),
         SizedBox(height: widget.screenHeight * 0.02),
-        _buildPasswordField(
+  _buildPasswordField(
           controller: _passwordController,
           label: AppStrings.getString('password', languageService.currentLanguage),
           icon: Icons.lock,
@@ -965,7 +1060,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
             }
             return null;
           },
-        ),
+  ),
         SizedBox(height: widget.screenHeight * 0.02),
         _buildPasswordField(
           controller: _confirmPasswordController,
@@ -1027,59 +1122,99 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
           ),
         ),
         SizedBox(height: widget.screenHeight * 0.03),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 1.2,
-          ),
-          itemCount: _serviceCategories.length,
-          itemBuilder: (context, index) {
-            String categoryKey = _serviceCategories.keys.elementAt(index);
-            Map<String, dynamic> category = _serviceCategories[categoryKey]!;
-            bool isSelected = _selectedMainCategory == categoryKey;
-            
-            return GestureDetector(
-              onTap: () => _selectMainCategory(categoryKey),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary : AppColors.white,
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(
-                    color: isSelected ? AppColors.primary : AppColors.grey.withValues(alpha: 0.3),
-                    width: 2,
+  FutureBuilder<List<ServiceCategoryModel>>(
+          future: _categoriesFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final cats = snapshot.data ?? const <ServiceCategoryModel>[];
+            return ValueListenableBuilder<Set<String>>(
+              valueListenable: _selectedCategoriesVN,
+              builder: (context, selected, _) {
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  primary: false,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 1.2,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.black.withValues(alpha: 0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      category['icon'],
-                      style: const TextStyle(fontSize: 32),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _getCategoryName(categoryKey, languageService),
-                      style: GoogleFonts.cairo(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: isSelected ? AppColors.white : AppColors.textPrimary,
+                  itemCount: cats.length,
+                  itemBuilder: (context, index) {
+                    final cat = cats[index];
+                    final isSelected = selected.contains(cat.id);
+                    return GestureDetector(
+                      onTap: () => _toggleCategory(cat.id),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        decoration: BoxDecoration(
+                          color: isSelected ? AppColors.primary : AppColors.white,
+                          borderRadius: BorderRadius.circular(15),
+                          border: Border.all(
+                            color: isSelected ? AppColors.primary : AppColors.grey.withValues(alpha: 0.3),
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.black.withValues(alpha: 0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Builder(
+                              builder: (_) {
+                                // Prefer emoji for colorful look (old design)
+                                final emoji = _categoryEmojiFor(cat.id);
+                                if (emoji != null) {
+                                  return Text(
+                                    emoji,
+                                    style: const TextStyle(fontSize: 32),
+                                  );
+                                }
+                                // Then asset icon if available
+                                final asset = _categoryAssetFor(cat.id);
+                                if (asset != null) {
+                                  return Image.asset(
+                                    asset,
+                                    width: 42,
+                                    height: 42,
+                                    fit: BoxFit.contain,
+                                  );
+                                }
+                                // Fallback to Material icon
+                                return Icon(
+                                  _resolveCategoryIcon(cat.icon, fallback: cat.id),
+                                  size: 36,
+                                  color: isSelected ? AppColors.white : AppColors.textPrimary,
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              AppStrings.getString((cat.nameKey.isNotEmpty ? cat.nameKey : cat.id), languageService.currentLanguage),
+                              style: GoogleFonts.cairo(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: isSelected ? AppColors.white : AppColors.textPrimary,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
+                    );
+                  },
+                );
+              },
             );
           },
         ),
@@ -1088,10 +1223,8 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
   }
 
   Widget _buildSubCategorySelection(LanguageService languageService) {
-    if (_selectedMainCategory == null) return Container();
-    
-    List<String> subCategories = _serviceCategories[_selectedMainCategory!]!['subCategories'] as List<String>;
-    
+    if (_selectedCategoriesVN.value.isEmpty) return Container();
+     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1112,35 +1245,62 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
           ),
         ),
         SizedBox(height: widget.screenHeight * 0.03),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: subCategories.map((subCategory) {
-            bool isSelected = _selectedSubCategory == subCategory;
-            
-            return GestureDetector(
-              onTap: () => _selectSubCategory(subCategory),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary : AppColors.white,
-                  borderRadius: BorderRadius.circular(25),
-                  border: Border.all(
-                    color: isSelected ? AppColors.primary : AppColors.grey.withValues(alpha: 0.3),
-                    width: 2,
-                  ),
-                ),
-                child: Text(
-                  AppStrings.getString(subCategory, languageService.currentLanguage),
-                  style: GoogleFonts.cairo(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: isSelected ? AppColors.white : AppColors.textPrimary,
-                  ),
-                ),
-              ),
+        ValueListenableBuilder<Set<String>>(
+          valueListenable: _selectedCategoriesVN,
+          builder: (context, selectedCats, _) {
+            // Build combined subcategory list from cached services
+            final set = <String>{};
+            for (final catId in selectedCats) {
+              final list = _categoryServices[catId];
+              if (list != null) set.addAll(list);
+            }
+            final subCategories = set.toList()..sort();
+            return ValueListenableBuilder<int>(
+              valueListenable: _pendingServiceLoadsVN,
+              builder: (context, pending, __) {
+                if (pending > 0 && subCategories.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8.0),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                return ValueListenableBuilder<Set<String>>(
+                  valueListenable: _selectedServicesVN,
+                  builder: (context, selectedServices, ___) {
+                    return Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: subCategories.map((subCategory) {
+                        final isSelected = selectedServices.contains(subCategory);
+                        return GestureDetector(
+                          onTap: () => _toggleService(subCategory),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: isSelected ? AppColors.primary : AppColors.white,
+                              borderRadius: BorderRadius.circular(25),
+                              border: Border.all(
+                                color: isSelected ? AppColors.primary : AppColors.grey.withValues(alpha: 0.3),
+                                width: 2,
+                              ),
+                            ),
+                            child: Text(
+                              AppStrings.getString(subCategory, languageService.currentLanguage),
+                              style: GoogleFonts.cairo(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: isSelected ? AppColors.white : AppColors.textPrimary,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  },
+                );
+              },
             );
-          }).toList(),
+          },
         ),
       ],
     );
@@ -1541,8 +1701,7 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
               return null;
             },
           ),
-        ),
-        
+  ),
         // Street Selection (only show if city is selected)
         if (_selectedLocation != null) ...[
           SizedBox(height: widget.screenHeight * 0.02),

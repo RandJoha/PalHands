@@ -8,6 +8,8 @@ import '../../../../core/constants/app_strings.dart';
 
 // Shared imports
 import '../../../../shared/services/language_service.dart';
+import '../../../../shared/services/auth_service.dart';
+import '../../../../shared/services/my_services_service.dart';
 
 class MyServicesWidget extends StatefulWidget {
   const MyServicesWidget({super.key});
@@ -20,45 +22,42 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
   bool _isMultiEditMode = false;
   final Set<int> _selectedServices = {};
   bool _showEmergencyOnly = false;
+  final _svc = MyServicesService();
+  bool _loading = true;
+  String? _error;
+  String? _providerId;
+  List<ProviderServiceItem> _items = const [];
+  List<Map<String, dynamic>> _services = [];
 
-  final List<Map<String, dynamic>> _services = [
-    {
-      'id': 1,
-      'name': 'homeCleaning',
-      'price': '\$25/hour',
-  'status': 'active',
-  'emergency': false,
-      'rating': 4.8,
-      'bookings': 12,
-    },
-    {
-      'id': 2,
-      'name': 'elderlyCare',
-      'price': '\$30/hour',
-  'status': 'active',
-  'emergency': true,
-      'rating': 4.9,
-      'bookings': 8,
-    },
-    {
-      'id': 3,
-      'name': 'homeCooking',
-      'price': '\$20/hour',
-  'status': 'inactive',
-  'emergency': false,
-      'rating': 4.7,
-      'bookings': 5,
-    },
-    {
-      'id': 4,
-      'name': 'babysitting',
-      'price': '\$18/hour',
-  'status': 'active',
-  'emergency': true,
-      'rating': 4.6,
-      'bookings': 15,
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _bootstrap();
+  }
+
+  Future<void> _bootstrap() async {
+    try {
+      final auth = Provider.of<AuthService>(context, listen: false);
+      final id = auth.currentUser?['_id']?.toString();
+      setState(() { _providerId = id; _loading = true; _error = null; });
+      if (id == null || id.isEmpty) {
+        setState(() { _error = 'Not authenticated as provider'; _loading = false; });
+        return;
+      }
+      final items = await _svc.list(id);
+      final mapped = items.map((it) => {
+        'name': it.serviceTitle.isNotEmpty ? it.serviceTitle : it.serviceKey,
+        'price': '${it.hourlyRate.toStringAsFixed(0)} ILS/hour',
+        'status': it.status,
+        'emergency': it.emergencyEnabled,
+        'rating': 0.0,
+        'bookings': 0,
+      }).toList();
+      setState(() { _items = items; _services = mapped; _loading = false; });
+    } catch (e) {
+      setState(() { _error = 'Failed to load services'; _loading = false; });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +97,18 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
           if (_isMultiEditMode) SizedBox(height: isMobile ? 8.0 : (isTablet ? 12.0 : 16.0)),
           
           // Services grid
-          _buildServicesGrid(languageService, isMobile, isTablet, isDesktop, screenWidth),
+          if (_loading) 
+            Center(child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SizedBox(width: 28, height: 28, child: CircularProgressIndicator(color: AppColors.primary)),
+            ))
+          else if (_error != null)
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Text(_error!, style: GoogleFonts.cairo(color: AppColors.error)),
+            )
+          else
+            _buildServicesGrid(languageService, isMobile, isTablet, isDesktop, screenWidth),
         ],
       ),
     );
@@ -694,26 +704,41 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
   }
 
   void _activateSelectedServices() {
-    // TODO: Implement bulk activate
-    setState(() {
-      _isMultiEditMode = false;
-      _selectedServices.clear();
+    if (_providerId == null) return;
+    Future.microtask(() async {
+      for (final idx in _selectedServices) {
+        if (idx >= 0 && idx < _items.length) {
+          await _svc.update(_providerId!, _items[idx].id, { 'status': 'active' });
+        }
+      }
+      await _bootstrap();
+      if (mounted) setState(() { _isMultiEditMode = false; _selectedServices.clear(); });
     });
   }
 
   void _deactivateSelectedServices() {
-    // TODO: Implement bulk deactivate
-    setState(() {
-      _isMultiEditMode = false;
-      _selectedServices.clear();
+    if (_providerId == null) return;
+    Future.microtask(() async {
+      for (final idx in _selectedServices) {
+        if (idx >= 0 && idx < _items.length) {
+          await _svc.update(_providerId!, _items[idx].id, { 'status': 'inactive', 'isPublished': false });
+        }
+      }
+      await _bootstrap();
+      if (mounted) setState(() { _isMultiEditMode = false; _selectedServices.clear(); });
     });
   }
 
   void _deleteSelectedServices() {
-    // TODO: Implement bulk delete with confirmation
-    setState(() {
-      _isMultiEditMode = false;
-      _selectedServices.clear();
+    if (_providerId == null) return;
+    Future.microtask(() async {
+      for (final idx in _selectedServices) {
+        if (idx >= 0 && idx < _items.length) {
+          await _svc.remove(_providerId!, _items[idx].id);
+        }
+      }
+      await _bootstrap();
+      if (mounted) setState(() { _isMultiEditMode = false; _selectedServices.clear(); });
     });
   }
 }

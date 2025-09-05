@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { auth, checkRole } = require('../middleware/auth');
+const { auth: authenticate, checkRole } = require('../middleware/auth');
 const { celebrate, Joi, Segments } = require('celebrate');
 const availabilityController = require('../controllers/availabilityController');
 
@@ -38,7 +38,7 @@ router.get('/:providerId/resolve', celebrate({
 
 // Update availability:
 // - provider can update only their own record
-router.put('/:providerId', auth, upsertSchema, (req, res, next) => {
+router.put('/:providerId', authenticate, upsertSchema, (req, res, next) => {
   const isSelf = req.user && req.user.role === 'provider' && String(req.user._id) === String(req.params.providerId);
   if (!isSelf) {
     return res.status(403).json({ success: false, code: 'FORBIDDEN', message: 'You can only modify your own availability' });

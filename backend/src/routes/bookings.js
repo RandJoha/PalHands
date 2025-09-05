@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { auth, checkRole } = require('../middleware/auth');
+const { auth: authenticate, checkRole } = require('../middleware/auth');
 const bookingsController = require('../controllers/bookingsController');
 const { celebrate, Joi, Segments } = require('celebrate');
 
@@ -30,23 +30,23 @@ const updateStatusValidator = celebrate({
   [Segments.BODY]: Joi.object({ status: Joi.string().valid('pending','confirmed','completed','cancelled').required() })
 });
 
-router.post('/', auth, createBookingValidator, bookingsController.createBooking);
-router.get('/', auth, bookingsController.listMyBookings);
+router.post('/', authenticate, createBookingValidator, bookingsController.createBooking);
+router.get('/', authenticate, bookingsController.listMyBookings);
 // Admin listing
-router.get('/admin/all', auth, checkRole(['admin']), bookingsController.listAllBookings);
+router.get('/admin/all', authenticate, checkRole(['admin']), bookingsController.listAllBookings);
 // Important: define the 'code' route before the generic ':id' route
-router.get('/:id', auth, bookingsController.getBookingById);
-router.put('/:id/status', auth, updateStatusValidator, bookingsController.updateBookingStatus);
+router.get('/:id', authenticate, bookingsController.getBookingById);
+router.put('/:id/status', authenticate, updateStatusValidator, bookingsController.updateBookingStatus);
 
 // New business endpoints
 const reasonValidator = celebrate({
   [Segments.BODY]: Joi.object({ reason: Joi.string().allow('').optional() })
 });
 
-router.post('/:id/cancel', auth, reasonValidator, bookingsController.cancelBooking);
-router.post('/:id/confirm', auth, checkRole(['provider']), bookingsController.confirmBooking);
-router.post('/:id/complete', auth, checkRole(['provider']), bookingsController.completeBooking);
-router.post('/:id/cancellation-requests/:requestId/respond', auth, celebrate({
+router.post('/:id/cancel', authenticate, reasonValidator, bookingsController.cancelBooking);
+router.post('/:id/confirm', authenticate, checkRole(['provider']), bookingsController.confirmBooking);
+router.post('/:id/complete', authenticate, checkRole(['provider']), bookingsController.completeBooking);
+router.post('/:id/cancellation-requests/:requestId/respond', authenticate, celebrate({
   [Segments.BODY]: Joi.object({ action: Joi.string().valid('accept','decline').required() })
 }), bookingsController.respondCancellationRequest);
 

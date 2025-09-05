@@ -62,7 +62,39 @@ Seed script:
 - `src/utils/seedDatabase.js`  # Creates test provider accounts and a demo service each (Phase 1)
 ```
 
-## 🔧 Technology Stack
+## � September 2025 — Registration flow and categories/services updates
+
+This update aligns backend registration and taxonomy with the latest frontend signup experience and website data.
+
+What changed
+- Provider-first registration path: when `role: 'provider'`, the API now creates a document in the `Provider` collection (not `User`). The response includes a JWT and the provider payload.
+- Conflict checks across both collections: email/phone uniqueness is validated against `users` and `providers` collections before registration.
+- Provider schema: `providerId` is still auto-generated in a pre-save hook, but it is no longer required at validation time (avoids premature validation failures).
+- Input validation (register): accepts optional `providerSelections` with `categories` and `services` arrays. `age` and `address` remain required for providers; conditional for others.
+- Service taxonomy endpoints: service categories and their distinct services are served from MongoDB, keeping the app in sync with the website.
+
+Files touched (reference)
+- `src/controllers/authController.js`: enhanced `register` handler to branch on `role === 'provider'`, create a `Provider` doc with safe defaults, and return 201.
+- `src/validators/authValidators.js`: accepts `providerSelections` and makes `age`/`address` conditionally required based on role.
+- `src/models/Provider.js`: `providerId` no longer required at validation time; still auto-assigned pre-save.
+- `src/routes/servicecategories.js`, `src/controllers/serviceCategoriesController.js`, `src/models/ServiceCategory.js`: DB-driven categories and per-category distinct services.
+
+API shape (selected)
+- POST `/api/auth/register`
+  - Body (provider): `{ firstName, lastName?, email, password, phone, role: 'provider', age, address: { city, street }, providerSelections?: { categories: string[], services: string[] } }`
+  - Responses:
+    - 201 Created: `{ token, user: { ...providerFields } }`
+    - 400 Conflict: email/phone already registered (users/providers)
+    - 400 Validation: missing required fields / invalid role
+- GET `/api/servicecategories` → Category list from DB
+- GET `/api/servicecategories/:id/services` → Distinct services for a category
+
+Notes
+- Email verification remains gated by `ENABLE_EMAIL_VERIFICATION` and works for both users and providers.
+- The categories/services are no longer hardcoded in the frontend; they are sourced from MongoDB for parity with the website.
+
+
+## �🔧 Technology Stack
 
 ### Core Technologies (current)
 - **Runtime**: Node.js (>=16.0.0)

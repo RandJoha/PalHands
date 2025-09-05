@@ -98,7 +98,7 @@ function renderActionHtml({ title, heading, buttonText, actionPath, token, succe
 
 // Register new user
 const register = asyncHandler(async (req, res) => {
-  const { firstName, lastName = '', email, phone, password, role = 'client', age, address } = req.body;
+  const { firstName, lastName = '', email, phone, password, role = 'client', age, address, providerSelections } = req.body;
   console.log('Registration attempt:', { firstName, lastName, email, phone, password: password ? '[HIDDEN]' : 'MISSING', role });
   
 
@@ -121,17 +121,84 @@ const register = asyncHandler(async (req, res) => {
       return error(res, 400, 'Invalid role. Must be client, provider, or admin', [], 'VALIDATION_ERROR');
     }
 
-    // Check if user already exists
-    const existingUser = await User.findOne({
-      $or: [{ email: email.toLowerCase() }, { phone }]
-    });
-
-    if (existingUser) {
-      console.log('User already exists:', existingUser.email === email.toLowerCase() ? 'Email conflict' : 'Phone conflict');
-      return error(res, 400, existingUser.email === email.toLowerCase() ? 'Email already registered' : 'Phone number already registered', [], 'CONFLICT');
+    // Check if user already exists (in either collection)
+    const [conflictUser, conflictProvider] = await Promise.all([
+      User.findOne({ $or: [{ email: email.toLowerCase() }, { phone }] }),
+      Provider.findOne({ $or: [{ email: email.toLowerCase() }, { phone }] })
+    ]);
+    if (conflictUser || conflictProvider) {
+      const conflict = conflictUser || conflictProvider;
+      console.log('Registration conflict:', conflict.email === email.toLowerCase() ? 'Email conflict' : 'Phone conflict');
+      return error(
+        res,
+        400,
+        conflict.email === email.toLowerCase() ? 'Email already registered' : 'Phone number already registered',
+        [],
+        'CONFLICT'
+      );
     }
 
-    // Create new user
+    // If registering a provider, create in Provider collection with sane defaults
+    if (role === 'provider') {
+      const providerDoc = new Provider({
+        firstName,
+        lastName,
+        email: email.toLowerCase(),
+        phone,
+        password,
+        role: 'provider',
+        age,
+        // Required provider fields with safe defaults
+        experienceYears: 0,
+        languages: ['Arabic'],
+        hourlyRate: 0,
+        services: Array.isArray(providerSelections?.services) ? providerSelections.services : [],
+        // Addresses array
+        addresses: (address && address.city && address.street) ? [{
+          type: 'home',
+          street: address.street.trim(),
+          city: address.city.trim(),
+          area: address.area?.trim() || '',
+          coordinates: { latitude: null, longitude: null },
+          isDefault: true,
+        }] : []
+      });
+
+      // Optional email verification
+      if (process.env.ENABLE_EMAIL_VERIFICATION === 'true') {
+        providerDoc.emailVerificationToken = crypto.randomBytes(20).toString('hex');
+        providerDoc.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      }
+
+      await providerDoc.save();
+
+      const token = generateToken(providerDoc._id);
+      const providerResponse = {
+        _id: providerDoc._id,
+        firstName: providerDoc.firstName,
+        lastName: providerDoc.lastName,
+        email: providerDoc.email,
+        phone: providerDoc.phone,
+        age: providerDoc.age,
+        profileImage: providerDoc.profileImage,
+        role: providerDoc.role,
+        isVerified: providerDoc.isVerified,
+        isActive: providerDoc.isActive,
+        rating: providerDoc.rating,
+        experienceYears: providerDoc.experienceYears,
+        languages: providerDoc.languages,
+        hourlyRate: providerDoc.hourlyRate,
+        services: providerDoc.services,
+        location: providerDoc.location,
+        totalBookings: providerDoc.totalBookings,
+        completedBookings: providerDoc.completedBookings,
+        addresses: providerDoc.addresses,
+        createdAt: providerDoc.createdAt
+      };
+      return created(res, { token, user: providerResponse }, 'Provider registered successfully');
+    }
+
+    // Create new user (for non-provider roles)
     const user = new User({
       firstName,
       lastName,

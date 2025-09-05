@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const chatController = require('../controllers/chatController');
-const { auth } = require('../middleware/auth');
+const { auth: authenticate } = require('../middleware/auth');
 
 // Test endpoint (no auth required)
 router.get('/test', (req, res) => {
@@ -13,7 +13,7 @@ router.get('/test', (req, res) => {
 });
 
 // Test endpoint to check current chats (requires auth)
-router.get('/test-chats', auth, async (req, res) => {
+router.get('/test-chats', authenticate, async (req, res) => {
   try {
     const Chat = require('../models/Chat');
     const User = require('../models/User');
@@ -47,7 +47,7 @@ router.get('/test-chats', auth, async (req, res) => {
 });
 
 // All chat routes require authentication
-router.use(auth);
+router.use(authenticate);
 
 // Get user's chat list
 router.get('/', chatController.getUserChats);

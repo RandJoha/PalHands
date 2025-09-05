@@ -1,6 +1,6 @@
 require('dotenv').config();
 const { connectDB, mongoose } = require('./src/config/database');
-const User = require('./src/models/User');
+const Provider = require('./src/models/Provider');
 
 async function testSearch() {
   await connectDB();
@@ -8,8 +8,7 @@ async function testSearch() {
   try {
     // Test search for kitchenCleaning
     console.log('🔍 Testing search for "kitchenCleaning":');
-    const kitchenProviders = await User.find({
-      role: 'provider',
+    const kitchenProviders = await Provider.find({
       isActive: true,
       services: { $in: ['kitchenCleaning'] }
     });
@@ -18,8 +17,7 @@ async function testSearch() {
 
     // Test search for bathroomCleaning
     console.log('\n🔍 Testing search for "bathroomCleaning":');
-    const bathroomProviders = await User.find({
-      role: 'provider',
+    const bathroomProviders = await Provider.find({
       isActive: true,
       services: { $in: ['bathroomCleaning'] }
     });
@@ -28,8 +26,7 @@ async function testSearch() {
 
     // Test search for both
     console.log('\n🔍 Testing search for both "kitchenCleaning" and "bathroomCleaning":');
-    const bothProviders = await User.find({
-      role: 'provider',
+    const bothProviders = await Provider.find({
       isActive: true,
       services: { $in: ['kitchenCleaning', 'bathroomCleaning'] }
     });

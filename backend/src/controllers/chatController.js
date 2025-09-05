@@ -464,8 +464,8 @@ const sendMessage = async (req, res) => {
       // Don't fail the message send if notifications fail
     }
 
-    // Populate sender info for response
-    // All users (including providers) are stored in User collection for authentication
+  // Populate sender info for response
+  // Note: providers authenticate via providers collection; users via users collection
     let responseSender = await User.findById(userId).select('firstName lastName profileImage');
     if (!responseSender) {
       const prov = await Provider.findById(userId).select('firstName lastName profileImage');

@@ -92,6 +92,11 @@ This document serves as a comprehensive index of all PalHands project documentat
 
 ## 📝 **Recent Documentation Updates**
 
+### September 2025 — Registration and taxonomy alignment
+- Backend: Provider registration now creates Provider docs, conflict checks across both collections, conditional validator, and providerSelections support.
+- Taxonomy: Categories/services now supplied from DB with endpoints used by the signup UI.
+- Frontend: Signup (web) shows colorful category icons and supports multi-select with smoother UX (no flicker/scroll jump).
+
 ### **September 2025 - Booking Monitoring polish & filters**
 - Admin Booking Monitoring: removed stray “x” near status, normalized date/time, Booking ID now hoverable and copyable.
 - Client dashboard: local dismiss on Cancelled filter (UI-only, non-destructive). Admin acting-as-client has the same dismiss.

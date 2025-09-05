@@ -1,133 +1,26 @@
 const { ok, error } = require('../utils/response');
+const ServiceCategory = require('../models/ServiceCategory');
+const Service = require('../models/Service');
 
-// Categories data for the frontend
-const SERVICE_CATEGORIES = [
-  {
-    id: 'cleaning',
-    name: 'Cleaning Services',
-    nameKey: 'cleaningServices',
-    description: 'Professional cleaning services for your home',
-    icon: 'cleaning_services',
-    color: '#4CAF50',
-    services: [
-      'bedroomCleaning', 'livingRoomCleaning', 'kitchenCleaning', 'bathroomCleaning',
-      'windowCleaning', 'doorCabinetCleaning', 'floorCleaning', 'carpetCleaning',
-      'furnitureCleaning', 'gardenCleaning', 'entranceCleaning', 'stairCleaning',
-      'garageCleaning', 'postEventCleaning', 'postConstructionCleaning', 
-      'apartmentCleaning', 'regularCleaning'
-    ]
-  },
-  {
-    id: 'organizing',
-    name: 'Organizing Services',
-    nameKey: 'organizingServices',
-    description: 'Professional organizing services for your home',
-    icon: 'folder_open',
-    color: '#2196F3',
-    services: [
-      'bedroomOrganizing', 'kitchenOrganizing', 'closetOrganizing', 'storageOrganizing',
-      'livingRoomOrganizing', 'postPartyOrganizing', 'fullHouseOrganizing', 'childrenOrganizing'
-    ]
-  },
-  {
-    id: 'cooking',
-    name: 'Home Cooking Services',
-    nameKey: 'homeCookingServices',
-    description: 'Professional cooking services for your home',
-    icon: 'restaurant',
-    color: '#FF9800',
-    services: [
-      'mainDishes', 'desserts', 'specialRequests'
-    ]
-  },
-  {
-    id: 'childcare',
-    name: 'Child Care Services',
-    nameKey: 'childCareServices',
-    description: 'Professional childcare services',
-    icon: 'child_care',
-    color: '#E91E63',
-    services: [
-      'homeBabysitting', 'schoolAccompaniment', 'homeworkHelp', 
-      'educationalActivities', 'childrenMealPrep', 'sickChildCare'
-    ]
-  },
-  {
-    id: 'elderly',
-    name: 'Personal & Elderly Care',
-    nameKey: 'personalElderlyCareServices',
-    description: 'Compassionate care for elderly individuals',
-    icon: 'elderly',
-    color: '#9C27B0',
-    services: [
-      'personalCare', 'companionship', 'medicationReminders', 
-      'lightHousekeeping', 'mealPreparation', 'transportationAssistance'
-    ]
-  },
-  {
-    id: 'maintenance',
-    name: 'Home Maintenance',
-    nameKey: 'homeMaintenanceServices',
-    description: 'Professional home maintenance and repair services',
-    icon: 'handyman',
-    color: '#795548',
-    services: [
-      'generalRepairs', 'plumbing', 'electrical', 'painting',
-      'furnitureAssembly', 'applianceInstallation'
-    ]
-  },
-  {
-    id: 'newhome',
-    name: 'New Home Setup',
-    nameKey: 'newHomeSetupServices',
-    description: 'Complete setup services for your new home',
-    icon: 'home',
-    color: '#607D8B',
-    services: [
-      'movingIn', 'unpacking', 'organizing', 'deepCleaning',
-      'furnitureArrangement', 'kitchenSetup'
-    ]
-  },
-  {
-    id: 'miscellaneous',
-    name: 'Miscellaneous Services',
-    nameKey: 'miscellaneousServices',
-    description: 'Various other helpful services',
-    icon: 'miscellaneous_services',
-    color: '#9E9E9E',
-    services: [
-      'petCare', 'gardenWork', 'eventPreparation', 'specialProjects'
-    ]
-  }
-];
-
-/**
- * Get all service categories
- */
+// Get all categories from DB (servicecategories collection)
 async function listCategories(req, res) {
   try {
-    return ok(res, {
-      categories: SERVICE_CATEGORIES,
-      total: SERVICE_CATEGORIES.length
-    });
+    const categories = await ServiceCategory.find({ isActive: { $ne: false } })
+      .sort({ sortOrder: 1, name: 1 })
+      .lean();
+    return ok(res, { categories, total: categories.length });
   } catch (e) {
     console.error('listCategories error', e);
     return error(res, 500, 'Failed to fetch service categories');
   }
 }
 
-/**
- * Get a specific category by ID
- */
+// Get a specific category by ID
 async function getCategoryById(req, res) {
   try {
     const { id } = req.params;
-    const category = SERVICE_CATEGORIES.find(cat => cat.id === id);
-    
-    if (!category) {
-      return error(res, 404, 'Category not found');
-    }
-    
+    const category = await ServiceCategory.findOne({ id }).lean();
+    if (!category) return error(res, 404, 'Category not found');
     return ok(res, category);
   } catch (e) {
     console.error('getCategoryById error', e);
@@ -135,43 +28,38 @@ async function getCategoryById(req, res) {
   }
 }
 
-/**
- * Get categories with service counts from the database
- */
+// Get categories with live service counts from services collection
 async function getCategoriesWithCounts(req, res) {
   try {
-    const Service = require('../models/Service');
-    
-    // Get service counts for each category
-    const serviceCounts = await Service.aggregate([
-      { $match: { isActive: true } },
-      { $group: { _id: '$category', count: { $sum: 1 } } }
+    const [categories, counts] = await Promise.all([
+      ServiceCategory.find({ isActive: { $ne: false } }).lean(),
+      Service.aggregate([
+        { $match: { isActive: true } },
+        { $group: { _id: '$category', count: { $sum: 1 } } }
+      ])
     ]);
-    
-    // Create a map for quick lookup
-    const countMap = serviceCounts.reduce((acc, item) => {
-      acc[item._id] = item.count;
-      return acc;
-    }, {});
-    
-    // Add counts to categories
-    const categoriesWithCounts = SERVICE_CATEGORIES.map(category => ({
-      ...category,
-      serviceCount: countMap[category.id] || 0
-    }));
-    
-    return ok(res, {
-      categories: categoriesWithCounts,
-      total: categoriesWithCounts.length
-    });
+    const countMap = counts.reduce((acc, c) => { acc[c._id] = c.count; return acc; }, {});
+    const categoriesWithCounts = categories.map(c => ({ ...c, serviceCount: countMap[c.id] || 0 }));
+    return ok(res, { categories: categoriesWithCounts, total: categoriesWithCounts.length });
   } catch (e) {
     console.error('getCategoriesWithCounts error', e);
     return error(res, 500, 'Failed to fetch categories with counts');
   }
 }
 
-module.exports = {
-  listCategories,
-  getCategoryById,
-  getCategoriesWithCounts
-};
+// New: return distinct service subcategories for a given category from services collection
+async function getDistinctServicesByCategory(req, res) {
+  try {
+    const { id } = req.params; // category id
+    if (!id) return error(res, 400, 'Category id is required');
+    const subcategories = await Service.distinct('subcategory', { category: id, isActive: true });
+    // Filter out empty/null
+    const items = subcategories.filter(Boolean).sort();
+    return ok(res, { category: id, services: items, total: items.length });
+  } catch (e) {
+    console.error('getDistinctServicesByCategory error', e);
+    return error(res, 500, 'Failed to fetch services for category');
+  }
+}
+
+module.exports = { listCategories, getCategoryById, getCategoriesWithCounts, getDistinctServicesByCategory };

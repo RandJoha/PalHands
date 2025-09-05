@@ -6,7 +6,7 @@ const Service = require('../models/Service');
 (async function main(){
   try {
     await connectDB();
-    const providers = await Provider.find({ role: 'provider' }).select('_id firstName lastName email');
+  const providers = await Provider.find({}).select('_id firstName lastName email');
     const rows = [];
     for (const p of providers) {
       const services = await Service.find({ provider: p._id, emergencyEnabled: true }).select('title emergencyTypes emergencyLeadTimeMinutes emergencyRateMultiplier emergencySurcharge');

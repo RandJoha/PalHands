@@ -35,7 +35,7 @@ async function main() {
 
   await connectDB();
   try {
-    const providers = await Provider.find({ role: 'provider' }).select('_id firstName lastName email');
+  const providers = await Provider.find({}).select('_id firstName lastName email');
     const ids = providers.map(p => p._id);
 
     // Find existing availability docs

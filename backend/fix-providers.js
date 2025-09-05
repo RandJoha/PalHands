@@ -1,13 +1,13 @@
 require('dotenv').config();
 const { connectDB, mongoose } = require('./src/config/database');
-const User = require('./src/models/User');
+const Provider = require('./src/models/Provider');
 
 async function fixProviders() {
   await connectDB();
 
   try {
-    // Get all providers
-    const providers = await User.find({ role: 'provider' });
+  // Get all providers (providers collection)
+  const providers = await Provider.find({});
     console.log(`Found ${providers.length} providers`);
 
     // Define services for each provider
@@ -33,7 +33,7 @@ async function fixProviders() {
       const provider = providers[i];
       const services = servicesToAdd[i % servicesToAdd.length];
       
-      const updateResult = await User.updateOne(
+  const updateResult = await Provider.updateOne(
         { _id: provider._id },
         {
           $set: {
@@ -54,7 +54,7 @@ async function fixProviders() {
 
     // Verify the updates
     console.log('\n🔍 Verifying updates...');
-    const updatedProviders = await User.find({ role: 'provider' });
+  const updatedProviders = await Provider.find({});
     
     for (const provider of updatedProviders) {
       console.log(`📋 ${provider.firstName} ${provider.lastName}:`);
@@ -65,8 +65,7 @@ async function fixProviders() {
 
     // Test search for kitchenCleaning
     console.log('\n🔍 Testing search for "kitchenCleaning":');
-    const kitchenProviders = await User.find({
-      role: 'provider',
+  const kitchenProviders = await Provider.find({
       isActive: true,
       services: { $in: ['kitchenCleaning'] }
     });
@@ -74,8 +73,7 @@ async function fixProviders() {
 
     // Test search for bathroomCleaning
     console.log('\n🔍 Testing search for "bathroomCleaning":');
-    const bathroomProviders = await User.find({
-      role: 'provider',
+  const bathroomProviders = await Provider.find({
       isActive: true,
       services: { $in: ['bathroomCleaning'] }
     });

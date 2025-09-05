@@ -6,7 +6,8 @@ const providerSchema = new mongoose.Schema({
   providerId: {
     type: Number,
     unique: true,
-    required: true,
+  // Not required at validation time; it's auto-assigned in pre('save')
+  required: false,
     min: 1000,
     max: 9999
   },

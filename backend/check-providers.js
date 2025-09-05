@@ -1,19 +1,14 @@
 require('dotenv').config();
-const mongoose = require('mongoose');
-const User = require('./src/models/User');
-
-// Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/palhands', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+const { connectDB, mongoose } = require('./src/config/database');
+const Provider = require('./src/models/Provider');
 
 async function checkProviders() {
   try {
+    await connectDB();
     console.log('🔍 Checking providers in database...');
     
-    // Find all users with role 'provider'
-    const providers = await User.find({ role: 'provider' }).select('_id firstName lastName email services');
+    // Find all providers in Provider collection
+    const providers = await Provider.find({}).select('_id firstName lastName email services');
     
     console.log(`📋 Found ${providers.length} providers:`);
     
@@ -25,7 +20,7 @@ async function checkProviders() {
     });
     
     // Also check for any existing chats
-    const Chat = require('./src/models/Chat');
+  const Chat = require('./src/models/Chat');
     const chats = await Chat.find({}).populate('participants', 'firstName lastName');
     
     console.log(`\n💬 Found ${chats.length} chats:`);

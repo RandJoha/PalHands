@@ -28,7 +28,8 @@ class ServiceCategoryModel {
     return ServiceCategoryModel(
       id: json['id'] ?? '',
       name: json['name'] ?? '',
-      nameKey: json['nameKey'] ?? '',
+      // Backend stores i18n key under 'name'; legacy clients used 'nameKey'
+      nameKey: (json['nameKey'] ?? json['name'] ?? '') as String,
       description: json['description'] ?? '',
       icon: json['icon'] ?? '',
       color: json['color'] ?? '#000000',
@@ -86,14 +87,19 @@ class ServiceCategoriesService with BaseApiService {
     try {
       final response = await get('/servicecategories', headers: _authHeaders);
 
+      // Backend uses unified ok({ data: ... }) wrapper
+      final dynamic dataBlock = response['data'] ?? response;
+      final List<dynamic> categoriesData = () {
+        if (dataBlock is Map<String, dynamic> && dataBlock['categories'] is List) {
+          return List<dynamic>.from(dataBlock['categories']);
+        }
+        if (dataBlock is List) return dataBlock;
+        return <dynamic>[];
+      }();
       if (kDebugMode) {
-        print('📂 Fetched service categories: ${response['categories']?.length ?? 0} items');
+        print('📂 Fetched service categories: ${categoriesData.length} items');
       }
-
-      final List<dynamic> categoriesData = response['categories'] ?? response['data'] ?? [];
-      final categories = categoriesData
-          .map((json) => ServiceCategoryModel.fromJson(json))
-          .toList();
+      final categories = categoriesData.map((json) => ServiceCategoryModel.fromJson(Map<String, dynamic>.from(json as Map))).toList();
 
       // Cache the results
       _cachedCategories = categories;
@@ -115,15 +121,18 @@ class ServiceCategoriesService with BaseApiService {
   Future<List<ServiceCategoryModel>> getCategoriesWithCounts({bool forceRefresh = false}) async {
     try {
       final response = await get('/servicecategories/counts', headers: _authHeaders);
-
+      final dynamic dataBlock = response['data'] ?? response;
+      final List<dynamic> categoriesData = () {
+        if (dataBlock is Map<String, dynamic> && dataBlock['categories'] is List) {
+          return List<dynamic>.from(dataBlock['categories']);
+        }
+        if (dataBlock is List) return dataBlock;
+        return <dynamic>[];
+      }();
       if (kDebugMode) {
-        print('📂 Fetched service categories with counts: ${response['categories']?.length ?? 0} items');
+        print('📂 Fetched service categories with counts: ${categoriesData.length} items');
       }
-
-      final List<dynamic> categoriesData = response['categories'] ?? response['data'] ?? [];
-      final categories = categoriesData
-          .map((json) => ServiceCategoryModel.fromJson(json))
-          .toList();
+      final categories = categoriesData.map((json) => ServiceCategoryModel.fromJson(Map<String, dynamic>.from(json as Map))).toList();
 
       return categories;
     } catch (e) {
@@ -145,8 +154,8 @@ class ServiceCategoriesService with BaseApiService {
         print('📂 Fetched service category: $categoryId');
       }
 
-      final categoryData = response['data'] ?? response;
-      return ServiceCategoryModel.fromJson(categoryData);
+  final categoryData = response['data'] ?? response;
+  return ServiceCategoryModel.fromJson(Map<String, dynamic>.from(categoryData as Map));
     } catch (e) {
       if (kDebugMode) {
         print('❌ Error fetching service category $categoryId: $e');
@@ -169,6 +178,27 @@ class ServiceCategoriesService with BaseApiService {
   void clearCache() {
     _cachedCategories = null;
     _lastFetch = null;
+  }
+
+  /// Get distinct service keys for a category from backend services collection
+  Future<List<String>> getServicesForCategory(String categoryId) async {
+    try {
+      final response = await get('/servicecategories/$categoryId/services', headers: _authHeaders);
+      final dynamic dataBlock = response['data'] ?? response;
+      final List<dynamic> list = () {
+        if (dataBlock is Map<String, dynamic> && dataBlock['services'] is List) {
+          return List<dynamic>.from(dataBlock['services']);
+        }
+        if (dataBlock is List) return dataBlock;
+        return <dynamic>[];
+      }();
+      return list.map((e) => e.toString()).toList();
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error fetching services for category $categoryId: $e');
+      }
+      return <String>[];
+    }
   }
 
   /// Convert color string to Color object

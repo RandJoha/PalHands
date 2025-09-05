@@ -1,13 +1,13 @@
 require('dotenv').config();
 const { connectDB, mongoose } = require('./src/config/database');
-const User = require('./src/models/User');
+const Provider = require('./src/models/Provider');
 
 async function addServicesToProviders() {
   await connectDB();
 
   try {
-    // Get all providers
-    const providers = await User.find({ role: 'provider' });
+  // Get all providers (providers collection)
+  const providers = await Provider.find({});
     console.log(`Found ${providers.length} providers`);
 
     // Define services for each provider
@@ -33,7 +33,7 @@ async function addServicesToProviders() {
       const provider = providers[i];
       const services = servicesToAdd[i % servicesToAdd.length];
       
-      await User.findByIdAndUpdate(provider._id, {
+  await Provider.findByIdAndUpdate(provider._id, {
         $set: {
           services: services,
           experienceYears: Math.floor(Math.random() * 10) + 1,

@@ -18,13 +18,13 @@ const Availability = require('../models/Availability');
       const keys = String(arg).split(',').map(s => s.trim()).filter(Boolean);
       const byId = keys.filter(k => /^[0-9a-fA-F]{24}$/.test(k));
       const byEmail = keys.filter(k => !/^[0-9a-fA-F]{24}$/.test(k));
-      const q = { role: 'provider', $or: [] };
+  const q = { $or: [] };
       if (byId.length) q.$or.push({ _id: { $in: byId } });
       if (byEmail.length) q.$or.push({ email: { $in: byEmail } });
       if (!q.$or.length) delete q.$or;
       providers = await Provider.find(q).limit(100);
     } else {
-      providers = await Provider.find({ role: 'provider' }).limit(5);
+  providers = await Provider.find({}).limit(5);
     }
 
     if (!providers || providers.length === 0) {

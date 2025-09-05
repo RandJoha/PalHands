@@ -1,4 +1,5 @@
 const User = require('../../models/User');
+const Provider = require('../../models/Provider');
 const Service = require('../../models/Service');
 const Booking = require('../../models/Booking');
 const Report = require('../../models/Report');
@@ -121,82 +122,126 @@ const getDashboardOverview = async (req, res) => {
   }
 };
 
-// Get user management data
+// Get user management data (combined Users + Providers)
 const getUserManagementData = async (req, res) => {
   try {
-    const { page = 1, limit = 20, search, role, status, excludeRole } = req.query;
-    const skip = (page - 1) * limit;
+    const { page = 1, limit = 20, search, role = 'all', status, excludeRole } = req.query;
+    const pageNum = parseInt(page);
+    const pageSize = parseInt(limit);
+    const skip = (pageNum - 1) * pageSize;
 
-    // Build filter
-    const filter = {};
-    if (search) {
-      // Check if search is a provider ID (4-digit number)
-      const isProviderId = /^\d{4}$/.test(search);
-      
+    // Build base filters for users and providers
+    const userFilter = {};
+    const providerFilter = {};
+
+    // Search across name/email/phone; support 4-digit providerId for providers
+    if (search && search.trim()) {
+      const s = search.trim();
+      const isProviderId = /^\d{4}$/.test(s);
+      userFilter.$or = [
+        { firstName: { $regex: s, $options: 'i' } },
+        { lastName: { $regex: s, $options: 'i' } },
+        { email: { $regex: s, $options: 'i' } },
+        { phone: { $regex: s, $options: 'i' } }
+      ];
+      providerFilter.$or = [
+        { firstName: { $regex: s, $options: 'i' } },
+        { lastName: { $regex: s, $options: 'i' } },
+        { email: { $regex: s, $options: 'i' } },
+        { phone: { $regex: s, $options: 'i' } }
+      ];
       if (isProviderId) {
-        // If searching by provider ID, we need to find the provider first
-        const Provider = require('../../models/Provider');
-        const provider = await Provider.findOne({ providerId: parseInt(search) });
-        
-        if (provider) {
-          // Filter by the provider's user ID
-          filter._id = provider._id;
-        } else {
-          // No provider found with this ID, return empty results
-          return res.json({
-            success: true,
-            data: {
-              users: [],
-              pagination: {
-                current: parseInt(page),
-                total: 0,
-                totalRecords: 0
-              }
-            }
-          });
-        }
-      } else {
-        // Regular text search
-        filter.$or = [
-          { firstName: { $regex: search, $options: 'i' } },
-          { lastName: { $regex: search, $options: 'i' } },
-          { email: { $regex: search, $options: 'i' } },
-          { phone: { $regex: search, $options: 'i' } }
-        ];
+        providerFilter.providerId = parseInt(s, 10);
       }
     }
-    
-    // Handle role filtering - prioritize specific role over excludeRole
+
+    // Role filters
     if (role && role !== 'all') {
-      filter.role = role;
+      if (role === 'provider') {
+        // Only providers; exclude users entirely
+        if (excludeRole) userFilter.role = { $ne: excludeRole };
+      } else {
+        userFilter.role = role; // e.g., 'client' or 'admin'
+      }
     } else if (excludeRole) {
-      filter.role = { $ne: excludeRole };
+      userFilter.role = { $ne: excludeRole };
     }
-    
-    if (status !== undefined) filter.isActive = status === 'active';
 
-    console.log('🔍 User management filter:', filter);
-    console.log('🔍 Query params:', { page, limit, search, role, status, excludeRole });
-    
-    const users = await User.find(filter)
-      .select('-password')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit));
+    // Status
+    if (status !== undefined && status !== 'all') {
+      const isActive = status === 'active';
+      userFilter.isActive = isActive;
+      providerFilter.isActive = isActive;
+    }
 
-    const total = await User.countDocuments(filter);
-    
-    console.log('🔍 Found users:', users.length);
-    console.log('🔍 Total count:', total);
+    // Fetch and combine
+    const MAX_BATCH = Math.max(pageSize * 3, 100);
+    const [
+      userTotal,
+      providerTotal
+    ] = await Promise.all([
+      (role === 'provider') ? Promise.resolve(0) : User.countDocuments(userFilter),
+      (role && role !== 'all' && role !== 'provider') ? Promise.resolve(0) : Provider.countDocuments(providerFilter)
+    ]);
 
-    res.json({
+    const [users, providers] = await Promise.all([
+      (role === 'provider')
+        ? Promise.resolve([])
+        : User.find(userFilter)
+            .select('-password')
+            .sort({ createdAt: -1 })
+            .limit(MAX_BATCH),
+      (role && role !== 'all' && role !== 'provider')
+        ? Promise.resolve([])
+        : Provider.find(providerFilter)
+            .select('-password -emailVerificationToken -passwordResetToken -passwordResetTokenHash')
+            .sort({ createdAt: -1 })
+            .limit(MAX_BATCH)
+    ]);
+
+    // Normalize to a unified shape expected by FE table
+    const normalizeUser = (u) => ({
+      _id: u._id,
+      firstName: u.firstName,
+      lastName: u.lastName,
+      email: u.email,
+      phone: u.phone,
+      role: u.role || 'client',
+      isActive: u.isActive,
+      isVerified: u.isVerified ?? false,
+      rating: u.rating ?? null,
+      createdAt: u.createdAt,
+    });
+    const normalizeProvider = (p) => ({
+      _id: p._id,
+      firstName: p.firstName,
+      lastName: p.lastName,
+      email: p.email,
+      phone: p.phone,
+      role: 'provider',
+      isActive: p.isActive,
+      isVerified: p.isVerified ?? false,
+      rating: p.rating ? { average: p.rating.average || 0, count: p.rating.count || 0 } : { average: 0, count: 0 },
+      createdAt: p.createdAt,
+      providerId: p.providerId,
+    });
+
+    const combined = [
+      ...(users || []).map(normalizeUser),
+      ...(providers || []).map(normalizeProvider)
+    ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const totalCombined = userTotal + providerTotal;
+    const paged = combined.slice(skip, skip + pageSize);
+
+    return res.json({
       success: true,
       data: {
-        users,
+        users: paged,
         pagination: {
-          current: parseInt(page),
-          total: Math.ceil(total / limit),
-          totalRecords: total
+          current: pageNum,
+          total: Math.ceil(totalCombined / pageSize),
+          totalRecords: totalCombined
         }
       }
     });
@@ -209,40 +254,47 @@ const getUserManagementData = async (req, res) => {
   }
 };
 
-// Update user status/role
+// Update user or provider status/role
 const updateUser = async (req, res) => {
   try {
     const { userId } = req.params;
     const { isActive, role, isVerified, deactivationReason } = req.body;
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
+    
+    // Try user first
+    let doc = await User.findById(userId);
+    let entity = 'user';
+    if (!doc) {
+      // Try provider
+      doc = await Provider.findById(userId);
+      entity = doc ? 'provider' : 'user';
+    }
+    if (!doc) {
+      return res.status(404).json({ success: false, message: 'User/Provider not found' });
     }
 
     // Update fields
     if (isActive !== undefined) {
-      user.isActive = isActive;
-      // Set deactivation reason when deactivating
+      doc.isActive = isActive;
       if (!isActive && deactivationReason) {
-        user.deactivationReason = deactivationReason;
+        doc.deactivationReason = deactivationReason;
       } else if (isActive) {
-        // Clear deactivation reason when reactivating
-        user.deactivationReason = null;
+        doc.deactivationReason = null;
       }
     }
-    if (role) user.role = role;
-    if (isVerified !== undefined) user.isVerified = isVerified;
+    // Only allow changing role for User documents; Providers keep role 'provider'
+    if (entity === 'user' && role) {
+      doc.role = role;
+    }
+    if (isVerified !== undefined) {
+      doc.isVerified = isVerified;
+    }
 
-    await user.save();
+    await doc.save();
 
     res.json({
       success: true,
-      message: 'User updated successfully',
-      data: user
+      message: `${entity === 'provider' ? 'Provider' : 'User'} updated successfully`,
+      data: doc
     });
   } catch (error) {
     console.error('Update user error:', error);

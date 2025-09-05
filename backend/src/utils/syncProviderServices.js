@@ -40,7 +40,7 @@ async function syncProviders() {
 
   // If requested, ensure at least one active provider advertises the KEY
   if (ENSURE_ONE && KEY) {
-    const one = await Provider.findOne({ isActive: true, role: 'provider', services: { $ne: KEY } });
+    const one = await Provider.findOne({ isActive: true, services: { $ne: KEY } });
     if (one) {
       const next = Array.isArray(one.services) ? [...one.services] : [];
       next.push(KEY);

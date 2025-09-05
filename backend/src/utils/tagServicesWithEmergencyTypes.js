@@ -14,7 +14,7 @@ const mapping = [
 (async function main(){
   try {
     await connectDB();
-    const providers = await Provider.find({ role: 'provider' }).limit(50);
+  const providers = await Provider.find({}).limit(50);
     const updated = [];
     for (const p of providers) {
       const services = await Service.find({ provider: p._id, emergencyEnabled: true });

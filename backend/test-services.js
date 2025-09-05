@@ -1,6 +1,6 @@
 require('dotenv').config();
 const { connectDB, mongoose } = require('./src/config/database');
-const User = require('./src/models/User');
+const Provider = require('./src/models/Provider');
 
 async function testServices() {
   await connectDB();
@@ -10,8 +10,7 @@ async function testServices() {
     const services = ['bathroomCleaning', 'floorCleaning', 'windowCleaning', 'doorCabinetCleaning'];
     
     for (const service of services) {
-      const providers = await User.find({
-        role: 'provider',
+      const providers = await Provider.find({
         isActive: true,
         services: { $in: [service] }
       });
@@ -21,8 +20,7 @@ async function testServices() {
 
     // Test combined search
     console.log('\n🔍 Testing combined search for all selected services:');
-    const combinedProviders = await User.find({
-      role: 'provider',
+    const combinedProviders = await Provider.find({
       isActive: true,
       services: { $in: services }
     });

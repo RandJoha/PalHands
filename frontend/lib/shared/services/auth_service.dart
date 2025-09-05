@@ -224,6 +224,7 @@ class AuthService extends ChangeNotifier with BaseApiService {
     String? city,
     String? street,
     String? area,
+    Map<String, dynamic>? providerSelections,
   }) async {
     try {
       final Map<String, dynamic> body = {
@@ -242,6 +243,9 @@ class AuthService extends ChangeNotifier with BaseApiService {
           if (area != null) 'area': area,
         };
       }
+     if (providerSelections != null && providerSelections.isNotEmpty) {
+       body['providerSelections'] = providerSelections;
+     }
       final response = await post(
         '${ApiConfig.authEndpoint}/register',
         body: body,
@@ -646,4 +650,4 @@ class AuthService extends ChangeNotifier with BaseApiService {
       rethrow;
     }
   }
-} 
+}

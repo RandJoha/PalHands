@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Notification = require('./src/models/Notification');
 const User = require('./src/models/User');
+const Provider = require('./src/models/Provider');
 require('dotenv').config();
 
 async function testChatNotification() {
@@ -9,8 +10,8 @@ async function testChatNotification() {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('✅ Connected to database');
 
-    // Find a provider user
-    const provider = await User.findOne({ role: 'provider' });
+  // Find a provider from providers collection
+  const provider = await Provider.findOne({});
     if (!provider) {
       console.log('❌ No provider found');
       return;
@@ -18,7 +19,7 @@ async function testChatNotification() {
     console.log('👤 Found provider:', provider.email, 'ID:', provider._id.toString());
 
     // Find a regular user
-    const user = await User.findOne({ role: 'user' });
+  const user = await User.findOne({ role: 'client' });
     if (!user) {
       console.log('❌ No user found');
       return;
