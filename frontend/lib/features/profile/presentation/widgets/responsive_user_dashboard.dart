@@ -1,5 +1,6 @@
 // ignore_for_file: dead_code
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
@@ -3263,13 +3264,27 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   }
 
   Widget _buildProvidersSummary(bool isMobile, bool isTablet, double screenWidth) {
-    final summaryCards = [
-      {'title': _getLocalizedString('totalProviders'), 'count': '5', 'icon': Icons.favorite, 'color': AppColors.error},
-      {'title': _getLocalizedString('available'), 'count': '3', 'icon': Icons.check_circle, 'color': AppColors.success},
-      // Removed 'Recently Booked' card per requirements
-    ];
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _getFavoriteProvidersData(),
+      builder: (context, snapshot) {
+        int totalProviders = 0;
+        int availableProviders = 0;
+        
+        if (snapshot.hasData && snapshot.data != null) {
+          totalProviders = snapshot.data!.length;
+          availableProviders = snapshot.data!.where((provider) {
+            final providerData = provider['providerData'] as Map<String, dynamic>? ?? provider;
+            return providerData['isAvailable'] ?? true;
+          }).length;
+        }
+        
+        final summaryCards = [
+          {'title': _getLocalizedString('totalProviders'), 'count': totalProviders.toString(), 'icon': Icons.favorite, 'color': AppColors.error},
+          {'title': _getLocalizedString('available'), 'count': availableProviders.toString(), 'icon': Icons.check_circle, 'color': AppColors.success},
+          // Removed 'Recently Booked' card per requirements
+        ];
 
-    return Wrap(
+        return Wrap(
       spacing: isMobile ? 12.0 : 16.0,
       runSpacing: isMobile ? 12.0 : 16.0,
       children: summaryCards.map((card) {
@@ -3321,7 +3336,28 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           ),
         );
       }).toList(),
+        );
+      },
     );
+  }
+
+  /// Get favorite providers data for summary cards
+  Future<List<Map<String, dynamic>>> _getFavoriteProvidersData() async {
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final favoritesService = FavoritesService();
+      
+      final favoriteProviders = await favoritesService.getFavoriteProviders(
+        authService: authService,
+      );
+      
+      return favoriteProviders;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error fetching favorite providers for summary: $e');
+      }
+      return [];
+    }
   }
 
   Widget _buildSavedProvidersList(bool isMobile, bool isTablet) {
