@@ -1,4 +1,5 @@
-const { ok, error } = require('../utils/response');
+const { ok, error, created } = require('../utils/response');
+const ServiceCategory = require('../models/ServiceCategory');
 
 // Categories data for the frontend
 const SERVICE_CATEGORIES = [
@@ -102,13 +103,66 @@ const SERVICE_CATEGORIES = [
 ];
 
 /**
- * Get all service categories
+ * Get all service categories (including dynamic ones from database)
  */
 async function listCategories(req, res) {
   try {
+    const Service = require('../models/Service');
+    
+    // Get all unique categories from services in the database
+    const dbCategories = await Service.aggregate([
+      { $match: { isActive: true } },
+      { $group: { _id: '$category', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+    
+    // Get all categories from ServiceCategory collection
+    const storedCategories = await ServiceCategory.find({ isActive: true });
+    
+    // Start with predefined categories
+    const allCategories = [...SERVICE_CATEGORIES];
+    
+    // Add stored categories from database
+    const predefinedIds = new Set(SERVICE_CATEGORIES.map(cat => cat.id));
+    const storedCategoryIds = new Set(storedCategories.map(cat => cat.id));
+    
+    // Add stored categories that aren't predefined
+    const storedDynamicCategories = storedCategories
+      .filter(cat => !predefinedIds.has(cat.id))
+      .map(cat => ({
+        id: cat.id,
+        name: cat.name,
+        nameKey: cat.nameKey,
+        description: cat.description,
+        icon: cat.icon,
+        color: cat.color,
+        services: cat.services,
+        isDynamic: cat.isDynamic
+      }));
+    
+    allCategories.push(...storedDynamicCategories);
+    
+    // Add service-based categories that aren't in predefined or stored lists
+    const allCategoryIds = new Set([...predefinedIds, ...storedCategoryIds]);
+    const serviceBasedCategories = dbCategories
+      .filter(item => !allCategoryIds.has(item._id))
+      .map(item => ({
+        id: item._id,
+        name: item._id.charAt(0).toUpperCase() + item._id.slice(1) + ' Services',
+        nameKey: item._id + 'Services',
+        description: `Services in the ${item._id} category`,
+        icon: 'category',
+        color: '#9E9E9E', // Default gray color for dynamic categories
+        services: [], // Will be populated with actual services
+        isDynamic: true
+      }));
+    
+    // Combine all categories
+    allCategories.push(...serviceBasedCategories);
+    
     return ok(res, {
-      categories: SERVICE_CATEGORIES,
-      total: SERVICE_CATEGORIES.length
+      categories: allCategories,
+      total: allCategories.length
     });
   } catch (e) {
     console.error('listCategories error', e);
@@ -117,12 +171,34 @@ async function listCategories(req, res) {
 }
 
 /**
- * Get a specific category by ID
+ * Get a specific category by ID (including dynamic categories)
  */
 async function getCategoryById(req, res) {
   try {
     const { id } = req.params;
-    const category = SERVICE_CATEGORIES.find(cat => cat.id === id);
+    
+    // First check predefined categories
+    let category = SERVICE_CATEGORIES.find(cat => cat.id === id);
+    
+    // If not found in predefined, check if it's a dynamic category from database
+    if (!category) {
+      const Service = require('../models/Service');
+      const serviceCount = await Service.countDocuments({ category: id, isActive: true });
+      
+      if (serviceCount > 0) {
+        // Create dynamic category
+        category = {
+          id: id,
+          name: id.charAt(0).toUpperCase() + id.slice(1) + ' Services',
+          nameKey: id + 'Services',
+          description: `Services in the ${id} category`,
+          icon: 'category',
+          color: '#9E9E9E',
+          services: [],
+          isDynamic: true
+        };
+      }
+    }
     
     if (!category) {
       return error(res, 404, 'Category not found');
@@ -246,9 +322,48 @@ async function getCategoriesWithServices(req, res) {
   }
 }
 
+/**
+ * Create a new service category (admin only)
+ */
+async function createCategory(req, res) {
+  try {
+    const { name, description, icon, color } = req.body;
+    
+    // Generate ID from name (lowercase, replace spaces with underscores)
+    const id = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    const nameKey = id + 'Services';
+    
+    // Check if category already exists
+    const existingCategory = await ServiceCategory.findOne({ id });
+    if (existingCategory) {
+      return error(res, 400, 'Category with this name already exists');
+    }
+    
+    const categoryData = {
+      id,
+      name,
+      nameKey,
+      description: description || `Services in the ${name} category`,
+      icon: icon || 'category',
+      color: color || '#9E9E9E',
+      services: [],
+      isDynamic: true,
+      isActive: true
+    };
+    
+    const category = await ServiceCategory.create(categoryData);
+    
+    return created(res, category, 'Category created successfully');
+  } catch (e) {
+    console.error('createCategory error', e);
+    return error(res, 400, e.message || 'Failed to create category');
+  }
+}
+
 module.exports = {
   listCategories,
   getCategoryById,
   getCategoriesWithCounts,
-  getCategoriesWithServices
+  getCategoriesWithServices,
+  createCategory
 };

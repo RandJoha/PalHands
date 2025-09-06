@@ -14,10 +14,11 @@ import '../../../../../shared/services/provider_service.dart';
 import '../../../../../shared/models/provider.dart';
 import '../../../../../shared/services/chat_service.dart';
 import '../../../../../shared/models/chat.dart';
-import '../../widgets/services_listing_widget.dart';
+import 'package:palhands/features/categories/presentation/widgets/services_listing_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import '../../../../../shared/services/category_selection_store.dart';
+import '../../../../../shared/services/category_refresh_notifier.dart';
 import '../../../../../shared/services/service_categories_service.dart';
 import '../../../../profile/presentation/widgets/chat_conversation_widget.dart';
 import '../../../../../shared/services/auth_service.dart';
@@ -58,6 +59,9 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
   Timer? _debounceTimer;
   static const Duration _debounceDuration = Duration(milliseconds: 500);
   
+  // Stream subscription for category refresh notifications
+  StreamSubscription? _categoryRefreshSubscription;
+  
   // Cache for selected services to prevent unnecessary refreshes
   Set<String> _cachedSelectedServices = {};
   bool _hasInitialized = false;
@@ -74,6 +78,17 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
   void initState() {
     super.initState();
     _loadCategories();
+    
+    // Listen for category refresh notifications
+    _categoryRefreshSubscription = CategoryRefreshNotifier().refreshStream.listen((_) {
+      if (mounted) {
+        if (kDebugMode) {
+          print('📢 Web category widget received refresh notification');
+        }
+        refreshCategoriesWithServices();
+      }
+    });
+    
     // Default: load providers on first paint so users see providers immediately
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _refreshProviders();
@@ -105,6 +120,47 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
     }
   }
 
+  // Force refresh categories (useful when new services are added)
+  Future<void> refreshCategories() async {
+    _categoriesService.clearCache();
+    await _loadCategories();
+  }
+
+  // Force refresh categories with services from database
+  Future<void> refreshCategoriesWithServices() async {
+    try {
+      _categoriesService.clearCache();
+      final categories = await _categoriesService.refreshCategoriesWithServices();
+      if (mounted) {
+        setState(() {
+          _categories = categories;
+          _categoriesLoading = false;
+          _categoriesError = null;
+        });
+      }
+      if (kDebugMode) {
+        print('✅ Web category widget refreshed with services from database');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _categoriesError = e.toString();
+          _categoriesLoading = false;
+        });
+      }
+      if (kDebugMode) {
+        print('❌ Error refreshing categories in web widget: $e');
+      }
+    }
+  }
+
+  // Method to refresh categories from outside (e.g., when services are created)
+  void refreshCategoriesFromOutside() {
+    if (mounted) {
+      refreshCategoriesWithServices();
+    }
+  }
+
   // Debounced version for filter changes to avoid excessive API calls
   void _debouncedRefreshProviders() {
     _debounceTimer?.cancel();
@@ -118,6 +174,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
   @override
   void dispose() {
     _debounceTimer?.cancel();
+    _categoryRefreshSubscription?.cancel();
     super.dispose();
   }
 
@@ -133,6 +190,10 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
     _cachedSelectedServices = Set.from(currentServices);
     _hasInitialized = true;
     
+    if (kDebugMode) {
+      print('🔄 Web: Refreshing providers with selected services: $currentServices');
+    }
+    
     setState(() {
       _loading = true;
       _error = null;
@@ -146,6 +207,11 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
         sortOrder: _sortOrder,
       );
       if (!mounted) return;
+      
+      if (kDebugMode) {
+        print('🔄 Web: Found ${data.length} providers for selected services');
+      }
+      
       setState(() {
         _providers = data;
       });
@@ -709,8 +775,14 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                               fn(() {
                                 if (v == true) {
                                   _store.selectedServices[id]!.add(service.id);
+                                  if (kDebugMode) {
+                                    print('✅ Web: Selected service "${service.title}" (${service.id})');
+                                  }
                                 } else {
                                   _store.selectedServices[id]!.remove(service.id);
+                                  if (kDebugMode) {
+                                    print('❌ Web: Deselected service "${service.title}" (${service.id})');
+                                  }
                                 }
                               });
                               _debouncedRefreshProviders();

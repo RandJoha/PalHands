@@ -14,4 +14,7 @@ router.get('/:id', auth, checkRole(['admin']), userController.getUserById);
 router.put('/:id/status', auth, checkRole(['admin']), userController.updateUserStatus);
 router.delete('/:id', auth, checkRole(['admin']), userController.deleteUser);
 
+// Client reviews route (providers can view client reviews)
+router.get('/:id/reviews', auth, checkRole(['provider', 'admin']), userController.getClientReviews);
+
 module.exports = router; 

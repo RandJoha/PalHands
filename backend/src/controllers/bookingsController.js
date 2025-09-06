@@ -259,8 +259,8 @@ async function listMyBookings(req, res) {
 
     let q = Booking.find(filter)
       // Use refPath from schema; no explicit model override needed
-      .populate({ path: 'client', select: 'firstName lastName email' })
-      .populate({ path: 'provider', select: 'firstName lastName email', model: 'Provider' })
+      .populate({ path: 'client', select: 'firstName lastName email rating' })
+      .populate({ path: 'provider', select: 'firstName lastName email rating', model: 'Provider' })
       .populate({ path: 'service', select: 'title category provider', populate: { path: 'provider', select: 'firstName lastName email', model: 'Provider' } })
       .sort({ createdAt: -1 })
       .skip((pg - 1) * sz)
@@ -269,6 +269,7 @@ async function listMyBookings(req, res) {
     let bookings = await q;
 
     // Backfill provider for legacy rows where booking.provider is null
+    // Also clean up invalid rating data
     bookings = bookings.map(b => {
       if (!b.provider && b.service && b.service.provider) {
         // clone lean-ish object to avoid mutating Mongoose internals unexpectedly in response
@@ -278,6 +279,36 @@ async function listMyBookings(req, res) {
       }
       return b;
     });
+
+    // Clean up invalid rating data in the background
+    for (const booking of bookings) {
+      let needsUpdate = false;
+      
+      // Clean up invalid providerRating - only if it exists and is invalid
+      if (booking.providerRating && 
+          (!booking.providerRating.rating || 
+           booking.providerRating.rating <= 0 || 
+           !booking.providerRating.ratedAt)) {
+        console.log('🧹 Cleaning up invalid providerRating for booking:', booking._id);
+        booking.providerRating = null; // Set to null instead of undefined
+        needsUpdate = true;
+      }
+      
+      // Clean up invalid clientRating - only if it exists and is invalid
+      if (booking.clientRating && 
+          (!booking.clientRating.rating || 
+           booking.clientRating.rating <= 0 || 
+           !booking.clientRating.ratedAt)) {
+        console.log('🧹 Cleaning up invalid clientRating for booking:', booking._id);
+        booking.clientRating = null; // Set to null instead of undefined
+        needsUpdate = true;
+      }
+      
+      if (needsUpdate) {
+        // Save in background without waiting
+        booking.save().catch(err => console.error('Error cleaning up rating data:', err));
+      }
+    }
     return ok(res, bookings);
   } catch (e) {
     console.error('listMyBookings error', e);
@@ -503,7 +534,290 @@ async function completeBooking(req, res) {
   }
 }
 
+async function rateClient(req, res) {
+  try {
+    console.log('🔍 Rate client request received:');
+    console.log('  - Booking ID:', req.params.id);
+    console.log('  - User ID:', req.user?._id);
+    console.log('  - User Role:', req.user?.role);
+    console.log('  - Request Body:', req.body);
+    
+    const { rating, comment } = req.body;
+    const bookingId = req.params.id;
+    
+    const booking = await Booking.findById(bookingId).populate('client');
+    if (!booking) {
+      console.log('❌ Booking not found:', bookingId);
+      return error(res, 404, 'Booking not found');
+    }
+    
+    console.log('✅ Booking found:', booking._id);
+    console.log('  - Status:', booking.status);
+    console.log('  - Provider:', booking.provider);
+    console.log('  - Client:', booking.client);
+    console.log('  - Current clientRating:', JSON.stringify(booking.clientRating));
+    
+    // Check if the current user is the provider for this booking
+    if (req.user.role !== 'provider' || req.user._id.toString() !== booking.provider.toString()) {
+      return error(res, 403, 'Only the assigned provider can rate the client');
+    }
+    
+    // Check if the booking is completed
+    if (booking.status !== 'completed') {
+      return error(res, 409, 'Can only rate clients for completed bookings');
+    }
+    
+    // Check if already rated - be more specific about what constitutes a rating
+    if (booking.clientRating && 
+        booking.clientRating.rating && 
+        booking.clientRating.rating > 0 && 
+        booking.clientRating.ratedAt) {
+      console.log('❌ Client already rated for this booking:', booking.clientRating);
+      return error(res, 409, 'Client has already been rated for this booking');
+    }
+    
+    // Clear any existing null/undefined clientRating and add the new rating
+    booking.clientRating = {
+      rating: rating,
+      comment: comment || null,
+      ratedAt: new Date(),
+      ratedBy: req.user._id
+    };
+    
+    console.log('📝 Setting new client rating:', booking.clientRating);
+    
+    await booking.save();
+    console.log('✅ Booking saved with client rating:', JSON.stringify(booking.clientRating));
+    
+    // Update client's rating and add review to their profile
+    const User = require('../models/User');
+    const client = await User.findById(booking.client);
+    
+    if (client) {
+      // Get provider name for the review
+      const Provider = require('../models/Provider');
+      const provider = await Provider.findById(req.user._id);
+      const providerName = provider ? `${provider.firstName} ${provider.lastName}` : 'Unknown Provider';
+      
+      // Add review to client's profile
+      const review = {
+        title: 'Review',
+        comment: comment || '',
+        rating: rating,
+        providerId: req.user._id,
+        providerName: providerName,
+        bookingId: bookingId,
+        createdAt: new Date()
+      };
+      
+      client.reviews.push(review);
+      
+      // Update client's average rating
+      const totalRatings = client.rating.count + 1;
+      const totalScore = (client.rating.average * client.rating.count) + rating;
+      client.rating.average = totalScore / totalRatings;
+      client.rating.count = totalRatings;
+      
+      await client.save();
+      console.log('✅ Client rating updated:', {
+        average: client.rating.average,
+        count: client.rating.count,
+        reviewsCount: client.reviews.length
+      });
+    }
+    
+    console.log('✅ Rating submitted successfully');
+    return ok(res, booking, 'Client rated successfully and review added to client profile');
+  } catch (e) {
+    console.error('❌ Error rating client:', e);
+    console.error('Error stack:', e.stack);
+    return error(res, 500, 'Failed to rate client');
+  }
+}
+
+async function rateProvider(req, res) {
+  try {
+    console.log('🔍 Rate provider request received:');
+    console.log('  - Booking ID:', req.params.id);
+    console.log('  - User ID:', req.user?._id);
+    console.log('  - User Role:', req.user?.role);
+    console.log('  - Request Body:', req.body);
+    
+    const { rating, comment } = req.body;
+    const bookingId = req.params.id;
+    
+    const booking = await Booking.findById(bookingId).populate('provider');
+    if (!booking) {
+      console.log('❌ Booking not found:', bookingId);
+      return error(res, 404, 'Booking not found');
+    }
+    
+    console.log('✅ Booking found:', booking._id);
+    console.log('  - Status:', booking.status);
+    console.log('  - Provider:', booking.provider);
+    console.log('  - Client:', booking.client);
+    
+    // Check if the current user is the client for this booking
+    if ((req.user.role !== 'client' && req.user.role !== 'user') || req.user._id.toString() !== booking.client.toString()) {
+      return error(res, 403, 'Only the client can rate the provider');
+    }
+    
+    // Check if the booking is completed
+    if (booking.status !== 'completed') {
+      return error(res, 409, 'Can only rate providers for completed bookings');
+    }
+    
+    // Check if already rated
+    console.log('🔍 Checking existing provider rating:');
+    console.log('  - providerRating exists:', !!booking.providerRating);
+    console.log('  - providerRating value:', JSON.stringify(booking.providerRating));
+    console.log('  - providerRating.rating:', booking.providerRating?.rating);
+    console.log('  - providerRating.rating > 0:', (booking.providerRating?.rating || 0) > 0);
+    
+    // Clear any invalid providerRating data (null, undefined, or rating <= 0)
+    if (booking.providerRating && (!booking.providerRating.rating || booking.providerRating.rating <= 0)) {
+      console.log('🧹 Clearing invalid providerRating data:', booking.providerRating);
+      booking.providerRating = null;
+      await booking.save();
+      console.log('✅ Invalid providerRating data cleared and booking saved');
+    }
+    
+    // Also check for empty objects or objects with only null values
+    if (booking.providerRating && typeof booking.providerRating === 'object') {
+      const hasValidRating = booking.providerRating.rating && 
+                           booking.providerRating.rating > 0 && 
+                           booking.providerRating.ratedAt;
+      if (!hasValidRating) {
+        console.log('🧹 Clearing invalid providerRating object:', booking.providerRating);
+        booking.providerRating = null;
+        await booking.save();
+        console.log('✅ Invalid providerRating object cleared and booking saved');
+      }
+    }
+    
+    // Final check - only block if there's a complete, valid rating
+    if (booking.providerRating && 
+        booking.providerRating.rating && 
+        booking.providerRating.rating > 0 && 
+        booking.providerRating.ratedAt) {
+      console.log('❌ Provider already rated for this booking:', booking.providerRating);
+      return error(res, 409, 'Provider has already been rated for this booking');
+    }
+    
+    // Add the provider rating to the booking
+    booking.providerRating = {
+      rating: rating,
+      comment: comment || null,
+      ratedAt: new Date(),
+      ratedBy: req.user._id
+    };
+    
+    console.log('📝 Setting new provider rating:', booking.providerRating);
+    
+    await booking.save();
+    console.log('✅ Booking saved with provider rating:', JSON.stringify(booking.providerRating));
+    
+    // Update provider's rating and add review to their profile
+    const Provider = require('../models/Provider');
+    console.log('🔍 Looking for provider with ID:', booking.provider);
+    console.log('🔍 Provider ID type:', typeof booking.provider);
+    console.log('🔍 Provider ID value:', booking.provider);
+    
+    const provider = await Provider.findById(booking.provider);
+    console.log('🔍 Provider query result:', provider ? 'Found' : 'Not found');
+    
+    if (provider) {
+      console.log('✅ Provider found:', provider.firstName, provider.lastName);
+      console.log('🔍 Provider current reviews count:', provider.reviews?.length || 0);
+      console.log('🔍 Provider ID:', provider.providerId);
+      console.log('🔍 Provider ID type:', typeof provider.providerId);
+      // Get client name for the review
+      const User = require('../models/User');
+      console.log('🔍 Looking for client with ID:', req.user._id);
+      const client = await User.findById(req.user._id);
+      console.log('🔍 Client query result:', client ? 'Found' : 'Not found');
+      const clientName = client ? `${client.firstName} ${client.lastName}` : 'Unknown Client';
+      console.log('🔍 Client name for review:', clientName);
+      
+      // Add review to provider's profile
+      const review = {
+        title: 'Review',
+        comment: comment || '',
+        rating: rating,
+        clientId: req.user._id,
+        clientName: clientName,
+        bookingId: bookingId,
+        createdAt: new Date()
+      };
+      
+      console.log('📝 Adding review to provider:', JSON.stringify(review, null, 2));
+      
+      provider.reviews = provider.reviews || [];
+      provider.reviews.push(review);
+      
+      console.log('📊 Provider reviews after adding:', provider.reviews.length);
+      console.log('📊 Provider reviews data:', JSON.stringify(provider.reviews, null, 2));
+      
+      // Update provider's average rating
+      const totalRatings = (provider.rating?.count || 0) + 1;
+      const totalScore = ((provider.rating?.average || 0) * (provider.rating?.count || 0)) + rating;
+      provider.rating = {
+        average: totalScore / totalRatings,
+        count: totalRatings
+      };
+      
+      try {
+        console.log('🔍 Attempting to save provider...');
+        console.log('🔍 Provider data before save:', {
+          providerId: provider.providerId,
+          firstName: provider.firstName,
+          lastName: provider.lastName,
+          reviewsCount: provider.reviews.length,
+          rating: provider.rating
+        });
+        
+        // Ensure providerId is preserved
+        if (!provider.providerId) {
+          console.error('❌ Provider ID is missing! Cannot save provider.');
+          return error(res, 500, 'Provider ID is missing');
+        }
+        
+        await provider.save();
+        console.log('✅ Provider saved successfully');
+        console.log('✅ Provider rating updated:', {
+          average: provider.rating.average,
+          count: provider.rating.count,
+          reviewsCount: provider.reviews.length
+        });
+      } catch (saveError) {
+        console.error('❌ Error saving provider:', saveError);
+        console.error('Save error details:', saveError.message);
+        console.error('Save error stack:', saveError.stack);
+        
+        // Try to identify the specific validation error
+        if (saveError.errors) {
+          console.error('Validation errors:', Object.keys(saveError.errors));
+          Object.keys(saveError.errors).forEach(field => {
+            console.error(`  ${field}: ${saveError.errors[field].message}`);
+          });
+        }
+      }
+    } else {
+      console.log('❌ Provider not found with ID:', booking.provider);
+    }
+    
+    console.log('✅ Provider rating submitted successfully');
+    return ok(res, booking, 'Provider rated successfully and review added to provider profile');
+  } catch (e) {
+    console.error('❌ Error rating provider:', e);
+    console.error('Error stack:', e.stack);
+    return error(res, 500, 'Failed to rate provider');
+  }
+}
+
 module.exports.cancelBooking = cancelBooking;
 module.exports.respondCancellationRequest = respondCancellationRequest;
 module.exports.confirmBooking = confirmBooking;
 module.exports.completeBooking = completeBooking;
+module.exports.rateClient = rateClient;
+module.exports.rateProvider = rateProvider;

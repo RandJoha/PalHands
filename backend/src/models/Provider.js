@@ -118,6 +118,17 @@ const providerSchema = new mongoose.Schema({
     }
   },
   
+  // Reviews from clients
+  reviews: [{
+    title: { type: String, default: 'Review' },
+    comment: { type: String, required: true },
+    rating: { type: Number, min: 1, max: 5, required: true },
+    clientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    clientName: { type: String, required: true },
+    bookingId: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
+  }],
+  
   // Location (enhanced from our schema)
   location: {
     address: {

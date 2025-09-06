@@ -93,6 +93,9 @@ class ProviderService with BaseApiService {
 
       if (kDebugMode) {
         print('🏢 Fetched providers: ${providersData.length} items');
+        print('🔍 Services filter: $servicesAny');
+        print('🔍 City filter: $city');
+        print('🔍 Response data: $response');
       }
       var list = providersData
           .map((json) => ProviderModel.fromJson(json))
@@ -110,9 +113,33 @@ class ProviderService with BaseApiService {
         try {
           final cat = _categoryOf(servicesAny.first);
           if (cat != null) {
+            if (kDebugMode) {
+              print('🔄 No providers found with service filter, trying category-based fetch for: $cat');
+            }
             list = await getProvidersByCategory(cat, city: city, sortBy: sortBy, sortOrder: sortOrder, page: page, limit: limit);
           }
         } catch (_) {}
+      }
+      
+      // Final fallback: if still no providers, try fetching all providers without service filter
+      if (list.isEmpty && servicesAny.isNotEmpty) {
+        try {
+          if (kDebugMode) {
+            print('🔄 Still no providers found, trying to fetch all providers without service filter');
+          }
+          final allProvidersResponse = await get('/providers', headers: _authHeaders);
+          final allProvidersData = allProvidersResponse['data']?['data'] ?? allProvidersResponse['data'] ?? allProvidersResponse['providers'] ?? [];
+          if (allProvidersData is List) {
+            list = allProvidersData.map((json) => ProviderModel.fromJson(json)).toList();
+            if (kDebugMode) {
+              print('🔄 Fetched ${list.length} providers without service filter');
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('❌ Error in final fallback: $e');
+          }
+        }
       }
       return list;
     } catch (e) {

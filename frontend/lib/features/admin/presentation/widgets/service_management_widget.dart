@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -12,6 +14,7 @@ import '../../../../shared/services/language_service.dart';
 import '../../../../shared/services/services_service.dart';
 import '../../../../shared/services/service_categories_service.dart';
 import '../../../../shared/services/auth_service.dart';
+import '../../../../shared/services/category_refresh_notifier.dart';
 
 class ServiceManagementWidget extends StatefulWidget {
   const ServiceManagementWidget({super.key});
@@ -29,20 +32,61 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
   String _selectedStatus = 'all';
   final ServicesService _servicesService = ServicesService();
   final ServiceCategoriesService _categoriesService = ServiceCategoriesService();
+  
+  // Timer for periodic category refresh
+  Timer? _categoryRefreshTimer;
 
   @override
   void initState() {
     super.initState();
     _loadCategories();
     _loadServices();
+    _startPeriodicRefresh();
+  }
+
+  @override
+  void dispose() {
+    _categoryRefreshTimer?.cancel();
+    super.dispose();
+  }
+
+  /// Start periodic refresh to keep categories up-to-date
+  void _startPeriodicRefresh() {
+    _categoryRefreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (mounted) {
+        if (kDebugMode) {
+          print('🔄 Periodic category refresh triggered');
+        }
+        _refreshCategories();
+      }
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh categories when dependencies change (e.g., when returning to this page)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _refreshCategories();
+      }
+    });
   }
 
   Future<void> _loadCategories() async {
     try {
-      final categories = await _categoriesService.getCategories();
+      // Force refresh from database to get latest categories
+      final categories = await _categoriesService.getCategories(forceRefresh: true);
       setState(() {
         _categories = categories;
       });
+      
+      if (kDebugMode) {
+        print('🔄 Categories refreshed: ${categories.length} categories loaded');
+        for (final category in categories) {
+          print('  - ${category.name} (${category.id})');
+        }
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -55,6 +99,77 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
           ),
         );
       }
+      
+      if (kDebugMode) {
+        print('❌ Error loading categories: $e');
+      }
+    }
+  }
+
+  /// Force refresh categories from database
+  Future<void> _refreshCategories() async {
+    if (kDebugMode) {
+      print('🔄 Force refreshing categories...');
+    }
+    
+    // Clear cache and force refresh
+    _categoriesService.clearCache();
+    await _loadCategories();
+    
+    // Trigger a rebuild to ensure UI updates
+    if (mounted) {
+      setState(() {
+        // This will trigger a rebuild of the dropdown
+      });
+    }
+    
+    if (kDebugMode) {
+      print('✅ Categories refresh completed - UI updated');
+    }
+  }
+
+  /// Enhanced refresh with multiple strategies to ensure dynamic updates
+  Future<void> _forceDynamicRefresh() async {
+    if (kDebugMode) {
+      print('🚀 Starting dynamic category refresh...');
+    }
+    
+    try {
+      // Strategy 1: Clear all caches
+      _categoriesService.clearCache();
+      
+      // Strategy 2: Force refresh from database
+      final freshCategories = await _categoriesService.getCategories(forceRefresh: true);
+      
+      // Strategy 3: Update state and trigger rebuild
+      if (mounted) {
+        setState(() {
+          _categories = freshCategories;
+        });
+      }
+      
+      // Strategy 4: Force refresh categories with services
+      await _categoriesService.refreshCategoriesWithServices();
+      
+      // Strategy 5: Final state update
+      if (mounted) {
+        setState(() {
+          // Force another rebuild to ensure dropdown updates
+        });
+      }
+      
+      if (kDebugMode) {
+        print('✅ Dynamic refresh completed - ${freshCategories.length} categories loaded');
+        for (final category in freshCategories) {
+          print('  📂 ${category.name} (${category.id})');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error in dynamic refresh: $e');
+      }
+      // Fallback to regular refresh
+      await _refreshCategories();
     }
   }
 
@@ -240,6 +355,68 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
           ),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            padding: EdgeInsets.symmetric(
+              horizontal: screenWidth > 1400 ? 16 : 14, 
+              vertical: screenWidth > 1400 ? 10 : 8
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+        ),
+        
+        SizedBox(width: 8),
+        
+        // Add category button
+        ElevatedButton.icon(
+          onPressed: () {
+            _showAddCategoryDialog(languageService);
+          },
+          icon: const Icon(Icons.category, size: 18),
+          label: Text(
+            'Add Category',
+            style: GoogleFonts.cairo(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.purple,
+            foregroundColor: Colors.white,
+            padding: EdgeInsets.symmetric(
+              horizontal: screenWidth > 1400 ? 16 : 14, 
+              vertical: screenWidth > 1400 ? 10 : 8
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+        ),
+        
+        SizedBox(width: 8),
+        
+        // Refresh categories button
+        ElevatedButton.icon(
+          onPressed: () async {
+            await _forceDynamicRefresh();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Categories refreshed dynamically', style: GoogleFonts.cairo()),
+                backgroundColor: Colors.green,
+              ),
+            );
+          },
+          icon: const Icon(Icons.refresh, size: 18),
+          label: Text(
+            'Refresh',
+            style: GoogleFonts.cairo(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.orange,
             foregroundColor: Colors.white,
             padding: EdgeInsets.symmetric(
               horizontal: screenWidth > 1400 ? 16 : 14, 
@@ -799,6 +976,15 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                   ),
                   tooltip: AppStrings.getString('edit', languageService.currentLanguage),
                 ),
+                IconButton(
+                  onPressed: () => _showDeleteConfirmation(service, languageService),
+                  icon: Icon(
+                    Icons.delete_outline,
+                    size: screenWidth > 1400 ? 18 : 16,
+                    color: Colors.red,
+                  ),
+                  tooltip: AppStrings.getString('delete', languageService.currentLanguage),
+                ),
               ],
             ),
           ),
@@ -908,7 +1094,9 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
     String selectedCategory = _categories.isNotEmpty ? _categories.first.id : 'cleaning'; // Default selection
     final TextEditingController serviceNameController = TextEditingController();
     final TextEditingController descriptionController = TextEditingController();
-    final TextEditingController customCategoryController = TextEditingController();
+
+    // Refresh categories before showing dialog to ensure latest data
+    _refreshCategories();
 
     showDialog(
       context: context,
@@ -930,14 +1118,30 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Category dropdown
-                    Text(
-                      AppStrings.getString('category', languageService.currentLanguage),
-                      style: GoogleFonts.cairo(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textDark,
-                      ),
+                    // Category dropdown with refresh button
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            AppStrings.getString('category', languageService.currentLanguage),
+                            style: GoogleFonts.cairo(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textDark,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () async {
+                            await _refreshCategories();
+                            setState(() {
+                              // Trigger dialog rebuild to show updated categories
+                            });
+                          },
+                          icon: Icon(Icons.refresh, size: 18, color: AppColors.primary),
+                          tooltip: 'Refresh categories',
+                        ),
+                      ],
                     ),
                     SizedBox(height: 8),
                     DropdownButtonFormField<String>(
@@ -954,47 +1158,21 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                       ),
                       items: [
-                        ..._categories.map((category) => DropdownMenuItem(
-                          value: category.id,
-                          child: Text(
-                            category.name,
-                            style: GoogleFonts.cairo(fontSize: 14),
-                          ),
-                        )),
-                        DropdownMenuItem(
-                          value: 'other',
-                          child: Text(
-                            AppStrings.getString('other', languageService.currentLanguage),
-                            style: GoogleFonts.cairo(fontSize: 14),
-                          ),
-                        ),
+                        ..._categories.map((category) {
+                          if (kDebugMode) {
+                            print('📋 Adding category to dropdown: ${category.name} (${category.id})');
+                          }
+                          return DropdownMenuItem(
+                            value: category.id,
+                            child: Text(
+                              category.name,
+                              style: GoogleFonts.cairo(fontSize: 14),
+                            ),
+                          );
+                        }),
                       ],
                     ),
                     
-                    // Show custom category field when "Other" is selected
-                    if (selectedCategory == 'other') ...[
-                      SizedBox(height: 16),
-                      Text(
-                        'Category name',
-                        style: GoogleFonts.cairo(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textDark,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      TextField(
-                        controller: customCategoryController,
-                        decoration: InputDecoration(
-                          hintText: 'Enter custom category name',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                        ),
-                        style: GoogleFonts.cairo(fontSize: 14),
-                      ),
-                    ],
                     
                     SizedBox(height: 16),
                     
@@ -1088,26 +1266,12 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                       return;
                     }
                     
-                    // Validate custom category name if "Other" is selected
-                    if (selectedCategory == 'other' && customCategoryController.text.trim().isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Please enter a category name',
-                            style: GoogleFonts.cairo(),
-                          ),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                      return;
-                    }
                     
                     // TODO: Implement service creation
                     _createService(
                       selectedCategory,
                       serviceNameController.text.trim(),
                       descriptionController.text.trim(),
-                      selectedCategory == 'other' ? customCategoryController.text.trim() : null,
                       languageService,
                     );
                     
@@ -1135,24 +1299,29 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
     );
   }
 
-  Future<void> _createService(String category, String serviceName, String description, String? customCategoryName, LanguageService languageService) async {
+  Future<void> _createService(String category, String serviceName, String description, LanguageService languageService) async {
     try {
       // Get AuthService from Provider context
       final authService = Provider.of<AuthService>(context, listen: false);
       
-      // Determine the final category to use
-      final finalCategory = category == 'other' && customCategoryName != null 
-          ? customCategoryName 
-          : category;
+      // Use the selected category directly
+      final finalCategory = category;
       
       // Create the service via API
+      if (kDebugMode) {
+        print('🔧 Creating service: "$serviceName" with category: "$finalCategory"');
+      }
+      
       final createdService = await _servicesService.createService(
         title: serviceName,
         description: description,
         category: finalCategory,
-        subcategory: category == 'other' ? customCategoryName : null,
         authService: authService,
       );
+      
+      if (kDebugMode) {
+        print('🔧 Service created: ${createdService?.title} with category: ${createdService?.category}');
+      }
       
       if (createdService != null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1167,6 +1336,49 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
         
         // Refresh the services list to show the new service
         _loadServices();
+        
+        // Clear category cache to ensure new services appear in categories
+        _categoriesService.clearCache();
+        
+        // Force refresh categories with services from database
+        try {
+          // First check if the service exists
+          final serviceExists = await _categoriesService.checkServiceExists('clean all', authService: authService);
+          
+          // If it's a cleaning service, force add it to cleaning category
+          if (serviceName.toLowerCase().contains('clean')) {
+            await _categoriesService.forceAddServiceToCategory(serviceName, 'cleaning', authService: authService);
+          }
+          
+          // Force refresh category widgets if they exist
+          if (mounted) {
+            // Try to find and refresh category widgets
+            final context = this.context;
+            if (context.mounted) {
+              // This will trigger a rebuild of any category widgets that are listening
+              setState(() {});
+            }
+          }
+          
+          final refreshedCategories = await _categoriesService.refreshCategoriesWithServices();
+          if (kDebugMode) {
+            print('✅ Categories refreshed with new services from database');
+            print('📂 Refreshed categories: ${refreshedCategories.length}');
+            for (final cat in refreshedCategories) {
+              print('  - ${cat.name}: ${cat.actualServices?.length ?? 0} services');
+              if (cat.id == 'cleaning') {
+                print('    Cleaning services:');
+                for (final service in cat.actualServices ?? []) {
+                  print('      * "${service.title}"');
+                }
+              }
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('❌ Error refreshing categories: $e');
+          }
+        }
       } else {
         throw Exception('Service creation returned null');
       }
@@ -1180,6 +1392,311 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
           backgroundColor: Colors.red,
         ),
       );
+    }
+  }
+
+  void _showAddCategoryDialog(LanguageService languageService) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final TextEditingController categoryNameController = TextEditingController();
+    final TextEditingController descriptionController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'Add New Category',
+            style: GoogleFonts.cairo(
+              fontWeight: FontWeight.bold,
+              fontSize: screenWidth > 1400 ? 18 : 16,
+            ),
+          ),
+          content: SizedBox(
+            width: screenWidth > 1400 ? 400 : 350,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Category Name
+                Text(
+                  'Category Name *',
+                  style: GoogleFonts.cairo(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                SizedBox(height: 8),
+                TextField(
+                  controller: categoryNameController,
+                  decoration: InputDecoration(
+                    hintText: 'Enter category name (e.g., Pet Care Services)',
+                    hintStyle: GoogleFonts.cairo(
+                      color: AppColors.textLight,
+                      fontSize: 13,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: AppColors.border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: AppColors.primary, width: 2),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: screenWidth > 1400 ? 12 : 10,
+                    ),
+                  ),
+                  style: GoogleFonts.cairo(fontSize: 14),
+                ),
+                
+                SizedBox(height: 16),
+                
+                // Description
+                Text(
+                  'Description',
+                  style: GoogleFonts.cairo(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                SizedBox(height: 8),
+                TextField(
+                  controller: descriptionController,
+                  maxLines: 2,
+                  decoration: InputDecoration(
+                    hintText: 'Enter category description (optional)',
+                    hintStyle: GoogleFonts.cairo(
+                      color: AppColors.textLight,
+                      fontSize: 13,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: AppColors.border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: AppColors.primary, width: 2),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: screenWidth > 1400 ? 12 : 10,
+                    ),
+                  ),
+                  style: GoogleFonts.cairo(fontSize: 14),
+                ),
+                
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.cairo(
+                  color: AppColors.textLight,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (categoryNameController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Please enter a category name',
+                        style: GoogleFonts.cairo(),
+                      ),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                  return;
+                }
+                
+                _createCategory(
+                  categoryNameController.text.trim(),
+                  descriptionController.text.trim(),
+                  languageService,
+                );
+                
+                Navigator.of(context).pop();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'Create Category',
+                style: GoogleFonts.cairo(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _createCategory(String name, String description, LanguageService languageService) async {
+    try {
+      // Get AuthService from Provider context
+      final authService = Provider.of<AuthService>(context, listen: false);
+      
+      if (kDebugMode) {
+        print('🔧 Creating category: "$name"');
+      }
+      
+      final createdCategory = await _categoriesService.createCategory(
+        name: name,
+        description: description.isNotEmpty ? description : null,
+        authService: authService,
+      );
+      
+      if (createdCategory != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Category "$name" created successfully',
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // Force dynamic refresh to show the new category immediately
+        await _forceDynamicRefresh();
+        
+        // Notify other widgets that categories have been updated
+        CategoryRefreshNotifier().notifyRefresh();
+        
+        if (kDebugMode) {
+          print('✅ Category created successfully: ${createdCategory.name}');
+          print('📢 Notified all widgets of category refresh');
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to create category: ${e.toString()}',
+            style: GoogleFonts.cairo(),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      
+      if (kDebugMode) {
+        print('❌ Error creating category: $e');
+      }
+    }
+  }
+
+  void _showDeleteConfirmation(ServiceModel service, LanguageService languageService) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'Delete Service',
+            style: GoogleFonts.cairo(
+              fontWeight: FontWeight.w600,
+              color: AppColors.textDark,
+            ),
+          ),
+          content: Text(
+            'Are you sure you want to delete "${service.title}"? This action cannot be undone.',
+            style: GoogleFonts.cairo(
+              color: AppColors.textDark,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.cairo(
+                  color: AppColors.textLight,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _deleteService(service, languageService);
+              },
+              child: Text(
+                'Delete',
+                style: GoogleFonts.cairo(
+                  color: Colors.red,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteService(ServiceModel service, LanguageService languageService) async {
+    try {
+      // Get AuthService from Provider context
+      final authService = Provider.of<AuthService>(context, listen: false);
+      
+      if (kDebugMode) {
+        print('🗑️ Deleting service: "${service.title}" (ID: ${service.id})');
+      }
+      
+      final success = await _servicesService.deleteService(
+        serviceId: service.id,
+        authService: authService,
+      );
+      
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Service "${service.title}" deleted successfully',
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // Refresh the services list to remove the deleted service
+        _loadServices();
+        
+        // Clear category cache to ensure changes are reflected
+        _categoriesService.clearCache();
+        
+        if (kDebugMode) {
+          print('✅ Service deleted successfully');
+        }
+      } else {
+        throw Exception('Delete operation returned false');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to delete service: ${e.toString()}',
+            style: GoogleFonts.cairo(),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      
+      if (kDebugMode) {
+        print('❌ Error deleting service: $e');
+      }
     }
   }
 

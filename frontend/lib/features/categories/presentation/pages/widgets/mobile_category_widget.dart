@@ -18,9 +18,10 @@ import '../../../../../shared/models/chat.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import '../../../../../shared/services/category_selection_store.dart';
+import '../../../../../shared/services/category_refresh_notifier.dart';
 import '../../../../profile/presentation/widgets/chat_conversation_widget.dart';
 import '../../../../../shared/services/auth_service.dart';
-import '../../widgets/services_listing_widget.dart';
+import 'package:palhands/features/categories/presentation/widgets/services_listing_widget.dart';
 import 'package:flutter/foundation.dart';
 import '../../../../../shared/widgets/chat_form_dialog.dart';
 import '../../../../../shared/services/service_categories_service.dart';
@@ -62,6 +63,9 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
   // Performance optimization: debounce API calls
   Timer? _debounceTimer;
   static const Duration _debounceDuration = Duration(milliseconds: 500);
+  
+  // Stream subscription for category refresh notifications
+  StreamSubscription? _categoryRefreshSubscription;
   
   // Cache for selected services to prevent unnecessary refreshes
   Set<String> _cachedSelectedServices = {};
@@ -108,6 +112,17 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
     // _cardController.forward();
     
     _loadCategories();
+    
+    // Listen for category refresh notifications
+    _categoryRefreshSubscription = CategoryRefreshNotifier().refreshStream.listen((_) {
+      if (mounted) {
+        if (kDebugMode) {
+          print('📢 Mobile category widget received refresh notification');
+        }
+        refreshCategoriesWithServices();
+      }
+    });
+    
     // Default: load providers after first frame to show initial list
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _refreshProviders();
@@ -142,6 +157,47 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
           _categoriesLoading = false;
         });
       }
+    }
+  }
+
+  // Force refresh categories (useful when new services are added)
+  Future<void> refreshCategories() async {
+    _categoriesService.clearCache();
+    await _loadCategories();
+  }
+
+  // Force refresh categories with services from database
+  Future<void> refreshCategoriesWithServices() async {
+    try {
+      _categoriesService.clearCache();
+      final categories = await _categoriesService.refreshCategoriesWithServices();
+      if (mounted) {
+        setState(() {
+          _categories = categories;
+          _categoriesLoading = false;
+          _categoriesError = null;
+        });
+      }
+      if (kDebugMode) {
+        print('✅ Mobile category widget refreshed with services from database');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _categoriesError = e.toString();
+          _categoriesLoading = false;
+        });
+      }
+      if (kDebugMode) {
+        print('❌ Error refreshing categories in mobile widget: $e');
+      }
+    }
+  }
+
+  // Method to refresh categories from outside (e.g., when services are created)
+  void refreshCategoriesFromOutside() {
+    if (mounted) {
+      refreshCategoriesWithServices();
     }
   }
 
@@ -944,10 +1000,18 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                               }
                               if (v == true) {
                                 _store.selectedServices[categoryId]!.add(service.id);
+                                if (kDebugMode) {
+                                  print('✅ Mobile: Selected service "${service.title}" (${service.id})');
+                                }
                               } else {
                                 _store.selectedServices[categoryId]!.remove(service.id);
+                                if (kDebugMode) {
+                                  print('❌ Mobile: Deselected service "${service.title}" (${service.id})');
+                                }
                               }
                             });
+                            // Trigger provider refresh when service selection changes
+                            _debouncedRefreshProviders();
                           },
                         ),
                         const SizedBox(width: 12),
@@ -1163,6 +1227,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
   @override
   void dispose() {
     _debounceTimer?.cancel();
+    _categoryRefreshSubscription?.cancel();
     super.dispose();
   }
 
@@ -1178,6 +1243,10 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
     _cachedSelectedServices = Set.from(currentServices);
     _hasInitialized = true;
     
+    if (kDebugMode) {
+      print('🔄 Mobile: Refreshing providers with selected services: $currentServices');
+    }
+    
     setState(() {
       _loading = true;
       _error = null;
@@ -1191,6 +1260,11 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
         sortOrder: _sortOrder,
       );
       if (!mounted) return;
+      
+      if (kDebugMode) {
+        print('🔄 Mobile: Found ${data.length} providers for selected services');
+      }
+      
       setState(() => _providers = data);
     } catch (e) {
       if (!mounted) return;

@@ -466,6 +466,7 @@ class ServicesService with BaseApiService {
 
       if (kDebugMode) {
         print('✅ Service created successfully');
+        print('📂 Service category: $category');
       }
 
       final serviceData = response['data'] ?? response;
@@ -473,6 +474,30 @@ class ServicesService with BaseApiService {
     } catch (e) {
       if (kDebugMode) {
         print('❌ Error creating service: $e');
+      }
+      rethrow;
+    }
+  }
+
+  /// Delete a service (admin only)
+  Future<bool> deleteService({
+    required String serviceId,
+    required AuthService authService,
+  }) async {
+    try {
+      await delete(
+        '${ApiConfig.servicesEndpoint}/$serviceId',
+        headers: _getAuthHeaders(authService),
+      );
+
+      if (kDebugMode) {
+        print('✅ Service deleted successfully: $serviceId');
+      }
+
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error deleting service: $e');
       }
       rethrow;
     }

@@ -13,25 +13,8 @@ const serviceSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: [
-      'cleaning',
-      'organizing',
-      'cooking',
-      'childcare',
-      'elderly',
-      'maintenance',
-      'newhome',
-      'miscellaneous',
-      // Legacy categories
-      'laundry',
-      'caregiving',
-      'furniture_moving',
-      'elderly_support',
-      'aluminum_work',
-      'carpentry',
-      'home_nursing',
-      'other'
-    ]
+    trim: true,
+    maxlength: 100
   },
   subcategory: {
     type: String,

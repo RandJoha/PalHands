@@ -5,10 +5,7 @@ const createServiceValidator = celebrate({
   [Segments.BODY]: Joi.object({
     title: Joi.string().trim().required(),
     description: Joi.string().trim().required(),
-    category: Joi.string().valid(
-      'cleaning','organizing','cooking','childcare','elderly','maintenance','newhome','miscellaneous',
-      'laundry','caregiving','furniture_moving','elderly_support','aluminum_work','carpentry','home_nursing','other'
-    ).required(),
+    category: Joi.string().trim().min(1).max(100).required(), // Allow any category name for dynamic categories
     subcategory: Joi.string().trim().allow('').optional(),
     // Make price optional for admin-created services
     price: Joi.object({
@@ -33,10 +30,7 @@ const createSimpleServiceValidator = celebrate({
   [Segments.BODY]: Joi.object({
     title: Joi.string().trim().required(),
     description: Joi.string().trim().required(),
-    category: Joi.string().valid(
-      'cleaning','organizing','cooking','childcare','elderly','maintenance','newhome','miscellaneous',
-      'laundry','caregiving','furniture_moving','elderly_support','aluminum_work','carpentry','home_nursing','other'
-    ).required(),
+    category: Joi.string().trim().min(1).max(100).required(), // Allow any category name for dynamic categories
     subcategory: Joi.string().trim().allow('').optional(),
     // Optional provider - if not provided, will be null
     provider: Joi.string().hex().length(24).optional()
@@ -47,10 +41,7 @@ const updateServiceValidator = celebrate({
   [Segments.BODY]: Joi.object({
     title: Joi.string().trim().optional(),
     description: Joi.string().trim().optional(),
-    category: Joi.string().valid(
-      'cleaning','organizing','cooking','childcare','elderly','maintenance','newhome','miscellaneous',
-      'laundry','caregiving','furniture_moving','elderly_support','aluminum_work','carpentry','home_nursing','other'
-    ).optional(),
+    category: Joi.string().trim().min(1).max(100).optional(), // Allow any category name for dynamic categories
     subcategory: Joi.string().trim().allow('').optional(),
     price: Joi.object({
       amount: Joi.number().positive().optional(),

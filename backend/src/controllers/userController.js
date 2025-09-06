@@ -273,11 +273,25 @@ const deleteUser = asyncHandler(async (req, res) => {
   return ok(res, {}, 'User deleted successfully');
 });
 
+// Get client reviews
+const getClientReviews = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  
+  const user = await User.findById(id).select('reviews firstName lastName');
+  if (!user) {
+    return error(res, 404, 'User not found');
+  }
+  
+  // Return the reviews array
+  return ok(res, user.reviews || [], 'Client reviews retrieved successfully');
+});
+
 module.exports = {
   updateProfile,
   changePassword,
   getUserById,
   getAllUsers,
   updateUserStatus,
-  deleteUser
+  deleteUser,
+  getClientReviews
 }; 

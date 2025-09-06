@@ -124,6 +124,39 @@ const userSchema = new mongoose.Schema({
       default: 0
     }
   },
+  reviews: [{
+    title: {
+      type: String,
+      default: 'Review'
+    },
+    comment: {
+      type: String,
+      required: true
+    },
+    rating: {
+      type: Number,
+      min: 1,
+      max: 5,
+      required: true
+    },
+    providerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Provider',
+      required: true
+    },
+    providerName: {
+      type: String,
+      required: true
+    },
+    bookingId: {
+      type: String,
+      required: true
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   
   // Provider-specific fields (only used when role is 'provider')
   services: [{

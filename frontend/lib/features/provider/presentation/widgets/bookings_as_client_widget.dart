@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,6 +9,9 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/models/booking.dart';
 import '../../../../shared/services/booking_service.dart';
 import '../../../../shared/services/language_service.dart';
+import '../../../../shared/services/auth_service.dart';
+import '../../../../shared/widgets/client_reviews_dialog.dart';
+import '../../../../shared/widgets/provider_rating_dialog.dart';
 
 class BookingsAsClientWidget extends StatefulWidget {
   final String? titleKey; // Optional i18n key to override header title
@@ -253,6 +257,12 @@ class _BookingsAsClientWidgetState extends State<BookingsAsClientWidget> {
           _row(Icons.location_on, AppStrings.getString('address', Provider.of<LanguageService>(context, listen:false).currentLanguage), address, isMobile),
           const SizedBox(height: 8),
           _row(Icons.attach_money, AppStrings.getString('estimatedCost', Provider.of<LanguageService>(context, listen:false).currentLanguage), price, isMobile),
+          // Add client rating display
+          const SizedBox(height: 8),
+          _buildClientOverallRatingRow(b0, isMobile),
+          // Add provider rating display
+          const SizedBox(height: 8),
+          _buildProviderOverallRatingRow(b0, isMobile),
           if (groupHasEmergency) const SizedBox(height:6),
           if (groupHasEmergency) Container(
             padding: const EdgeInsets.symmetric(horizontal:8, vertical:4),
@@ -378,6 +388,12 @@ class _BookingsAsClientWidgetState extends State<BookingsAsClientWidget> {
           _row(Icons.location_on, AppStrings.getString('address', Provider.of<LanguageService>(context, listen:false).currentLanguage), address, isMobile),
           const SizedBox(height: 8),
           _row(Icons.attach_money, AppStrings.getString('estimatedCost', Provider.of<LanguageService>(context, listen:false).currentLanguage), price, isMobile),
+          // Add client rating display
+          const SizedBox(height: 8),
+          _buildClientOverallRatingRow(b, isMobile),
+          // Add provider rating display
+          const SizedBox(height: 8),
+          _buildProviderOverallRatingRow(b, isMobile),
           const SizedBox(height: 12),
           _actions(b, isMobile),
         ],
@@ -394,9 +410,239 @@ class _BookingsAsClientWidgetState extends State<BookingsAsClientWidget> {
     ]);
   }
 
+  Widget _buildClientOverallRatingRow(BookingModel booking, bool isMobile) {
+    // Get client rating from the populated client data
+    final averageRating = booking.clientOverallRating?.average ?? 0.0;
+    final ratingCount = booking.clientOverallRating?.count ?? 0;
+    
+    // Debug: Print the booking data to see what we're getting
+    if (kDebugMode) {
+      print('🔍 Client booking debug:');
+      print('  - Booking ID: ${booking.id}');
+      print('  - Client ID: ${booking.clientId}');
+      print('  - Client Name: ${booking.clientName}');
+      print('  - Client Overall Rating: ${booking.clientOverallRating}');
+      print('  - Average Rating: $averageRating');
+      print('  - Rating Count: $ratingCount');
+    }
+    
+    return Row(
+      children: [
+        Icon(
+          Icons.star,
+          color: Colors.amber,
+          size: isMobile ? 16.0 : 18.0,
+        ),
+        const SizedBox(width: 8.0),
+        Text(
+          'My Rating: ',
+          style: GoogleFonts.cairo(
+            fontSize: isMobile ? 14.0 : 16.0,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        Row(
+          children: [
+            // Star rating display
+            ...List.generate(5, (index) {
+              return Icon(
+                index < averageRating.floor() 
+                    ? Icons.star 
+                    : (index < averageRating ? Icons.star_half : Icons.star_border),
+                color: Colors.amber,
+                size: isMobile ? 14.0 : 16.0,
+              );
+            }),
+            const SizedBox(width: 6.0),
+            Text(
+              averageRating > 0 ? '${averageRating.toStringAsFixed(1)}' : 'No rating',
+              style: GoogleFonts.cairo(
+                fontSize: isMobile ? 14.0 : 16.0,
+                fontWeight: FontWeight.w600,
+                color: averageRating > 0 ? Colors.amber.shade700 : AppColors.textSecondary,
+              ),
+            ),
+            if (ratingCount > 0) ...[
+              const SizedBox(width: 4.0),
+              Text(
+                '($ratingCount)',
+                style: GoogleFonts.cairo(
+                  fontSize: isMobile ? 12.0 : 14.0,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ],
+        ),
+        const Spacer(),
+        // View Reviews button - show even if no ratings for debugging
+        TextButton.icon(
+          onPressed: ratingCount > 0 ? () => _showClientReviewsDialog(booking) : null,
+          icon: Icon(
+            Icons.reviews,
+            size: isMobile ? 14.0 : 16.0,
+            color: ratingCount > 0 ? AppColors.primary : AppColors.textSecondary,
+          ),
+          label: Text(
+            'View Reviews',
+            style: GoogleFonts.cairo(
+              fontSize: isMobile ? 12.0 : 14.0,
+              color: ratingCount > 0 ? AppColors.primary : AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          style: TextButton.styleFrom(
+            padding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 8.0 : 12.0,
+              vertical: isMobile ? 4.0 : 6.0,
+            ),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showClientReviewsDialog(BookingModel booking) {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final bookingService = BookingService();
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return ClientReviewsDialog(
+          clientId: booking.clientId ?? '',
+          clientName: booking.clientName ?? 'Unknown Client',
+          reviewsFuture: bookingService.getClientReviews(
+            booking.clientId ?? '',
+            authService: authService,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildProviderOverallRatingRow(BookingModel booking, bool isMobile) {
+    // Get provider rating from the populated provider data
+    final averageRating = booking.providerOverallRating?.average ?? 0.0;
+    final ratingCount = booking.providerOverallRating?.count ?? 0;
+    
+    // Debug: Print the booking data to see what we're getting
+    if (kDebugMode) {
+      print('🔍 Provider rating debug:');
+      print('  - Booking ID: ${booking.id}');
+      print('  - Provider ID: ${booking.providerId}');
+      print('  - Provider Name: ${booking.providerName}');
+      print('  - Provider Overall Rating: ${booking.providerOverallRating}');
+      print('  - Average Rating: $averageRating');
+      print('  - Rating Count: $ratingCount');
+    }
+    
+    return Row(
+      children: [
+        Icon(
+          Icons.star,
+          color: Colors.amber,
+          size: isMobile ? 16.0 : 18.0,
+        ),
+        const SizedBox(width: 8.0),
+        Text(
+          'Provider Rating: ',
+          style: GoogleFonts.cairo(
+            fontSize: isMobile ? 14.0 : 16.0,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        Row(
+          children: [
+            // Star rating display
+            ...List.generate(5, (index) {
+              return Icon(
+                index < averageRating.floor() 
+                    ? Icons.star 
+                    : (index < averageRating ? Icons.star_half : Icons.star_border),
+                color: Colors.amber,
+                size: isMobile ? 14.0 : 16.0,
+              );
+            }),
+            const SizedBox(width: 6.0),
+            Text(
+              averageRating > 0 ? '${averageRating.toStringAsFixed(1)}' : 'No rating',
+              style: GoogleFonts.cairo(
+                fontSize: isMobile ? 14.0 : 16.0,
+                fontWeight: FontWeight.w600,
+                color: averageRating > 0 ? Colors.amber.shade700 : AppColors.textSecondary,
+              ),
+            ),
+            if (ratingCount > 0) ...[
+              const SizedBox(width: 4.0),
+              Text(
+                '($ratingCount)',
+                style: GoogleFonts.cairo(
+                  fontSize: isMobile ? 12.0 : 14.0,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ],
+        ),
+        const Spacer(),
+        // View Reviews button - show even if no ratings for debugging
+        TextButton.icon(
+          onPressed: ratingCount > 0 ? () => _showProviderReviewsDialog(booking) : null,
+          icon: Icon(
+            Icons.reviews,
+            size: isMobile ? 14.0 : 16.0,
+            color: ratingCount > 0 ? AppColors.primary : AppColors.textSecondary,
+          ),
+          label: Text(
+            'View Reviews',
+            style: GoogleFonts.cairo(
+              fontSize: isMobile ? 12.0 : 14.0,
+              color: ratingCount > 0 ? AppColors.primary : AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          style: TextButton.styleFrom(
+            padding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 8.0 : 12.0,
+              vertical: isMobile ? 4.0 : 6.0,
+            ),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showProviderReviewsDialog(BookingModel booking) {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final bookingService = BookingService();
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return ClientReviewsDialog(
+          clientId: booking.providerId ?? '',
+          clientName: booking.providerName ?? 'Unknown Provider',
+          reviewsFuture: bookingService.getProviderReviews(
+            booking.providerId ?? '',
+            authService: authService,
+          ),
+        );
+      },
+    );
+  }
+
   Widget _actions(BookingModel b, bool isMobile) {
     final lang = Provider.of<LanguageService>(context, listen: false).currentLanguage;
     final canCancel = ['pending','confirmed'].contains(b.status.toLowerCase());
+    final canRate = b.status.toLowerCase() == 'completed' && b.providerRating == null;
+    
     return Wrap(
       spacing: isMobile ? 8 : 12,
       children: [
@@ -409,7 +655,32 @@ class _BookingsAsClientWidgetState extends State<BookingsAsClientWidget> {
             label: Text(AppStrings.getString('cancel', lang), style: GoogleFonts.cairo(color: AppColors.error)),
             style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.error)),
           ),
+        if (canRate)
+          ElevatedButton.icon(
+            onPressed: () => _showProviderRatingDialog(b),
+            icon: const Icon(Icons.star, color: Colors.white, size: 18),
+            label: Text('Rate Provider', style: GoogleFonts.cairo(color: Colors.white)),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+          ),
       ],
+    );
+  }
+
+  void _showProviderRatingDialog(BookingModel booking) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing by tapping outside
+      builder: (BuildContext context) {
+        return ProviderRatingDialog(
+          bookingId: booking.id,
+          providerName: booking.providerName ?? 'Unknown Provider',
+          serviceName: booking.serviceDetails.title,
+          onRatingSubmitted: () {
+            // Refresh bookings after rating is submitted
+            _loadBookings();
+          },
+        );
+      },
     );
   }
 }

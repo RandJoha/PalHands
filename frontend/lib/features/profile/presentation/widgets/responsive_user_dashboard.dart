@@ -17,6 +17,9 @@ import '../../../../shared/models/chat.dart';
 
 // Widget imports
 import '../../../admin/presentation/widgets/language_toggle_widget.dart';
+import '../../../../shared/widgets/client_reviews_dialog.dart';
+import '../../../../shared/widgets/provider_rating_dialog.dart';
+import '../../../../shared/widgets/provider_reviews_dialog.dart';
 
 // Feature imports
 import '../widgets/chat_messages_widget.dart';
@@ -982,6 +985,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       'id': b.id,
       'service': b.serviceDetails.title,
       'provider': b.providerName ?? '',
+      'providerId': b.providerId,
       'date': displayDate,
       'status': statusInfo['label'],
       'statusRaw': b.status,
@@ -989,8 +993,10 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       'price': '₪${b.pricing.totalAmount.toStringAsFixed(0)}',
       'address': b.location.address,
       'instructions': b.location.instructions ?? '',
-  'notes': b.notes ?? '',
+      'notes': b.notes ?? '',
       'hasPendingCancel': hasPendingCancel,
+      'providerOverallRating': b.providerOverallRating,
+      'providerRating': b.providerRating,
     };
   }
 
@@ -1092,6 +1098,9 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           _detailRow(Icons.location_on, AppStrings.getString('address', languageService.currentLanguage), b0.location.address, isMobile),
           const SizedBox(height: 8),
           _detailRow(Icons.attach_money, AppStrings.getString('estimatedCost', languageService.currentLanguage), price, isMobile),
+          const SizedBox(height: 8),
+          // Provider rating display
+          _buildProviderRatingRowForGroup(b0, isMobile),
           const SizedBox(height: 12),
           // Service sections within this provider
           ...(() {
@@ -1167,7 +1176,30 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                               icon: const Icon(Icons.cancel, color: AppColors.error, size: 18),
                               label: Text(AppStrings.getString('cancel', languageService.currentLanguage), style: GoogleFonts.cairo(color: AppColors.error)),
                               style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.error)),
-                            )
+                            ),
+                          if (b.status.toLowerCase() == 'completed' && 
+                              (b.providerRating == null || b.providerRating?.rating == null || b.providerRating?.rating == 0)) ...[
+                            // Debug logging
+                            Builder(builder: (context) {
+                              print('🔍 Grouped booking rate button debug for ${b.id}:');
+                              print('  - Status: ${b.status}');
+                              print('  - Provider rating: ${b.providerRating}');
+                              print('  - Can rate: true');
+                              return const SizedBox.shrink();
+                            }),
+                            SizedBox(
+                              width: 80, // Fixed width to make it 50% smaller
+                              child: ElevatedButton.icon(
+                                onPressed: () => _showProviderRatingDialog(b.id),
+                                icon: const Icon(Icons.star, color: Colors.white, size: 16),
+                                label: Text('Rate', style: GoogleFonts.cairo(color: Colors.white, fontSize: 12)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.amber,
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                ),
+                              ),
+                            ),
+                          ]
                         ]),
                       );
                     }).toList(),
@@ -1356,10 +1388,13 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             booking['price'],
             isMobile,
           ),
+          const SizedBox(height: 8.0),
+          // Provider rating display
+          _buildProviderRatingRow(booking, isMobile),
           SizedBox(height: isMobile ? 16.0 : 20.0),
           
           // Action buttons
-          _buildBookingActions(isMobile, isTablet, screenWidth, bookingId: booking['id'] as String?, statusRaw: booking['statusRaw'] as String?),
+          _buildBookingActions(isMobile, isTablet, screenWidth, bookingId: booking['id'] as String?, statusRaw: booking['statusRaw'] as String?, booking: booking),
         ],
       ),
     );
@@ -1396,12 +1431,28 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     );
   }
 
-  Widget _buildBookingActions(bool isMobile, bool isTablet, double screenWidth, { String? bookingId, String? statusRaw }) {
+  Widget _buildBookingActions(bool isMobile, bool isTablet, double screenWidth, { String? bookingId, String? statusRaw, Map<String, dynamic>? booking }) {
     final languageService = Provider.of<LanguageService>(context, listen: false);
     final canCancel = (statusRaw != null) && ['pending','confirmed'].contains(statusRaw.toLowerCase());
+    // Debug logging for rate button visibility
+    print('🔍 Rate button debug for booking ${booking?['id']}:');
+    print('  - Status: $statusRaw');
+    print('  - Is completed: ${statusRaw?.toLowerCase() == 'completed'}');
+    print('  - Provider rating exists: ${booking?['providerRating'] != null}');
+    print('  - Provider rating value: ${booking?['providerRating']}');
+    
+    final canRate = (statusRaw != null) && statusRaw.toLowerCase() == 'completed' && 
+                   (booking?['providerRating'] == null || 
+                    (booking?['providerRating'] as ProviderRating?)?.rating == null ||
+                    (booking?['providerRating'] as ProviderRating?)?.rating == 0);
+    
+    print('  - Can rate: $canRate');
     final actions = <Map<String, dynamic>>[];
     if (canCancel) {
       actions.add({'key': 'cancel', 'icon': Icons.cancel, 'label': AppStrings.getString('cancel', languageService.currentLanguage), 'color': AppColors.error});
+    }
+    if (canRate) {
+      actions.add({'key': 'rate', 'icon': Icons.star, 'label': 'Rate', 'color': Colors.amber});
     }
 
   if (actions.isEmpty) return const SizedBox.shrink();
@@ -1427,8 +1478,8 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           style: OutlinedButton.styleFrom(
             side: BorderSide(color: action['color'] as Color, width: 1),
             padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 12.0 : 16.0,
-              vertical: isMobile ? 8.0 : 10.0,
+              horizontal: isMobile ? 8.0 : 12.0,
+              vertical: isMobile ? 6.0 : 8.0,
             ),
           ),
         );
@@ -1437,6 +1488,10 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   }
 
   Future<void> _onBookingActionPressed(String key, { String? bookingId }) async {
+    if (key == 'rate') {
+      await _showProviderRatingDialog(bookingId);
+      return;
+    }
     if (key != 'cancel') return;
     String? targetId = bookingId;
     if (targetId == null || targetId.isEmpty) {
@@ -4115,6 +4170,359 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         ),
         backgroundColor: AppColors.error,
       ),
+    );
+  }
+
+  // Provider rating display for single booking cards
+  Widget _buildProviderRatingRow(Map<String, dynamic> booking, bool isMobile) {
+    final providerOverallRating = booking['providerOverallRating'] as ProviderOverallRating?;
+    
+    if (providerOverallRating == null) {
+      return const SizedBox.shrink();
+    }
+
+    final rating = providerOverallRating.average;
+    final ratingCount = providerOverallRating.count;
+    
+    final userProviderRating = booking['providerRating'] as ProviderRating?;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Provider's overall rating row
+        Row(
+          children: [
+            Icon(
+              Icons.star,
+              color: AppColors.textSecondary,
+              size: isMobile ? 16.0 : 18.0,
+            ),
+            const SizedBox(width: 8.0),
+            Text(
+              'Provider Rating: ',
+              style: GoogleFonts.cairo(
+                fontSize: isMobile ? 14.0 : 16.0,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            // Star rating display
+            Row(
+              children: List.generate(5, (index) {
+                final starRating = index + 1;
+                final isFilled = starRating <= rating;
+                return Icon(
+                  isFilled ? Icons.star : Icons.star_border,
+                  color: isFilled ? Colors.amber : AppColors.textSecondary,
+                  size: isMobile ? 16.0 : 18.0,
+                );
+              }),
+            ),
+            const SizedBox(width: 8.0),
+            Text(
+              '${rating.toStringAsFixed(1)} (${ratingCount})',
+              style: GoogleFonts.cairo(
+                fontSize: isMobile ? 14.0 : 16.0,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const Spacer(),
+            if (ratingCount > 0)
+              TextButton.icon(
+                onPressed: () => _showProviderReviewsDialog(booking),
+                icon: Icon(
+                  Icons.reviews,
+                  color: AppColors.primary,
+                  size: isMobile ? 16.0 : 18.0,
+                ),
+                label: Text(
+                  'View Reviews',
+                  style: GoogleFonts.cairo(
+                    color: AppColors.primary,
+                    fontSize: isMobile ? 12.0 : 14.0,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        // User's specific rating and comment row
+        if (userProviderRating != null) ...[
+          const SizedBox(height: 4.0),
+          Row(
+            children: [
+              Icon(
+                Icons.star,
+                color: Colors.amber,
+                size: isMobile ? 14.0 : 16.0,
+              ),
+              const SizedBox(width: 6.0),
+              Text(
+                'My Rating: ',
+                style: GoogleFonts.cairo(
+                  fontSize: isMobile ? 12.0 : 14.0,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              // User's star rating
+              Row(
+                children: List.generate(5, (index) {
+                  return Icon(
+                    index < userProviderRating.rating.floor() 
+                        ? Icons.star 
+                        : (index < userProviderRating.rating ? Icons.star_half : Icons.star_border),
+                    color: Colors.amber,
+                    size: isMobile ? 12.0 : 14.0,
+                  );
+                }),
+              ),
+              const SizedBox(width: 4.0),
+              Text(
+                '${userProviderRating.rating.toStringAsFixed(1)}',
+                style: GoogleFonts.cairo(
+                  fontSize: isMobile ? 12.0 : 14.0,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.amber.shade700,
+                ),
+              ),
+              if (userProviderRating.comment != null && userProviderRating.comment!.isNotEmpty) ...[
+                const SizedBox(width: 8.0),
+                Expanded(
+                  child: Text(
+                    '"${userProviderRating.comment!}"',
+                    style: GoogleFonts.cairo(
+                      fontSize: isMobile ? 11.0 : 13.0,
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.textSecondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  // Provider rating display for grouped booking cards
+  Widget _buildProviderRatingRowForGroup(BookingModel booking, bool isMobile) {
+    final providerOverallRating = booking.providerOverallRating;
+    
+    if (providerOverallRating == null) {
+      return const SizedBox.shrink();
+    }
+
+    final rating = providerOverallRating.average;
+    final ratingCount = providerOverallRating.count;
+    
+    final userProviderRating = booking.providerRating;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Provider's overall rating row
+        Row(
+          children: [
+            Icon(
+              Icons.star,
+              color: AppColors.textSecondary,
+              size: isMobile ? 16.0 : 18.0,
+            ),
+            const SizedBox(width: 8.0),
+            Text(
+              'Provider Rating: ',
+              style: GoogleFonts.cairo(
+                fontSize: isMobile ? 14.0 : 16.0,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            // Star rating display
+            Row(
+              children: List.generate(5, (index) {
+                final starRating = index + 1;
+                final isFilled = starRating <= rating;
+                return Icon(
+                  isFilled ? Icons.star : Icons.star_border,
+                  color: isFilled ? Colors.amber : AppColors.textSecondary,
+                  size: isMobile ? 16.0 : 18.0,
+                );
+              }),
+            ),
+            const SizedBox(width: 8.0),
+            Text(
+              '${rating.toStringAsFixed(1)} (${ratingCount})',
+              style: GoogleFonts.cairo(
+                fontSize: isMobile ? 14.0 : 16.0,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const Spacer(),
+            if (ratingCount > 0)
+              TextButton.icon(
+                onPressed: () => _showProviderReviewsDialogForGroup(booking),
+                icon: Icon(
+                  Icons.reviews,
+                  color: AppColors.primary,
+                  size: isMobile ? 16.0 : 18.0,
+                ),
+                label: Text(
+                  'View Reviews',
+                  style: GoogleFonts.cairo(
+                    color: AppColors.primary,
+                    fontSize: isMobile ? 12.0 : 14.0,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        // User's specific rating and comment row
+        if (userProviderRating != null) ...[
+          const SizedBox(height: 4.0),
+          Row(
+            children: [
+              Icon(
+                Icons.star,
+                color: Colors.amber,
+                size: isMobile ? 14.0 : 16.0,
+              ),
+              const SizedBox(width: 6.0),
+              Text(
+                'My Rating: ',
+                style: GoogleFonts.cairo(
+                  fontSize: isMobile ? 12.0 : 14.0,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              // User's star rating
+              Row(
+                children: List.generate(5, (index) {
+                  return Icon(
+                    index < userProviderRating.rating.floor() 
+                        ? Icons.star 
+                        : (index < userProviderRating.rating ? Icons.star_half : Icons.star_border),
+                    color: Colors.amber,
+                    size: isMobile ? 12.0 : 14.0,
+                  );
+                }),
+              ),
+              const SizedBox(width: 4.0),
+              Text(
+                '${userProviderRating.rating.toStringAsFixed(1)}',
+                style: GoogleFonts.cairo(
+                  fontSize: isMobile ? 12.0 : 14.0,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.amber.shade700,
+                ),
+              ),
+              if (userProviderRating.comment != null && userProviderRating.comment!.isNotEmpty) ...[
+                const SizedBox(width: 8.0),
+                Expanded(
+                  child: Text(
+                    '"${userProviderRating.comment!}"',
+                    style: GoogleFonts.cairo(
+                      fontSize: isMobile ? 11.0 : 13.0,
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.textSecondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  // Show provider reviews dialog for single booking
+  void _showProviderReviewsDialog(Map<String, dynamic> booking) {
+    final providerId = booking['providerId'] as String?;
+    final providerName = booking['provider'] as String?;
+    
+    if (providerId == null || providerName == null) return;
+
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final bookingService = BookingService();
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return ProviderReviewsDialog(
+          providerId: providerId,
+          providerName: providerName,
+          reviewsFuture: bookingService.getProviderReviews(
+            providerId,
+            authService: authService,
+          ),
+        );
+      },
+    );
+  }
+
+  // Show provider reviews dialog for grouped booking
+  void _showProviderReviewsDialogForGroup(BookingModel booking) {
+    final providerId = booking.providerId;
+    final providerName = booking.providerName;
+    
+    if (providerId == null || providerName == null) return;
+
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final bookingService = BookingService();
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return ProviderReviewsDialog(
+          providerId: providerId,
+          providerName: providerName,
+          reviewsFuture: bookingService.getProviderReviews(
+            providerId,
+            authService: authService,
+          ),
+        );
+      },
+    );
+  }
+
+
+  // Show provider rating dialog for booking ID
+  Future<void> _showProviderRatingDialog(String? bookingId) async {
+    if (bookingId == null) return;
+
+    // Find the booking to get provider details
+    final booking = _myBookings.firstWhere(
+      (b) => b.id == bookingId,
+      orElse: () => throw Exception('Booking not found'),
+    );
+
+    final providerName = booking.providerName ?? 'Unknown Provider';
+    final serviceName = booking.serviceDetails.title;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return ProviderRatingDialog(
+          bookingId: bookingId,
+          providerName: providerName,
+          serviceName: serviceName,
+          onRatingSubmitted: () {
+            // Refresh bookings to show updated rating
+            _refreshBookings();
+          },
+        );
+      },
     );
   }
 } 
