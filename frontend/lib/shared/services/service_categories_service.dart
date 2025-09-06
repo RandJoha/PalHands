@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'base_api_service.dart';
 import 'auth_service.dart';
+import 'services_service.dart';
 import '../../core/constants/api_config.dart';
 
 class ServiceCategoryModel {
@@ -12,6 +13,8 @@ class ServiceCategoryModel {
   final String color;
   final List<String> services;
   final int? serviceCount;
+  final List<ServiceModel>? actualServices;
+  final bool? isDynamic;
 
   const ServiceCategoryModel({
     required this.id,
@@ -22,9 +25,15 @@ class ServiceCategoryModel {
     required this.color,
     required this.services,
     this.serviceCount,
+    this.actualServices,
+    this.isDynamic,
   });
 
   factory ServiceCategoryModel.fromJson(Map<String, dynamic> json) {
+    if (kDebugMode) {
+      print('🔍 Parsing category: ${json['name']} - actualServices: ${json['actualServices']?.length ?? 0}');
+    }
+    
     return ServiceCategoryModel(
       id: json['id'] ?? '',
       name: json['name'] ?? '',
@@ -34,6 +43,22 @@ class ServiceCategoryModel {
       color: json['color'] ?? '#000000',
       services: (json['services'] as List?)?.map((e) => e.toString()).toList() ?? [],
       serviceCount: json['serviceCount'],
+      actualServices: (json['actualServices'] as List?)
+          ?.map((e) {
+            try {
+              return ServiceModel.fromJson(e);
+            } catch (error) {
+              if (kDebugMode) {
+                print('❌ Error parsing service: $error');
+                print('❌ Service data: $e');
+              }
+              return null;
+            }
+          })
+          .where((service) => service != null)
+          .cast<ServiceModel>()
+          .toList(),
+      isDynamic: json['isDynamic'],
     );
   }
 
@@ -47,6 +72,8 @@ class ServiceCategoryModel {
       'color': color,
       'services': services,
       if (serviceCount != null) 'serviceCount': serviceCount,
+      if (actualServices != null) 'actualServices': actualServices!.map((e) => e.toJson()).toList(),
+      if (isDynamic != null) 'isDynamic': isDynamic,
     };
   }
 }
@@ -132,6 +159,48 @@ class ServiceCategoriesService with BaseApiService {
       }
       
       // Fallback to regular categories without counts
+      return getCategories(forceRefresh: forceRefresh);
+    }
+  }
+
+  /// Get categories with their actual services from the database
+  Future<List<ServiceCategoryModel>> getCategoriesWithServices({bool forceRefresh = false}) async {
+    try {
+      final response = await get('/servicecategories/with-services', headers: _authHeaders);
+
+      if (kDebugMode) {
+        print('📂 Fetched service categories with services: ${response['categories']?.length ?? 0} items');
+        print('📂 Response keys: ${response.keys}');
+      }
+
+      // Handle different response structures
+      List<dynamic> categoriesData = [];
+      if (response['data'] != null && response['data']['categories'] != null) {
+        categoriesData = response['data']['categories'];
+      } else if (response['categories'] != null) {
+        categoriesData = response['categories'];
+      } else if (response['data'] != null && response['data'] is List) {
+        categoriesData = response['data'];
+      }
+      
+      if (kDebugMode) {
+        print('📂 Raw categories data length: ${categoriesData.length}');
+        if (categoriesData.isNotEmpty) {
+          print('📂 First category keys: ${categoriesData.first.keys}');
+        }
+      }
+      
+      final categories = categoriesData
+          .map((json) => ServiceCategoryModel.fromJson(json))
+          .toList();
+
+      return categories;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error fetching service categories with services: $e');
+      }
+      
+      // Fallback to regular categories without services
       return getCategories(forceRefresh: forceRefresh);
     }
   }

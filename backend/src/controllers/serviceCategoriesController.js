@@ -142,20 +142,42 @@ async function getCategoriesWithCounts(req, res) {
   try {
     const Service = require('../models/Service');
     
-    // Get service counts for each category
-    const serviceCounts = await Service.aggregate([
+    // Get all unique categories from services in the database
+    const dbCategories = await Service.aggregate([
       { $match: { isActive: true } },
-      { $group: { _id: '$category', count: { $sum: 1 } } }
+      { $group: { _id: '$category', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
     ]);
     
     // Create a map for quick lookup
-    const countMap = serviceCounts.reduce((acc, item) => {
+    const countMap = dbCategories.reduce((acc, item) => {
       acc[item._id] = item.count;
       return acc;
     }, {});
     
-    // Add counts to categories
-    const categoriesWithCounts = SERVICE_CATEGORIES.map(category => ({
+    // Start with predefined categories
+    const allCategories = [...SERVICE_CATEGORIES];
+    
+    // Add dynamic categories from database that aren't in predefined list
+    const predefinedIds = new Set(SERVICE_CATEGORIES.map(cat => cat.id));
+    const dynamicCategories = dbCategories
+      .filter(item => !predefinedIds.has(item._id))
+      .map(item => ({
+        id: item._id,
+        name: item._id.charAt(0).toUpperCase() + item._id.slice(1) + ' Services',
+        nameKey: item._id + 'Services',
+        description: `Services in the ${item._id} category`,
+        icon: 'category',
+        color: '#9E9E9E', // Default gray color for dynamic categories
+        services: [], // Will be populated with actual services
+        isDynamic: true
+      }));
+    
+    // Combine predefined and dynamic categories
+    allCategories.push(...dynamicCategories);
+    
+    // Add counts to all categories
+    const categoriesWithCounts = allCategories.map(category => ({
       ...category,
       serviceCount: countMap[category.id] || 0
     }));
@@ -170,8 +192,63 @@ async function getCategoriesWithCounts(req, res) {
   }
 }
 
+/**
+ * Get categories with their actual services from the database
+ */
+async function getCategoriesWithServices(req, res) {
+  try {
+    const Service = require('../models/Service');
+    
+    // Get all unique categories from services in the database
+    const dbCategories = await Service.aggregate([
+      { $match: { isActive: true } },
+      { $group: { _id: '$category', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+    
+    // Get actual services for each category
+    const categoriesWithServices = await Promise.all(
+      dbCategories.map(async (cat) => {
+        const services = await Service.find(
+          { category: cat._id, isActive: true },
+          { title: 1, description: 1, category: 1, subcategory: 1, price: 1, rating: 1, provider: 1 }
+        ).populate('provider', 'fullName email phone')
+         .limit(20); // Limit services per category for performance
+        
+        // Find predefined category or create dynamic one
+        const predefinedCategory = SERVICE_CATEGORIES.find(c => c.id === cat._id);
+        const categoryData = predefinedCategory || {
+          id: cat._id,
+          name: cat._id.charAt(0).toUpperCase() + cat._id.slice(1) + ' Services',
+          nameKey: cat._id + 'Services',
+          description: `Services in the ${cat._id} category`,
+          icon: 'category',
+          color: '#9E9E9E',
+          services: [],
+          isDynamic: true
+        };
+        
+        return {
+          ...categoryData,
+          serviceCount: cat.count,
+          actualServices: services
+        };
+      })
+    );
+    
+    return ok(res, {
+      categories: categoriesWithServices,
+      total: categoriesWithServices.length
+    });
+  } catch (e) {
+    console.error('getCategoriesWithServices error', e);
+    return error(res, 500, 'Failed to fetch categories with services');
+  }
+}
+
 module.exports = {
   listCategories,
   getCategoryById,
-  getCategoriesWithCounts
+  getCategoriesWithCounts,
+  getCategoriesWithServices
 };

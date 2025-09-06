@@ -3,6 +3,44 @@ import 'base_api_service.dart';
 import 'auth_service.dart';
 import '../../core/constants/api_config.dart';
 
+class ProviderInfo {
+  final String id;
+  final String firstName;
+  final String lastName;
+  final String email;
+  final RatingModel? rating;
+
+  const ProviderInfo({
+    required this.id,
+    required this.firstName,
+    required this.lastName,
+    required this.email,
+    this.rating,
+  });
+
+  factory ProviderInfo.fromJson(Map<String, dynamic> json) {
+    return ProviderInfo(
+      id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
+      firstName: json['firstName'] ?? '',
+      lastName: json['lastName'] ?? '',
+      email: json['email'] ?? '',
+      rating: json['rating'] != null ? RatingModel.fromJson(json['rating']) : null,
+    );
+  }
+
+  String get fullName => '$firstName $lastName';
+
+  Map<String, dynamic> toJson() {
+    return {
+      '_id': id,
+      'firstName': firstName,
+      'lastName': lastName,
+      'email': email,
+      if (rating != null) 'rating': rating!.toJson(),
+    };
+  }
+}
+
 class ServiceModel {
   final String id;
   final String slug;
@@ -11,6 +49,7 @@ class ServiceModel {
   final String category;
   final String? subcategory;
   final String providerId;
+  final ProviderInfo? provider;
   final PriceModel price;
   final LocationModel location;
   final List<String> images;
@@ -30,12 +69,13 @@ class ServiceModel {
 
   const ServiceModel({
     required this.id,
-  this.slug = '',
+    this.slug = '',
     required this.title,
     required this.description,
     required this.category,
     this.subcategory,
     required this.providerId,
+    this.provider,
     required this.price,
     required this.location,
     required this.images,
@@ -47,11 +87,11 @@ class ServiceModel {
     required this.featured,
     required this.createdAt,
     required this.updatedAt,
-  this.emergencyEnabled = false,
-  this.emergencyLeadTimeMinutes = 120,
-  this.emergencySurchargeType = 'flat',
-  this.emergencySurchargeAmount = 0,
-  this.emergencyRateMultiplier = 1.5,
+    this.emergencyEnabled = false,
+    this.emergencyLeadTimeMinutes = 120,
+    this.emergencySurchargeType = 'flat',
+    this.emergencySurchargeAmount = 0,
+    this.emergencyRateMultiplier = 1.5,
   });
 
   factory ServiceModel.fromJson(Map<String, dynamic> json) {
@@ -69,6 +109,9 @@ class ServiceModel {
         }
         return p?.toString() ?? '';
       }(),
+      provider: json['provider'] is Map<String, dynamic> 
+          ? ProviderInfo.fromJson(json['provider']) 
+          : null,
       price: PriceModel.fromJson(json['price'] ?? {}),
       location: LocationModel.fromJson(json['location'] ?? {}),
       images: (json['images'] as List?)?.map((e) => e['url']?.toString() ?? '').toList() ?? [],
@@ -112,6 +155,7 @@ class ServiceModel {
       'category': category,
       if (subcategory != null) 'subcategory': subcategory,
       'provider': providerId,
+      if (provider != null) 'providerInfo': provider!.toJson(),
       'price': price.toJson(),
       'location': location.toJson(),
       'images': images.map((url) => {'url': url}).toList(),
@@ -220,9 +264,9 @@ class ServicesService with BaseApiService {
   factory ServicesService() => _instance;
   ServicesService._internal();
 
-  // Get authentication token from AuthService
-  Map<String, String> get _authHeaders {
-    final token = AuthService().token;
+  // Get authentication headers from provided AuthService instance
+  Map<String, String> _getAuthHeaders(AuthService authService) {
+    final token = authService.token;
     if (token != null) {
       return {
         'Authorization': 'Bearer $token',
@@ -242,6 +286,7 @@ class ServicesService with BaseApiService {
     double? maxDistanceKm,
     int? page,
     int? limit,
+    AuthService? authService,
   }) async {
     try {
       final queryParams = <String, String>{};
@@ -259,7 +304,7 @@ class ServicesService with BaseApiService {
               ? '?${Uri(queryParameters: queryParams).query}' 
               : '');
 
-      final response = await get(endpoint, headers: _authHeaders);
+      final response = await get(endpoint, headers: authService != null ? _getAuthHeaders(authService) : ApiConfig.defaultHeaders);
 
       dynamic raw = response['services'] ?? response['data'];
       if (raw is Map<String, dynamic>) {
@@ -282,11 +327,11 @@ class ServicesService with BaseApiService {
   }
 
   /// Get a specific service by ID
-  Future<ServiceModel?> getServiceById(String serviceId) async {
+  Future<ServiceModel?> getServiceById(String serviceId, {AuthService? authService}) async {
     try {
       final response = await get(
         '${ApiConfig.servicesEndpoint}/$serviceId',
-        headers: _authHeaders,
+        headers: authService != null ? _getAuthHeaders(authService) : ApiConfig.defaultHeaders,
       );
 
       if (kDebugMode) {
@@ -310,6 +355,7 @@ class ServicesService with BaseApiService {
     String? q,
     int? page,
     int? limit,
+    AuthService? authService,
   }) async {
     return getServices(
       category: category,
@@ -317,6 +363,7 @@ class ServicesService with BaseApiService {
       q: q,
       page: page,
       limit: limit,
+      authService: authService,
     );
   }
 
@@ -325,11 +372,13 @@ class ServicesService with BaseApiService {
     String providerId, {
     int? page,
     int? limit,
+    AuthService? authService,
   }) async {
     return getServices(
       providerId: providerId,
       page: page,
       limit: limit,
+      authService: authService,
     );
   }
 
@@ -340,6 +389,7 @@ class ServicesService with BaseApiService {
     String? area,
     int? page,
     int? limit,
+    AuthService? authService,
   }) async {
     return getServices(
       q: query,
@@ -347,12 +397,14 @@ class ServicesService with BaseApiService {
       area: area,
       page: page,
       limit: limit,
+      authService: authService,
     );
   }
 
   /// Get featured services
   Future<List<ServiceModel>> getFeaturedServices({
     int? limit,
+    AuthService? authService,
   }) async {
     try {
       final queryParams = <String, String>{};
@@ -363,7 +415,7 @@ class ServicesService with BaseApiService {
               ? '?${Uri(queryParameters: queryParams).query}' 
               : '');
 
-      final response = await get(endpoint, headers: _authHeaders);
+      final response = await get(endpoint, headers: authService != null ? _getAuthHeaders(authService) : ApiConfig.defaultHeaders);
 
       dynamic raw = response['services'] ?? response['data'];
       if (raw is Map<String, dynamic>) {
@@ -385,6 +437,44 @@ class ServicesService with BaseApiService {
         print('❌ Error fetching featured services: $e');
       }
       return [];
+    }
+  }
+
+  /// Create a new service (admin only)
+  Future<ServiceModel?> createService({
+    required String title,
+    required String description,
+    required String category,
+    String? subcategory,
+    String? providerId,
+    required AuthService authService,
+  }) async {
+    try {
+      final requestBody = {
+        'title': title,
+        'description': description,
+        'category': category,
+        if (subcategory != null && subcategory.isNotEmpty) 'subcategory': subcategory,
+        if (providerId != null && providerId.isNotEmpty) 'provider': providerId,
+      };
+
+      final response = await post(
+        '${ApiConfig.servicesEndpoint}/simple',
+        body: requestBody,
+        headers: _getAuthHeaders(authService),
+      );
+
+      if (kDebugMode) {
+        print('✅ Service created successfully');
+      }
+
+      final serviceData = response['data'] ?? response;
+      return ServiceModel.fromJson(serviceData);
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error creating service: $e');
+      }
+      rethrow;
     }
   }
 }

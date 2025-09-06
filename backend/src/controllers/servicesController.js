@@ -119,6 +119,53 @@ async function createService(req, res) {
   }
 }
 
+async function createSimpleService(req, res) {
+  try {
+    // Enforce admin-only via policies
+    const actor = req.user;
+    if (!servicePolicies.canCreate(actor)) {
+      return error(res, 403, 'Only admins can create services');
+    }
+
+    // Prepare service data with defaults
+    const serviceData = {
+      title: req.body.title,
+      description: req.body.description,
+      category: req.body.category,
+      subcategory: req.body.subcategory || '',
+      // Set default values for required fields
+      price: {
+        amount: 0,
+        type: 'hourly',
+        currency: 'ILS'
+      },
+      location: {
+        serviceArea: 'General',
+        radius: 10,
+        onSite: true,
+        remote: false
+      },
+      provider: null, // Will be assigned later
+      isActive: true
+    };
+
+    // If provider ID is provided, validate it
+    if (req.body.provider) {
+      const User = require('../models/User');
+      const provider = await User.findById(req.body.provider);
+      if (provider && provider.role === 'provider') {
+        serviceData.provider = provider._id;
+      }
+    }
+
+    const service = await Service.create(serviceData);
+    return created(res, service, 'Service created successfully');
+  } catch (e) {
+    console.error('createSimpleService error', e);
+    return error(res, 400, e.message || 'Failed to create service');
+  }
+}
+
 async function updateService(req, res) {
   try {
     const service = await Service.findById(req.params.id);
@@ -273,4 +320,4 @@ async function setServiceEmergency(req, res) {
 
 }
 
-module.exports = { listServices, getServiceById, createService, updateService, deleteService, uploadServiceImages, presignServiceImages, attachServiceImages, cleanupServiceImages, setServiceEmergency };
+module.exports = { listServices, getServiceById, createService, createSimpleService, updateService, deleteService, uploadServiceImages, presignServiceImages, attachServiceImages, cleanupServiceImages, setServiceEmergency };
