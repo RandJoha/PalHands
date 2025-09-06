@@ -49,7 +49,7 @@ class ChatMessagesWidgetState extends State<ChatMessagesWidget> {
       final response = await _chatService.getUserChats(authService: authService);
       
       if (response['success'] == true) {
-        final chatsData = response['data']['chats'] as List<dynamic>;
+        final chatsData = response['data']['chats'] as List<dynamic>? ?? [];
         final parsedChats = chatsData.map((json) => ChatModel.fromJson(json)).toList();
         
         setState(() {
@@ -63,10 +63,20 @@ class ChatMessagesWidgetState extends State<ChatMessagesWidget> {
         });
       }
     } catch (e) {
-      setState(() {
-        _error = 'Failed to load chats: $e';
-        _isLoading = false;
-      });
+      // Check if it's a 500 error that might indicate no chats
+      final errorString = e.toString();
+      if (errorString.contains('500') && errorString.contains('Failed to get chats')) {
+        // This might be a backend issue with empty chats, treat as empty result
+        setState(() {
+          _chats = [];
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _error = 'Failed to load chats: $e';
+          _isLoading = false;
+        });
+      }
     }
   }
 

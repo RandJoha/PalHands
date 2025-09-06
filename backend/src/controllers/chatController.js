@@ -190,9 +190,21 @@ const getUserChats = async (req, res) => {
     const responseData = { chats: transformedChats };
     console.log('📤 Final response data structure:', JSON.stringify(responseData, null, 2));
     
+    // Always return success with chats array, even if empty
     return ok(res, responseData);
   } catch (err) {
     console.error('Get user chats error:', err);
+    console.error('Error details:', {
+      message: err.message,
+      stack: err.stack,
+      name: err.name
+    });
+    
+    // If it's a specific error, provide more context
+    if (err.message && err.message.includes('Cast to ObjectId failed')) {
+      return error(res, 400, 'Invalid user ID format');
+    }
+    
     return error(res, 500, 'Failed to fetch chats');
   }
 };
