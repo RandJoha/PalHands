@@ -34,6 +34,12 @@ const authenticate = async (req, res, next) => {
         return res.status(401).json({ success: false, message: 'Account is deactivated.' });
       }
       req.user = user;
+      console.log('🔍 User authenticated:', {
+        userId: user._id,
+        role: user.role,
+        email: user.email,
+        isActive: user.isActive
+      });
       return next();
     }
     
@@ -47,12 +53,23 @@ const authenticate = async (req, res, next) => {
 
 // Role guard (e.g., ['admin'])
 const requireRole = (roles) => (req, res, next) => {
+  console.log('🔍 Role check:', {
+    userRole: req.user?.role,
+    requiredRoles: roles,
+    userId: req.user?._id
+  });
+  
   if (!req.user) {
     return res.status(401).json({ success: false, message: 'Authentication required.' });
   }
   if (!roles.includes(req.user.role)) {
+    console.log('❌ Role check failed:', {
+      userRole: req.user.role,
+      requiredRoles: roles
+    });
     return res.status(403).json({ success: false, message: `Access denied. ${roles.join(' or ')} role required.` });
   }
+  console.log('✅ Role check passed');
   next();
 };
 

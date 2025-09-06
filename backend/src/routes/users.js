@@ -10,11 +10,19 @@ router.put('/change-password', auth, changePasswordValidator, userController.cha
 
 // Admin routes (admin only)
 router.get('/', auth, checkRole(['admin']), userController.getAllUsers);
-router.get('/:id', auth, checkRole(['admin']), userController.getUserById);
-router.put('/:id/status', auth, checkRole(['admin']), userController.updateUserStatus);
-router.delete('/:id', auth, checkRole(['admin']), userController.deleteUser);
+
+// Favorite providers routes (authenticated users) - MUST come before /:id routes
+router.post('/favorites/:providerId', auth, userController.addToFavorites);
+router.delete('/favorites/:providerId', auth, userController.removeFromFavorites);
+router.get('/favorites', auth, userController.getFavoriteProviders);
+router.get('/favorites/:providerId/check', auth, userController.isProviderFavorite);
 
 // Client reviews route (providers can view client reviews)
 router.get('/:id/reviews', auth, checkRole(['provider', 'admin']), userController.getClientReviews);
+
+// Generic /:id routes (admin only) - MUST come after specific routes
+router.get('/:id', auth, checkRole(['admin']), userController.getUserById);
+router.put('/:id/status', auth, checkRole(['admin']), userController.updateUserStatus);
+router.delete('/:id', auth, checkRole(['admin']), userController.deleteUser);
 
 module.exports = router; 

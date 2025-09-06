@@ -185,7 +185,13 @@ const userSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
     default: Date.now
-  }
+  },
+  
+  // Favorite providers
+  favoriteProviders: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Provider'
+  }]
 });
 
 // Ensure unique index for phone and email exist (in case of older deployments)

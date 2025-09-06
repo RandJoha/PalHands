@@ -12,18 +12,17 @@ import '../../../../shared/services/language_service.dart';
 import '../../../../shared/services/booking_service.dart';
 import '../../../../shared/models/booking.dart';
 import '../../../../shared/services/auth_service.dart';
-import '../../../../shared/services/chat_service.dart';
-import '../../../../shared/models/chat.dart';
+import '../../../../shared/services/favorites_service.dart';
 
 // Widget imports
 import '../../../admin/presentation/widgets/language_toggle_widget.dart';
-import '../../../../shared/widgets/client_reviews_dialog.dart';
 import '../../../../shared/widgets/provider_rating_dialog.dart';
 import '../../../../shared/widgets/provider_reviews_dialog.dart';
 
 // Feature imports
 import '../widgets/chat_messages_widget.dart';
 import '../widgets/mobile_chat_messages_widget.dart';
+import 'saved_providers_widget.dart';
 
 // User models
 class UserMenuItem {
@@ -1092,7 +1091,11 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             ],
           ),
           const SizedBox(height: 8),
-          _detailRow(Icons.person, AppStrings.getString('providerName', languageService.currentLanguage), b0.providerName ?? '', isMobile),
+          _buildProviderRowWithFavoriteForGroup(
+            b0.providerName ?? '',
+            b0.providerId,
+            isMobile,
+          ),
           const SizedBox(height: 8),
           // Address and total shown at top of the group
           _detailRow(Icons.location_on, AppStrings.getString('address', languageService.currentLanguage), b0.location.address, isMobile),
@@ -1262,7 +1265,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if ((booking['notes'] as String).toLowerCase().contains('admin set to') || (booking['notes'] as String).toLowerCase().contains('admin cancelled')) ...[
+          if ((booking['notes'] as String? ?? '').toLowerCase().contains('admin set to') || (booking['notes'] as String? ?? '').toLowerCase().contains('admin cancelled')) ...[
             Container(
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -1342,15 +1345,14 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           ),
           SizedBox(height: isMobile ? 12.0 : 16.0),
           
-          // Booking details
-          _buildBookingDetailRow(
-            Icons.person,
-            AppStrings.getString('provider', languageService.currentLanguage),
+          // Provider details with favorite icon
+          _buildProviderRowWithFavorite(
             booking['provider'],
+            booking['providerId'] as String?,
             isMobile,
           ),
           const SizedBox(height: 8.0),
-          if ((booking['instructions'] as String).isNotEmpty) ...[
+          if ((booking['instructions'] as String? ?? '').isNotEmpty) ...[
             _buildBookingDetailRow(
               Icons.notes,
               AppStrings.getString('specialInstructions', languageService.currentLanguage),
@@ -1359,7 +1361,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             ),
             const SizedBox(height: 8.0),
           ],
-          if ((booking['notes'] as String).isNotEmpty) ...[
+          if ((booking['notes'] as String? ?? '').isNotEmpty) ...[
             _buildBookingDetailRow(
               Icons.sticky_note_2,
               AppStrings.getString('additionalNotesOptional', languageService.currentLanguage),
@@ -1468,7 +1470,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             color: action['color'] as Color,
           ),
           label: Text(
-            action['label'] as String,
+            (action['label'] as String? ?? ''),
             style: GoogleFonts.cairo(
               fontSize: isMobile ? 12.0 : 14.0,
               fontWeight: FontWeight.w500,
@@ -1733,13 +1735,13 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           child: Column(
             children: [
               Icon(
-                card['icon'] as IconData,
-                color: card['color'] as Color,
+                card['icon'] as IconData?,
+                color: card['color'] as Color?,
                 size: isMobile ? 32.0 : 40.0,
               ),
               SizedBox(height: isMobile ? 8.0 : 12.0),
               Text(
-                card['amount'] as String,
+                (card['count'] ?? '0').toString(),
                 style: GoogleFonts.cairo(
                   fontSize: isMobile ? 24.0 : 32.0,
                   fontWeight: FontWeight.w700,
@@ -1748,7 +1750,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               ),
               const SizedBox(height: 4.0),
               Text(
-                card['title'] as String,
+                (card['title'] ?? '').toString(),
                 style: GoogleFonts.cairo(
                   fontSize: isMobile ? 14.0 : 16.0,
                   fontWeight: FontWeight.w500,
@@ -2073,8 +2075,8 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           child: Column(
             children: [
               Icon(
-                card['icon'] as IconData,
-                color: card['color'] as Color,
+                card['icon'] as IconData?,
+                color: card['color'] as Color?,
                 size: isMobile ? 32.0 : 40.0,
               ),
               SizedBox(height: isMobile ? 8.0 : 12.0),
@@ -2088,7 +2090,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               ),
               const SizedBox(height: 4.0),
               Text(
-                card['title'] as String,
+                (card['title'] ?? '').toString(),
                 style: GoogleFonts.cairo(
                   fontSize: isMobile ? 14.0 : 16.0,
                   fontWeight: FontWeight.w500,
@@ -3293,13 +3295,13 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           child: Column(
             children: [
               Icon(
-                card['icon'] as IconData,
-                color: card['color'] as Color,
+                card['icon'] as IconData?,
+                color: card['color'] as Color?,
                 size: isMobile ? 32.0 : 40.0,
               ),
               SizedBox(height: isMobile ? 8.0 : 12.0),
               Text(
-                card['amount'] as String,
+                (card['count'] ?? '0').toString(),
                 style: GoogleFonts.cairo(
                   fontSize: isMobile ? 24.0 : 32.0,
                   fontWeight: FontWeight.w700,
@@ -3308,7 +3310,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               ),
               const SizedBox(height: 4.0),
               Text(
-                card['title'] as String,
+                (card['title'] ?? '').toString(),
                 style: GoogleFonts.cairo(
                   fontSize: isMobile ? 14.0 : 16.0,
                   fontWeight: FontWeight.w500,
@@ -3323,181 +3325,9 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   }
 
   Widget _buildSavedProvidersList(bool isMobile, bool isTablet) {
-  final providers = [
-      {
-        'name': 'Fatima Al-Zahra',
-        'service': _getLocalizedString('homeCleaning'),
-        'rating': 4.8,
-        'price': '₪150',
-        'isAvailable': true,
-      },
-      {
-        'name': 'Mariam Hassan',
-        'service': _getLocalizedString('elderlyCare'),
-        'rating': 4.9,
-        'price': '₪200',
-        'isAvailable': true,
-      },
-      {
-        'name': 'Aisha Mohammed',
-        'service': _getLocalizedString('babysitting'),
-        'rating': 4.7,
-        'price': '₪120',
-        'isAvailable': false,
-      },
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          _getLocalizedString('savedProviders'),
-          style: GoogleFonts.cairo(
-            fontSize: isMobile ? 18.0 : 20.0,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        SizedBox(height: isMobile ? 12.0 : 16.0),
-        
-        ...providers.map((provider) {
-          return Container(
-            margin: const EdgeInsets.only(bottom: 16.0),
-            child: _buildSavedProviderCard(provider, isMobile, isTablet),
-          );
-        }),
-      ],
-    );
-  }
-
-  Widget _buildSavedProviderCard(Map<String, dynamic> provider, bool isMobile, bool isTablet) {
-    return Container(
-      padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(isMobile ? 12.0 : 16.0),
-        border: Border.all(color: AppColors.border, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadow.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: isMobile ? 60.0 : 70.0,
-            height: isMobile ? 60.0 : 70.0,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(isMobile ? 30.0 : 35.0),
-            ),
-            child: Icon(
-              Icons.person,
-              color: AppColors.primary,
-              size: isMobile ? 30.0 : 35.0,
-            ),
-          ),
-          SizedBox(width: isMobile ? 12.0 : 16.0),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  provider['name'],
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 16.0 : 18.0,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4.0),
-                Text(
-                  provider['service'],
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 14.0 : 16.0,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 8.0),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.star,
-                      color: AppColors.ratingFilled,
-                      size: isMobile ? 16.0 : 18.0,
-                    ),
-                    const SizedBox(width: 4.0),
-                    Text(
-                      provider['rating'].toString(),
-                      style: GoogleFonts.cairo(
-                        fontSize: isMobile ? 14.0 : 16.0,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(width: 16.0),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: provider['isAvailable'] ? AppColors.success.withValues(alpha: 0.1) : AppColors.error.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        provider['isAvailable'] ? _getLocalizedString('available') : _getLocalizedString('unavailable'),
-                        style: GoogleFonts.cairo(
-                          fontSize: isMobile ? 12.0 : 14.0,
-                          fontWeight: FontWeight.w600,
-                          color: provider['isAvailable'] ? AppColors.success : AppColors.error,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                // Removed Recent Bookings info per requirements
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                provider['price'],
-                style: GoogleFonts.cairo(
-                  fontSize: isMobile ? 18.0 : 20.0,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(height: 8.0),
-              ElevatedButton(
-                onPressed: provider['isAvailable'] ? () {
-                  // Handle book again
-                } : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.white,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isMobile ? 12.0 : 16.0,
-                    vertical: isMobile ? 8.0 : 10.0,
-                  ),
-                ),
-                child: Text(
-                  _getLocalizedString('bookNow'),
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 12.0 : 14.0,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+    // This method should not be used anymore - the SavedProvidersWidget handles this
+    // Return a placeholder or redirect to the proper widget
+    return const SavedProvidersWidget();
   }
 
   // Support Help Section
@@ -4524,5 +4354,172 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         );
       },
     );
+  }
+
+  // Provider row with favorite icon for single bookings
+  Widget _buildProviderRowWithFavorite(String providerName, String? providerId, bool isMobile) {
+    return Row(
+      children: [
+        Icon(
+          Icons.person,
+          color: AppColors.textSecondary,
+          size: isMobile ? 16.0 : 18.0,
+        ),
+        const SizedBox(width: 8.0),
+        Text(
+          AppStrings.getString('provider', Provider.of<LanguageService>(context, listen: false).currentLanguage),
+          style: GoogleFonts.cairo(
+            fontSize: isMobile ? 14.0 : 16.0,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(width: 8.0),
+        Expanded(
+          child: Text(
+            providerName,
+            style: GoogleFonts.cairo(
+              fontSize: isMobile ? 14.0 : 16.0,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ),
+        if (providerId != null)
+          _buildFavoriteIcon(providerId, isMobile),
+      ],
+    );
+  }
+
+  // Provider row with favorite icon for grouped bookings
+  Widget _buildProviderRowWithFavoriteForGroup(String providerName, String? providerId, bool isMobile) {
+    return Row(
+      children: [
+        Icon(
+          Icons.person,
+          color: AppColors.textSecondary,
+          size: isMobile ? 16.0 : 18.0,
+        ),
+        const SizedBox(width: 8.0),
+        Text(
+          AppStrings.getString('providerName', Provider.of<LanguageService>(context, listen: false).currentLanguage),
+          style: GoogleFonts.cairo(
+            fontSize: isMobile ? 14.0 : 16.0,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(width: 8.0),
+        Expanded(
+          child: Text(
+            providerName,
+            style: GoogleFonts.cairo(
+              fontSize: isMobile ? 14.0 : 16.0,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ),
+        if (providerId != null)
+          _buildFavoriteIcon(providerId, isMobile),
+      ],
+    );
+  }
+
+  // Favorite icon widget
+  Widget _buildFavoriteIcon(String providerId, bool isMobile) {
+    return FutureBuilder<bool>(
+      future: _isProviderFavorite(providerId),
+      builder: (context, snapshot) {
+        final isFavorite = snapshot.data ?? false;
+        
+        return GestureDetector(
+          onTap: () => _toggleProviderFavorite(providerId, isFavorite),
+          child: Container(
+            padding: const EdgeInsets.all(4.0),
+            child: Icon(
+              isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: isFavorite ? Colors.red : AppColors.textSecondary,
+              size: isMobile ? 20.0 : 22.0,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Check if provider is favorite
+  Future<bool> _isProviderFavorite(String providerId) async {
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final favoritesService = FavoritesService();
+      
+      return await favoritesService.isProviderFavorite(
+        providerId,
+        authService: authService,
+      );
+    } catch (e) {
+      print('Error checking favorite status: $e');
+      return false;
+    }
+  }
+
+  // Toggle provider favorite status
+  Future<void> _toggleProviderFavorite(String providerId, bool currentStatus) async {
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final favoritesService = FavoritesService();
+      
+      if (currentStatus) {
+        // Remove from favorites
+        await favoritesService.removeFromFavorites(
+          providerId,
+          authService: authService,
+        );
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Removed from favorites',
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      } else {
+        // Add to favorites
+        await favoritesService.addToFavorites(
+          providerId,
+          authService: authService,
+        );
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Added to favorites',
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+      
+      // Refresh the UI
+      setState(() {});
+    } catch (e) {
+      print('Error toggling favorite status: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Error updating favorite status',
+            style: GoogleFonts.cairo(),
+          ),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 } 
