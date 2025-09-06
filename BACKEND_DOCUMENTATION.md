@@ -155,7 +155,57 @@ EMAIL_PASS=your-app-password
 CORS_ORIGIN=http://localhost:8080,http://localhost:3000
 ```
 
-## 📊 Database Models
+## � September 2025 — Per‑service data source & provider listings overhaul
+
+This update makes `providerservices` the single source of truth for per‑service pricing, experience, and availability, fixes “My Services” accuracy for all providers, and updates provider listing endpoints to consume aggregated per‑service data.
+
+What changed
+- Single source of truth: `providerservices` now holds authoritative `hourlyRate`, `experienceYears`, and availability details per provider+service.
+- Data cleanup & migration (Atlas):
+  - Removed orphan `ProviderService` docs with missing/undefined service refs.
+  - Dropped legacy indexes in `providerservices` referencing `serviceKey` (e.g., `provider_1_serviceKey_1`, `serviceKey_1`).
+  - Ensured a unique `{ provider, service }` pair per record; created the missing ones across all providers.
+  - Result: 35 providers, 83 services, 83 `ProviderService` docs (1:1).
+- Controllers (provider listings):
+  - `src/controllers/providersController.js`
+    - `listProviders` aggregates per‑service data to compute display `hourlyRate` (avg) and `experienceYears` (avg).
+    - `getProviderById` returns provider with aggregated values and per‑service presence metadata.
+    - `getProvidersByCategory` mirrors the same aggregation and post‑aggregation price sorting.
+    - Price sorting (`sortBy=price`) now happens after aggregation to reflect per‑service data.
+    - Optional gate: only providers with at least one `ProviderService` in `status: 'active'` and `publishable: true` are returned.
+- Response shape (backward‑compatible):
+  - Endpoints return `{ data: Provider[], providers: Provider[], pagination }` to keep older consumers working.
+  - Each `Provider` in the list contains aggregated `hourlyRate`, `experienceYears`, and `_serviceCount`, `_hasPerServiceData` flags.
+- Test utility: `backend/quick-test.js` updated to normalize payload whether list is in `data` or `data.data/providers`.
+
+Frontend impact
+- “My Services” (provider dashboard) already consumes `/api/provider-services` → unchanged but now 100% in sync after migration.
+- “Our Services” listings consume `/api/providers` and now display aggregated per‑service `hourlyRate`/`experienceYears`.
+- Booking dialog still has a fallback reference to `provider.hourlyRate`; plan to replace with a computed value from selected service or aggregated average.
+
+Next steps
+- Deprecate and remove legacy `hourlyRate`/`experienceYears` fields on the Provider schema once no remaining UI depends on them.
+- Update booking dialog to stop using provider‑level fallback and rely on service‑level pricing.
+- Add unit tests for provider listing aggregation and price sorting.
+
+## 🧩 September 2025 — Provider‑service availability & validation fixes
+
+What changed
+- Validation for `PATCH /api/provider-services/:providerId/:id` now accepts `null` for:
+  - `weeklyOverrides`, `exceptionOverrides`, `emergencyWeeklyOverrides`, `emergencyExceptionOverrides`.
+- Celebrate error handler installed to surface validation errors as HTTP 400 (not 500).
+- Normalization in controller clears fields on `null` and sanitizes weekly arrays.
+
+Implications
+- Frontend can explicitly clear overrides by sending `null` when the service should inherit global availability (or has no emergency additions).
+- DB remains clean with undefined fields instead of empty objects.
+
+Files touched
+- `src/routes/providerServices.js` (updateSchema)
+- `src/controllers/providerServicesController.js` (update)
+- `src/app-minimal.js` (celebrate error handler)
+
+## �📊 Database Models
 
 ### User Model (`src/models/User.js`)
 

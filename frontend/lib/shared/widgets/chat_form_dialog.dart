@@ -19,10 +19,10 @@ class ChatFormDialog extends StatefulWidget {
   final VoidCallback? onMessageSent;
 
   const ChatFormDialog({
-    Key? key,
+    super.key,
     required this.provider,
     this.onMessageSent,
-  }) : super(key: key);
+  });
 
   @override
   State<ChatFormDialog> createState() => _ChatFormDialogState();
@@ -125,7 +125,7 @@ class _ChatFormDialogState extends State<ChatFormDialog> {
           // Show success message with multiple options
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Column(
+              content: const Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -136,7 +136,7 @@ class _ChatFormDialogState extends State<ChatFormDialog> {
                 ],
               ),
               backgroundColor: Colors.green,
-              duration: Duration(seconds: 8),
+              duration: const Duration(seconds: 8),
               action: SnackBarAction(
                 label: 'Refresh Now',
                 textColor: Colors.white,
@@ -154,14 +154,14 @@ class _ChatFormDialogState extends State<ChatFormDialog> {
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
-              title: Text('Message Sent!'),
-              content: Text('Your message has been sent successfully. Would you like to view it in the chat list?'),
+              title: const Text('Message Sent!'),
+              content: const Text('Your message has been sent successfully. Would you like to view it in the chat list?'),
               actions: [
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  child: Text('Stay Here'),
+                  child: const Text('Stay Here'),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -172,12 +172,12 @@ class _ChatFormDialogState extends State<ChatFormDialog> {
                         print('🔄 Chat form dialog - Navigating to user dashboard chat tab and refreshing');
                       }
                       // Add a small delay to ensure navigation completes
-                      Future.delayed(Duration(milliseconds: 500), () {
+                      Future.delayed(const Duration(milliseconds: 500), () {
                         widget.onMessageSent?.call();
                       });
                     });
                   },
-                  child: Text('View Chat'),
+                  child: const Text('View Chat'),
                 ),
               ],
             ),
@@ -297,11 +297,11 @@ class _ChatFormDialogState extends State<ChatFormDialog> {
                     hintText: AppStrings.getString('typeMessage', lang),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.r),
-                      borderSide: BorderSide(color: AppColors.border),
+                      borderSide: const BorderSide(color: AppColors.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.r),
-                      borderSide: BorderSide(color: AppColors.primary),
+                      borderSide: const BorderSide(color: AppColors.primary),
                     ),
                     contentPadding: EdgeInsets.all(12.w),
                   ),
@@ -348,7 +348,7 @@ class _ChatFormDialogState extends State<ChatFormDialog> {
                         onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
                         style: OutlinedButton.styleFrom(
                           padding: EdgeInsets.symmetric(vertical: 12.h),
-                          side: BorderSide(color: AppColors.border),
+                          side: const BorderSide(color: AppColors.border),
                         ),
                         child: Text(
                           AppStrings.getString('cancel', lang),
@@ -371,7 +371,7 @@ class _ChatFormDialogState extends State<ChatFormDialog> {
                             ? SizedBox(
                                 width: 16.w,
                                 height: 16.w,
-                                child: CircularProgressIndicator(
+                                child: const CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                 ),

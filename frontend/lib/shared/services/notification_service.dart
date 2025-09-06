@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../../core/constants/api_config.dart';
 import 'auth_service.dart';
@@ -98,34 +97,15 @@ class NotificationService {
 
   // Get unread count
   Future<Map<String, dynamic>> getUnreadCount() async {
-    try {
-      final uri = Uri.parse('$_baseUrl/notifications/unread-count');
-
-      if (kDebugMode) {
-        print('🔔 Fetching unread count from: $uri');
-        print('🔔 Headers: $_authHeaders');
-      }
-
-      final response = await http.get(
-        uri,
-        headers: _authHeaders,
-      );
-
-      if (kDebugMode) {
-        print('🔔 Response status: ${response.statusCode}');
-        print('🔔 Response body: ${response.body}');
-      }
-
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      } else {
-        throw Exception('Failed to fetch unread count: ${response.statusCode}');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('🔔 Error fetching unread count: $e');
-      }
-      throw Exception('Network error: $e');
+    final uri = Uri.parse('$_baseUrl/notifications/unread-count');
+    final response = await http.get(
+      uri,
+      headers: _authHeaders,
+    );
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to fetch unread count: ${response.statusCode}');
     }
   }
 
@@ -215,12 +195,7 @@ class NotificationService {
     // Use provided AuthService instance or create new one
     final authService = _authService ?? AuthService();
     final token = authService.token;
-    
-    if (kDebugMode) {
-      print('🔑 Notification service - Token: ${token != null ? 'Present' : 'Missing'}');
-      print('🔑 Using AuthService instance: ${_authService != null ? 'Provided' : 'New'}');
-    }
-    
+
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',

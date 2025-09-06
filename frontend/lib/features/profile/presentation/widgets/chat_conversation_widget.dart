@@ -207,7 +207,7 @@ class _ChatConversationWidgetState extends State<ChatConversationWidget> {
   Widget _buildChatHeader(LanguageService languageService) {
     return Container(
       padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.white,
         border: Border(
           bottom: BorderSide(color: AppColors.border, width: 1),
@@ -217,7 +217,7 @@ class _ChatConversationWidgetState extends State<ChatConversationWidget> {
         children: [
           if (widget.showBackButton)
             IconButton(
-              icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+              icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
               onPressed: widget.onBack ?? () {},
               tooltip: languageService.isArabic ? 'رجوع' : 'Back',
             )
@@ -294,7 +294,7 @@ class _ChatConversationWidgetState extends State<ChatConversationWidget> {
             SizedBox(height: 16.h),
             ElevatedButton(
               onPressed: _loadMessages,
-              child: Text('Retry'),
+              child: const Text('Retry'),
             ),
           ],
         ),
@@ -433,7 +433,7 @@ class _ChatConversationWidgetState extends State<ChatConversationWidget> {
     return Container(
       // Reduce inner gutters while keeping comfortable touch targets
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.white,
         border: Border(
           top: BorderSide(color: AppColors.border, width: 1),
@@ -445,7 +445,7 @@ class _ChatConversationWidgetState extends State<ChatConversationWidget> {
             onPressed: () {
               // TODO: Add file attachment functionality
             },
-            icon: Icon(Icons.attach_file, color: AppColors.textSecondary),
+            icon: const Icon(Icons.attach_file, color: AppColors.textSecondary),
           ),
           // Proper keyboard handling: Enter to send, Shift+Enter for newline
           Expanded(
@@ -497,12 +497,12 @@ class _ChatConversationWidgetState extends State<ChatConversationWidget> {
                 ? SizedBox(
                     width: 20.w,
                     height: 20.w,
-                    child: CircularProgressIndicator(
+                    child: const CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                     ),
                   )
-                : Icon(Icons.send, color: AppColors.primary),
+                : const Icon(Icons.send, color: AppColors.primary),
           ),
         ],
       ),

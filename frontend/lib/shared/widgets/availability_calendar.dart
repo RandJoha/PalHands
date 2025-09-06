@@ -18,7 +18,7 @@ class AvailabilityCalendar extends StatelessWidget {
     DateTime cursor = first;
     // Fill leading empty days
     final startWeekday = (cursor.weekday % 7); // 0=Sun
-    List<_DayCell> current = List.generate(startWeekday, (_) => _DayCell.empty());
+    List<_DayCell> current = List.generate(startWeekday, (_) => const _DayCell.empty());
 
     while (cursor.isBefore(last.add(const Duration(days: 1)))) {
       final key = _dateKey(cursor);
@@ -27,8 +27,8 @@ class AvailabilityCalendar extends StatelessWidget {
       current.add(_DayCell(
         date: cursor,
         enabled: has,
-        badge: has ? rd!.slots.length : 0,
-        onTap: has ? () => onSelect(_SlotRef(date: cursor, slots: rd!.slots)) : null,
+        badge: has ? rd.slots.length : 0,
+        onTap: has ? () => onSelect(_SlotRef(date: cursor, slots: rd.slots)) : null,
       ));
       if (current.length == 7) {
         weeks.add(current);
@@ -38,7 +38,9 @@ class AvailabilityCalendar extends StatelessWidget {
     }
     if (current.isNotEmpty) {
       // trailing blanks
-      while (current.length < 7) current.add(_DayCell.empty());
+      while (current.length < 7) {
+        current.add(const _DayCell.empty());
+      }
       weeks.add(current);
     }
 
@@ -47,7 +49,7 @@ class AvailabilityCalendar extends StatelessWidget {
       children: [
         _WeekHeader(),
         const SizedBox(height: 8),
-        ...weeks.map((w) => Row(children: w.map((c) => Expanded(child: c)).toList())).toList(),
+        ...weeks.map((w) => Row(children: w.map((c) => Expanded(child: c)).toList())),
       ],
     );
   }

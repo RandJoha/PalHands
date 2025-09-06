@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_fonts/google_fonts.dart';
+// screenutil/google_fonts not used in this widget
 import 'package:provider/provider.dart';
 import 'dart:async';
 import '../../../../../core/constants/app_colors.dart';
@@ -12,15 +11,14 @@ import '../../../../../shared/widgets/booking_dialog.dart';
 import '../../../../../shared/services/responsive_service.dart';
 import '../../../../../shared/services/provider_service.dart';
 import '../../../../../shared/models/provider.dart';
-import '../../../../../shared/services/chat_service.dart';
-import '../../../../../shared/models/chat.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import '../../../../../shared/services/category_selection_store.dart';
-import '../../../../profile/presentation/widgets/chat_conversation_widget.dart';
+// chat conversation not used directly here
 import '../../../../../shared/services/auth_service.dart';
 import 'package:flutter/foundation.dart';
 import '../../../../../shared/widgets/chat_form_dialog.dart';
+import '../../../../../shared/services/services_service.dart' as svc;
 
 class MobileCategoryWidget extends StatefulWidget {
   const MobileCategoryWidget({super.key});
@@ -44,7 +42,8 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
   String? _error;
   List<ProviderModel> _providers = const [];
   final _providerService = ProviderService();
-  final _chatService = ChatService();
+  // Chat is opened via ChatFormDialog directly; no direct ChatService use needed here
+  final svc.ServicesService _servicesService = svc.ServicesService();
   
   // Performance optimization: debounce API calls
   Timer? _debounceTimer;
@@ -205,7 +204,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                 _buildLabeled(
                   AppStrings.getString('sort', languageService.currentLanguage),
                   DropdownButton<String>(
-                    value: _sortBy + '_' + _sortOrder,
+                    value: '${_sortBy}_$_sortOrder',
                     items: [
                       DropdownMenuItem(value: 'rating_desc', child: Text('${AppStrings.getString('rating', languageService.currentLanguage)} ↓')),
                       DropdownMenuItem(value: 'rating_asc', child: Text('${AppStrings.getString('rating', languageService.currentLanguage)} ↑')),
@@ -348,7 +347,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                               setSheetState(() {});
                             },
                           );
-                        }).toList(),
+                        }),
                         const SizedBox(height: 8),
                       ],
                     ),
@@ -1230,6 +1229,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
   }
 
   Widget _buildProviderTile(ProviderModel p, String lang) {
+  final servicesFuture = _servicesService.getServicesByProvider(p.id);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -1274,7 +1274,14 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                         ],
                       ],
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
+                    // Languages under provider name (global to provider)
+                    Row(children: [
+                      const Icon(Icons.language, size: 14, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Flexible(child: Text(_localizedLanguages(p.languages, lang).join(', '), style: TextStyle(color: Colors.grey.shade700, fontSize: 12))),
+                    ]),
+                    const SizedBox(height: 4),
                     Row(children: [
                       const Icon(Icons.location_on, size: 14, color: Colors.grey),
                       const SizedBox(width: 4),
@@ -1293,26 +1300,51 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
             ],
           ),
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 6,
-            children: () {
-              final maxVisible = 3;
-              final visible = p.services.take(maxVisible).toList();
-              final extras = p.services.length - visible.length;
-              final chips = <Widget>[];
-              chips.addAll(visible.map((s) => Chip(label: Text(AppStrings.getString(s, lang), style: const TextStyle(fontSize: 11)))));
-              if (extras > 0) {
-                final hidden = p.services.skip(maxVisible).take(12).map((s) => AppStrings.getString(s, lang)).toList();
-                final tooltip = hidden.join(', ');
-                chips.add(Tooltip(
-                  message: tooltip,
-                  waitDuration: const Duration(milliseconds: 300),
-                  child: Chip(label: Text('+$extras', style: const TextStyle(fontSize: 11))),
-                ));
+          // Dynamic per-service list with price and years
+          FutureBuilder<List<svc.ServiceModel>>(
+            future: servicesFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const LinearProgressIndicator(minHeight: 2);
               }
-              return chips;
-            }(),
+              final services = snapshot.data ?? const <svc.ServiceModel>[];
+              if (services.isEmpty) {
+                // Show minimal summary when no per-service docs
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    _kv(Icons.work_history, '${p.experienceYears} ${AppStrings.getString('years', lang)}'),
+                    _kv(Icons.attach_money, '${p.hourlyRate.toStringAsFixed(0)} ${AppStrings.getString('hourly', lang)}'),
+                  ],
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ...services.take(8).map((s) {
+                    final amount = s.price.amount.toStringAsFixed(0);
+                    final unit = AppStrings.getString('hourly', lang);
+                    final exp = s.experienceYears ?? p.experienceYears;
+                    final yrs = lang == 'ar' ? AppStrings.getString('years', lang) : 'yrs';
+                    final title = s.title.isNotEmpty ? s.title : AppStrings.getString(s.slug, lang);
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.check_circle, size: 14, color: Colors.green),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text('$title — ₪$amount/$unit · $exp $yrs',
+                                style: const TextStyle(fontSize: 13), overflow: TextOverflow.ellipsis),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 10),
           Row(
@@ -1350,14 +1382,6 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                 style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12)),
                 label: Text(AppStrings.getString('chat', lang)),
               ),
-              // Debug button for authentication testing
-              if (kDebugMode)
-                OutlinedButton.icon(
-                  onPressed: () => _debugAuthStatus(),
-                  icon: const Icon(Icons.bug_report, size: 18),
-                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12)),
-                  label: const Text('Debug Auth'),
-                ),
             ],
           )
         ],
@@ -1376,6 +1400,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
     );
   }
 
+  // Removed _debugAuthStatus helper
   // Language localization for display purposes without altering provider names
   List<String> _localizedLanguages(List<String> langs, String langCode) {
     final arMap = {
@@ -1486,16 +1511,16 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
           context: context,
           barrierDismissible: false,
           builder: (context) => AlertDialog(
-            title: Text('Login Required'),
-            content: Text('You need to be logged in to chat with providers. Would you like to login now?'),
+            title: const Text('Login Required'),
+            content: const Text('You need to be logged in to chat with providers. Would you like to login now?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: Text('Cancel'),
+                child: const Text('Cancel'),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: Text('Login'),
+                child: const Text('Login'),
               ),
             ],
           ),
@@ -1555,33 +1580,4 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
     }
   }
 
-  void _debugAuthStatus() {
-    final authService = Provider.of<AuthService>(context, listen: false);
-    if (kDebugMode) {
-      print('🔍 Debug Auth Status:');
-      print('  - Is authenticated: ${authService.isAuthenticated}');
-      print('  - Token present: ${authService.token != null}');
-      print('  - Token length: ${authService.token?.length ?? 0}');
-      print('  - Current user: ${authService.currentUser?['email'] ?? 'None'}');
-      if (authService.token != null) {
-        print('  - Token preview: ${authService.token!.substring(0, 30)}...');
-      }
-    }
-    
-    if (authService.isAuthenticated) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('✅ Authenticated as: ${authService.currentUser?['email'] ?? 'Unknown'}'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('❌ User is NOT authenticated.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
 } 

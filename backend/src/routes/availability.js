@@ -18,7 +18,28 @@ const upsertSchema = celebrate({
       saturday: Joi.array().items(timeWindow).default([]),
       sunday: Joi.array().items(timeWindow).default([])
     }).required(),
-    exceptions: Joi.array().items(Joi.object({ date: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).required(), windows: Joi.array().items(timeWindow).default([]) })).default([])
+    exceptions: Joi.array().items(
+      Joi.object({
+        date: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).required(),
+        windows: Joi.array().items(timeWindow).default([])
+      })
+    ).default([]),
+    // Optional emergency schedule channels
+    emergencyWeekly: Joi.object({
+      monday: Joi.array().items(timeWindow).default([]),
+      tuesday: Joi.array().items(timeWindow).default([]),
+      wednesday: Joi.array().items(timeWindow).default([]),
+      thursday: Joi.array().items(timeWindow).default([]),
+      friday: Joi.array().items(timeWindow).default([]),
+      saturday: Joi.array().items(timeWindow).default([]),
+      sunday: Joi.array().items(timeWindow).default([])
+    }).default({}),
+    emergencyExceptions: Joi.array().items(
+      Joi.object({
+        date: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).required(),
+        windows: Joi.array().items(timeWindow).default([])
+      })
+    ).default([])
   })
 });
 

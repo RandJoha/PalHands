@@ -91,7 +91,7 @@ class ProviderService with BaseApiService {
       }
       final List<dynamic> providersData = (raw is List) ? raw : <dynamic>[];
 
-      if (kDebugMode) {
+      if (kDebugMode && ApiConfig.enableLogging) {
         print('🏢 Fetched providers: ${providersData.length} items');
       }
       var list = providersData
@@ -161,7 +161,7 @@ class ProviderService with BaseApiService {
         headers: _authHeaders,
       );
 
-      if (kDebugMode) {
+      if (kDebugMode && ApiConfig.enableLogging) {
         print('🏢 Fetched provider: $providerId');
       }
 
@@ -216,7 +216,7 @@ class ProviderService with BaseApiService {
       }
       final List<dynamic> providersData = (raw is List) ? raw : <dynamic>[];
 
-      if (kDebugMode) {
+      if (kDebugMode && ApiConfig.enableLogging) {
         print('🏢 Fetched providers for category $category: ${providersData.length} items');
       }
       return providersData

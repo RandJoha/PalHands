@@ -1,54 +1,84 @@
 const mongoose = require('mongoose');
 
-// Reuse a simple time window schema (HH:mm strings in provider timezone)
+// Service-level weekly override schema (optional)
 const timeWindowSchema = new mongoose.Schema({ start: String, end: String }, { _id: false });
-
 const weeklySchema = new mongoose.Schema({
-  monday: [timeWindowSchema],
-  tuesday: [timeWindowSchema],
-  wednesday: [timeWindowSchema],
-  thursday: [timeWindowSchema],
-  friday: [timeWindowSchema],
-  saturday: [timeWindowSchema],
-  sunday: [timeWindowSchema]
+	monday: [timeWindowSchema],
+	tuesday: [timeWindowSchema],
+	wednesday: [timeWindowSchema],
+	thursday: [timeWindowSchema],
+	friday: [timeWindowSchema],
+	saturday: [timeWindowSchema],
+	sunday: [timeWindowSchema]
+}, { _id: false });
+
+const exceptionSchema = new mongoose.Schema({
+	date: { type: String, required: true }, // YYYY-MM-DD
+	windows: [timeWindowSchema] // empty => unavailable all day
+}, { _id: false });
+
+const deactivationBatchSchema = new mongoose.Schema({
+	batchId: { type: String, required: true },
+	fromDate: { type: String, required: true }, // YYYY-MM-DD
+	toDate: { type: String, required: true },   // YYYY-MM-DD inclusive
+	reason: { type: String, default: 'manual_deactivation' },
+	createdAt: { type: Date, default: Date.now }
 }, { _id: false });
 
 const providerServiceSchema = new mongoose.Schema({
-  provider: { type: mongoose.Schema.Types.ObjectId, ref: 'Provider', required: true, index: true },
-  // Reference to catalog Service (optional for now due to legacy string-based services)
-  service: { type: mongoose.Schema.Types.ObjectId, ref: 'Service', required: false, index: true },
-  // Legacy/compat: key used in Provider.services (e.g., 'homeCleaning')
-  serviceKey: { type: String, required: true, index: true },
-  serviceTitle: { type: String, default: '' }, // denormalized for quick display
-  category: { type: String, default: '' },
+	provider: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+	service: { type: mongoose.Schema.Types.ObjectId, ref: 'Service', required: true },
 
-  // Provider-specific settings
-  hourlyRate: { type: Number, required: true, min: 0 },
-  experienceYears: { type: Number, required: true, min: 0 },
+	// Per-service configuration
+	hourlyRate: { type: Number, required: false, min: 0 },
+	experienceYears: { type: Number, required: false, min: 0 },
+	emergencyEnabled: { type: Boolean, default: false },
+	emergencyLeadTimeMinutes: { type: Number, default: 0 },
 
-  // Publication & lifecycle
-  status: { type: String, enum: ['active', 'inactive', 'deleted'], default: 'inactive', index: true },
-  isPublished: { type: Boolean, default: false, index: true },
+	// Optional per-service availability overrides (base comes from Availability model)
+	weeklyOverrides: { type: weeklySchema, default: undefined },
+	exceptionOverrides: { type: [exceptionSchema], default: undefined },
 
-  // Emergency
-  emergencyEnabled: { type: Boolean, default: false },
-  emergencyTypes: [{ type: String }],
+	// Optional per-service emergency-only additive overrides
+	emergencyWeeklyOverrides: { type: weeklySchema, default: undefined },
+	emergencyExceptionOverrides: { type: [exceptionSchema], default: undefined },
 
-  // Optional per-service availability override
-  timezone: { type: String, default: 'Asia/Jerusalem' },
-  weekly: { type: weeklySchema, default: undefined },
-  emergencyWeekly: { type: weeklySchema, default: undefined },
-  exceptions: [{
-    date: { type: String, required: true }, // YYYY-MM-DD in provider TZ
-    windows: [timeWindowSchema] // empty means unavailable
-  }],
-  emergencyExceptions: [{
-    date: { type: String, required: true },
-    windows: [timeWindowSchema]
-  }]
-}, { timestamps: true });
+	// Admin/moderation & lifecycle
+	status: { type: String, enum: ['draft','active','inactive','deleted'], default: 'draft' },
+	publishable: { type: Boolean, default: false },
+	publishedAt: { type: Date, default: null },
+	completenessScore: { type: Number, default: 0 },
 
-// Each provider can have at most one entry per serviceKey
-providerServiceSchema.index({ provider: 1, serviceKey: 1 }, { unique: true });
+	// Deactivation bookkeeping (reactivation restores last batch only)
+	deactivationBatches: { type: [deactivationBatchSchema], default: [] },
+	lastDeactivationBatchId: { type: String, default: null },
+
+	createdAt: { type: Date, default: Date.now },
+	updatedAt: { type: Date, default: Date.now }
+});
+
+providerServiceSchema.index({ provider: 1, service: 1 }, { unique: true });
+providerServiceSchema.index({ provider: 1, status: 1, publishable: 1 });
+providerServiceSchema.index({ service: 1, status: 1, publishable: 1 });
+
+providerServiceSchema.pre('save', function(next) {
+	this.updatedAt = Date.now();
+	// Compute publishable and score
+	let score = 0;
+	if (Number.isFinite(this.hourlyRate) && this.hourlyRate > 0) score += 35;
+	if (Number.isFinite(this.experienceYears) && this.experienceYears >= 0) score += 25;
+	// Availability considered if overrides provided, otherwise rely on global provider availability
+	const hasAvailability = (this.weeklyOverrides && Object.values(this.weeklyOverrides.toObject() || {}).some(arr => (arr||[]).length > 0))
+		|| (Array.isArray(this.exceptionOverrides) && this.exceptionOverrides.length > 0);
+	if (hasAvailability) score += 25; // bonus when service override exists
+	// Emergency is optional, not required to publish
+	if (this.emergencyEnabled) score += 5;
+	this.completenessScore = score;
+	const requiredOk = Number.isFinite(this.hourlyRate) && this.hourlyRate > 0
+		&& Number.isFinite(this.experienceYears) && this.experienceYears >= 0;
+	this.publishable = !!requiredOk;
+	if (this.publishable && this.status === 'active' && !this.publishedAt) this.publishedAt = new Date();
+	next();
+});
 
 module.exports = mongoose.model('ProviderService', providerServiceSchema);

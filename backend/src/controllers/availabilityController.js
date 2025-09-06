@@ -16,8 +16,36 @@ async function getAvailability(req, res) {
 async function upsertAvailability(req, res) {
   try {
     const providerId = req.params.providerId;
-    const data = { ...req.body, provider: providerId };
-    const a = await Availability.findOneAndUpdate({ provider: providerId }, data, { upsert: true, new: true, setDefaultsOnInsert: true });
+    const normWeekly = (w) => {
+      const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+      const out = {};
+      const src = (w && typeof w === 'object') ? w : {};
+      for (const d of days) {
+        const arr = Array.isArray(src[d]) ? src[d] : [];
+        out[d] = arr.filter(Boolean).map(x => ({
+          start: String((x && x.start) || ''),
+          end: String((x && x.end) || '')
+        })).filter(w => w.start && w.end);
+      }
+      return out;
+    };
+    const normExceptions = (list) => {
+      const src = Array.isArray(list) ? list : [];
+      return src.map(e => ({
+        date: String((e && e.date) || ''),
+        windows: Array.isArray(e && e.windows) ? e.windows.map(w => ({ start: String(w.start||''), end: String(w.end||'') })).filter(w => w.start && w.end) : []
+      })).filter(e => e.date);
+    };
+
+    const data = {
+      provider: providerId,
+      timezone: req.body && req.body.timezone ? String(req.body.timezone) : 'Asia/Jerusalem',
+      weekly: normWeekly(req.body && req.body.weekly),
+      emergencyWeekly: normWeekly(req.body && req.body.emergencyWeekly),
+      exceptions: normExceptions(req.body && req.body.exceptions),
+      emergencyExceptions: normExceptions(req.body && req.body.emergencyExceptions),
+    };
+    const a = await Availability.findOneAndUpdate({ provider: providerId }, { $set: data }, { upsert: true, new: true, setDefaultsOnInsert: true });
     return ok(res, a, 'Availability saved');
   } catch (e) {
     return error(res, 400, e.message || 'Failed to save availability');
@@ -56,97 +84,133 @@ async function getResolvedAvailability(req, res) {
       to = from.plus({ days: 62 });
     }
 
-    // Ensure provider supports emergency if requested
+    // Ensure provider supports emergency if requested (use ProviderService flags)
     if (isEmergency) {
       try {
-        const Service = require('../models/Service');
+        const ProviderService = require('../models/ProviderService');
         const sid = (req.query.serviceId || '').toString();
-        const q = { provider: providerId, emergencyEnabled: true };
-        const has = sid && sid.length === 24
-          ? await Service.exists({ _id: sid, ...q })
-          : await Service.exists(q);
-        if (!has) return ok(res, { timezone: 'Asia/Jerusalem', step, days: [] });
+        if (sid && sid.length === 24) {
+          const ps = await ProviderService.findOne({ provider: providerId, service: sid })
+            .select('status publishable emergencyEnabled');
+          if (!ps || ps.status !== 'active' || ps.publishable !== true || ps.emergencyEnabled !== true) {
+            return ok(res, { timezone: 'Asia/Jerusalem', step, days: [] });
+          }
+        } else {
+          const psAny = await ProviderService.exists({ provider: providerId, status: 'active', publishable: true, emergencyEnabled: true });
+          if (!psAny) return ok(res, { timezone: 'Asia/Jerusalem', step, days: [] });
+        }
       } catch (_) {
         return ok(res, { timezone: 'Asia/Jerusalem', step, days: [] });
       }
     }
 
-    // Load availability
+    // Optional: service-specific gating (only expose slots if ProviderService is active+publishable when serviceId provided)
+    const ProviderService = require('../models/ProviderService');
+    const pid = (req.query.serviceId || '').toString();
+    if (pid && pid.length === 24) {
+      try {
+        const ps = await ProviderService.findOne({ provider: providerId, service: pid });
+        if (!ps || ps.status !== 'active' || ps.publishable !== true) {
+          return ok(res, { timezone: 'Asia/Jerusalem', step, days: [] });
+        }
+      } catch (_) {}
+    }
+
+    // Load availability + optional provider-service overrides
     const a = await Availability.findOne({ provider: providerId });
-  const tz = a?.timezone || 'Asia/Jerusalem';
-  // Build weekly windows and exceptions. For emergency mode we merge normal weekly
-  // with emergencyWeekly so emergency includes all normal slots plus any extra
-  // emergency-only windows; similarly merge exceptions. Also append a small set
-  // of default late-night/early-morning emergency-only windows so short-notice
-  // emergency bookings can be offered even if provider didn't configure them.
-  const defaultEmergencyExtras = [
-    { start: '00:00', end: '06:00' }, // early-morning
-    { start: '22:00', end: '23:59' }  // late-night
-  ];
-
-  const weekly = (() => {
-    const base = a?.weekly || {};
-    if (!isEmergency) return base;
-    const emerg = a?.emergencyWeekly || {};
-    const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
-    const merged = {};
-    for (const d of days) {
-      const b = Array.isArray(base[d]) ? base[d].map(w => ({ start: w.start, end: w.end })) : [];
-      const e = Array.isArray(emerg[d]) ? emerg[d].map(w => ({ start: w.start, end: w.end })) : [];
-      // combine base + emergency windows + default extras (avoid duplicates by string)
-      const combined = [...b, ...e, ...defaultEmergencyExtras];
-      const seen = new Set();
-      merged[d] = combined.filter(w => {
-        const k = `${w.start}-${w.end}`;
-        if (seen.has(k)) return false;
-        seen.add(k);
-        return true;
-      });
+    const tz = a?.timezone || 'Asia/Jerusalem';
+    let psDoc = null;
+    const sidForMerge = (req.query.serviceId || '').toString();
+    if (sidForMerge && sidForMerge.length === 24) {
+      try {
+        psDoc = await ProviderService.findOne({ provider: providerId, service: sidForMerge })
+          .select('weeklyOverrides exceptionOverrides emergencyWeeklyOverrides emergencyExceptionOverrides');
+      } catch (_) { psDoc = null; }
     }
-    return merged;
-  })();
+    // Build weekly windows and exceptions. For emergency mode we merge normal weekly
+    // with emergencyWeekly (if present) and additive per-service emergency overrides.
+    // No implicit default time windows are added.
 
-  const exceptions = (() => {
-    const baseEx = Array.isArray(a?.exceptions) ? a.exceptions : [];
-    if (!isEmergency) return baseEx;
-    const emergEx = Array.isArray(a?.emergencyExceptions) ? a.emergencyExceptions : [];
-    // Merge exceptions by date, combining windows when a date appears in both lists.
-    const map = new Map();
-    for (const ex of [...baseEx, ...emergEx]) {
-      if (!ex || !ex.date) continue;
-      const existing = map.get(ex.date) || { date: ex.date, windows: [] };
-      const wins = Array.isArray(ex.windows) ? ex.windows.map(w => ({ start: w.start, end: w.end })) : [];
-      // append wins, avoid duplicates
-      const seen = new Set(existing.windows.map(w => `${w.start}-${w.end}`));
-      for (const w of wins) {
-        const k = `${w.start}-${w.end}`;
-        if (!seen.has(k)) { existing.windows.push(w); seen.add(k); }
+    const weekly = (() => {
+      const base = a?.weekly || {};
+      const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+      const merged = {};
+      for (const d of days) {
+        const b = Array.isArray(base[d]) ? base[d].map(w => ({ start: w.start, end: w.end })) : [];
+        // per-service normal overrides replace base for that day if provided (complete schedule)
+        const o = psDoc && psDoc.weeklyOverrides && Array.isArray(psDoc.weeklyOverrides[d])
+          ? psDoc.weeklyOverrides[d].map(w => ({ start: w.start, end: w.end }))
+          : null;
+        let combined = o ? o : b; // Use override if present, otherwise use base
+        if (isEmergency) {
+          const emerg = a?.emergencyWeekly || {};
+          const e = Array.isArray(emerg[d]) ? emerg[d].map(w => ({ start: w.start, end: w.end })) : [];
+          const eo = psDoc && psDoc.emergencyWeeklyOverrides && Array.isArray(psDoc.emergencyWeeklyOverrides[d])
+            ? psDoc.emergencyWeeklyOverrides[d].map(w => ({ start: w.start, end: w.end }))
+            : [];
+          combined = [...combined, ...e, ...eo]; // Add emergency slots on top
+        }
+        const seen = new Set();
+        merged[d] = combined.filter(w => {
+          const k = `${w.start}-${w.end}`;
+          if (seen.has(k)) return false;
+          seen.add(k);
+          return true;
+        });
       }
-      map.set(ex.date, existing);
-    }
-    return Array.from(map.values());
-  })();
+      return merged;
+    })();
 
-    // Determine lead threshold for emergency vs normal
-    // Normal bookings use the global MIN_LEAD (default 48h). Emergency defaults
-    // to a short-notice 120 minutes but will be overridden by the service setting
-    // if present on the Service document.
+    const exceptions = (() => {
+      const baseEx = Array.isArray(a?.exceptions) ? a.exceptions : [];
+      const map = new Map();
+      const addList = (list) => {
+        for (const ex of list || []) {
+          if (!ex || !ex.date) continue;
+          const existing = map.get(ex.date) || { date: ex.date, windows: [] };
+          const wins = Array.isArray(ex.windows) ? ex.windows.map(w => ({ start: w.start, end: w.end })) : [];
+          const seen = new Set(existing.windows.map(w => `${w.start}-${w.end}`));
+          for (const w of wins) {
+            const k = `${w.start}-${w.end}`;
+            if (!seen.has(k)) { existing.windows.push(w); seen.add(k); }
+          }
+          map.set(ex.date, existing);
+        }
+      };
+      // base exceptions
+      addList(baseEx);
+      // per-service normal overrides
+      if (psDoc && Array.isArray(psDoc.exceptionOverrides)) addList(psDoc.exceptionOverrides);
+      if (isEmergency) {
+        const emergEx = Array.isArray(a?.emergencyExceptions) ? a.emergencyExceptions : [];
+        addList(emergEx);
+        if (psDoc && Array.isArray(psDoc.emergencyExceptionOverrides)) addList(psDoc.emergencyExceptionOverrides);
+      }
+      return Array.from(map.values());
+    })();
+
+  // Determine lead threshold for emergency vs normal
+  // Normal bookings use the global MIN_LEAD (default 48h). Emergency defaults
+  // to 0 minutes (same-day allowed) but will be overridden by ProviderService
+  // (preferred) or Service document (fallback) when available.
     let leadMinutes = MIN_LEAD;
     if (isEmergency) {
-      leadMinutes = 120; // emergency default (2 hours)
+      leadMinutes = 0;
       try {
+        const ProviderService = require('../models/ProviderService');
         const Service = require('../models/Service');
-        const q = { provider: providerId, emergencyEnabled: true };
         const sid = (req.query.serviceId || '').toString();
-        let svc = null;
         if (sid && sid.length === 24) {
-          svc = await Service.findOne({ _id: sid, ...q }).select('emergencyLeadTimeMinutes');
-        }
-        if (!svc) {
-          svc = await Service.findOne(q).select('emergencyLeadTimeMinutes');
-        }
-        if (svc && Number.isFinite(svc.emergencyLeadTimeMinutes)) {
-          leadMinutes = Math.max(0, svc.emergencyLeadTimeMinutes);
+          const ps = await ProviderService.findOne({ provider: providerId, service: sid })
+            .select('emergencyLeadTimeMinutes');
+          if (ps && Number.isFinite(ps.emergencyLeadTimeMinutes)) {
+            leadMinutes = Math.max(0, ps.emergencyLeadTimeMinutes);
+          } else {
+            const svc = await Service.findById(sid).select('emergencyLeadTimeMinutes');
+            if (svc && Number.isFinite(svc.emergencyLeadTimeMinutes)) {
+              leadMinutes = Math.max(0, svc.emergencyLeadTimeMinutes);
+            }
+          }
         }
       } catch (_) {}
     }
@@ -175,11 +239,7 @@ async function getResolvedAvailability(req, res) {
         const dayName = cursor.toFormat('cccc').toLowerCase();
         windows = (weekly?.[dayName] || []).map(w => ({ start: w.start, end: w.end }));
       }
-      // If emergency and windows are empty after falling back, provide a minimal short-notice window late-night
-      if (isEmergency && (!windows || windows.length === 0)) {
-        // Provide a narrow window from 22:00-23:59 as a final fallback
-        windows = [{ start: '22:00', end: '23:59' }];
-      }
+  // No implicit windows if empty; providers must configure availability in dashboard
       if (!windows.length) {
         // Even if no available windows, we may still expose booked slots for clarity
         // Compute booked step slots intersecting this day (not clipped to windows)
@@ -241,7 +301,7 @@ async function getResolvedAvailability(req, res) {
         return Interval.fromDateTimes(start, iv.end);
       }).filter(Boolean).filter(iv => iv.length('minutes') > 0);
 
-      // Discretize into step-minute slots (start..start+step)
+  // Discretize into step-minute slots (start..start+step)
       const slots = [];
       for (const iv of free) {
         let s = iv.start;

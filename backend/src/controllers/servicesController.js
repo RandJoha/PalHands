@@ -15,7 +15,18 @@ async function listServices(req, res) {
 
     const filter = { isActive: true };
     if (category) filter.category = category;
-    if (providerId) filter.provider = providerId;
+    if (providerId) {
+      filter.provider = providerId;
+      // Telemetry: mark usage of deprecated providerId flow on /services
+      try { res.set('X-Deprecated-Provider-Query', '1'); } catch (_) {}
+      // console.warn(`[DEPRECATION] /services?providerId=${providerId} used. Prefer /provider-services/public?providerId=...`);
+      // Optional feature flag: block legacy providerId path (safe default: off)
+      const usePublicOnly = String(process.env.USE_PROVIDER_SERVICES_PUBLIC_ONLY || 'false').toLowerCase() === 'true';
+      if (usePublicOnly) {
+        try { res.set('X-Deprecated-Provider-Query', 'blocked'); } catch (_) {}
+        return ok(res, { services: [], pagination: { current: 0, total: 0, totalRecords: 0 } }, 'Use /provider-services/public instead');
+      }
+    }
     if (area) filter['location.serviceArea'] = { $regex: area, $options: 'i' };
     if (q) filter.$text = { $search: q };
 
@@ -36,12 +47,13 @@ async function listServices(req, res) {
       }
     }
 
-    const qFilter = geoQuery ? { ...filter, ...geoQuery } : filter;
-    let services = await Service.find(qFilter)
+  const qFilter = geoQuery ? { ...filter, ...geoQuery } : filter;
+  let services = await Service.find(qFilter)
       .populate('provider', 'firstName lastName email rating')
       .sort({ featured: -1, 'rating.average': -1, createdAt: -1 })
       .skip(skip)
-      .limit(parseInt(limit));
+      .limit(parseInt(limit))
+      .lean();
     // Fallback: if no services found and caller filtered by providerId, try to resolve
     // provider.services (string IDs) and load those services (some providers reference
     // services by string ids instead of setting Service.provider).
@@ -59,7 +71,8 @@ async function listServices(req, res) {
               .populate('provider', 'firstName lastName email rating')
               .sort({ featured: -1, 'rating.average': -1, createdAt: -1 })
               .skip(skip)
-              .limit(parseInt(limit));
+              .limit(parseInt(limit))
+              .lean();
           }
         }
       } catch (_) {
@@ -67,7 +80,45 @@ async function listServices(req, res) {
       }
     }
 
-    const total = await Service.countDocuments(qFilter);
+    // Gate by ProviderService publishable+active when providerId specified
+  if (providerId) {
+      try {
+        const ProviderService = require('../models/ProviderService');
+        const psDocs = await ProviderService
+          .find({ provider: providerId, status: 'active', publishable: true })
+          .select('service hourlyRate experienceYears emergencyEnabled emergencyLeadTimeMinutes')
+          .lean();
+        const allowedMap = new Map(psDocs.map(ps => [String(ps.service), ps]));
+        // Keep only services with an active+publishable ProviderService entry
+        services = services.filter(s => allowedMap.has(String(s._id)));
+        // Overlay ProviderService per-service fields (price.amount, experienceYears, emergency flags)
+        services = services.map(s => {
+          const ps = allowedMap.get(String(s._id));
+          if (ps) {
+            // Ensure price exists
+            s.price = s.price || { amount: 0, type: 'hourly', currency: 'ILS' };
+            if (Number.isFinite(ps.hourlyRate)) {
+              s.price.amount = ps.hourlyRate;
+            }
+            if (Number.isFinite(ps.experienceYears)) {
+              s.experienceYears = ps.experienceYears;
+            }
+            // Reflect per-provider emergency toggle and lead time when present
+            if (typeof ps.emergencyEnabled === 'boolean') {
+              s.emergencyEnabled = !!ps.emergencyEnabled;
+            }
+            if (Number.isFinite(ps.emergencyLeadTimeMinutes)) {
+              s.emergencyLeadTimeMinutes = ps.emergencyLeadTimeMinutes;
+            }
+          }
+          return s;
+        });
+      } catch (e) {
+        // If overlay fails, continue with original services list
+      }
+    }
+
+    const total = services.length; // simple total post-filter to avoid double queries
     const totalPages = Math.ceil(total / limit);
     const currentPage = totalPages ? parseInt(page) : 0;
 

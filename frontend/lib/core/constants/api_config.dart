@@ -55,6 +55,7 @@ class ApiConfig {
   static String get paymentsUrl => '$currentApiBaseUrl$paymentsEndpoint';
   static String get reviewsUrl => '$currentApiBaseUrl$reviewsEndpoint';
   static String get adminUrl => '$currentApiBaseUrl$adminEndpoint';
+  static String get baseUrl => currentApiBaseUrl; // convenience
   
   // Timeout configurations
   static const Duration connectionTimeout = Duration(seconds: 10);
@@ -71,7 +72,8 @@ class ApiConfig {
   };
   
   // Logging configuration
-  static bool get enableLogging => isDevelopment;
+  // Disable verbose network logging by default to keep console clean in dev
+  static bool get enableLogging => false;
   
   // File upload configurations
   static const int maxFileSize = 5 * 1024 * 1024; // 5MB

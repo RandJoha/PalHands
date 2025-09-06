@@ -2,6 +2,16 @@ import 'package:flutter/foundation.dart';
 import 'base_api_service.dart';
 import 'auth_service.dart';
 import '../../core/constants/api_config.dart';
+import 'provider_services_service.dart';
+
+// Private cache entry with absolute expiry time
+class _CacheEntry<T> {
+  final T value;
+  final DateTime expiresAt;
+  _CacheEntry({required this.value, Duration ttl = const Duration(minutes: 1)})
+      : expiresAt = DateTime.now().add(ttl);
+  bool get isExpired => DateTime.now().isAfter(expiresAt);
+}
 
 class ServiceModel {
   final String id;
@@ -11,6 +21,8 @@ class ServiceModel {
   final String category;
   final String? subcategory;
   final String providerId;
+  // Optional years of experience specific to this service (per provider-service)
+  final int? experienceYears;
   final PriceModel price;
   final LocationModel location;
   final List<String> images;
@@ -36,6 +48,7 @@ class ServiceModel {
     required this.category,
     this.subcategory,
     required this.providerId,
+  this.experienceYears,
     required this.price,
     required this.location,
     required this.images,
@@ -69,6 +82,8 @@ class ServiceModel {
         }
         return p?.toString() ?? '';
       }(),
+  // Prefer explicit per-service experience if provided; fallback-compatible with 'experience'
+  experienceYears: (json['experienceYears'] as num?)?.toInt() ?? (json['experience'] as num?)?.toInt(),
       price: PriceModel.fromJson(json['price'] ?? {}),
       location: LocationModel.fromJson(json['location'] ?? {}),
       images: (json['images'] as List?)?.map((e) => e['url']?.toString() ?? '').toList() ?? [],
@@ -112,6 +127,7 @@ class ServiceModel {
       'category': category,
       if (subcategory != null) 'subcategory': subcategory,
       'provider': providerId,
+  if (experienceYears != null) 'experienceYears': experienceYears,
       'price': price.toJson(),
       'location': location.toJson(),
       'images': images.map((url) => {'url': url}).toList(),
@@ -220,6 +236,16 @@ class ServicesService with BaseApiService {
   factory ServicesService() => _instance;
   ServicesService._internal();
 
+  // Notifier to trigger UI refreshes (e.g., Our Services cards) when provider
+  // services data changes (availability/emergency flags/rates etc.).
+  static final ValueNotifier<int> providerServicesVersion = ValueNotifier<int>(0);
+
+  // Simple in-memory cache for per-provider services to reduce duplicate requests
+  static const Duration _providerCacheTTL = Duration(seconds: 60);
+  final Map<String, _CacheEntry<List<ServiceModel>>> _providerServicesCache = {};
+  // Track in-flight requests to avoid issuing multiple identical GETs concurrently
+  final Map<String, Future<List<ServiceModel>>> _inflightProviderRequests = {};
+
   // Get authentication token from AuthService
   Map<String, String> get _authHeaders {
     final token = AuthService().token;
@@ -267,7 +293,7 @@ class ServicesService with BaseApiService {
       }
       final List<dynamic> servicesData = (raw is List) ? raw : <dynamic>[];
 
-      if (kDebugMode) {
+      if (kDebugMode && ApiConfig.enableLogging) {
         print('🛠️ Fetched services: ${servicesData.length} items');
       }
       return servicesData
@@ -289,7 +315,7 @@ class ServicesService with BaseApiService {
         headers: _authHeaders,
       );
 
-      if (kDebugMode) {
+      if (kDebugMode && ApiConfig.enableLogging) {
         print('🛠️ Fetched service: $serviceId');
       }
 
@@ -325,14 +351,92 @@ class ServicesService with BaseApiService {
     String providerId, {
     int? page,
     int? limit,
+    bool forceRefresh = false,
   }) async {
-    return getServices(
-      providerId: providerId,
-      page: page,
-      limit: limit,
-    );
+    // Serve from cache if present and not expired
+    if (!forceRefresh) {
+      final cached = _providerServicesCache[providerId];
+      if (cached != null && !cached.isExpired) {
+        return cached.value;
+      }
+    }
+
+    // Deduplicate in-flight request for same provider
+    final inflight = _inflightProviderRequests[providerId];
+    if (inflight != null) {
+      return inflight;
+    }
+
+    final future = () async {
+      // 1) Try new public aggregated endpoint first
+      try {
+        final publicItems = await ProviderServicesApi().listPublic(providerId);
+        if (publicItems.isNotEmpty) {
+          final mapped = publicItems.map((e) {
+            // Map flattened provider-service to ServiceModel-compatible shape
+            final pricing = (e['pricing'] as Map?) ?? const {};
+            final serviceId = (e['serviceId'] ?? e['id'] ?? '').toString();
+            return ServiceModel(
+              id: serviceId.isNotEmpty ? serviceId : (e['providerServiceId']?.toString() ?? ''),
+              slug: ServiceModel.generateSlug((e['title'] ?? '').toString()),
+              title: (e['title'] ?? '').toString(),
+              description: (e['description'] ?? '').toString(),
+              category: (e['category'] ?? '').toString(),
+              subcategory: (e['subcategory'] as String?),
+              providerId: providerId,
+              experienceYears: (e['experienceYears'] as num?)?.toInt(),
+              price: PriceModel.fromJson({
+                'amount': (pricing['amount'] as num?)?.toDouble() ?? 0.0,
+                'type': (pricing['type'] ?? 'hourly').toString(),
+                'currency': (pricing['currency'] ?? 'ILS').toString(),
+              }),
+              location: const LocationModel(serviceArea: '', radius: 10, onSite: true, remote: false),
+              images: const <String>[],
+              requirements: const <String>[],
+              equipment: const <String>[],
+              rating: const RatingModel(average: 0, count: 0),
+              totalBookings: 0,
+              isActive: true,
+              featured: false,
+              createdAt: DateTime.tryParse((e['createdAt'] ?? '').toString()) ?? DateTime.now(),
+              updatedAt: DateTime.tryParse((e['updatedAt'] ?? '').toString()) ?? DateTime.now(),
+              emergencyEnabled: ((e['emergency'] is Map) ? (e['emergency']['enabled'] ?? false) : false) as bool,
+              emergencyLeadTimeMinutes: ((e['emergency'] is Map) ? ((e['emergency']['leadTimeMinutes'] as num?)?.toInt() ?? 120) : 120),
+              emergencySurchargeType: ((e['emergency'] is Map) ? ((e['emergency']['surcharge']?['type'] ?? 'flat').toString()) : 'flat'),
+              emergencySurchargeAmount: ((e['emergency'] is Map) ? (((e['emergency']['surcharge']?['amount']) as num?)?.toDouble() ?? 0.0) : 0.0),
+              emergencyRateMultiplier: ((e['emergency'] is Map) ? ((e['emergency']['rateMultiplier'] as num?)?.toDouble() ?? 1.5) : 1.5),
+            );
+          }).toList();
+          // Cache and return
+          _providerServicesCache[providerId] = _CacheEntry(value: mapped, ttl: _providerCacheTTL);
+          return mapped;
+        }
+      } catch (_) {}
+
+      // 2) Fallback to legacy /services?providerId overlay endpoint
+      final list = await getServices(providerId: providerId, page: page, limit: limit);
+      if (list.isNotEmpty) {
+        _providerServicesCache[providerId] = _CacheEntry(value: list, ttl: _providerCacheTTL);
+      }
+      return list;
+    }().whenComplete(() {
+      _inflightProviderRequests.remove(providerId);
+    });
+
+    _inflightProviderRequests[providerId] = future;
+    return future;
   }
 
+  // Optional: allow clearing the cache, for example after mutations
+  void clearProviderServicesCache([String? providerId]) {
+    if (providerId == null) {
+      _providerServicesCache.clear();
+    } else {
+      _providerServicesCache.remove(providerId);
+    }
+  // Signal listeners (UI) to refetch
+  providerServicesVersion.value = providerServicesVersion.value + 1;
+  }
   /// Search services with text query
   Future<List<ServiceModel>> searchServices(
     String query, {
@@ -371,7 +475,7 @@ class ServicesService with BaseApiService {
       }
       final List<dynamic> servicesData = (raw is List) ? raw : <dynamic>[];
 
-      if (kDebugMode) {
+      if (kDebugMode && ApiConfig.enableLogging) {
         print('🛠️ Fetched featured services: ${servicesData.length} items');
       }
       final services = servicesData

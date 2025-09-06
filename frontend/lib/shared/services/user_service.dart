@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 
 import 'base_api_service.dart';
 import 'auth_service.dart';
@@ -18,9 +17,6 @@ class UserService with BaseApiService {
       final token = authService.token;
       
       if (kDebugMode) {
-        print('🔑 Auth token: ${token != null ? 'Present' : 'Missing'}');
-        print('🔑 Is authenticated: ${authService.isAuthenticated}');
-        print('🔑 Current user: ${authService.currentUser?['email'] ?? 'None'}');
       }
       
       if (token != null) {
@@ -61,10 +57,9 @@ class UserService with BaseApiService {
       // Exclude admin users - only show regular users and providers
       queryParams['excludeRole'] = 'admin';
 
-      final endpoint = '${ApiConfig.adminEndpoint}/users' +
-          (queryParams.isNotEmpty 
+      final endpoint = '${ApiConfig.adminEndpoint}/users${queryParams.isNotEmpty 
               ? '?${Uri(queryParameters: queryParams).query}' 
-              : '');
+              : ''}';
 
       // Use provided authService or fall back to default
       final headers = authService != null 
@@ -76,10 +71,9 @@ class UserService with BaseApiService {
       
       if (kDebugMode) {
         print('🌐 Making API call to: $endpoint');
-        print('🔑 Headers: $headers');
         print('🔍 Query parameters: $queryParams');
         if (authService != null) {
-          print('🔑 Using provided AuthService - Token: ${authService.token != null ? 'Present' : 'Missing'}');
+  // debug removed
         }
       }
       

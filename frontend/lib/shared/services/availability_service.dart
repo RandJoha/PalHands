@@ -16,8 +16,10 @@ class AvailabilityModel {
   final String timezone;
   final Map<String, List<TimeWindow>> weekly;
   final Map<String, List<TimeWindow>> exceptions;
+  final Map<String, List<TimeWindow>> emergencyWeekly;
+  final Map<String, List<TimeWindow>> emergencyExceptions;
 
-  AvailabilityModel({required this.timezone, required this.weekly, required this.exceptions});
+  AvailabilityModel({required this.timezone, required this.weekly, required this.exceptions, required this.emergencyWeekly, required this.emergencyExceptions});
 
   factory AvailabilityModel.fromJson(Map<String, dynamic> json) {
     final weekly = <String, List<TimeWindow>>{};
@@ -34,10 +36,26 @@ class AvailabilityModel {
       final list = (m['windows'] as List? )?.map((x) => TimeWindow.fromJson(Map<String, dynamic>.from(x))).toList() ?? <TimeWindow>[];
       exceptions[date] = list;
     }
+    final emergencyWeekly = <String, List<TimeWindow>>{};
+    final ew = (json['emergencyWeekly'] as Map<String, dynamic>? ) ?? {};
+    for (final entry in ew.entries) {
+      final list = (entry.value as List? )?.map((e) => TimeWindow.fromJson(Map<String, dynamic>.from(e))).toList() ?? <TimeWindow>[];
+      emergencyWeekly[entry.key] = list;
+    }
+    final emergencyExceptions = <String, List<TimeWindow>>{};
+    final eex = (json['emergencyExceptions'] as List? ) ?? [];
+    for (final e in eex) {
+      final m = Map<String, dynamic>.from(e as Map);
+      final date = (m['date'] ?? '').toString();
+      final list = (m['windows'] as List? )?.map((x) => TimeWindow.fromJson(Map<String, dynamic>.from(x))).toList() ?? <TimeWindow>[];
+      emergencyExceptions[date] = list;
+    }
     return AvailabilityModel(
       timezone: (json['timezone'] ?? 'Asia/Jerusalem').toString(),
       weekly: weekly,
       exceptions: exceptions,
+      emergencyWeekly: emergencyWeekly,
+      emergencyExceptions: emergencyExceptions,
     );
   }
 }
@@ -87,15 +105,44 @@ class AvailabilityService with BaseApiService {
       if (serviceId != null && serviceId.isNotEmpty) params['serviceId'] = serviceId;
       if (from != null) params['from'] = _dateKey(from);
       if (to != null) params['to'] = _dateKey(to);
+  // cache-buster to avoid any intermediary/browser caching when provider updates availability
+  params['_ts'] = DateTime.now().millisecondsSinceEpoch.toString();
       final qp = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
       final data = await get(
-        '${ApiConfig.availabilityEndpoint}/$providerId/resolve' + (qp.isNotEmpty ? '?$qp' : ''),
+        '${ApiConfig.availabilityEndpoint}/$providerId/resolve${qp.isNotEmpty ? '?$qp' : ''}',
         headers: await _getAuthHeaders(),
       );
       final body = data['data'] ?? data;
       return AvailabilityResolved.fromJson(Map<String, dynamic>.from(body));
     } catch (e) {
       return null;
+    }
+  }
+
+  Future<bool> upsertAvailability(
+    String providerId, {
+    required String timezone,
+    required Map<String, List<TimeWindow>> weekly,
+    List<Map<String, dynamic>> exceptions = const [],
+  Map<String, List<TimeWindow>> emergencyWeekly = const {},
+  List<Map<String, dynamic>> emergencyExceptions = const [],
+  }) async {
+    try {
+      final body = <String, dynamic>{
+        'timezone': timezone,
+    'weekly': weekly.map((k, v) => MapEntry(k, v.map((w) => {'start': w.start, 'end': w.end}).toList())),
+    'exceptions': exceptions,
+    'emergencyWeekly': emergencyWeekly.map((k, v) => MapEntry(k, v.map((w) => {'start': w.start, 'end': w.end}).toList())),
+    'emergencyExceptions': emergencyExceptions,
+      };
+      await put(
+        '${ApiConfig.availabilityEndpoint}/$providerId',
+        body: body,
+        headers: await _getAuthHeaders(),
+      );
+      return true;
+    } catch (e) {
+      return false;
     }
   }
 }

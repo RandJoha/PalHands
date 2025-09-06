@@ -14,14 +14,14 @@ class ChatService {
     final token = authService.token;
     
     if (kDebugMode) {
-      print('🔑 Chat service - Auth check:');
+  // debug removed
       print('  - Auth service instance: ${authService.hashCode}');
       print('  - Is authenticated: ${authService.isAuthenticated}');
       print('  - Token present: ${token != null}');
       print('  - Token length: ${token?.length ?? 0}');
       print('  - Current user: ${authService.currentUser?['email'] ?? 'None'}');
       if (token != null) {
-        print('  - Token preview: ${token!.substring(0, min(30, token.length))}...');
+        print('  - Token preview: ${token.substring(0, min(30, token.length))}...');
       } else {
         print('  - ⚠️ NO TOKEN AVAILABLE - This will cause 401 errors!');
       }

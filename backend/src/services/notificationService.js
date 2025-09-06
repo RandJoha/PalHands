@@ -182,24 +182,10 @@ class NotificationService {
   // Get unread count for a user
   static async getUnreadCount(userId) {
     try {
-      console.log('🔔 Getting unread count for user:', userId.toString());
       
       const count = await Notification.countDocuments({
         recipient: userId,
         read: false
-      });
-
-      console.log('🔔 Found unread notifications:', count);
-      
-      // Also log some sample notifications for debugging
-      const sampleNotifications = await Notification.find({
-        recipient: userId,
-        read: false
-      }).limit(3);
-      
-      console.log('🔔 Sample unread notifications:');
-      sampleNotifications.forEach((notif, index) => {
-        console.log(`  ${index + 1}. Type: ${notif.type}, Title: ${notif.title}, Read: ${notif.read}`);
       });
 
       return { success: true, data: { unreadCount: count } };

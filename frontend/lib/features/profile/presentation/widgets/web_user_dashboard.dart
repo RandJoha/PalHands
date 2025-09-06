@@ -423,7 +423,7 @@ class _WebUserDashboardState extends State<WebUserDashboard> {
     // Refresh chat messages when navigating to chat tab
     if (index == 1) {
       // Use a small delay to ensure the widget is built
-      Future.delayed(Duration(milliseconds: 100), () {
+      Future.delayed(const Duration(milliseconds: 100), () {
         _refreshChatMessages();
       });
     }

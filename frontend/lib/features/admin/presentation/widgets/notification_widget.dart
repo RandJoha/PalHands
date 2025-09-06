@@ -195,7 +195,7 @@ class _NotificationWidgetState extends State<NotificationWidget> {
             ),
             child: Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.notifications,
                   color: AppColors.primary,
                   size: 28,

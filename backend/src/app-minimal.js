@@ -3,6 +3,7 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const { errors: celebrateErrors } = require('celebrate');
 
 console.log('🚀 Starting minimal PalHands API...');
 
@@ -12,22 +13,24 @@ const app = express();
 app.use(cors({
   origin: true,
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'authorization']
 }));
+// Ensure preflight requests are handled for all routes
+app.options('*', cors());
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
 
-// Request logging
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path} from ${req.get('origin') || 'unknown'}`);
-  next();
-});
+// Request logging (disabled for cleaner console)
+// app.use((req, res, next) => {
+//   console.log(`${req.method} ${req.path} from ${req.get('origin') || 'unknown'}`);
+//   next();
+// });
 
 // Health check
 app.get('/api/health', (req, res) => {
-  console.log('Health check requested');
+  // console.log('Health check requested');
   res.json({
     status: 'OK',
     timestamp: new Date().toISOString(),
@@ -123,6 +126,17 @@ try {
 } catch (error) {
   console.error('❌ Availability routes failed:', error.message);
 }
+
+try {
+  const providerServicesRoutes = require('./routes/providerServices');
+  app.use('/api/provider-services', providerServicesRoutes);
+  console.log('✅ Provider-services routes loaded');
+} catch (error) {
+  console.error('❌ Provider-services routes failed:', error.message);
+}
+
+// Validation error handler (Celebrate)
+app.use(celebrateErrors());
 
 // Simple error handler
 app.use((err, req, res, next) => {

@@ -579,8 +579,8 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
           icon: const Icon(Icons.analytics, size: 20),
           label: AppStrings.getString('analytics', languageService.currentLanguage),
         ),
-        BottomNavigationBarItem(
-          icon: const Icon(Icons.notifications, size: 20),
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.notifications, size: 20),
           label: 'Notifications',
         ),
         BottomNavigationBarItem(

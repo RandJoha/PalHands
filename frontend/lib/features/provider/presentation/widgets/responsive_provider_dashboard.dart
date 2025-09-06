@@ -111,21 +111,18 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
   // Load unread notification count
   Future<void> _loadUnreadNotificationCount() async {
     try {
-      print('🔔 Loading unread notification count...');
       final response = await _notificationService.getUnreadCount();
-      print('🔔 Notification response: $response');
       
       if (response['success'] == true) {
         final count = response['data']['unreadCount'] ?? 0;
-        print('🔔 Setting unread count to: $count');
         setState(() {
           _unreadNotificationCount = count;
         });
       } else {
-        print('🔔 Response not successful: ${response['success']}');
+        // ignore non-success silently
       }
     } catch (e) {
-      print('🔔 Failed to load notification count: $e');
+      // ignore fetch errors silently
     }
   }
 
@@ -325,7 +322,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
               // Temporary: Manual refresh for testing
               _loadUnreadNotificationCount();
             },
-            tooltip: 'Notifications (${_unreadNotificationCount}) - Tap to refresh',
+            tooltip: 'Notifications ($_unreadNotificationCount) - Tap to refresh',
             icon: Stack(
               children: [
                 const Icon(Icons.notifications_outlined, size: 20, color: AppColors.white),
@@ -608,7 +605,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
                     // Temporary: Manual refresh for testing
                     _loadUnreadNotificationCount();
                   },
-                  tooltip: 'Notifications (${_unreadNotificationCount}) - Tap to refresh',
+                  tooltip: 'Notifications ($_unreadNotificationCount) - Tap to refresh',
                   icon: Stack(
                     children: [
                       Icon(Icons.notifications_outlined, 

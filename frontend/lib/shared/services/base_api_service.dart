@@ -7,13 +7,20 @@ import 'package:flutter/foundation.dart';
 import '../../core/constants/api_config.dart';
 
 mixin BaseApiService {
+  String _buildUrl(String endpoint) {
+    // If endpoint is absolute, use it as-is; otherwise prefix with API base
+    if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+      return endpoint;
+    }
+    return '${ApiConfig.currentApiBaseUrl}$endpoint';
+  }
   // HTTP GET request with retry mechanism
   Future<Map<String, dynamic>> get(String endpoint, {Map<String, String>? headers}) async {
     return _executeWithRetry(() => _get(endpoint, headers: headers));
   }
 
   Future<Map<String, dynamic>> _get(String endpoint, {Map<String, String>? headers}) async {
-    final url = '${ApiConfig.currentApiBaseUrl}$endpoint';
+    final url = _buildUrl(endpoint);
     final requestHeaders = {...ApiConfig.defaultHeaders, ...?headers};
     
     _logRequest('GET', url, headers: requestHeaders);
@@ -45,7 +52,7 @@ mixin BaseApiService {
     Map<String, dynamic>? body,
     Map<String, String>? headers,
   }) async {
-    final url = '${ApiConfig.currentApiBaseUrl}$endpoint';
+  final url = _buildUrl(endpoint);
     final requestHeaders = {...ApiConfig.defaultHeaders, ...?headers};
     final requestBody = body != null ? json.encode(body) : null;
     
@@ -78,7 +85,7 @@ mixin BaseApiService {
     Map<String, dynamic>? body,
     Map<String, String>? headers,
   }) async {
-    final url = '${ApiConfig.currentApiBaseUrl}$endpoint';
+  final url = _buildUrl(endpoint);
     final requestHeaders = {...ApiConfig.defaultHeaders, ...?headers};
     final requestBody = body != null ? json.encode(body) : null;
     
@@ -97,13 +104,46 @@ mixin BaseApiService {
     }
   }
 
+  // HTTP PATCH request with retry mechanism
+  Future<Map<String, dynamic>> patch(
+    String endpoint, {
+    Map<String, dynamic>? body,
+    Map<String, String>? headers,
+  }) async {
+    return _executeWithRetry(() => _patch(endpoint, body: body, headers: headers));
+  }
+
+  Future<Map<String, dynamic>> _patch(
+    String endpoint, {
+    Map<String, dynamic>? body,
+    Map<String, String>? headers,
+  }) async {
+  final url = _buildUrl(endpoint);
+    final requestHeaders = {...ApiConfig.defaultHeaders, ...?headers};
+    final requestBody = body != null ? json.encode(body) : null;
+
+    _logRequest('PATCH', url, headers: requestHeaders, body: body);
+
+    try {
+      final response = await http
+          .patch(Uri.parse(url), headers: requestHeaders, body: requestBody)
+          .timeout(ApiConfig.connectionTimeout);
+
+      _logResponse('PATCH', url, response);
+      return _handleResponse(response);
+    } catch (e) {
+      _logError('PATCH', url, e);
+      throw _handleError(e);
+    }
+  }
+
   // HTTP DELETE request with retry mechanism
   Future<Map<String, dynamic>> delete(String endpoint, {Map<String, String>? headers}) async {
     return _executeWithRetry(() => _delete(endpoint, headers: headers));
   }
 
   Future<Map<String, dynamic>> _delete(String endpoint, {Map<String, String>? headers}) async {
-    final url = '${ApiConfig.currentApiBaseUrl}$endpoint';
+  final url = _buildUrl(endpoint);
     final requestHeaders = {...ApiConfig.defaultHeaders, ...?headers};
     
     _logRequest('DELETE', url, headers: requestHeaders);
@@ -192,9 +232,9 @@ mixin BaseApiService {
     if (!ApiConfig.enableLogging) return;
     
     if (kDebugMode) {
-      print('🌐 $method $url');
-      if (headers != null) print('📋 Headers: $headers');
-      if (body != null) print('📦 Body: $body');
+  // Keep request logging minimal and disabled by default via ApiConfig.enableLogging
+  print('🌐 $method $url');
+  // Headers/body intentionally not printed to reduce console noise
     }
   }
 
@@ -202,15 +242,8 @@ mixin BaseApiService {
     if (!ApiConfig.enableLogging) return;
     
     if (kDebugMode) {
-      print('✅ $method $url - ${response.statusCode}');
-      if (response.body.isNotEmpty) {
-        try {
-          final data = json.decode(response.body);
-          print('📥 Response: $data');
-        } catch (e) {
-          print('📥 Response: ${response.body}');
-        }
-      }
+  print('✅ $method $url - ${response.statusCode}');
+  // Response body intentionally not printed to reduce console noise
     }
   }
 

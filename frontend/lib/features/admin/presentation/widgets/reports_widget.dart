@@ -677,12 +677,12 @@ class _ReportsWidgetState extends State<ReportsWidget> {
                 labelText: 'Status',
                 border: OutlineInputBorder(),
               ),
-              items: [
-                const DropdownMenuItem(value: null, child: Text('Active Reports')),
-                const DropdownMenuItem(value: 'pending', child: Text('Pending')),
-                const DropdownMenuItem(value: 'under_review', child: Text('Under Review')),
-                const DropdownMenuItem(value: 'resolved', child: Text('Resolved')),
-                const DropdownMenuItem(value: 'dismissed', child: Text('Dismissed')),
+              items: const [
+                DropdownMenuItem(value: null, child: Text('Active Reports')),
+                DropdownMenuItem(value: 'pending', child: Text('Pending')),
+                DropdownMenuItem(value: 'under_review', child: Text('Under Review')),
+                DropdownMenuItem(value: 'resolved', child: Text('Resolved')),
+                DropdownMenuItem(value: 'dismissed', child: Text('Dismissed')),
               ],
               onChanged: (value) {
                 setState(() {
@@ -703,13 +703,13 @@ class _ReportsWidgetState extends State<ReportsWidget> {
                 labelText: 'Category',
                 border: OutlineInputBorder(),
               ),
-              items: [
-                const DropdownMenuItem(value: null, child: Text('All Categories')),
-                const DropdownMenuItem(value: 'user_issue', child: Text('User Issue')),
-                const DropdownMenuItem(value: 'technical_issue', child: Text('Technical Issue')),
-                const DropdownMenuItem(value: 'feature_suggestion', child: Text('Feature Suggestion')),
-                const DropdownMenuItem(value: 'service_category_request', child: Text('Service Category Request')),
-                const DropdownMenuItem(value: 'other', child: Text('Other')),
+              items: const [
+                DropdownMenuItem(value: null, child: Text('All Categories')),
+                DropdownMenuItem(value: 'user_issue', child: Text('User Issue')),
+                DropdownMenuItem(value: 'technical_issue', child: Text('Technical Issue')),
+                DropdownMenuItem(value: 'feature_suggestion', child: Text('Feature Suggestion')),
+                DropdownMenuItem(value: 'service_category_request', child: Text('Service Category Request')),
+                DropdownMenuItem(value: 'other', child: Text('Other')),
               ],
               onChanged: (value) {
                 setState(() {
@@ -1140,7 +1140,7 @@ class _ReportsWidgetState extends State<ReportsWidget> {
       final firstName = report.reporter!['firstName']?.toString() ?? '';
       final lastName = report.reporter!['lastName']?.toString() ?? '';
       if (firstName.isNotEmpty || lastName.isNotEmpty) {
-        return '${firstName} ${lastName}'.trim();
+        return '$firstName $lastName'.trim();
       }
     }
     
@@ -1316,7 +1316,7 @@ class _ReportsWidgetState extends State<ReportsWidget> {
                     Text('• User Role: ${authService.userRole ?? 'None'}'),
                     Text('• Has Token: ${authService.token != null}'),
                     Text('• API Base URL: ${ApiConfig.currentApiBaseUrl}'),
-                    Text('• Is Web: $kIsWeb'),
+                    const Text('• Is Web: $kIsWeb'),
                   ],
                 ),
               ),

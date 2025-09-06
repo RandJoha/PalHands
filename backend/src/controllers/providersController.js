@@ -1,4 +1,6 @@
 const Provider = require('../models/Provider');
+const ProviderService = require('../models/ProviderService');
+const Service = require('../models/Service');
 const Booking = require('../models/Booking');
 const { ok, error } = require('../utils/response');
 
@@ -37,13 +39,12 @@ async function listProviders(req, res) {
       filter.$text = { $search: q };
     }
 
-    // Build sort options
+    // Build sort options - price sorting will be done after aggregation
     let sortOptions = { createdAt: -1 }; // Default sort
     if (sortBy === 'rating') {
       sortOptions = { 'rating.average': sortOrder === 'asc' ? 1 : -1 };
-    } else if (sortBy === 'price') {
-      sortOptions = { hourlyRate: sortOrder === 'asc' ? 1 : -1 };
     }
+    // Note: price sorting is handled after per-service aggregation
 
     // If emergency filter is requested, precompute provider IDs that have at least one emergency-enabled service
     let providerIdsEmergency = null;
@@ -73,43 +74,100 @@ async function listProviders(req, res) {
       }
     }
 
-    const providers = await Provider.find(filter)
+    let providers = await Provider.find(filter)
       .select('-password -emailVerificationToken -passwordResetToken -passwordResetTokenHash')
       .sort(sortOptions)
       .skip(skip)
       .limit(parseInt(limit));
 
-    console.log(`📊 Found ${providers.length} providers`);
+    // Optional gate: only include providers having at least one active+publishable ProviderService
+    try {
+      const ProviderService = require('../models/ProviderService');
+      const ids = providers.map(p => String(p._id));
+      const ps = await ProviderService.aggregate([
+        { $match: { provider: { $in: ids.map(id => require('mongoose').Types.ObjectId(id)) }, status: 'active', publishable: true } },
+        { $group: { _id: '$provider', count: { $sum: 1 } } }
+      ]);
+      const ok = new Set(ps.map(x => String(x._id)));
+      providers = providers.filter(p => ok.has(String(p._id)));
+    } catch (_) {}
+
+    // console.log(`📊 Found ${providers.length} providers`);
 
   // Count total matching providers for pagination
-  const total = await Provider.countDocuments(filter);
+  const total = providers.length;
     const totalPages = Math.ceil(total / limit);
     const currentPage = totalPages ? parseInt(page) : 0;
 
-    // Transform providers to match frontend ProviderModel
-    const transformedProviders = providers.map(provider => ({
-      _id: provider._id,
-      id: provider._id,
-      providerId: provider.providerId || 1000 + Math.floor(Math.random() * 9000), // Generate if not exists
-      name: `${provider.firstName} ${provider.lastName}`.trim(),
-      city: provider.addresses && provider.addresses.length > 0 
-        ? provider.addresses.find(addr => addr.isDefault)?.city || provider.addresses[0].city 
-        : 'Palestine',
-      phone: provider.phone,
-      experienceYears: provider.experienceYears || 2,
-      languages: provider.languages || ['Arabic'],
-      hourlyRate: provider.hourlyRate || 50,
-      services: provider.services || ['homeCleaning'],
-      ratingAverage: provider.rating?.average || 4.0,
-      ratingCount: provider.rating?.count || 5,
-      avatarUrl: provider.profileImage,
-      rating: {
-        average: provider.rating?.average || 4.0,
-        count: provider.rating?.count || 5
-      }
-    }));
+    // Transform providers to match frontend ProviderModel using per-service data
+    const transformedProviders = [];
+    
+    for (const provider of providers) {
+      // Get provider's service data from ProviderService collection
+      const providerServices = await ProviderService.find({ 
+        provider: provider._id, 
+        status: { $in: ['active', 'draft'] },
+        publishable: true 
+      }).populate('service', 'title subcategory');
 
-    console.log(`✅ Returning ${transformedProviders.length} transformed providers`);
+      // Calculate aggregated data from per-service information
+      let avgHourlyRate = 0;
+      let avgExperienceYears = 0;
+      let totalServices = 0;
+
+      if (providerServices.length > 0) {
+        const validServices = providerServices.filter(ps => ps.hourlyRate > 0);
+        if (validServices.length > 0) {
+          avgHourlyRate = validServices.reduce((sum, ps) => sum + ps.hourlyRate, 0) / validServices.length;
+          avgExperienceYears = validServices.reduce((sum, ps) => sum + ps.experienceYears, 0) / validServices.length;
+          totalServices = validServices.length;
+        }
+      }
+
+      // Fallback to provider static data if no service data available
+      if (totalServices === 0) {
+        avgHourlyRate = provider.hourlyRate || 50;
+        avgExperienceYears = provider.experienceYears || 2;
+      }
+
+      transformedProviders.push({
+        _id: provider._id,
+        id: provider._id,
+        providerId: provider.providerId || 1000 + Math.floor(Math.random() * 9000),
+        name: `${provider.firstName} ${provider.lastName}`.trim(),
+        city: provider.addresses && provider.addresses.length > 0 
+          ? provider.addresses.find(addr => addr.isDefault)?.city || provider.addresses[0].city 
+          : 'Palestine',
+        phone: provider.phone,
+        experienceYears: Math.round(avgExperienceYears), // Aggregated from services
+        languages: provider.languages || ['Arabic'],
+        hourlyRate: Math.round(avgHourlyRate), // Aggregated from services
+        services: provider.services || ['homeCleaning'],
+        ratingAverage: provider.rating?.average || 4.0,
+        ratingCount: provider.rating?.count || 5,
+        avatarUrl: provider.profileImage,
+        rating: {
+          average: provider.rating?.average || 4.0,
+          count: provider.rating?.count || 5
+        },
+        // Add metadata about per-service data
+        _serviceCount: totalServices,
+        _hasPerServiceData: totalServices > 0
+      });
+    }
+
+    // Apply price sorting after aggregation if requested
+    if (sortBy === 'price') {
+      transformedProviders.sort((a, b) => {
+        if (sortOrder === 'asc') {
+          return a.hourlyRate - b.hourlyRate;
+        } else {
+          return b.hourlyRate - a.hourlyRate;
+        }
+      });
+    }
+
+    // console.log(`✅ Returning ${transformedProviders.length} transformed providers with per-service data`);
 
     return ok(res, {
       data: transformedProviders,
@@ -143,7 +201,34 @@ async function getProviderById(req, res) {
       return error(res, 404, 'Provider not found');
     }
 
-    // Transform provider to match frontend ProviderModel
+    // Get provider's service data from ProviderService collection
+    const providerServices = await ProviderService.find({ 
+      provider: provider._id, 
+      status: { $in: ['active', 'draft'] },
+      publishable: true 
+    }).populate('service', 'title subcategory');
+
+    // Calculate aggregated data from per-service information
+    let avgHourlyRate = 0;
+    let avgExperienceYears = 0;
+    let totalServices = 0;
+
+    if (providerServices.length > 0) {
+      const validServices = providerServices.filter(ps => ps.hourlyRate > 0);
+      if (validServices.length > 0) {
+        avgHourlyRate = validServices.reduce((sum, ps) => sum + ps.hourlyRate, 0) / validServices.length;
+        avgExperienceYears = validServices.reduce((sum, ps) => sum + ps.experienceYears, 0) / validServices.length;
+        totalServices = validServices.length;
+      }
+    }
+
+    // Fallback to provider static data if no service data available
+    if (totalServices === 0) {
+      avgHourlyRate = provider.hourlyRate || 50;
+      avgExperienceYears = provider.experienceYears || 2;
+    }
+
+    // Transform provider to match frontend ProviderModel using per-service data
     const transformedProvider = {
       _id: provider._id,
       id: provider._id,
@@ -153,9 +238,9 @@ async function getProviderById(req, res) {
         ? provider.addresses.find(addr => addr.isDefault)?.city || provider.addresses[0].city 
         : '',
       phone: provider.phone,
-      experienceYears: provider.experienceYears,
+      experienceYears: Math.round(avgExperienceYears), // Aggregated from services
       languages: provider.languages,
-      hourlyRate: provider.hourlyRate,
+      hourlyRate: Math.round(avgHourlyRate), // Aggregated from services
       services: provider.services,
       ratingAverage: provider.rating.average,
       ratingCount: provider.rating.count,
@@ -196,13 +281,12 @@ async function getProvidersByCategory(req, res) {
       filter['addresses.city'] = { $regex: city, $options: 'i' };
     }
 
-    // Build sort options
+    // Build sort options - price sorting will be done after aggregation
     let sortOptions = { createdAt: -1 }; // Default sort
     if (sortBy === 'rating') {
       sortOptions = { 'rating.average': sortOrder === 'asc' ? 1 : -1 };
-    } else if (sortBy === 'price') {
-      sortOptions = { hourlyRate: sortOrder === 'asc' ? 1 : -1 };
     }
+    // Note: price sorting is handled after per-service aggregation
 
     const providers = await Provider.find(filter)
       .select('-password -emailVerificationToken -passwordResetToken -passwordResetTokenHash')
@@ -214,28 +298,73 @@ async function getProvidersByCategory(req, res) {
     const totalPages = Math.ceil(total / limit);
     const currentPage = totalPages ? parseInt(page) : 0;
 
-    // Transform providers to match frontend ProviderModel
-    const transformedProviders = providers.map(provider => ({
-      _id: provider._id,
-      id: provider._id,
-      providerId: provider.providerId,
-      name: `${provider.firstName} ${provider.lastName}`.trim(),
-      city: provider.addresses && provider.addresses.length > 0 
-        ? provider.addresses.find(addr => addr.isDefault)?.city || provider.addresses[0].city 
-        : '',
-      phone: provider.phone,
-      experienceYears: provider.experienceYears,
-      languages: provider.languages,
-      hourlyRate: provider.hourlyRate,
-      services: provider.services,
-      ratingAverage: provider.rating.average,
-      ratingCount: provider.rating.count,
-      avatarUrl: provider.profileImage,
-      rating: {
-        average: provider.rating.average,
-        count: provider.rating.count
+    // Transform providers to match frontend ProviderModel using per-service data
+    const transformedProviders = [];
+    
+    for (const provider of providers) {
+      // Get provider's service data from ProviderService collection
+      const providerServices = await ProviderService.find({ 
+        provider: provider._id, 
+        status: { $in: ['active', 'draft'] },
+        publishable: true 
+      }).populate('service', 'title subcategory');
+
+      // Calculate aggregated data from per-service information
+      let avgHourlyRate = 0;
+      let avgExperienceYears = 0;
+      let totalServices = 0;
+
+      if (providerServices.length > 0) {
+        const validServices = providerServices.filter(ps => ps.hourlyRate > 0);
+        if (validServices.length > 0) {
+          avgHourlyRate = validServices.reduce((sum, ps) => sum + ps.hourlyRate, 0) / validServices.length;
+          avgExperienceYears = validServices.reduce((sum, ps) => sum + ps.experienceYears, 0) / validServices.length;
+          totalServices = validServices.length;
+        }
       }
-    }));
+
+      // Fallback to provider static data if no service data available
+      if (totalServices === 0) {
+        avgHourlyRate = provider.hourlyRate || 50;
+        avgExperienceYears = provider.experienceYears || 2;
+      }
+
+      transformedProviders.push({
+        _id: provider._id,
+        id: provider._id,
+        providerId: provider.providerId,
+        name: `${provider.firstName} ${provider.lastName}`.trim(),
+        city: provider.addresses && provider.addresses.length > 0 
+          ? provider.addresses.find(addr => addr.isDefault)?.city || provider.addresses[0].city 
+          : '',
+        phone: provider.phone,
+        experienceYears: Math.round(avgExperienceYears), // Aggregated from services
+        languages: provider.languages,
+        hourlyRate: Math.round(avgHourlyRate), // Aggregated from services
+        services: provider.services,
+        ratingAverage: provider.rating.average,
+        ratingCount: provider.rating.count,
+        avatarUrl: provider.profileImage,
+        rating: {
+          average: provider.rating.average,
+          count: provider.rating.count
+        },
+        // Add metadata about per-service data
+        _serviceCount: totalServices,
+        _hasPerServiceData: totalServices > 0
+      });
+    }
+
+    // Apply price sorting after aggregation if requested
+    if (sortBy === 'price') {
+      transformedProviders.sort((a, b) => {
+        if (sortOrder === 'asc') {
+          return a.hourlyRate - b.hourlyRate;
+        } else {
+          return b.hourlyRate - a.hourlyRate;
+        }
+      });
+    }
 
     return ok(res, {
       data: transformedProviders,

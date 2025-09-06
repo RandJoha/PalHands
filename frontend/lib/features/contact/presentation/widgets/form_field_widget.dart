@@ -300,7 +300,7 @@ class _FormFieldWidgetState extends State<FormFieldWidget> {
           ),
           child: Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.attach_file,
                 color: AppColors.primary,
                 size: 20,
@@ -347,7 +347,7 @@ class _FormFieldWidgetState extends State<FormFieldWidget> {
           const SizedBox(height: 8),
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.check_circle,
                 color: Colors.green,
                 size: 16,

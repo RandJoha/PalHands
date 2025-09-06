@@ -14,7 +14,7 @@ import 'app_toast.dart';
 import '../services/auth_service.dart';
 import '../services/services_service.dart';
 import '../services/services_service.dart' as svc;
-import '../config/emergency_services.dart';
+// Legacy emergency whitelist removed; we now respect provider-configured flags only.
 import '../services/availability_service.dart';
 // Calendar UI will be declared at bottom of this file for simplicity
 
@@ -70,34 +70,17 @@ class _BookingDialogState extends State<BookingDialog> {
   // Same-day booking is not allowed per product rules (UI mirrors backend)
   bool _emergency = false; // emergency booking mode
   bool get _supportsEmergency {
-    // If we have service documents for this provider, prefer checking them
+    // Only respect provider-configured per-service flags
     if (_providerServices.isNotEmpty) {
       if (_selectedServiceId != null && _selectedServiceId!.isNotEmpty) {
         final selected = _providerServices.firstWhere(
           (s) => s.id == _selectedServiceId,
           orElse: () => _providerServices.first,
         );
-        final slug = (selected.slug.isNotEmpty)
-            ? selected.slug
-            : svc.ServiceModel.generateSlug(selected.title);
-        // Enable emergency if either backend marks it or slug is in our emergency list
-        return (selected.emergencyEnabled == true) || kEmergencyServiceSlugs.contains(slug);
+        return (selected.emergencyEnabled == true);
       }
-      return _providerServices.any((s) {
-        final slug = (s.slug.isNotEmpty)
-            ? s.slug
-            : svc.ServiceModel.generateSlug(s.title);
-        return (s.emergencyEnabled == true) || kEmergencyServiceSlugs.contains(slug);
-      });
+      return _providerServices.any((s) => s.emergencyEnabled == true);
     }
-
-    // Fallback when service documents are not available: inspect the provider
-    try {
-      final keys = widget.provider.services.map((e) => e.toString().toLowerCase()).toList();
-      for (final s in kEmergencyServiceSlugs) {
-        if (keys.contains(s.toLowerCase())) return true;
-      }
-    } catch (_) {}
     return false;
   }
 
@@ -235,15 +218,24 @@ class _BookingDialogState extends State<BookingDialog> {
   }
 
   Future<void> _selectDate() async {
-  // UI guard: 48h minimum
-  final now = DateTime.now();
-  final minUiDate = now.add(const Duration(days: 2));
-  final picked = await showDatePicker(
+    final now = DateTime.now();
+    
+    // Dynamic minimum date based on emergency mode (Fix #5)
+    final DateTime minUiDate;
+    if (_emergency && _supportsEmergency) {
+      // Emergency mode: same-day booking allowed (today)
+      minUiDate = DateTime(now.year, now.month, now.day);
+    } else {
+      // Normal mode: 48-hour minimum
+      minUiDate = now.add(const Duration(days: 2));
+    }
+    
+    final picked = await showDatePicker(
       context: context,
-    initialDate: _selectedDate != null && _selectedDate!.isAfter(minUiDate)
-      ? _selectedDate!
-      : minUiDate,
-    firstDate: minUiDate,
+      initialDate: _selectedDate != null && _selectedDate!.isAfter(minUiDate)
+          ? _selectedDate!
+          : minUiDate,
+      firstDate: minUiDate,
       lastDate: DateTime.now().add(const Duration(days: 90)),
     );
     
@@ -398,21 +390,10 @@ class _BookingDialogState extends State<BookingDialog> {
     }
     final priceType = (selected?.price.type ?? 'hourly');
     double amount = (selected?.price.amount ?? widget.provider.hourlyRate).toDouble();
-    // Apply emergency multiplier if selected and supported. If we don't have
-    // a selected service document (selected==null), attempt to infer a
-    // multiplier from provider-level info by checking provider.services keys
-    // against our whitelist and applying a conservative multiplier.
-    if (_emergency) {
-      if (selected != null && selected.emergencyEnabled) {
-        final multiplier = selected.emergencyRateMultiplier;
-        amount = (amount * multiplier);
-      } else {
-        // fallback multiplier to mirror Khaled's UX
-        final keys = widget.provider.services.map((e) => e.toLowerCase()).toList();
-        if (keys.any((k) => kEmergencyServiceSlugs.contains(k) )) {
-          amount = amount * 1.6;
-        }
-      }
+    // Apply emergency multiplier if selected and supported by configured flags only
+    if (_emergency && selected != null && selected.emergencyEnabled) {
+      final multiplier = selected.emergencyRateMultiplier;
+      amount = (amount * multiplier);
     }
     if (priceType == 'hourly') {
       final hours = totalMinutes / 60.0;
@@ -673,7 +654,7 @@ class _BookingDialogState extends State<BookingDialog> {
                   Expanded(
                     child: Text(
                       '${AppStrings.getString('bookNow', lang)} • ${widget.provider.name}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -811,7 +792,7 @@ class _BookingDialogState extends State<BookingDialog> {
             backgroundColor: AppColors.primary,
             child: Text(
               widget.provider.name.substring(0, 1).toUpperCase(),
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -825,7 +806,7 @@ class _BookingDialogState extends State<BookingDialog> {
               children: [
                 Text(
                   widget.provider.name,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -851,22 +832,21 @@ class _BookingDialogState extends State<BookingDialog> {
                   },
                 ),
                 const SizedBox(height: 4),
-                // Hourly rate (updates when emergency toggled)
+                // Hourly rate: only show once per-service data is loaded so it matches the preselected service
                 Builder(
                   builder: (context) {
                     final languageCode = Provider.of<LanguageService>(context, listen: false).currentLanguage;
-                    // Compute displayed hourly rate depending on selected service and emergency toggle
-                    double baseRate = widget.provider.hourlyRate.toDouble();
-                    svc.ServiceModel? selected;
-                    if (_providerServices.isNotEmpty && _selectedServiceId != null) {
-                      try {
-                        selected = _providerServices.firstWhere((s) => s.id == _selectedServiceId);
-                      } catch (_) { selected = null; }
+                    if (_providerServices.isEmpty || _selectedServiceId == null) {
+                      // Subtle placeholder until service list loads to avoid flashing provider-level rate
+                      return const SizedBox(height: 16);
                     }
-                    final svcPrice = selected?.price.amount;
-                    if (svcPrice != null) baseRate = svcPrice.toDouble();
+                    svc.ServiceModel? selected;
+                    try {
+                      selected = _providerServices.firstWhere((s) => s.id == _selectedServiceId);
+                    } catch (_) { selected = _providerServices.first; }
+                    double baseRate = (selected.price.amount).toDouble();
                     double displayRate = baseRate;
-                    if (_emergency && selected != null && selected.emergencyEnabled) {
+                    if (_emergency && selected.emergencyEnabled) {
                       displayRate = baseRate * selected.emergencyRateMultiplier;
                     }
                     final rateText = displayRate.toStringAsFixed(0);
@@ -875,7 +855,7 @@ class _BookingDialogState extends State<BookingDialog> {
                     final text = isRtl ? '$per /₪$rateText' : '₪$rateText/$per';
                     return Text(
                       text,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                         color: AppColors.primary,
@@ -897,7 +877,7 @@ class _BookingDialogState extends State<BookingDialog> {
       children: [
         Text(
           AppStrings.getString('service', lang),
-          style: TextStyle(
+          style: const TextStyle(
       fontSize: 15,
             fontWeight: FontWeight.w600,
           ),
@@ -975,7 +955,7 @@ class _BookingDialogState extends State<BookingDialog> {
       children: [
         Text(
     AppStrings.getString('dateAndTime', lang),
-          style: TextStyle(
+          style: const TextStyle(
       fontSize: 15,
             fontWeight: FontWeight.w600,
           ),
@@ -1060,7 +1040,11 @@ class _BookingDialogState extends State<BookingDialog> {
         final dateKey = _dateKey(date);
         final key = '${slot.start}-${slot.end}';
         final set = _selectedByDate.putIfAbsent(dateKey, () => <String>{});
-        if (set.contains(key)) set.remove(key); else set.add(key);
+        if (set.contains(key)) {
+          set.remove(key);
+        } else {
+          set.add(key);
+        }
         _startTime = _parseHHmm(slot.start);
         _endTime = _parseHHmm(slot.end);
             });
@@ -1076,7 +1060,7 @@ class _BookingDialogState extends State<BookingDialog> {
           final hasSelection = count > 0 && _startTime != null && _endTime != null;
           return Text(
             hasSelection
-                ? 'Selected (${count}): ${_formatDate(_selectedDate!)} • ${_formatTime(_startTime!)} - ${_formatTime(_endTime!)}'
+                ? 'Selected ($count): ${_formatDate(_selectedDate!)} • ${_formatTime(_startTime!)} - ${_formatTime(_endTime!)}'
                 : 'Select a day to view available times',
             style: TextStyle(fontSize: 12, color: Colors.grey.shade800),
           );
@@ -1155,7 +1139,7 @@ class _BookingDialogState extends State<BookingDialog> {
       children: [
         Text(
           AppStrings.getString('serviceAddress', lang),
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w600,
           ),
@@ -1208,7 +1192,7 @@ class _BookingDialogState extends State<BookingDialog> {
                     subtitle: Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
                   ),
                 );
-              }).toList(),
+              }),
               const SizedBox(height: 8),
             ],
           ),
@@ -1239,7 +1223,7 @@ class _BookingDialogState extends State<BookingDialog> {
       children: [
         Text(
           AppStrings.getString('specialInstructions', lang),
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w600,
           ),
@@ -1270,7 +1254,7 @@ class _BookingDialogState extends State<BookingDialog> {
       children: [
         Text(
           AppStrings.getString('additionalNotesOptional', lang),
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w600,
           ),
@@ -1306,14 +1290,14 @@ class _BookingDialogState extends State<BookingDialog> {
         children: [
           Text(
             AppStrings.getString('estimatedCost', lang),
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
             ),
           ),
           Text(
             '₪${estimatedCost.toStringAsFixed(0)}',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
               color: AppColors.primary,
@@ -1349,7 +1333,7 @@ class _CalendarSection extends StatelessWidget {
     // Week header
     rows.add(Row(
       children: const ['S','M','T','W','T','F','S']
-          .map((l) => Expanded(child: Center(child: Text(l, style: TextStyle(fontWeight: FontWeight.bold)))))
+          .map((l) => Expanded(child: Center(child: Text(l, style: const TextStyle(fontWeight: FontWeight.bold)))))
           .toList(),
     ));
     rows.add(const SizedBox(height: 8));
@@ -1357,7 +1341,9 @@ class _CalendarSection extends StatelessWidget {
     DateTime cursor = first;
     int lead = cursor.weekday % 7; // 0=Sun
     List<Widget> current = [];
-    for (int i=0; i<lead; i++) current.add(const Expanded(child: SizedBox(height: 40)));
+    for (int i=0; i<lead; i++) {
+      current.add(const Expanded(child: SizedBox(height: 40)));
+    }
 
     while (!cursor.isAfter(last)) {
       final dayDate = DateTime(cursor.year, cursor.month, cursor.day);

@@ -12,11 +12,11 @@ const getUserChats = async (req, res) => {
     const userId = req.user._id;
     const userRole = req.user.role;
     
-    console.log('🔍 Get user chats request:', { 
-      userId: userId.toString(), 
-      userRole,
-      timestamp: new Date().toISOString()
-    });
+    // console.log('🔍 Get user chats request:', { 
+    //   userId: userId.toString(), 
+    //   userRole,
+    //   timestamp: new Date().toISOString()
+    // });
     
     // Find chats where user is a participant
     const chats = await Chat.find({
@@ -504,13 +504,13 @@ const createOrGetChat = async (req, res) => {
     const userId = req.user._id;
     const userRole = req.user.role;
 
-    console.log('Create or get chat request:', {
-      participantId,
-      bookingId,
-      serviceName,
-      userId,
-      userRole
-    });
+    // console.log('Create or get chat request:', {
+    //   participantId,
+    //   bookingId,
+    //   serviceName,
+    //   userId,
+    //   userRole
+    // });
 
     // Validate participantId is a valid MongoDB ObjectId
     if (!participantId || typeof participantId !== 'string' || participantId.length !== 24) {

@@ -400,7 +400,7 @@ class _ProviderChatWidgetState extends State<ProviderChatWidget> {
         // Header
         Container(
           padding: EdgeInsets.all(16.w),
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: AppColors.white,
             border: Border(
               bottom: BorderSide(color: AppColors.border, width: 1),
@@ -462,7 +462,7 @@ class _ProviderChatWidgetState extends State<ProviderChatWidget> {
                     contentPadding: EdgeInsets.all(16.w),
                     leading: CircleAvatar(
                       backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                      child: Icon(
+                      child: const Icon(
                         Icons.person,
                         color: AppColors.primary,
                       ),
@@ -569,7 +569,7 @@ class _ProviderChatWidgetState extends State<ProviderChatWidget> {
             // Chat header
             Container(
               padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.white,
                 border: Border(
                   bottom: BorderSide(color: AppColors.border, width: 1),
@@ -589,7 +589,7 @@ class _ProviderChatWidgetState extends State<ProviderChatWidget> {
                   SizedBox(width: 12.w),
                   CircleAvatar(
                     backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                    child: Icon(
+                    child: const Icon(
                       Icons.person,
                       color: AppColors.primary,
                     ),
@@ -730,7 +730,7 @@ class _ProviderChatWidgetState extends State<ProviderChatWidget> {
             // Message input area
             Container(
               padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.white,
                 border: Border(
                   top: BorderSide(color: AppColors.border, width: 1),
@@ -792,7 +792,7 @@ class _ProviderChatWidgetState extends State<ProviderChatWidget> {
                           ? SizedBox(
                               width: 20.w,
                               height: 20.w,
-                              child: CircularProgressIndicator(
+                              child: const CircularProgressIndicator(
                                 strokeWidth: 2,
                                 valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
                               ),

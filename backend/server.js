@@ -1,38 +1,32 @@
-const dotenv = require('dotenv');
-dotenv.config();
-const { validateEnv } = require('./src/utils/config');
-const env = validateEnv();
-const { connectDB, mongoose } = require('./src/config/database');
+/* Auto-restored server.js - starts the PalHands API using src/app-minimal.js
+   This file was accidentally emptied; recreate a safe startup that connects
+   to MongoDB and listens on PORT.
+*/
+require('dotenv').config();
+const mongoose = require('mongoose');
 const app = require('./src/app-minimal');
-const { startMediaCleanupScheduler } = require('./src/services/cleanup');
 
-const PORT = env.PORT || 3000;
-const HOST = '127.0.0.1'; // Force IPv4 binding
+const DEFAULT_PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/palhands-dev';
 
-(async () => {
-  await connectDB();
-  app.listen(PORT, HOST, () => {
-    console.log(`🚀 PalHands server running on http://${HOST}:${PORT}`);
-    console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🌐 Health check: http://${HOST}:${PORT}/api/health`);
-  });
-  startMediaCleanupScheduler();
-})().catch((err) => {
-  console.error('❌ Failed to start server:', err);
-  process.exit(1);
-});
-
-// Graceful shutdown
-const shutdown = async (signal) => {
-  console.log(`${signal} received. Shutting down gracefully...`);
+async function start() {
   try {
-    await mongoose.connection.close();
-    console.log('MongoDB connection closed.');
-  } catch (err) {
-    console.error('MongoDB close error:', err);
-  }
-  process.exit(0);
-};
+    console.log('🔌 Connecting to MongoDB...');
+    await mongoose.connect(MONGO_URI, {
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+    });
+    console.log('✅ Connected to MongoDB');
 
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
+    const port = DEFAULT_PORT;
+    app.listen(port, () => {
+      console.log(`🚀 PalHands API listening on http://0.0.0.0:${port} (env=${process.env.NODE_ENV || 'development'})`);
+    });
+  } catch (err) {
+    console.error('❌ Failed to start server:', err && err.message ? err.message : err);
+    // exit with non-zero code so nodemon will not treat as clean exit
+    process.exit(1);
+  }
+}
+
+start();

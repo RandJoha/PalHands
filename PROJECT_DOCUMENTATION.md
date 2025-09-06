@@ -34,6 +34,8 @@ PalHands/
 
 This section reflects the latest decisions and shipped behavior from the booking-hardening work.
 
+- Per‑service authoritative data: providerservices is now the single source for pricing/experience/availability. Provider listings aggregate per‑service values and sort by aggregated price. Legacy provider.hourlyRate/experience are being deprecated.
+
 - Booking status lifecycle is limited to four states: pending, confirmed, completed, cancelled. Any references to in-progress in older docs are legacy and no longer used.
 - Role-agnostic booking creation: admins and providers can create bookings “as a client”. The backend persists a polymorphic client reference using refPath (User|Provider) and returns fully populated bookings.
 - Admin dashboard now has two booking domains:

@@ -23,11 +23,8 @@ const getNotifications = async (req, res) => {
 const getUnreadCount = async (req, res) => {
   try {
     const userId = req.user._id;
-    console.log('🔔 Get unread count request for user:', userId.toString());
-    console.log('🔔 User role:', req.user.role);
     
     const result = await NotificationService.getUnreadCount(userId);
-    console.log('🔔 Unread count result:', result);
     
     res.json(result);
   } catch (error) {

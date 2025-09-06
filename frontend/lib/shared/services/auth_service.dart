@@ -19,6 +19,10 @@ class AuthService extends ChangeNotifier with BaseApiService {
   String? get token => _token;
   Map<String, dynamic>? get currentUser => _currentUser;
   bool get isAuthenticated => _isAuthenticated;
+  String? get userId {
+    final id = _currentUser?['_id'] ?? _currentUser?['id'];
+    return id?.toString();
+  }
 
   // Initialize auth service and load persisted data
   Future<void> initialize() async {

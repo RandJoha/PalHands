@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 import '../../../../../core/constants/app_strings.dart';
@@ -11,15 +9,13 @@ import '../../../../../shared/widgets/booking_dialog.dart';
 import '../../../../../shared/services/responsive_service.dart';
 import '../../../../../shared/services/provider_service.dart';
 import '../../../../../shared/models/provider.dart';
-import '../../../../../shared/services/chat_service.dart';
-import '../../../../../shared/models/chat.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import '../../../../../shared/services/category_selection_store.dart';
-import '../../../../profile/presentation/widgets/chat_conversation_widget.dart';
 import '../../../../../shared/services/auth_service.dart';
 import 'package:flutter/foundation.dart';
 import '../../../../../shared/widgets/chat_form_dialog.dart';
+import '../../../../../shared/services/services_service.dart' as svc;
 
 class WebCategoryWidget extends StatefulWidget {
   const WebCategoryWidget({super.key});
@@ -30,6 +26,8 @@ class WebCategoryWidget extends StatefulWidget {
 
 class _WebCategoryWidgetState extends State<WebCategoryWidget> {
   final CategorySelectionStore _store = CategorySelectionStore.instance;
+  // Convenience getter for current language; safe to use across closures
+  String get lang => Provider.of<LanguageService>(context, listen: false).currentLanguage;
   String? get _selectedCity => _store.selectedCity;
   set _selectedCity(String? v) => _store.selectedCity = v;
   String get _sortBy => _store.sortBy; // rating | price
@@ -40,7 +38,8 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
   String? _error;
   List<ProviderModel> _providers = const [];
   final _providerService = ProviderService();
-  final _chatService = ChatService();
+  // Chat handled via ChatFormDialog; no direct ChatService usage here
+  final svc.ServicesService _servicesService = svc.ServicesService();
   
   // Performance optimization: debounce API calls
   Timer? _debounceTimer;
@@ -286,7 +285,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                   _buildLabeled(
                     AppStrings.getString('sort', languageService.currentLanguage),
                     DropdownButton<String>(
-                      value: _sortBy + '_' + _sortOrder,
+                      value: '${_sortBy}_$_sortOrder',
                       items: [
                         DropdownMenuItem(value: 'rating_desc', child: Text('${AppStrings.getString('rating', languageService.currentLanguage)} ↓')),
                         DropdownMenuItem(value: 'rating_asc', child: Text('${AppStrings.getString('rating', languageService.currentLanguage)} ↑')),
@@ -645,7 +644,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                               _debouncedRefreshProviders();
                             },
                           );
-                        }).toList(),
+                        }),
                         const SizedBox(height: 8),
                       ],
                     ),
@@ -1125,7 +1124,9 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
             LayoutBuilder(
               builder: (context, constraints) {
                 int crossAxisCount;
-                if (constraints.maxWidth > 1400) crossAxisCount = 3; else if (constraints.maxWidth > 900) crossAxisCount = 2; else crossAxisCount = 1;
+                if (constraints.maxWidth > 1400) {
+                  crossAxisCount = 3;
+                } else if (constraints.maxWidth > 900) crossAxisCount = 2; else crossAxisCount = 1;
                 // Use fixed mainAxisExtent to keep all cards the same height and avoid overflow
                 return GridView.builder(
                   shrinkWrap: true,
@@ -1154,6 +1155,9 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
 
   Widget _buildProviderCard(ProviderModel p, LanguageService languageService) {
     final lang = languageService.currentLanguage;
+  // Local state holder for fetched services per provider
+  // Using FutureBuilder per card keeps this self-contained and avoids global refactors
+  final servicesFuture = _servicesService.getServicesByProvider(p.id);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1197,7 +1201,16 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
+                    // Languages stay under provider's name (global to provider)
+                    Row(
+                      children: [
+                        const Icon(Icons.language, size: 16, color: Colors.grey),
+                        const SizedBox(width: 4),
+                        Flexible(child: Text(_localizedLanguages(p.languages, lang).join(', '), style: TextStyle(color: Colors.grey.shade700)) ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
                     Row(children: [
                       const Icon(Icons.location_on, size: 16, color: Colors.grey),
                       const SizedBox(width: 4),
@@ -1216,33 +1229,60 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
             ],
           ),
           const SizedBox(height: 12),
-          Wrap(
-            spacing: 12,
-            runSpacing: 8,
-            children: [
-              _kv(Icons.work_history, '${p.experienceYears} ${AppStrings.getString('years', lang)}'),
-              _kv(Icons.language, _localizedLanguages(p.languages, lang).join(', ')),
-              _kv(Icons.attach_money, '${p.hourlyRate.toStringAsFixed(0)} ${AppStrings.getString('hourly', lang)}'),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: () {
-              // Show more chips on web and avoid tooltip '+1'
-              final maxVisible = 8;
-              final visible = p.services.take(maxVisible).toList();
-              final extras = p.services.length - visible.length;
-              final chips = <Widget>[];
-              chips.addAll(visible.map((s) => Chip(label: Text(AppStrings.getString(s, lang)))));
-              // If there are still more, just append the rest without tooltip up to a safe cap
-              if (extras > 0) {
-                chips.addAll(p.services.skip(maxVisible).take(6).map((s) => Chip(label: Text(AppStrings.getString(s, lang)))));
+          // Per-service list with price and years: "Kitchen Cleaning — ₪72/hour · 8 yrs"
+          FutureBuilder<List<svc.ServiceModel>>(
+            future: servicesFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const LinearProgressIndicator(minHeight: 2);
               }
-              return chips;
-            }(),
+              final services = snapshot.data ?? const <svc.ServiceModel>[];
+              if (services.isEmpty) {
+                // Fallback to provider-level summary when no per-service docs
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  children: [
+                    _kv(Icons.work_history, '${p.experienceYears} ${AppStrings.getString('years', lang)}'),
+                    _kv(Icons.attach_money, '${p.hourlyRate.toStringAsFixed(0)} ${AppStrings.getString('hourly', lang)}'),
+                  ],
+                );
+              }
+              return ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 180),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ...services.map((s) {
+                        final amount = s.price.amount.toStringAsFixed(0);
+                        final unit = AppStrings.getString('hourly', lang);
+                        final exp = s.experienceYears ?? p.experienceYears;
+                        final yrs = lang == 'ar' ? AppStrings.getString('years', lang) : 'yrs';
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.check_circle, size: 16, color: Colors.green),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  '${s.title.isNotEmpty ? s.title : AppStrings.getString(s.slug, lang)} — ₪$amount/$unit · $exp $yrs',
+                                  style: const TextStyle(fontSize: 14),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
+          // Removed mini service chips to avoid duplication with per-service list
           const Spacer(),
           Row(
             children: [
@@ -1326,16 +1366,16 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
           context: context,
           barrierDismissible: false,
           builder: (context) => AlertDialog(
-            title: Text('Login Required'),
-            content: Text('You need to be logged in to chat with providers. Would you like to login now?'),
+            title: const Text('Login Required'),
+            content: const Text('You need to be logged in to chat with providers. Would you like to login now?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: Text('Cancel'),
+                child: const Text('Cancel'),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: Text('Login'),
+                child: const Text('Login'),
               ),
             ],
           ),

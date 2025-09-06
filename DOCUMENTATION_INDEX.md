@@ -92,6 +92,13 @@ This document serves as a comprehensive index of all PalHands project documentat
 
 ## 📝 **Recent Documentation Updates**
 
+### September 2025 — Per‑service data source & provider listings overhaul
+- Backend: `providerservices` is now the single source of truth for per‑service pricing/experience/availability.
+- Data migration on Atlas: removed orphans, dropped legacy indexes, enforced unique `{provider, service}` pairs; 35 providers → 83 services → 83 ProviderService docs.
+- Endpoints updated: `listProviders`, `getProviderById`, `getProvidersByCategory` now aggregate per‑service data and sort by aggregated price.
+- Response shape compatible with older clients (`data` and `providers` arrays present). Added `_serviceCount` and `_hasPerServiceData` flags.
+- Frontend note: “Our Services” lists use aggregated values; booking fallback to provider.hourlyRate slated for removal.
+
 ### September 2025 — Registration and taxonomy alignment
 - Backend: Provider registration now creates Provider docs, conflict checks across both collections, conditional validator, and providerSelections support.
 - Taxonomy: Categories/services now supplied from DB with endpoints used by the signup UI.
@@ -364,6 +371,28 @@ This document serves as a comprehensive index of all PalHands project documentat
 **Last Updated**: December 2024
 **Status**: ✅ Complete
 
+## 📋 **Technical Memory & Reference Documents**
+
+### **📋 TECH_MEMORY.md** 🧠 (MASTER REFERENCE)
+**Purpose**: **Master technical memory** for service management, availability, and booking integration
+**Content**:
+- Complete record of service management fixes and architectural decisions
+- Global slot inheritance patterns and emergency mode implementation
+- Critical issue resolutions with detailed solutions
+- Development guidelines and testing checklists
+- Integration points and known limitations
+- Change log and decision references
+- **⚠️ READ THIS FIRST** before making availability or booking changes
+
+**Last Updated**: January 2025  
+**Status**: ✅ Active master reference document
+
+### **📋 AVAILABILITY_REDESIGN_AND_VALIDATION.md** 🎯
+**Purpose**: Specific availability system redesign documentation  
+**Content**: Frontend UX changes, backend API adjustments, inheritance models, emergency workflow implementation
+**Last Updated**: January 2025 (with recent fixes)
+**Status**: ✅ Updated with latest service management solutions
+
 ## 🎯 **Recent Implementation Documentation**
 
 ### **Authentication & Authorization System** ✅
@@ -439,8 +468,8 @@ This document serves as a comprehensive index of all PalHands project documentat
 | MONGODB_SETUP.md | ✅ Complete | Dec 2024 | 100% |
 | FRONTEND_ANALYSIS.md | ✅ Complete | Dec 2024 | 100% |
 | APP_WORKFLOW.md | ✅ Complete | Dec 2024 | 100% |
-| TECHNICAL_MEMORY.md | ✅ Updated | Aug 2025 | 100% |
-| TECH_MEMORY.md | ✅ Added | Aug 2025 | 100% |
+| TECH_MEMORY.md | ✅ Master Reference | Jan 2025 | 100% |
+| AVAILABILITY_REDESIGN_AND_VALIDATION.md | ✅ Updated | Jan 2025 | 100% |
 
 ## 🎯 **Documentation Usage Guide**
 
@@ -464,6 +493,11 @@ This document serves as a comprehensive index of all PalHands project documentat
 1. **ADMIN_DASHBOARD_DOCUMENTATION.md** - Complete admin dashboard guide
 2. **PROJECT_DOCUMENTATION.md** - Current development status and issues
 3. **USER_DASHBOARD_DOCUMENTATION.md** - Reference for responsive design patterns
+
+### **For Service Management & Availability Changes** ⚠️
+1. **📋 TECH_MEMORY.md** - **REQUIRED READING** before any availability or booking changes
+2. **AVAILABILITY_REDESIGN_AND_VALIDATION.md** - Specific implementation details
+3. **PROVIDER_DASHBOARD_DOCUMENTATION.md** - UI integration patterns
 
 ### **For Current Issues & Bug Fixes**
 1. **PROJECT_DOCUMENTATION.md** - Current issues and known problems section

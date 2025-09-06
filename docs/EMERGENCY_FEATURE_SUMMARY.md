@@ -1,33 +1,36 @@
 Emergency Bookings — Feature Summary
 
-Status (as of 2025-09-03):
-- Implemented end-to-end feature to support "Emergency" bookings for a curated set of services.
-- Frontend: emergency toggle in booking dialog, immediate price multiplier applied in the UI, emergency badge on bookings, and a provider-side "Emergency only" filter toggle added to `MyServicesWidget` (currently wired to sample data; needs production wiring to ServicesService).
-- Backend: service-level flags exist and are respected (`service.emergencyEnabled`, `service.emergencyRateMultiplier`, `service.emergencySurcharge`, `service.emergencyLeadTimeMinutes`). Availability resolution and booking creation now merge the normal weekly schedule with emergency-specific windows and append default emergency-only extra windows (late-night / early-morning). Emergency lead-time defaults to 120 minutes (2h) unless a service-specific `emergencyLeadTimeMinutes` is set.
-- DB: A tagging script was added and run to mark a set of services as emergency-enabled. The script updated 16 services in the live MongoDB during this work.
+Status (as of 2025-09-06):
+- End-to-end Emergency flow is live with improved availability editing and inheritance.
+- Frontend (Provider dashboard):
+  - Per-service Availability editor shows inherited Global slots in blue, service additions in green, and exclusions in red.
+  - “Add window” uses a range picker and splits into hourly slots automatically.
+  - Emergency tab now inherits from the service’s saved normal effective schedule (or global if no overrides) and only saves emergency additions.
+  - Deletions/exclusions now persist; overrides are saved whenever there are exclusions or additions, otherwise we inherit by saving null.
+  - Console noise greatly reduced; debug prints limited and marked for removal post-stabilization.
+- Backend:
+  - Validation updated to accept `emergencyWeekly` and `emergencyExceptions` in Availability upserts.
+  - Server bootstrap (`server.js`) restored; request logging and noisy console prints disabled by default.
+- DB:
+  - No destructive schema changes were applied in this pass. A separate normalization plan is documented to move provider-specific flags from `Service` to `ProviderService` and rely on `Availability` for schedules.
 
-Files changed / created by the implementation:
+Key files changed in this iteration:
 - frontend:
-  - `frontend/lib/shared/config/emergency_services.dart` — whitelist of emergency-eligible service slugs (extended).
-  - `frontend/lib/shared/widgets/booking_dialog.dart` — emergency toggle + immediate price behavior + provider.services fallback.
-  - `frontend/lib/features/provider/presentation/widgets/my_services_widget.dart` — emergency filter toggle (uses sample data currently).
+  - `frontend/lib/features/provider/presentation/widgets/my_services_widget.dart` — hourly slot splitting, inherited baseline rendering, exclusion persistence, Emergency baseline from normal effective schedule, clean saves for emergency overrides.
 - backend:
-  - `backend/src/controllers/availabilityController.js` — merged normal + emergency weekly windows; appended emergency-only extras; emergency lead-time handling.
-  - `backend/src/controllers/bookingsController.js` — emergency min-lead enforcement; merged emergency windows for booking validation; multiplier/surcharge preserved.
-  - `backend/src/utils/tagSelectedServicesEmergency.js` — tagging script to bulk-enable emergency for service documents.
+  - `backend/src/routes/availability.js` (validator) — allow emergency fields.
+  - `backend/server.js` — restored minimal server and toned down logging.
 
-Known mismatches and notes:
-- Tagging script set `emergencyLeadTimeMinutes: 60` for some services while the backend default emergency lead-time is 120 minutes; the code honors per-service values. Recommendation: pick a canonical default (60 or 120) and update either DB or code to match.
-- `MyServicesWidget` currently filters local sample data. It should be wired to call the backend `ServicesService` so the emergency-filter reflects real DB state.
-- Dart analyzer reported many non-fatal lints (245 issues); recent edits don't introduce syntax errors but a small unused-variable lint exists in `my_services_widget.dart`.
+Behavioral details:
+- Effective per-service normal schedule = (Global − Exclusions) + Service additions.
+- Emergency schedule baseline = Service normal effective schedule; only emergency additions are saved. Empty emergency saves as null to keep inheritance clean.
 
-Quick test notes:
-- A probe run against a provider with no weekly schedule returned zero slots for both normal and emergency probes; to validate emergency-only extra windows, run a probe against a provider with a configured weekly schedule or create a temporary availability record.
+Known notes:
+- If you later normalize DB (see new `DB_RESTRUCTURING_PLAN.md`), update controllers to read emergency flags from `ProviderService` instead of `Service`.
+- Pick a canonical default for emergency lead-time (currently 120 minutes by default; some older tags used 60).
 
-Next steps (pick one or more):
-- Wire `MyServicesWidget` to the real Services API and test the emergency filter with live service documents.
-- Reconcile the emergency lead-time canonical value and update DB or code.
-- Add unit and integration tests: availability merging test; emergency booking creation within lead-time and price verification.
-- Clean up lint warnings and remove unused local variables in frontend widgets.
+Sanity tests to try:
+- Add a global slot, open any service: it appears blue; exclude it in one service and save; reopen and verify it’s red (excluded) and not present in effective schedule.
+- Add a green (service) slot; save; verify persistence; in Emergency tab, add a green emergency-only slot and save; verify only emergency additions were stored.
 
 Contact/author: Changes applied by developer workflow on repository `PalHands` (branch: master).

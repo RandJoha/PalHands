@@ -671,7 +671,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
 
   String _formatDateTime(DateTime dt) {
     // Local short format: yyyy-MM-dd HH:mm
-    final two = (int n) => n.toString().padLeft(2, '0');
+    two(int n) => n.toString().padLeft(2, '0');
     return '${dt.year}-${two(dt.month)}-${two(dt.day)} ${two(dt.hour)}:${two(dt.minute)}';
   }
 
@@ -680,7 +680,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
     try {
       if (raw.contains('T')) {
         final dt = DateTime.parse(raw).toLocal();
-        final two = (int n) => n.toString().padLeft(2, '0');
+        two(int n) => n.toString().padLeft(2, '0');
         return '${dt.year}-${two(dt.month)}-${two(dt.day)}';
       }
     } catch (_) {}
@@ -693,7 +693,7 @@ class _BookingManagementWidgetState extends State<BookingManagementWidget> {
       if (RegExp(r'^\d{2}:\d{2}$').hasMatch(v)) return v;
       try {
         final dt = DateTime.parse(v).toLocal();
-        final two = (int n) => n.toString().padLeft(2, '0');
+        two(int n) => n.toString().padLeft(2, '0');
         return '${two(dt.hour)}:${two(dt.minute)}';
       } catch (_) {
         return v; // as-is fallback

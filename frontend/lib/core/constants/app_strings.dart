@@ -233,6 +233,32 @@ class AppStrings {
     'ar': 'الخدمات التقنية',
   };
 
+  // --- Availability & Emergency (Provider Services) ---
+  static const Map<String, String> availability = {
+    'en': 'availability',
+    'ar': 'التوفر',
+  };
+
+  static const Map<String, String> normal = {
+    'en': 'normal',
+    'ar': 'عادي',
+  };
+
+  static const Map<String, String> emergency = {
+    'en': 'emergency',
+    'ar': 'طوارئ',
+  };
+
+  static const Map<String, String> emergencyIsOnAddExtraWindows = {
+    'en': 'Emergency is ON — add extra windows.',
+    'ar': 'الطوارئ مُفعلة — أضف نوافذ إضافية.',
+  };
+
+  static const Map<String, String> emergencyIsOffTurnOnInEdit = {
+    'en': 'Turn on Emergency in Edit Service to set emergency hours.',
+    'ar': 'قم بتفعيل الطوارئ من تعديل الخدمة لإعداد ساعات الطوارئ.',
+  };
+
   // Sub-services examples
   static const Map<String, String> cleaning = {
     'en': 'Cleaning',
@@ -4510,6 +4536,12 @@ class AppStrings {
       'entertainmentServices': entertainmentServices,
       'beautyServices': beautyServices,
       'technicalServices': technicalServices,
+  // Availability & Emergency
+  'availability': availability,
+  'normal': normal,
+  'emergency': emergency,
+  'emergencyIsOnAddExtraWindows': emergencyIsOnAddExtraWindows,
+  'emergencyIsOffTurnOnInEdit': emergencyIsOffTurnOnInEdit,
       'cleaning': cleaning,
       'plumbing': plumbing,
       'electrical': electrical,
@@ -5571,10 +5603,7 @@ class AppStrings {
         'en': 'Confirm',
         'ar': 'تأكيد',
       },
-      'accept': {
-        'en': 'Accept',
-        'ar': 'قبول',
-      },
+  // duplicate removed: 'accept'
       'reject': {
         'en': 'Reject',
         'ar': 'رفض',
@@ -5671,10 +5700,7 @@ class AppStrings {
         'en': 'Filter',
         'ar': 'تصفية',
       },
-      'actions': {
-        'en': 'Actions',
-        'ar': 'إجراءات',
-      },
+  // duplicate removed: 'actions'
       'sort': {
         'en': 'Sort',
         'ar': 'ترتيب',

@@ -134,6 +134,17 @@ The Provider Dashboard is a comprehensive management interface designed for serv
 - Service management functionality
 - Add service interface
 
+##### Availability editor (Updated Sep 2025)
+- Global slots (blue) are inherited by default; click ⊖ to exclude for a specific service.
+- Service additions (green) are per‑service only; use “Add hour” or “Add service slots” to add.
+- Excluded slots show in red and can be restored.
+- Save semantics:
+  - If a service’s effective schedule equals global, `weeklyOverrides` is cleared (null) so it fully inherits.
+  - Otherwise, the full effective schedule is saved under `weeklyOverrides`.
+- Emergency tab:
+  - Baseline inherits from the service’s normal effective schedule when present, else from global.
+  - Only emergency additions are stored in `emergencyWeeklyOverrides` (set to null when empty).
+
 #### **Bookings** (Updated Sep 2025)
 - There are two booking views:
   - **My Client Bookings**: Jobs where the provider is the service provider. Cards show the client name. Default “All” filter excludes cancelled.

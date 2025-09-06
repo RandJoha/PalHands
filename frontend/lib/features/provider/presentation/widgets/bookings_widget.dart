@@ -293,7 +293,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                     child: Container(
                       width: isMobile ? 24 : 28,
                       height: isMobile ? 24 : 28,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: AppColors.border,
                         shape: BoxShape.circle,
                       ),

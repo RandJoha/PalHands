@@ -114,10 +114,9 @@ class BookingService with BaseApiService {
       if (page != null) queryParams['page'] = page.toString();
       if (limit != null) queryParams['limit'] = limit.toString();
 
-      final endpoint = '${ApiConfig.bookingsEndpoint}/admin/all' +
-          (queryParams.isNotEmpty
+      final endpoint = '${ApiConfig.bookingsEndpoint}/admin/all${queryParams.isNotEmpty
               ? '?${Uri(queryParameters: queryParams).query}'
-              : '');
+              : ''}';
 
       final response = await get(endpoint, headers: await _getAuthHeaders());
 
