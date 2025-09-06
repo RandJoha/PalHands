@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 // Core imports
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/constants/api_config.dart';
 
 // Shared imports
 import '../../../../shared/services/language_service.dart';
+import '../../../../shared/services/auth_service.dart';
 
 class DashboardOverview extends StatefulWidget {
   const DashboardOverview({super.key});
@@ -31,49 +35,57 @@ class _DashboardOverviewState extends State<DashboardOverview> {
       _isLoading = true;
     });
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      // Get auth service for headers
+      final authService = Provider.of<AuthService>(context, listen: false);
+      
+      if (!authService.isAuthenticated || !authService.isAdmin) {
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
 
-    // Mock data for demonstration
-    setState(() {
-      _dashboardData = {
-        'users': {
-          'total': 1247,
-          'active': 1189,
-          'inactive': 58,
-          'byRole': [
-            {'_id': 'client', 'count': 892},
-            {'_id': 'provider', 'count': 312},
-            {'_id': 'admin', 'count': 43},
-          ]
-        },
-        'services': {
-          'total': 456,
-          'active': 423,
-          'featured': 23,
-        },
-        'bookings': {
-          'total': 2341,
-          'today': 12,
-          'thisWeek': 89,
-          'thisMonth': 342,
-        },
-        'revenue': {
-          'monthly': 45678.50,
-          'averageBooking': 133.56,
-        },
-        'reports': {
-          'pending': 8,
-          'urgent': 2,
-        },
-        'systemHealth': {
-          'database': 'healthy',
-          'api': 'healthy',
-          'uptime': 99.8,
-        }
+      // Call real backend API
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        if (authService.token != null) 'Authorization': 'Bearer ${authService.token}',
       };
-      _isLoading = false;
-    });
+
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/api/admin/dashboard/overview'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          setState(() {
+            _dashboardData = data['data'];
+            _isLoading = false;
+          });
+        } else {
+          throw Exception('API returned success: false');
+        }
+      } else {
+        throw Exception('HTTP ${response.statusCode}: ${response.body}');
+      }
+    } catch (error) {
+      print('❌ Error loading dashboard data: $error');
+      // Fallback to empty data on error
+      setState(() {
+        _dashboardData = {
+          'users': {'total': 0, 'active': 0, 'inactive': 0, 'byRole': []},
+          'services': {'total': 0, 'active': 0, 'featured': 0},
+          'bookings': {'total': 0, 'today': 0, 'thisWeek': 0, 'thisMonth': 0},
+          'revenue': {'monthly': 0.0, 'averageBooking': 0.0},
+          'reports': {'pending': 0, 'urgent': 0},
+          'systemHealth': {'database': 'unknown', 'api': 'unknown', 'uptime': 0.0},
+        };
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -302,6 +314,15 @@ class _DashboardOverviewState extends State<DashboardOverview> {
           languageService: languageService,
         ),
         _buildStatCard(
+          title: 'Under Review',
+          value: _dashboardData['reports']?['underReview']?.toString() ?? '0',
+          icon: Icons.visibility,
+          color: const Color(0xFF2196F3),
+          trend: '+2',
+          trendUp: true,
+          languageService: languageService,
+        ),
+        _buildStatCard(
           title: AppStrings.getString('systemUptime', languageService.currentLanguage),
           value: '${_dashboardData['systemHealth']?['uptime']?.toStringAsFixed(1) ?? '99.9'}%',
           icon: Icons.check_circle,
@@ -367,6 +388,15 @@ class _DashboardOverviewState extends State<DashboardOverview> {
           color: const Color(0xFFFF5722),
           trend: '-3',
           trendUp: false,
+          languageService: languageService,
+        ),
+        _buildMobileStatCard(
+          title: 'Under Review',
+          value: _dashboardData['reports']?['underReview']?.toString() ?? '0',
+          icon: Icons.visibility,
+          color: const Color(0xFF2196F3),
+          trend: '+2',
+          trendUp: true,
           languageService: languageService,
         ),
         _buildMobileStatCard(

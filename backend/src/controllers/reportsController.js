@@ -78,17 +78,37 @@ const createReport = async (req, res) => {
       createdAt: report.createdAt
     });
 
-    // Send notification to all admins about the new report
-    try {
-      await NotificationService.notifyNewReport(report);
-    } catch (notificationError) {
-      console.error('Failed to send notification for new report:', notificationError);
-      // Don't fail the report creation if notification fails
-    }
+    // Send notification to all admins about the new report - DISABLED
+    // try {
+    //   await NotificationService.notifyNewReport(report);
+    // } catch (notificationError) {
+    //   console.error('Failed to send notification for new report:', notificationError);
+    //   // Don't fail the report creation if notification fails
+    // }
 
     return res.status(201).json({ success: true, message: 'Report created', data: report });
   } catch (error) {
     console.error('Create report error:', error);
+    
+    // Handle duplicate key error (idempotency key conflict)
+    if (error.code === 11000) {
+      console.log('Duplicate key error - likely idempotency key conflict');
+      return res.status(400).json({ 
+        success: false, 
+        message: 'A report with the same content has already been submitted. Please wait a moment and try again.' 
+      });
+    }
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Validation failed', 
+        details: messages 
+      });
+    }
+    
     return res.status(500).json({ success: false, message: 'Failed to create report' });
   }
 };

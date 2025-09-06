@@ -220,7 +220,7 @@ class ReportsService {
       final body = <String, dynamic>{
         'reportCategory': reportCategory,
         'description': description,
-        'evidence': evidence,
+        'evidence': evidence.cast<String>(),
       };
 
       if (reportedType != null) body['reportedType'] = reportedType;

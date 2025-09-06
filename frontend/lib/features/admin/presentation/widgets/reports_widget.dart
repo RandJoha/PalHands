@@ -600,6 +600,15 @@ class _ReportsWidgetState extends State<ReportsWidget> {
         const SizedBox(width: 16),
         Expanded(
           child: _buildStatCard(
+            'Under Review',
+            _stats?['byStatus']?.firstWhere((s) => s['_id'] == 'under_review', orElse: () => {'count': 0})['count']?.toString() ?? '0',
+            Icons.visibility,
+            Colors.blue,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _buildStatCard(
             'Dismissed',
             _stats?['byStatus']?.firstWhere((s) => s['_id'] == 'dismissed', orElse: () => {'count': 0})['count']?.toString() ?? '0',
             Icons.cancel,
@@ -1080,7 +1089,6 @@ class _ReportsWidgetState extends State<ReportsWidget> {
             children: [
               _buildDetailRow('Reporter', _getReporterDisplayName(report)),
               _buildDetailRow('Email', _getReporterEmail(report)),
-              _buildDetailRow('Category', _getCategoryDisplayName(report.reportCategory)),
               _buildDetailRow('Status', _getStatusDisplayName(report.status)),
               // Show title for "Other" reports, idea title for feature suggestions
               if (report.reportCategory == 'other' && report.subject != null && report.subject!.isNotEmpty) 
@@ -1088,8 +1096,11 @@ class _ReportsWidgetState extends State<ReportsWidget> {
               if (report.reportCategory == 'feature_suggestion' && report.ideaTitle != null && report.ideaTitle!.isNotEmpty) 
                 _buildDetailRow('Idea Title', report.ideaTitle!),
               if (report.issueType != null) _buildDetailRow('Issue Type', _getIssueTypeDisplayName(report.issueType!)),
-              if (report.reportedName != null && report.reportedName!.isNotEmpty) _buildDetailRow('Reported Name', report.reportedName!),
+              if (report.reportedName != null && report.reportedName!.isNotEmpty) _buildDetailRow('Reported ID', report.reportedName!),
+              if (report.reportedUserRole != null) _buildDetailRow('Reported User Role', report.reportedUserRole!.toUpperCase()),
               if (report.serviceName != null && report.serviceName!.isNotEmpty) _buildDetailRow('Service Name', report.serviceName!),
+              if (report.reportCategory == 'service_category_request' && report.categoryFit != null && report.categoryFit!.isNotEmpty) 
+                _buildDetailRow('Category', report.categoryFit!),
               // Show description for all reports
               _buildDetailRow('Description', report.description.isNotEmpty ? report.description : 'No description provided'),
               if (report.adminNote != null && report.adminNote!.isNotEmpty) _buildDetailRow('Admin Note', report.adminNote!),

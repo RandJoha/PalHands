@@ -71,13 +71,6 @@ class ContactData {
             required: true,
           ),
           ContactFormField(
-            labelKey: 'issueType',
-            hintKey: 'issueType',
-            type: FieldType.dropdown,
-            required: true,
-            options: ['unsafe', 'misleading', 'other'],
-          ),
-          ContactFormField(
             labelKey: 'attachScreenshot',
             hintKey: 'attachScreenshot',
             type: FieldType.file,

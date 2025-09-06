@@ -430,39 +430,39 @@ const sendMessage = async (req, res) => {
       updatedAt: new Date()
     });
 
-    // Create notifications for other participants
-    try {
-      for (const participantId of otherParticipants) {
-        // Skip if it's the sender
-        if (participantId.toString() === userId.toString()) continue;
+    // Create notifications for other participants - DISABLED
+    // try {
+    //   for (const participantId of otherParticipants) {
+    //     // Skip if it's the sender
+    //     if (participantId.toString() === userId.toString()) continue;
         
-        // Get participant info
-        const participant = await User.findById(participantId).select('firstName lastName role');
-        if (!participant) continue;
+    //     // Get participant info
+    //     const participant = await User.findById(participantId).select('firstName lastName role');
+    //     if (!participant) continue;
 
-        // Create notification
-        const notification = new Notification({
-          recipient: participantId,
-          type: 'new_message',
-          title: 'New Message',
-          message: `You have a new message from ${sender.firstName} ${sender.lastName}`,
-          data: {
-            chatId: chatId,
-            senderId: userId,
-            senderName: `${sender.firstName} ${sender.lastName}`,
-            messageContent: content.substring(0, 100) + (content.length > 100 ? '...' : ''),
-            messageType: messageType
-          },
-          priority: 'medium'
-        });
+    //     // Create notification
+    //     const notification = new Notification({
+    //       recipient: participantId,
+    //       type: 'new_message',
+    //       title: 'New Message',
+    //       message: `You have a new message from ${sender.firstName} ${sender.lastName}`,
+    //       data: {
+    //         chatId: chatId,
+    //         senderId: userId,
+    //         senderName: `${sender.firstName} ${sender.lastName}`,
+    //         messageContent: content.substring(0, 100) + (content.length > 100 ? '...' : ''),
+    //         messageType: messageType
+    //       },
+    //       priority: 'medium'
+    //     });
 
-        await notification.save();
-        console.log(`🔔 Notification created for ${participant.firstName} ${participant.lastName} (${participant.role})`);
-      }
-    } catch (notificationError) {
-      console.error('❌ Failed to create notifications:', notificationError);
-      // Don't fail the message send if notifications fail
-    }
+    //     await notification.save();
+    //     console.log(`🔔 Notification created for ${participant.firstName} ${participant.lastName} (${participant.role})`);
+    //   }
+    // } catch (notificationError) {
+    //   console.error('❌ Failed to create notifications:', notificationError);
+    //   // Don't fail the message send if notifications fail
+    // }
 
     // Populate sender info for response
     // All users (including providers) are stored in User collection for authentication

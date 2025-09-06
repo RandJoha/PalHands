@@ -21,6 +21,7 @@ import '../services/responsive_service.dart';
 import 'animated_handshake.dart';
 import 'signup_screen.dart';
 import '../../features/profile/presentation/widgets/security_widget.dart';
+import '../../features/contact/presentation/widgets/contact_purpose_selector.dart';
 
 // Responsive login screen
 class LoginScreen extends StatefulWidget {
@@ -74,9 +75,26 @@ class _LoginScreenState extends State<LoginScreen> {
         );
 
   if (response['success'] == true) {
-          // Login successful - navigate to root to trigger AuthWrapper routing
+          // Login successful - check if we should return to contact page
           if (mounted) {
-            Navigator.of(context).pushReplacementNamed('/');
+            // Check if there's a stored contact purpose
+            final storedPurpose = await ContactPurposeSelector.getAndClearStoredPurpose();
+            if (kDebugMode) {
+              print('🔍 Login success - checking for stored purpose: ${storedPurpose != null ? storedPurpose.toString() : 'None'}');
+            }
+            if (storedPurpose != null) {
+              if (kDebugMode) {
+                print('✅ Navigating to contact page to restore purpose: ${storedPurpose.toString()}');
+              }
+              // Navigate to contact page to restore the selected purpose
+              Navigator.of(context).pushReplacementNamed('/contact');
+            } else {
+              if (kDebugMode) {
+                print('ℹ️ No stored purpose, navigating to dashboard');
+              }
+              // Navigate to root to trigger AuthWrapper routing
+              Navigator.of(context).pushReplacementNamed('/');
+            }
           }
         } else {
           // Debug: Print the response to see what we're getting

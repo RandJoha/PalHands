@@ -63,6 +63,7 @@ const getDashboardOverview = async (req, res) => {
 
     // Report statistics
     const pendingReports = await Report.countDocuments({ status: 'pending' });
+    const underReviewReports = await Report.countDocuments({ status: 'under_review' });
     const urgentReports = 0; // Priority removed, no urgent reports
 
     // Recent admin actions
@@ -106,6 +107,7 @@ const getDashboardOverview = async (req, res) => {
         },
         reports: {
           pending: pendingReports,
+          underReview: underReviewReports,
           urgent: urgentReports
         },
         recentActions,

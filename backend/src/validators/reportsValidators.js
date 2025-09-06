@@ -1,6 +1,6 @@
 const { celebrate, Joi, Segments } = require('celebrate');
 
-const objectId = Joi.string().regex(/^[0-9a-fA-F]{24}$/);
+const objectId = Joi.string().optional();
 
 const createReportValidator = celebrate({
   [Segments.BODY]: Joi.object({
@@ -8,45 +8,35 @@ const createReportValidator = celebrate({
 
     // Common
     description: Joi.string().min(10).max(1000).required(),
-    contactEmail: Joi.string().email()
-      .when('reportCategory', { is: Joi.valid('feature_suggestion', 'service_category_request', 'technical_issue', 'other'), then: Joi.required(), otherwise: Joi.optional() }),
-    contactName: Joi.string().min(2).max(80)
-      .when('reportCategory', { is: Joi.valid('feature_suggestion', 'service_category_request', 'technical_issue', 'other'), then: Joi.required(), otherwise: Joi.optional() }),
+    contactEmail: Joi.string().email().optional(),
+    contactName: Joi.string().min(2).max(80).optional(),
     subject: Joi.string().min(3).max(200).optional(),
-    evidence: Joi.array().items(Joi.string()).default([]),
+    evidence: Joi.array().items(Joi.string().min(1)).default([]),
 
     // Optional linkage keys
-    relatedBookingId: objectId.optional(),
-    reportedServiceId: objectId.optional(),
+    relatedBookingId: Joi.string().optional(),
+    reportedServiceId: Joi.string().optional(),
 
     // User issue specifics
     reportedType: Joi.string().valid('user', 'service', 'booking', 'review', 'payment').optional(),
-    reportedId: objectId.optional(),
-    reportedName: Joi.string().min(2).max(120)
-      .when('reportCategory', { is: 'user_issue', then: Joi.required(), otherwise: Joi.forbidden() }),
-    reportedUserRole: Joi.string().valid('client', 'provider')
-      .when('reportedType', { is: 'user', then: Joi.required(), otherwise: Joi.forbidden() }),
-    issueType: Joi.string().valid('unsafe', 'harassment', 'misleading', 'inappropriate_behavior', 'fraud', 'spam', 'payment_issue', 'safety_concern', 'poor_quality', 'no_show', 'other')
-      .when('reportCategory', { is: 'user_issue', then: Joi.required(), otherwise: Joi.forbidden() }),
+    reportedId: Joi.string().optional(),
+    reportedName: Joi.string().min(2).max(120).optional(),
+    reportedUserRole: Joi.string().valid('client', 'provider').optional(),
+    issueType: Joi.string().valid('unsafe', 'harassment', 'misleading', 'inappropriate_behavior', 'fraud', 'spam', 'payment_issue', 'safety_concern', 'poor_quality', 'no_show', 'other').optional(),
     partyInfo: Joi.object({
-      reporterName: Joi.string().min(2).max(80).required(),
-      reporterEmail: Joi.string().email().required(),
+      reporterName: Joi.string().min(2).max(80).optional(),
+      reporterEmail: Joi.string().email().optional(),
       reportedEmail: Joi.string().email().optional()
-    }).when('reportCategory', { is: 'user_issue', then: Joi.optional(), otherwise: Joi.forbidden() }),
+    }).optional(),
 
     // Feature suggestion specifics
-    ideaTitle: Joi.string().min(3).max(150)
-      .when('reportCategory', { is: 'feature_suggestion', then: Joi.required(), otherwise: Joi.forbidden() }),
-    communityBenefit: Joi.string().min(5).max(1000)
-      .when('reportCategory', { is: 'feature_suggestion', then: Joi.required(), otherwise: Joi.forbidden() }),
+    ideaTitle: Joi.string().min(3).max(150).allow('', null).optional(),
+    communityBenefit: Joi.string().min(5).max(1000).allow('', null).optional(),
 
     // Service category request specifics
-    serviceName: Joi.string().min(2).max(120)
-      .when('reportCategory', { is: 'service_category_request', then: Joi.required(), otherwise: Joi.forbidden() }),
-    categoryFit: Joi.string().min(2).max(120)
-      .when('reportCategory', { is: 'service_category_request', then: Joi.required(), otherwise: Joi.forbidden() }),
-    importanceReason: Joi.string().min(5).max(1000)
-      .when('reportCategory', { is: 'service_category_request', then: Joi.required(), otherwise: Joi.forbidden() }),
+    serviceName: Joi.string().min(2).max(120).optional(),
+    categoryFit: Joi.string().min(2).max(120).optional(),
+    importanceReason: Joi.string().min(5).max(1000).optional(),
     requestedCategory: Joi.string().min(2).max(120).optional(),
 
     // Technical issue metadata
@@ -73,7 +63,7 @@ const listMyReportsValidator = celebrate({
 });
 
 const getByIdValidator = celebrate({
-  [Segments.PARAMS]: Joi.object({ id: objectId.required() })
+  [Segments.PARAMS]: Joi.object({ id: Joi.string().required() })
 });
 
 // Admin list filters
@@ -85,7 +75,7 @@ const adminListValidator = celebrate({
     reportCategory: Joi.string().valid('user_issue', 'technical_issue', 'feature_suggestion', 'service_category_request', 'other').optional(),
     issueType: Joi.string().valid('unsafe', 'harassment', 'misleading', 'inappropriate_behavior', 'fraud', 'spam', 'payment_issue', 'safety_concern', 'poor_quality', 'no_show', 'other').optional(),
     hasEvidence: Joi.boolean().optional(),
-    assignedAdmin: objectId.optional(),
+    assignedAdmin: Joi.string().optional(),
     awaiting_user: Joi.boolean().optional(),
     sort: Joi.string().valid('createdAt:asc', 'createdAt:desc').default('createdAt:desc')
   })
@@ -95,7 +85,7 @@ const adminListValidator = celebrate({
 const adminUpdateValidator = celebrate({
   [Segments.BODY]: Joi.object({
     status: Joi.string().valid('pending', 'under_review', 'resolved', 'dismissed').optional(),
-    assignedAdmin: objectId.optional(),
+    assignedAdmin: Joi.string().optional(),
     adminNote: Joi.string().max(1000).optional(),
     resolution: Joi.object({
       action: Joi.string().valid('warning_sent','warn_user','user_suspended','user_banned','service_disabled','booking_cancelled','refund_issued','no_action','other').optional(),
