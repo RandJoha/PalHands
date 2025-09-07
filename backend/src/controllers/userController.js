@@ -1,4 +1,6 @@
 const User = require('../models/User');
+const Provider = require('../models/Provider');
+const SavedProvider = require('../models/SavedProvider');
 const asyncHandler = require('../utils/asyncHandler');
 const { ok, created, error } = require('../utils/response');
 
@@ -273,11 +275,249 @@ const deleteUser = asyncHandler(async (req, res) => {
   return ok(res, {}, 'User deleted successfully');
 });
 
+// Get client reviews
+const getClientReviews = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  
+  const user = await User.findById(id).select('reviews firstName lastName');
+  if (!user) {
+    return error(res, 404, 'User not found');
+  }
+  
+  // Return the reviews array
+  return ok(res, user.reviews || [], 'Client reviews retrieved successfully');
+});
+
+// Add provider to favorites
+const addToFavorites = asyncHandler(async (req, res) => {
+  const { providerId } = req.params;
+  const userId = req.user._id;
+  
+  try {
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return error(res, 404, 'User not found');
+    }
+    
+    // Check if provider exists
+    const provider = await Provider.findById(providerId);
+    if (!provider) {
+      return error(res, 404, 'Provider not found');
+    }
+    
+    // Check if provider is already saved
+    const existingSavedProvider = await SavedProvider.findOne({ 
+      userId: userId, 
+      providerId: providerId 
+    });
+    
+    if (existingSavedProvider) {
+      return error(res, 409, 'Provider already in favorites');
+    }
+    
+    // Get provider's primary service
+    const primaryService = provider.services && provider.services.length > 0 
+      ? provider.services[0] 
+      : null;
+    
+    // Create saved provider record with provider data snapshot
+    const savedProvider = new SavedProvider({
+      userId: userId,
+      providerId: providerId,
+      providerData: {
+        firstName: provider.firstName,
+        lastName: provider.lastName,
+        email: provider.email,
+        phone: provider.phone,
+        primaryService: primaryService ? {
+          title: primaryService.title,
+          description: primaryService.description,
+          hourlyRate: primaryService.hourlyRate,
+          category: primaryService.category
+        } : null,
+        rating: provider.rating || { average: 0, count: 0 },
+        isAvailable: provider.isAvailable !== false,
+        location: {
+          city: provider.city,
+          address: provider.address
+        }
+      }
+    });
+    
+    await savedProvider.save();
+    
+    // Also add to user's favoriteProviders array for backward compatibility
+    if (!user.favoriteProviders.includes(providerId)) {
+      user.favoriteProviders.push(providerId);
+      await user.save();
+    }
+    
+    console.log('✅ Provider saved to favorites:', {
+      userId: userId,
+      providerId: providerId,
+      providerName: `${provider.firstName} ${provider.lastName}`
+    });
+    
+    return ok(res, { 
+      savedProvider: savedProvider,
+      favoriteProviders: user.favoriteProviders 
+    }, 'Provider added to favorites');
+    
+  } catch (err) {
+    console.error('❌ Error adding provider to favorites:', err);
+    return error(res, 500, 'Failed to add provider to favorites');
+  }
+});
+
+// Remove provider from favorites
+const removeFromFavorites = asyncHandler(async (req, res) => {
+  const { providerId } = req.params;
+  const userId = req.user._id;
+  
+  try {
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return error(res, 404, 'User not found');
+    }
+    
+    // Remove from savedProviders collection
+    const deletedSavedProvider = await SavedProvider.findOneAndDelete({
+      userId: userId,
+      providerId: providerId
+    });
+    
+    // Also remove from user's favoriteProviders array for backward compatibility
+    user.favoriteProviders = user.favoriteProviders.filter(id => id.toString() !== providerId);
+    await user.save();
+    
+    if (!deletedSavedProvider) {
+      return error(res, 404, 'Provider not found in favorites');
+    }
+    
+    console.log('✅ Provider removed from favorites:', {
+      userId: userId,
+      providerId: providerId,
+      providerName: `${deletedSavedProvider.providerData.firstName} ${deletedSavedProvider.providerData.lastName}`
+    });
+    
+    return ok(res, { 
+      favoriteProviders: user.favoriteProviders 
+    }, 'Provider removed from favorites');
+    
+  } catch (err) {
+    console.error('❌ Error removing provider from favorites:', err);
+    return error(res, 500, 'Failed to remove provider from favorites');
+  }
+});
+
+// Get user's favorite providers
+const getFavoriteProviders = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  
+  // Debug logging
+  console.log('🔍 getFavoriteProviders called:', {
+    userId: userId,
+    userRole: req.user.role,
+    userEmail: req.user.email,
+    userType: req.user.constructor.modelName
+  });
+  
+  try {
+    // Get saved providers from the savedProviders collection
+    const savedProviders = await SavedProvider.find({ userId: userId })
+      .sort({ savedAt: -1 }) // Most recently saved first
+      .lean(); // Use lean() for better performance
+    
+    // Return the data in the new format with providerData
+    const favoriteProviders = savedProviders.map(savedProvider => ({
+      _id: savedProvider.providerId,
+      id: savedProvider.providerId,
+      providerId: savedProvider.providerId,
+      providerData: {
+        firstName: savedProvider.providerData?.firstName || '',
+        lastName: savedProvider.providerData?.lastName || '',
+        email: savedProvider.providerData?.email || '',
+        phone: savedProvider.providerData?.phone || '',
+        rating: savedProvider.providerData?.rating || { average: 0, count: 0 },
+        isAvailable: savedProvider.providerData?.isAvailable !== false,
+        location: savedProvider.providerData?.location || {},
+        primaryService: savedProvider.providerData?.primaryService || null
+      },
+      services: savedProvider.providerData?.primaryService ? [savedProvider.providerData.primaryService] : [],
+      savedAt: savedProvider.savedAt,
+      notes: savedProvider.notes || '',
+      tags: savedProvider.tags || []
+    }));
+    
+    console.log('✅ Retrieved favorite providers:', {
+      userId: userId,
+      count: favoriteProviders.length
+    });
+    
+    // Debug logging for data structure
+    if (favoriteProviders.length > 0) {
+      console.log('📊 Sample provider data structure:', {
+        keys: Object.keys(favoriteProviders[0]),
+        providerDataKeys: favoriteProviders[0].providerData ? Object.keys(favoriteProviders[0].providerData) : 'No providerData',
+        firstName: favoriteProviders[0].providerData?.firstName,
+        lastName: favoriteProviders[0].providerData?.lastName
+      });
+      
+      // Log all providers for debugging
+      favoriteProviders.forEach((provider, index) => {
+        console.log(`📊 Provider ${index + 1}:`, {
+          id: provider._id,
+          name: `${provider.providerData?.firstName} ${provider.providerData?.lastName}`,
+          email: provider.providerData?.email,
+          savedAt: provider.savedAt
+        });
+      });
+    } else {
+      console.log('📊 No favorite providers found for user:', userId);
+    }
+    
+    return ok(res, favoriteProviders, 'Favorite providers retrieved successfully');
+    
+  } catch (err) {
+    console.error('❌ Error retrieving favorite providers:', err);
+    return error(res, 500, 'Failed to retrieve favorite providers');
+  }
+});
+
+// Check if provider is favorite
+const isProviderFavorite = asyncHandler(async (req, res) => {
+  const { providerId } = req.params;
+  const userId = req.user._id;
+  
+  try {
+    // Check if provider exists in savedProviders collection
+    const savedProvider = await SavedProvider.findOne({
+      userId: userId,
+      providerId: providerId
+    });
+    
+    const isFavorite = !!savedProvider;
+    
+    return ok(res, { isFavorite }, 'Favorite status retrieved successfully');
+    
+  } catch (err) {
+    console.error('❌ Error checking favorite status:', err);
+    return error(res, 500, 'Failed to check favorite status');
+  }
+});
+
 module.exports = {
   updateProfile,
   changePassword,
   getUserById,
   getAllUsers,
   updateUserStatus,
-  deleteUser
+  deleteUser,
+  getClientReviews,
+  addToFavorites,
+  removeFromFavorites,
+  getFavoriteProviders,
+  isProviderFavorite
 }; 

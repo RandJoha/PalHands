@@ -452,6 +452,31 @@ async function unlinkServiceFromProvider(req, res) {
   }
 }
 
+// Get provider reviews
+async function getProviderReviews(req, res) {
+  try {
+    const { id } = req.params;
+    
+    console.log('🔍 Getting provider reviews for provider ID:', id);
+    
+    const provider = await Provider.findById(id).select('reviews firstName lastName');
+    if (!provider) {
+      console.log('❌ Provider not found:', id);
+      return error(res, 404, 'Provider not found');
+    }
+    
+    console.log('✅ Provider found:', provider.firstName, provider.lastName);
+    console.log('📊 Reviews count:', (provider.reviews || []).length);
+    console.log('📊 Reviews data:', JSON.stringify(provider.reviews || [], null, 2));
+    
+    // Return the reviews array
+    return ok(res, provider.reviews || [], 'Provider reviews retrieved successfully');
+  } catch (e) {
+    console.error('getProviderReviews error', e);
+    return error(res, 500, 'Failed to get provider reviews');
+  }
+}
+
 module.exports = {
   listProviders,
   getProviderById,
@@ -460,7 +485,8 @@ module.exports = {
   deactivateServiceForMonth,
   activateServiceForMonth,
   unlinkServiceFromProvider,
-  getProviderStats
+  getProviderStats,
+  getProviderReviews
 };
 
 /**

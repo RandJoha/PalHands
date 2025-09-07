@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/booking.dart';
 import 'base_api_service.dart';
+import 'auth_service.dart';
 import '../../core/constants/api_config.dart';
 
 class BookingService with BaseApiService {
@@ -23,6 +24,18 @@ class BookingService with BaseApiService {
         };
       }
     } catch (_) {}
+    return ApiConfig.defaultHeaders;
+  }
+
+  // Build auth headers from AuthService instance
+  Map<String, String> _getAuthHeadersFromService(AuthService authService) {
+    final token = authService.token;
+    if (token != null && token.isNotEmpty) {
+      return {
+        'Authorization': 'Bearer $token',
+        ...ApiConfig.defaultHeaders,
+      };
+    }
     return ApiConfig.defaultHeaders;
   }
 
@@ -218,6 +231,92 @@ class BookingService with BaseApiService {
     );
     final data = response['data'] ?? response;
     return BookingModel.fromJson(data);
+  }
+
+  /// Rate a client after service completion (provider action)
+  Future<Map<String, dynamic>> rateClient(
+    String bookingId, {
+    required double rating,
+    String? comment,
+    required AuthService authService,
+  }) async {
+    final requestBody = {
+      'rating': rating,
+      if (comment != null && comment.isNotEmpty) 'comment': comment,
+    };
+
+    final response = await post(
+      '${ApiConfig.bookingsEndpoint}/$bookingId/rate-client',
+      body: requestBody,
+      headers: _getAuthHeadersFromService(authService),
+    );
+
+    if (kDebugMode) {
+      print('✅ Client rating submitted successfully for booking: $bookingId');
+    }
+
+    return response;
+  }
+
+  /// Get client reviews by client ID
+  Future<List<Map<String, dynamic>>> getClientReviews(
+    String clientId, {
+    required AuthService authService,
+  }) async {
+    final response = await get(
+      '${ApiConfig.usersEndpoint}/$clientId/reviews',
+      headers: _getAuthHeadersFromService(authService),
+    );
+
+    if (kDebugMode) {
+      print('✅ Client reviews fetched successfully for client: $clientId');
+    }
+
+    return List<Map<String, dynamic>>.from(response['data'] ?? []);
+  }
+
+  /// Rate a provider after service completion (client action)
+  Future<Map<String, dynamic>> rateProvider(
+    String bookingId, {
+    required double rating,
+    String? comment,
+    required AuthService authService,
+  }) async {
+    final requestBody = {
+      'rating': rating,
+      if (comment != null && comment.isNotEmpty) 'comment': comment,
+    };
+
+    final response = await post(
+      '${ApiConfig.bookingsEndpoint}/$bookingId/rate-provider',
+      body: requestBody,
+      headers: _getAuthHeadersFromService(authService),
+    );
+
+    if (kDebugMode) {
+      print('✅ Provider rating submitted successfully for booking: $bookingId');
+    }
+
+    return response;
+  }
+
+  /// Get provider reviews by provider ID
+  Future<List<Map<String, dynamic>>> getProviderReviews(
+    String providerId, {
+    required AuthService authService,
+  }) async {
+    final response = await get(
+      '${ApiConfig.providersEndpoint}/$providerId/reviews',
+      headers: _getAuthHeadersFromService(authService),
+    );
+
+    if (kDebugMode) {
+      print('✅ Provider reviews fetched successfully for provider: $providerId');
+      print('📊 Reviews data: ${response['data']}');
+      print('📊 Reviews count: ${(response['data'] as List?)?.length ?? 0}');
+    }
+
+    return List<Map<String, dynamic>>.from(response['data'] ?? []);
   }
 
   /// Respond to a cancellation request (provider or client counterparty)

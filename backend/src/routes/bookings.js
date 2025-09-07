@@ -46,6 +46,25 @@ const reasonValidator = celebrate({
 router.post('/:id/cancel', authenticate, reasonValidator, bookingsController.cancelBooking);
 router.post('/:id/confirm', authenticate, checkRole(['provider']), bookingsController.confirmBooking);
 router.post('/:id/complete', authenticate, checkRole(['provider']), bookingsController.completeBooking);
+
+// Client rating endpoint
+const rateClientValidator = celebrate({
+  [Segments.BODY]: Joi.object({
+    rating: Joi.number().min(1).max(5).required(),
+    comment: Joi.string().allow('').optional()
+  })
+});
+router.post('/:id/rate-client', authenticate, checkRole(['provider']), rateClientValidator, bookingsController.rateClient);
+
+// Provider rating endpoint
+const rateProviderValidator = celebrate({
+  [Segments.BODY]: Joi.object({
+    rating: Joi.number().min(1).max(5).required(),
+    comment: Joi.string().allow('').optional()
+  })
+});
+router.post('/:id/rate-provider', authenticate, checkRole(['client', 'user']), rateProviderValidator, bookingsController.rateProvider);
+
 router.post('/:id/cancellation-requests/:requestId/respond', authenticate, celebrate({
   [Segments.BODY]: Joi.object({ action: Joi.string().valid('accept','decline').required() })
 }), bookingsController.respondCancellationRequest);

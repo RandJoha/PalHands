@@ -176,6 +176,10 @@ class BookingModel {
 	final String? clientName;
 	final bool emergency;
 	final List<CancellationRequest> cancellationRequests;
+	final ClientRating? clientRating;
+	final ClientOverallRating? clientOverallRating;
+	final ProviderRating? providerRating;
+	final ProviderOverallRating? providerOverallRating;
 
 	BookingModel({
 		required this.id,
@@ -194,6 +198,10 @@ class BookingModel {
 			this.clientName,
 			this.emergency = false,
 		this.cancellationRequests = const [],
+		this.clientRating,
+		this.clientOverallRating,
+		this.providerRating,
+		this.providerOverallRating,
 	});
 
 	factory BookingModel.fromJson(Map<String, dynamic> json) {
@@ -276,6 +284,34 @@ class BookingModel {
 					}
 					return <CancellationRequest>[];
 				})(),
+				clientRating: (() {
+					final rating = json['clientRating'];
+					if (rating is Map<String, dynamic>) {
+						return ClientRating.fromJson(rating);
+					}
+					return null;
+				})(),
+				clientOverallRating: (() {
+					final client = json['client'];
+					if (client is Map<String, dynamic> && client['rating'] is Map<String, dynamic>) {
+						return ClientOverallRating.fromJson(client['rating']);
+					}
+					return null;
+				})(),
+				providerRating: (() {
+					final rating = json['providerRating'];
+					if (rating is Map<String, dynamic>) {
+						return ProviderRating.fromJson(rating);
+					}
+					return null;
+				})(),
+				providerOverallRating: (() {
+					final provider = json['provider'];
+					if (provider is Map<String, dynamic> && provider['rating'] is Map<String, dynamic>) {
+						return ProviderOverallRating.fromJson(provider['rating']);
+					}
+					return null;
+				})(),
 		);
 	}
 
@@ -320,6 +356,86 @@ class CancellationRequest {
 			requestedTo: (json['requestedTo'])?.toString(),
 			reason: json['reason']?.toString(),
 			requestedAt: json['requestedAt'] != null ? DateTime.tryParse(json['requestedAt'].toString()) : null,
+		);
+	}
+}
+
+class ClientRating {
+	final double rating;
+	final String? comment;
+	final DateTime ratedAt;
+	final String ratedBy;
+
+	ClientRating({
+		required this.rating,
+		this.comment,
+		required this.ratedAt,
+		required this.ratedBy,
+	});
+
+	factory ClientRating.fromJson(Map<String, dynamic> json) {
+		return ClientRating(
+			rating: (json['rating'] ?? 0.0).toDouble(),
+			comment: json['comment']?.toString(),
+			ratedAt: DateTime.tryParse(json['ratedAt']?.toString() ?? '') ?? DateTime.now(),
+			ratedBy: (json['ratedBy'] ?? '').toString(),
+		);
+	}
+}
+
+class ClientOverallRating {
+	final double average;
+	final int count;
+
+	ClientOverallRating({
+		required this.average,
+		required this.count,
+	});
+
+	factory ClientOverallRating.fromJson(Map<String, dynamic> json) {
+		return ClientOverallRating(
+			average: (json['average'] ?? 0.0).toDouble(),
+			count: (json['count'] ?? 0).toInt(),
+		);
+	}
+}
+
+class ProviderRating {
+	final double rating;
+	final String? comment;
+	final DateTime ratedAt;
+	final String ratedBy;
+
+	ProviderRating({
+		required this.rating,
+		this.comment,
+		required this.ratedAt,
+		required this.ratedBy,
+	});
+
+	factory ProviderRating.fromJson(Map<String, dynamic> json) {
+		return ProviderRating(
+			rating: (json['rating'] ?? 0.0).toDouble(),
+			comment: json['comment']?.toString(),
+			ratedAt: DateTime.tryParse(json['ratedAt']?.toString() ?? '') ?? DateTime.now(),
+			ratedBy: (json['ratedBy'] ?? '').toString(),
+		);
+	}
+}
+
+class ProviderOverallRating {
+	final double average;
+	final int count;
+
+	ProviderOverallRating({
+		required this.average,
+		required this.count,
+	});
+
+	factory ProviderOverallRating.fromJson(Map<String, dynamic> json) {
+		return ProviderOverallRating(
+			average: (json['average'] ?? 0.0).toDouble(),
+			count: (json['count'] ?? 0).toInt(),
 		);
 	}
 }

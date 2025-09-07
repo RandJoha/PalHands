@@ -13,6 +13,44 @@ class _CacheEntry<T> {
   bool get isExpired => DateTime.now().isAfter(expiresAt);
 }
 
+class ProviderInfo {
+  final String id;
+  final String firstName;
+  final String lastName;
+  final String email;
+  final RatingModel? rating;
+
+  const ProviderInfo({
+    required this.id,
+    required this.firstName,
+    required this.lastName,
+    required this.email,
+    this.rating,
+  });
+
+  factory ProviderInfo.fromJson(Map<String, dynamic> json) {
+    return ProviderInfo(
+      id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
+      firstName: json['firstName'] ?? '',
+      lastName: json['lastName'] ?? '',
+      email: json['email'] ?? '',
+      rating: json['rating'] != null ? RatingModel.fromJson(json['rating']) : null,
+    );
+  }
+
+  String get fullName => '$firstName $lastName';
+
+  Map<String, dynamic> toJson() {
+    return {
+      '_id': id,
+      'firstName': firstName,
+      'lastName': lastName,
+      'email': email,
+      if (rating != null) 'rating': rating!.toJson(),
+    };
+  }
+}
+
 class ServiceModel {
   final String id;
   final String slug;
@@ -23,6 +61,7 @@ class ServiceModel {
   final String providerId;
   // Optional years of experience specific to this service (per provider-service)
   final int? experienceYears;
+  final ProviderInfo? provider;
   final PriceModel price;
   final LocationModel location;
   final List<String> images;
@@ -42,13 +81,14 @@ class ServiceModel {
 
   const ServiceModel({
     required this.id,
-  this.slug = '',
+    this.slug = '',
     required this.title,
     required this.description,
     required this.category,
     this.subcategory,
     required this.providerId,
-  this.experienceYears,
+    this.experienceYears,
+    this.provider,
     required this.price,
     required this.location,
     required this.images,
@@ -60,11 +100,11 @@ class ServiceModel {
     required this.featured,
     required this.createdAt,
     required this.updatedAt,
-  this.emergencyEnabled = false,
-  this.emergencyLeadTimeMinutes = 120,
-  this.emergencySurchargeType = 'flat',
-  this.emergencySurchargeAmount = 0,
-  this.emergencyRateMultiplier = 1.5,
+    this.emergencyEnabled = false,
+    this.emergencyLeadTimeMinutes = 120,
+    this.emergencySurchargeType = 'flat',
+    this.emergencySurchargeAmount = 0,
+    this.emergencyRateMultiplier = 1.5,
   });
 
   factory ServiceModel.fromJson(Map<String, dynamic> json) {
@@ -82,8 +122,11 @@ class ServiceModel {
         }
         return p?.toString() ?? '';
       }(),
-  // Prefer explicit per-service experience if provided; fallback-compatible with 'experience'
-  experienceYears: (json['experienceYears'] as num?)?.toInt() ?? (json['experience'] as num?)?.toInt(),
+      // Prefer explicit per-service experience if provided; fallback-compatible with 'experience'
+      experienceYears: (json['experienceYears'] as num?)?.toInt() ?? (json['experience'] as num?)?.toInt(),
+      provider: json['provider'] is Map<String, dynamic> 
+          ? ProviderInfo.fromJson(json['provider']) 
+          : null,
       price: PriceModel.fromJson(json['price'] ?? {}),
       location: LocationModel.fromJson(json['location'] ?? {}),
       images: (json['images'] as List?)?.map((e) => e['url']?.toString() ?? '').toList() ?? [],
@@ -127,7 +170,8 @@ class ServiceModel {
       'category': category,
       if (subcategory != null) 'subcategory': subcategory,
       'provider': providerId,
-  if (experienceYears != null) 'experienceYears': experienceYears,
+      if (experienceYears != null) 'experienceYears': experienceYears,
+      if (provider != null) 'providerInfo': provider!.toJson(),
       'price': price.toJson(),
       'location': location.toJson(),
       'images': images.map((url) => {'url': url}).toList(),
@@ -246,9 +290,9 @@ class ServicesService with BaseApiService {
   // Track in-flight requests to avoid issuing multiple identical GETs concurrently
   final Map<String, Future<List<ServiceModel>>> _inflightProviderRequests = {};
 
-  // Get authentication token from AuthService
-  Map<String, String> get _authHeaders {
-    final token = AuthService().token;
+  // Get authentication headers from provided AuthService instance
+  Map<String, String> _getAuthHeaders(AuthService authService) {
+    final token = authService.token;
     if (token != null) {
       return {
         'Authorization': 'Bearer $token',
@@ -268,6 +312,7 @@ class ServicesService with BaseApiService {
     double? maxDistanceKm,
     int? page,
     int? limit,
+    AuthService? authService,
   }) async {
     try {
       final queryParams = <String, String>{};
@@ -285,7 +330,7 @@ class ServicesService with BaseApiService {
               ? '?${Uri(queryParameters: queryParams).query}' 
               : '');
 
-      final response = await get(endpoint, headers: _authHeaders);
+      final response = await get(endpoint, headers: authService != null ? _getAuthHeaders(authService) : ApiConfig.defaultHeaders);
 
       dynamic raw = response['services'] ?? response['data'];
       if (raw is Map<String, dynamic>) {
@@ -308,11 +353,11 @@ class ServicesService with BaseApiService {
   }
 
   /// Get a specific service by ID
-  Future<ServiceModel?> getServiceById(String serviceId) async {
+  Future<ServiceModel?> getServiceById(String serviceId, {AuthService? authService}) async {
     try {
       final response = await get(
         '${ApiConfig.servicesEndpoint}/$serviceId',
-        headers: _authHeaders,
+        headers: authService != null ? _getAuthHeaders(authService) : ApiConfig.defaultHeaders,
       );
 
       if (kDebugMode && ApiConfig.enableLogging) {
@@ -336,6 +381,7 @@ class ServicesService with BaseApiService {
     String? q,
     int? page,
     int? limit,
+    AuthService? authService,
   }) async {
     return getServices(
       category: category,
@@ -343,6 +389,7 @@ class ServicesService with BaseApiService {
       q: q,
       page: page,
       limit: limit,
+      authService: authService,
     );
   }
 
@@ -352,6 +399,7 @@ class ServicesService with BaseApiService {
     int? page,
     int? limit,
     bool forceRefresh = false,
+    AuthService? authService,
   }) async {
     // Serve from cache if present and not expired
     if (!forceRefresh) {
@@ -414,7 +462,7 @@ class ServicesService with BaseApiService {
       } catch (_) {}
 
       // 2) Fallback to legacy /services?providerId overlay endpoint
-      final list = await getServices(providerId: providerId, page: page, limit: limit);
+      final list = await getServices(providerId: providerId, page: page, limit: limit, authService: authService);
       if (list.isNotEmpty) {
         _providerServicesCache[providerId] = _CacheEntry(value: list, ttl: _providerCacheTTL);
       }
@@ -444,6 +492,7 @@ class ServicesService with BaseApiService {
     String? area,
     int? page,
     int? limit,
+    AuthService? authService,
   }) async {
     return getServices(
       q: query,
@@ -451,12 +500,14 @@ class ServicesService with BaseApiService {
       area: area,
       page: page,
       limit: limit,
+      authService: authService,
     );
   }
 
   /// Get featured services
   Future<List<ServiceModel>> getFeaturedServices({
     int? limit,
+    AuthService? authService,
   }) async {
     try {
       final queryParams = <String, String>{};
@@ -467,7 +518,7 @@ class ServicesService with BaseApiService {
               ? '?${Uri(queryParameters: queryParams).query}' 
               : '');
 
-      final response = await get(endpoint, headers: _authHeaders);
+      final response = await get(endpoint, headers: authService != null ? _getAuthHeaders(authService) : ApiConfig.defaultHeaders);
 
       dynamic raw = response['services'] ?? response['data'];
       if (raw is Map<String, dynamic>) {
@@ -489,6 +540,69 @@ class ServicesService with BaseApiService {
         print('❌ Error fetching featured services: $e');
       }
       return [];
+    }
+  }
+
+  /// Create a new service (admin only)
+  Future<ServiceModel?> createService({
+    required String title,
+    required String description,
+    required String category,
+    String? subcategory,
+    String? providerId,
+    required AuthService authService,
+  }) async {
+    try {
+      final requestBody = {
+        'title': title,
+        'description': description,
+        'category': category,
+        if (subcategory != null && subcategory.isNotEmpty) 'subcategory': subcategory,
+        if (providerId != null && providerId.isNotEmpty) 'provider': providerId,
+      };
+
+      final response = await post(
+        '${ApiConfig.servicesEndpoint}/simple',
+        body: requestBody,
+        headers: _getAuthHeaders(authService),
+      );
+
+      if (kDebugMode) {
+        print('✅ Service created successfully');
+        print('📂 Service category: $category');
+      }
+
+      final serviceData = response['data'] ?? response;
+      return ServiceModel.fromJson(serviceData);
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error creating service: $e');
+      }
+      rethrow;
+    }
+  }
+
+  /// Delete a service (admin only)
+  Future<bool> deleteService({
+    required String serviceId,
+    required AuthService authService,
+  }) async {
+    try {
+      await delete(
+        '${ApiConfig.servicesEndpoint}/$serviceId',
+        headers: _getAuthHeaders(authService),
+      );
+
+      if (kDebugMode) {
+        print('✅ Service deleted successfully: $serviceId');
+      }
+
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error deleting service: $e');
+      }
+      rethrow;
     }
   }
 }

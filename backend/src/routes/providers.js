@@ -17,4 +17,7 @@ router.delete('/:providerId/services/:serviceId', authenticate, checkRole(['admi
 // Provider dashboard stats (can be public for now; tighten later if needed)
 router.get('/:id/bookings/stats', providersController.getProviderStats);
 
+// Provider reviews route (clients can view provider reviews)
+router.get('/:id/reviews', auth, checkRole(['client', 'admin']), providersController.getProviderReviews);
+
 module.exports = router;

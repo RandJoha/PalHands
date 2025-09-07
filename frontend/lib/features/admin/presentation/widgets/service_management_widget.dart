@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,6 +11,10 @@ import '../../../../core/constants/app_strings.dart';
 
 // Shared imports
 import '../../../../shared/services/language_service.dart';
+import '../../../../shared/services/services_service.dart';
+import '../../../../shared/services/service_categories_service.dart';
+import '../../../../shared/services/auth_service.dart';
+import '../../../../shared/services/category_refresh_notifier.dart';
 
 class ServiceManagementWidget extends StatefulWidget {
   const ServiceManagementWidget({super.key});
@@ -19,14 +25,172 @@ class ServiceManagementWidget extends StatefulWidget {
 
 class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
   bool _isLoading = false;
-  List<Map<String, dynamic>> _services = [];
+  List<ServiceModel> _services = [];
+  List<ServiceCategoryModel> _categories = [];
   String _searchQuery = '';
   String _selectedCategory = 'all';
   String _selectedStatus = 'all';
+  final ServicesService _servicesService = ServicesService();
+  final ServiceCategoriesService _categoriesService = ServiceCategoriesService();
+  
+  // Timer for periodic category refresh
+  Timer? _categoryRefreshTimer;
 
   @override
   void initState() {
     super.initState();
+    _loadCategories();
+    _loadServices();
+    _startPeriodicRefresh();
+  }
+
+  @override
+  void dispose() {
+    _categoryRefreshTimer?.cancel();
+    super.dispose();
+  }
+
+  /// Start periodic refresh to keep categories up-to-date
+  void _startPeriodicRefresh() {
+    _categoryRefreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (mounted) {
+        if (kDebugMode) {
+          print('🔄 Periodic category refresh triggered');
+        }
+        _refreshCategories();
+      }
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh categories when dependencies change (e.g., when returning to this page)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _refreshCategories();
+      }
+    });
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      // Force refresh from database to get latest categories
+      final categories = await _categoriesService.getCategories(forceRefresh: true);
+      setState(() {
+        _categories = categories;
+      });
+      
+      if (kDebugMode) {
+        print('🔄 Categories refreshed: ${categories.length} categories loaded');
+        for (final category in categories) {
+          print('  - ${category.name} (${category.id})');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to load categories: $e',
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      
+      if (kDebugMode) {
+        print('❌ Error loading categories: $e');
+      }
+    }
+  }
+
+  /// Force refresh categories from database
+  Future<void> _refreshCategories() async {
+    if (kDebugMode) {
+      print('🔄 Force refreshing categories...');
+    }
+    
+    // Clear cache and force refresh
+    _categoriesService.clearCache();
+    await _loadCategories();
+    
+    // Trigger a rebuild to ensure UI updates
+    if (mounted) {
+      setState(() {
+        // This will trigger a rebuild of the dropdown
+      });
+    }
+    
+    if (kDebugMode) {
+      print('✅ Categories refresh completed - UI updated');
+    }
+  }
+
+  /// Enhanced refresh with multiple strategies to ensure dynamic updates
+  Future<void> _forceDynamicRefresh() async {
+    if (kDebugMode) {
+      print('🚀 Starting dynamic category refresh...');
+    }
+    
+    try {
+      // Strategy 1: Clear all caches
+      _categoriesService.clearCache();
+      
+      // Strategy 2: Force refresh from database
+      final freshCategories = await _categoriesService.getCategories(forceRefresh: true);
+      
+      // Strategy 3: Update state and trigger rebuild
+      if (mounted) {
+        setState(() {
+          _categories = freshCategories;
+        });
+      }
+      
+      // Strategy 4: Force refresh categories with services
+      await _categoriesService.refreshCategoriesWithServices();
+      
+      // Strategy 5: Final state update
+      if (mounted) {
+        setState(() {
+          // Force another rebuild to ensure dropdown updates
+        });
+      }
+      
+      if (kDebugMode) {
+        print('✅ Dynamic refresh completed - ${freshCategories.length} categories loaded');
+        for (final category in freshCategories) {
+          print('  📂 ${category.name} (${category.id})');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error in dynamic refresh: $e');
+      }
+      // Fallback to regular refresh
+      await _refreshCategories();
+    }
+  }
+
+  void _onSearchChanged(String query) {
+    setState(() {
+      _searchQuery = query;
+    });
+    _loadServices();
+  }
+
+  void _onCategoryChanged(String category) {
+    setState(() {
+      _selectedCategory = category;
+    });
+    _loadServices();
+  }
+
+  void _onStatusChanged(String status) {
+    setState(() {
+      _selectedStatus = status;
+    });
     _loadServices();
   }
 
@@ -35,76 +199,48 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
       _isLoading = true;
     });
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
-
-    // Mock data
-    setState(() {
-      _services = [
-        {
-          'id': '1',
-          'title': 'Professional Home Cleaning',
-          'description': 'Complete home cleaning service with eco-friendly products',
-          'category': 'cleaning',
-          'provider': {
-            'firstName': 'Ahmed',
-            'lastName': 'Hassan',
-            'email': 'ahmed.hassan@email.com',
-          },
-          'price': {'amount': 150, 'currency': 'ILS', 'type': 'hourly'},
-          'isActive': true,
-          'featured': true,
-          'rating': {'average': 4.8, 'count': 45},
-          'totalBookings': 89,
-          'createdAt': '2024-01-15T10:30:00Z',
-        },
-        {
-          'id': '2',
-          'title': 'Elderly Care & Support',
-          'description': 'Compassionate care for elderly family members',
-          'category': 'elderly_support',
-          'provider': {
-            'firstName': 'Fatima',
-            'lastName': 'Ali',
-            'email': 'fatima.ali@email.com',
-          },
-          'price': {'amount': 200, 'currency': 'ILS', 'type': 'daily'},
-          'isActive': true,
-          'featured': false,
-          'rating': {'average': 4.9, 'count': 23},
-          'totalBookings': 34,
-          'createdAt': '2024-01-20T14:15:00Z',
-        },
-        {
-          'id': '3',
-          'title': 'Home Maintenance & Repairs',
-          'description': 'General home maintenance and repair services',
-          'category': 'maintenance',
-          'provider': {
-            'firstName': 'Omar',
-            'lastName': 'Khalil',
-            'email': 'omar.khalil@email.com',
-          },
-          'price': {'amount': 120, 'currency': 'ILS', 'type': 'fixed'},
-          'isActive': false,
-          'featured': false,
-          'rating': {'average': 4.2, 'count': 12},
-          'totalBookings': 15,
-          'createdAt': '2024-01-10T09:45:00Z',
-        },
-      ];
-      _isLoading = false;
-    });
+    try {
+      // Get AuthService from Provider context
+      final authService = Provider.of<AuthService>(context, listen: false);
+      
+      final services = await _servicesService.getServices(
+        category: _selectedCategory != 'all' ? _selectedCategory : null,
+        q: _searchQuery.isNotEmpty ? _searchQuery : null,
+        limit: 100, // Get more services for admin view
+        authService: authService,
+      );
+      
+      setState(() {
+        _services = services;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to load services: $e',
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
-  List<Map<String, dynamic>> get _filteredServices {
+  List<ServiceModel> get _filteredServices {
     return _services.where((service) {
       // Search filter
       if (_searchQuery.isNotEmpty) {
         final query = _searchQuery.toLowerCase();
-        final title = service['title'].toLowerCase();
-        final description = service['description'].toLowerCase();
-        final providerName = '${service['provider']['firstName']} ${service['provider']['lastName']}'.toLowerCase();
+        final title = service.title.toLowerCase();
+        final description = service.description.toLowerCase();
+        final providerName = service.provider?.fullName.toLowerCase() ?? '';
         
         if (!title.contains(query) && 
             !description.contains(query) && 
@@ -114,14 +250,14 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
       }
 
       // Category filter
-      if (_selectedCategory != 'all' && service['category'] != _selectedCategory) {
+      if (_selectedCategory != 'all' && service.category != _selectedCategory) {
         return false;
       }
 
       // Status filter
       if (_selectedStatus != 'all') {
         final isActive = _selectedStatus == 'active';
-        if (service['isActive'] != isActive) {
+        if (service.isActive != isActive) {
           return false;
         }
       }
@@ -154,6 +290,11 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
             _buildHeader(languageService),
             
             SizedBox(height: screenWidth > 1400 ? 20 : screenWidth > 1024 ? 16 : 12),
+            
+            // Services count
+            _buildServicesCount(languageService),
+            
+            SizedBox(height: screenWidth > 1400 ? 16 : screenWidth > 1024 ? 12 : 8),
             
             // Filters - Improved sizing
             _buildFilters(languageService),
@@ -202,7 +343,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
         // Add service button - More compact
         ElevatedButton.icon(
           onPressed: () {
-            // TODO: Show add service dialog
+            _showAddServiceDialog(languageService);
           },
           icon: const Icon(Icons.add_business, size: 18),
           label: Text(
@@ -224,7 +365,154 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
             ),
           ),
         ),
+        
+        SizedBox(width: 8),
+        
+        // Add category button
+        ElevatedButton.icon(
+          onPressed: () {
+            _showAddCategoryDialog(languageService);
+          },
+          icon: const Icon(Icons.category, size: 18),
+          label: Text(
+            'Add Category',
+            style: GoogleFonts.cairo(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.purple,
+            foregroundColor: Colors.white,
+            padding: EdgeInsets.symmetric(
+              horizontal: screenWidth > 1400 ? 16 : 14, 
+              vertical: screenWidth > 1400 ? 10 : 8
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+        ),
+        
+        SizedBox(width: 8),
+        
+        // Refresh categories button
+        ElevatedButton.icon(
+          onPressed: () async {
+            await _forceDynamicRefresh();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Categories refreshed dynamically', style: GoogleFonts.cairo()),
+                backgroundColor: Colors.green,
+              ),
+            );
+          },
+          icon: const Icon(Icons.refresh, size: 18),
+          label: Text(
+            'Refresh',
+            style: GoogleFonts.cairo(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.orange,
+            foregroundColor: Colors.white,
+            padding: EdgeInsets.symmetric(
+              horizontal: screenWidth > 1400 ? 16 : 14, 
+              vertical: screenWidth > 1400 ? 10 : 8
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+        ),
       ],
+    );
+  }
+
+  Widget _buildServicesCount(LanguageService languageService) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final totalServices = _services.length;
+    final filteredServices = _filteredServices.length;
+    
+    return Container(
+      padding: EdgeInsets.all(screenWidth > 1400 ? 16 : screenWidth > 1024 ? 14 : 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(screenWidth > 1400 ? 10 : 8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 3,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Red warning icon
+          Container(
+            width: screenWidth > 1400 ? 24 : 22,
+            height: screenWidth > 1400 ? 24 : 22,
+            decoration: BoxDecoration(
+              color: Colors.red,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.warning,
+              size: screenWidth > 1400 ? 16 : 14,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(width: screenWidth > 1400 ? 12 : 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  AppStrings.getString('totalServices', languageService.currentLanguage),
+                  style: GoogleFonts.cairo(
+                    fontSize: screenWidth > 1400 ? 16 : 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textLight,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  filteredServices == totalServices 
+                    ? '$totalServices ${AppStrings.getString('services', languageService.currentLanguage)}'
+                    : '$filteredServices ${AppStrings.getString('of', languageService.currentLanguage)} $totalServices ${AppStrings.getString('services', languageService.currentLanguage)}',
+                  style: GoogleFonts.cairo(
+                    fontSize: screenWidth > 1400 ? 14 : 13,
+                    color: AppColors.textLight,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (_isLoading) ...[
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+              ),
+            ),
+          ] else ...[
+            // Large orange/red colored number
+            Text(
+              totalServices.toString(),
+              style: GoogleFonts.cairo(
+                fontSize: screenWidth > 1400 ? 32 : 28,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFFFF6B35), // Orange-red color
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -266,11 +554,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                 Expanded(
                   flex: 3,
                   child: TextField(
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value;
-                      });
-                    },
+                    onChanged: _onSearchChanged,
                     decoration: InputDecoration(
                       hintText: AppStrings.getString('searchServices', languageService.currentLanguage),
                       hintStyle: GoogleFonts.cairo(
@@ -295,11 +579,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     value: _selectedCategory,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedCategory = value!;
-                      });
-                    },
+                    onChanged: (value) => _onCategoryChanged(value!),
                     decoration: InputDecoration(
                       labelText: AppStrings.getString('category', languageService.currentLanguage),
                       labelStyle: GoogleFonts.cairo(
@@ -315,10 +595,20 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                       ),
                     ),
                     items: [
-                      DropdownMenuItem(value: 'all', child: Text(AppStrings.getString('allCategories', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
-                      DropdownMenuItem(value: 'cleaning', child: Text(AppStrings.getString('cleaning', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
-                      DropdownMenuItem(value: 'elderly_support', child: Text(AppStrings.getString('elderlySupport', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
-                      DropdownMenuItem(value: 'maintenance', child: Text(AppStrings.getString('maintenance', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
+                      DropdownMenuItem(
+                        value: 'all', 
+                        child: Text(
+                          AppStrings.getString('allCategories', languageService.currentLanguage), 
+                          style: GoogleFonts.cairo(fontSize: 13)
+                        )
+                      ),
+                      ..._categories.map((category) => DropdownMenuItem(
+                        value: category.id,
+                        child: Text(
+                          category.name,
+                          style: GoogleFonts.cairo(fontSize: 13)
+                        ),
+                      )),
                     ],
                   ),
                 ),
@@ -329,11 +619,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     value: _selectedStatus,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedStatus = value!;
-                      });
-                    },
+                    onChanged: (value) => _onStatusChanged(value!),
                     decoration: InputDecoration(
                       labelText: AppStrings.getString('status', languageService.currentLanguage),
                       labelStyle: GoogleFonts.cairo(
@@ -363,11 +649,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
               children: [
                 // Search
                 TextField(
-                  onChanged: (value) {
-                    setState(() {
-                      _searchQuery = value;
-                    });
-                  },
+                  onChanged: _onSearchChanged,
                   decoration: InputDecoration(
                     hintText: AppStrings.getString('searchServices', languageService.currentLanguage),
                     hintStyle: GoogleFonts.cairo(
@@ -394,11 +676,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         value: _selectedCategory,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedCategory = value!;
-                          });
-                        },
+                        onChanged: (value) => _onCategoryChanged(value!),
                         decoration: InputDecoration(
                           labelText: AppStrings.getString('category', languageService.currentLanguage),
                           labelStyle: GoogleFonts.cairo(
@@ -414,10 +692,20 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                           ),
                         ),
                         items: [
-                          DropdownMenuItem(value: 'all', child: Text(AppStrings.getString('allCategories', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
-                          DropdownMenuItem(value: 'cleaning', child: Text(AppStrings.getString('cleaning', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
-                          DropdownMenuItem(value: 'elderly_support', child: Text(AppStrings.getString('elderlySupport', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
-                          DropdownMenuItem(value: 'maintenance', child: Text(AppStrings.getString('maintenance', languageService.currentLanguage), style: GoogleFonts.cairo(fontSize: 13))),
+                          DropdownMenuItem(
+                            value: 'all', 
+                            child: Text(
+                              AppStrings.getString('allCategories', languageService.currentLanguage), 
+                              style: GoogleFonts.cairo(fontSize: 13)
+                            )
+                          ),
+                          ..._categories.map((category) => DropdownMenuItem(
+                            value: category.id,
+                            child: Text(
+                              category.name,
+                              style: GoogleFonts.cairo(fontSize: 13)
+                            ),
+                          )),
                         ],
                       ),
                     ),
@@ -428,11 +716,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         value: _selectedStatus,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedStatus = value!;
-                          });
-                        },
+                        onChanged: (value) => _onStatusChanged(value!),
                         decoration: InputDecoration(
                           labelText: AppStrings.getString('status', languageService.currentLanguage),
                           labelStyle: GoogleFonts.cairo(
@@ -521,11 +805,8 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
             child: Row(
               children: [
                 Expanded(flex: 2, child: _buildHeaderCell(AppStrings.getString('service', languageService.currentLanguage))),
-                Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('provider', languageService.currentLanguage))),
                 if (screenWidth > 768) ...[
                   Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('category', languageService.currentLanguage))),
-                  Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('price', languageService.currentLanguage))),
-                  Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('rating', languageService.currentLanguage))),
                 ],
                 Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('status', languageService.currentLanguage))),
                 Expanded(flex: 1, child: _buildHeaderCell(AppStrings.getString('actions', languageService.currentLanguage))),
@@ -561,7 +842,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
     );
   }
 
-  Widget _buildServiceRow(Map<String, dynamic> service, LanguageService languageService) {
+  Widget _buildServiceRow(ServiceModel service, LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
     
     return Container(
@@ -585,12 +866,12 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                   width: screenWidth > 1400 ? 40 : screenWidth > 1024 ? 36 : 32,
                   height: screenWidth > 1400 ? 40 : screenWidth > 1024 ? 36 : 32,
                   decoration: BoxDecoration(
-                    color: _getCategoryColor(service['category']).withValues(alpha: 0.1),
+                    color: _getCategoryColor(service.category).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Icon(
-                    _getCategoryIcon(service['category']),
-                    color: _getCategoryColor(service['category']),
+                    _getCategoryIcon(service.category),
+                    color: _getCategoryColor(service.category),
                     size: screenWidth > 1400 ? 20 : screenWidth > 1024 ? 18 : 16,
                   ),
                 ),
@@ -600,7 +881,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        service['title'],
+                        service.title,
                         style: GoogleFonts.cairo(
                           fontSize: screenWidth > 1400 ? 15 : screenWidth > 1024 ? 14 : 13,
                           fontWeight: FontWeight.w600,
@@ -610,7 +891,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                         maxLines: 1,
                       ),
                       Text(
-                        service['description'],
+                        service.description,
                         style: GoogleFonts.cairo(
                           fontSize: screenWidth > 1400 ? 13 : screenWidth > 1024 ? 12 : 11,
                           color: AppColors.textLight,
@@ -625,44 +906,6 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
             ),
           ),
           
-          // Provider - Balanced sizing
-          Expanded(
-            flex: 1,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    '${service['provider']['firstName']} ${service['provider']['lastName']}',
-                    style: GoogleFonts.cairo(
-                      fontSize: screenWidth > 1400 ? 14 : screenWidth > 1024 ? 13 : 12,
-                      color: AppColors.textDark,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (service['provider']['providerId'] != null) ...[
-                  const SizedBox(width: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(3),
-                      border: Border.all(color: Colors.blue.shade200),
-                    ),
-                    child: Text(
-                      '#${service['provider']['providerId']}',
-                      style: GoogleFonts.cairo(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.blue.shade700,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          
           // Category (hidden on mobile) - Balanced sizing
           if (screenWidth > 768) ...[
             Expanded(
@@ -673,56 +916,18 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                   vertical: screenWidth > 1400 ? 4 : 3,
                 ),
                 decoration: BoxDecoration(
-                  color: _getCategoryColor(service['category']).withValues(alpha: 0.1),
+                  color: _getCategoryColor(service.category).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  _getLocalizedCategoryLabel(service['category'], languageService).toUpperCase(),
+                  _getLocalizedCategoryLabel(service.category, languageService).toUpperCase(),
                   style: GoogleFonts.cairo(
                     fontSize: screenWidth > 1400 ? 11 : screenWidth > 1024 ? 10 : 9,
                     fontWeight: FontWeight.w600,
-                    color: _getCategoryColor(service['category']),
+                    color: _getCategoryColor(service.category),
                   ),
                   textAlign: TextAlign.center,
                 ),
-              ),
-            ),
-          ],
-          
-          // Price (hidden on mobile) - Balanced sizing
-          if (screenWidth > 768) ...[
-            Expanded(
-              flex: 1,
-              child: Text(
-                '₪${service['price']['amount']}/${_getLocalizedPriceType(service['price']['type'], languageService)}',
-                style: GoogleFonts.cairo(
-                  fontSize: screenWidth > 1400 ? 13 : screenWidth > 1024 ? 12 : 11,
-                  color: AppColors.textDark,
-                ),
-              ),
-            ),
-          ],
-          
-          // Rating (hidden on mobile) - Balanced sizing
-          if (screenWidth > 768) ...[
-            Expanded(
-              flex: 1,
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.star,
-                    size: screenWidth > 1400 ? 14 : screenWidth > 1024 ? 12 : 11,
-                    color: Colors.amber,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${service['rating']['average']} (${service['rating']['count']})',
-                    style: GoogleFonts.cairo(
-                      fontSize: screenWidth > 1400 ? 12 : screenWidth > 1024 ? 11 : 10,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                ],
               ),
             ),
           ],
@@ -736,19 +941,19 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                 vertical: screenWidth > 1400 ? 4 : 3,
               ),
               decoration: BoxDecoration(
-                color: service['isActive'] 
+                color: service.isActive 
                   ? Colors.green.withValues(alpha: 0.1)
                   : Colors.red.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                service['isActive'] 
+                service.isActive 
                   ? AppStrings.getString('active', languageService.currentLanguage).toUpperCase()
                   : AppStrings.getString('inactive', languageService.currentLanguage).toUpperCase(),
                 style: GoogleFonts.cairo(
                   fontSize: screenWidth > 1400 ? 11 : screenWidth > 1024 ? 10 : 9,
                   fontWeight: FontWeight.w600,
-                  color: service['isActive'] ? Colors.green : Colors.red,
+                  color: service.isActive ? Colors.green : Colors.red,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -771,6 +976,15 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                   ),
                   tooltip: AppStrings.getString('edit', languageService.currentLanguage),
                 ),
+                IconButton(
+                  onPressed: () => _showDeleteConfirmation(service, languageService),
+                  icon: Icon(
+                    Icons.delete_outline,
+                    size: screenWidth > 1400 ? 18 : 16,
+                    color: Colors.red,
+                  ),
+                  tooltip: AppStrings.getString('delete', languageService.currentLanguage),
+                ),
               ],
             ),
           ),
@@ -780,15 +994,22 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
   }
 
   String _getLocalizedCategoryLabel(String category, LanguageService languageService) {
-    switch (category) {
-      case 'cleaning':
-        return AppStrings.getString('cleaning', languageService.currentLanguage);
-      case 'elderly_support':
-        return AppStrings.getString('elderlySupport', languageService.currentLanguage);
-      case 'maintenance':
-        return AppStrings.getString('maintenance', languageService.currentLanguage);
-      default:
-        return category;
+    // Try to find the category in the loaded categories
+    try {
+      final categoryModel = _categories.firstWhere((cat) => cat.id == category);
+      return categoryModel.name;
+    } catch (e) {
+      // Fallback to hardcoded labels if category not found
+      switch (category) {
+        case 'cleaning':
+          return AppStrings.getString('cleaning', languageService.currentLanguage);
+        case 'elderly_support':
+          return AppStrings.getString('elderlySupport', languageService.currentLanguage);
+        case 'maintenance':
+          return AppStrings.getString('maintenance', languageService.currentLanguage);
+        default:
+          return category;
+      }
     }
   }
 
@@ -806,28 +1027,676 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
   }
 
   Color _getCategoryColor(String category) {
-    switch (category) {
-      case 'cleaning':
-        return Colors.blue;
-      case 'elderly_support':
-        return Colors.orange;
-      case 'maintenance':
-        return Colors.green;
-      default:
-        return AppColors.textLight;
+    // Try to find the category in the loaded categories
+    try {
+      final categoryModel = _categories.firstWhere((cat) => cat.id == category);
+      return Color(ServiceCategoriesService.getColorFromString(categoryModel.color));
+    } catch (e) {
+      // Fallback to hardcoded colors if category not found
+      switch (category) {
+        case 'cleaning':
+          return Colors.blue;
+        case 'elderly_support':
+          return Colors.orange;
+        case 'maintenance':
+          return Colors.green;
+        default:
+          return AppColors.textLight;
+      }
     }
   }
 
   IconData _getCategoryIcon(String category) {
-    switch (category) {
-      case 'cleaning':
+    // Try to find the category in the loaded categories
+    try {
+      final categoryModel = _categories.firstWhere((cat) => cat.id == category);
+      return _getIconFromString(categoryModel.icon);
+    } catch (e) {
+      // Fallback to hardcoded icons if category not found
+      switch (category) {
+        case 'cleaning':
+          return Icons.cleaning_services;
+        case 'elderly_support':
+          return Icons.elderly;
+        case 'maintenance':
+          return Icons.build;
+        default:
+          return Icons.business_center;
+      }
+    }
+  }
+
+  IconData _getIconFromString(String iconString) {
+    switch (iconString) {
+      case 'cleaning_services':
         return Icons.cleaning_services;
-      case 'elderly_support':
+      case 'folder_open':
+        return Icons.folder_open;
+      case 'restaurant':
+        return Icons.restaurant;
+      case 'child_care':
+        return Icons.child_care;
+      case 'elderly':
         return Icons.elderly;
-      case 'maintenance':
-        return Icons.build;
+      case 'handyman':
+        return Icons.handyman;
+      case 'home':
+        return Icons.home;
+      case 'miscellaneous_services':
+        return Icons.miscellaneous_services;
       default:
         return Icons.business_center;
+    }
+  }
+
+  void _showAddServiceDialog(LanguageService languageService) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    String selectedCategory = _categories.isNotEmpty ? _categories.first.id : 'cleaning'; // Default selection
+    final TextEditingController serviceNameController = TextEditingController();
+    final TextEditingController descriptionController = TextEditingController();
+
+    // Refresh categories before showing dialog to ensure latest data
+    _refreshCategories();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(
+                AppStrings.getString('addService', languageService.currentLanguage),
+                style: GoogleFonts.cairo(
+                  fontSize: screenWidth > 1400 ? 20 : 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDark,
+                ),
+              ),
+              content: SizedBox(
+                width: screenWidth > 1400 ? 500 : 400,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Category dropdown with refresh button
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            AppStrings.getString('category', languageService.currentLanguage),
+                            style: GoogleFonts.cairo(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textDark,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () async {
+                            await _refreshCategories();
+                            setState(() {
+                              // Trigger dialog rebuild to show updated categories
+                            });
+                          },
+                          icon: Icon(Icons.refresh, size: 18, color: AppColors.primary),
+                          tooltip: 'Refresh categories',
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      value: selectedCategory,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedCategory = value!;
+                        });
+                      },
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      ),
+                      items: [
+                        ..._categories.map((category) {
+                          if (kDebugMode) {
+                            print('📋 Adding category to dropdown: ${category.name} (${category.id})');
+                          }
+                          return DropdownMenuItem(
+                            value: category.id,
+                            child: Text(
+                              category.name,
+                              style: GoogleFonts.cairo(fontSize: 14),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                    
+                    
+                    SizedBox(height: 16),
+                    
+                    // Service name field
+                    Text(
+                      'Service name',
+                      style: GoogleFonts.cairo(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    TextField(
+                      controller: serviceNameController,
+                      decoration: InputDecoration(
+                        hintText: AppStrings.getString('enterServiceName', languageService.currentLanguage),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      ),
+                      style: GoogleFonts.cairo(fontSize: 14),
+                    ),
+                    
+                    SizedBox(height: 16),
+                    
+                    // Description field
+                    Text(
+                      AppStrings.getString('description', languageService.currentLanguage),
+                      style: GoogleFonts.cairo(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    TextField(
+                      controller: descriptionController,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        hintText: AppStrings.getString('enterDescription', languageService.currentLanguage),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      ),
+                      style: GoogleFonts.cairo(fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(
+                    AppStrings.getString('cancel', languageService.currentLanguage),
+                    style: GoogleFonts.cairo(
+                      color: AppColors.textLight,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (serviceNameController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            AppStrings.getString('pleaseEnterServiceName', languageService.currentLanguage),
+                            style: GoogleFonts.cairo(),
+                          ),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+                    
+                    if (descriptionController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            AppStrings.getString('pleaseEnterDescription', languageService.currentLanguage),
+                            style: GoogleFonts.cairo(),
+                          ),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+                    
+                    
+                    // TODO: Implement service creation
+                    _createService(
+                      selectedCategory,
+                      serviceNameController.text.trim(),
+                      descriptionController.text.trim(),
+                      languageService,
+                    );
+                    
+                    Navigator.of(context).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    AppStrings.getString('addService', languageService.currentLanguage),
+                    style: GoogleFonts.cairo(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _createService(String category, String serviceName, String description, LanguageService languageService) async {
+    try {
+      // Get AuthService from Provider context
+      final authService = Provider.of<AuthService>(context, listen: false);
+      
+      // Use the selected category directly
+      final finalCategory = category;
+      
+      // Create the service via API
+      if (kDebugMode) {
+        print('🔧 Creating service: "$serviceName" with category: "$finalCategory"');
+      }
+      
+      final createdService = await _servicesService.createService(
+        title: serviceName,
+        description: description,
+        category: finalCategory,
+        authService: authService,
+      );
+      
+      if (kDebugMode) {
+        print('🔧 Service created: ${createdService?.title} with category: ${createdService?.category}');
+      }
+      
+      if (createdService != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Service "$serviceName" created successfully in category "$finalCategory"',
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // Refresh the services list to show the new service
+        _loadServices();
+        
+        // Clear category cache to ensure new services appear in categories
+        _categoriesService.clearCache();
+        
+        // Force refresh categories with services from database
+        try {
+          // First check if the service exists
+          final serviceExists = await _categoriesService.checkServiceExists('clean all', authService: authService);
+          
+          // If it's a cleaning service, force add it to cleaning category
+          if (serviceName.toLowerCase().contains('clean')) {
+            await _categoriesService.forceAddServiceToCategory(serviceName, 'cleaning', authService: authService);
+          }
+          
+          // Force refresh category widgets if they exist
+          if (mounted) {
+            // Try to find and refresh category widgets
+            final context = this.context;
+            if (context.mounted) {
+              // This will trigger a rebuild of any category widgets that are listening
+              setState(() {});
+            }
+          }
+          
+          final refreshedCategories = await _categoriesService.refreshCategoriesWithServices();
+          if (kDebugMode) {
+            print('✅ Categories refreshed with new services from database');
+            print('📂 Refreshed categories: ${refreshedCategories.length}');
+            for (final cat in refreshedCategories) {
+              print('  - ${cat.name}: ${cat.actualServices?.length ?? 0} services');
+              if (cat.id == 'cleaning') {
+                print('    Cleaning services:');
+                for (final service in cat.actualServices ?? []) {
+                  print('      * "${service.title}"');
+                }
+              }
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('❌ Error refreshing categories: $e');
+          }
+        }
+      } else {
+        throw Exception('Service creation returned null');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to create service: ${e.toString()}',
+            style: GoogleFonts.cairo(),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _showAddCategoryDialog(LanguageService languageService) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final TextEditingController categoryNameController = TextEditingController();
+    final TextEditingController descriptionController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'Add New Category',
+            style: GoogleFonts.cairo(
+              fontWeight: FontWeight.bold,
+              fontSize: screenWidth > 1400 ? 18 : 16,
+            ),
+          ),
+          content: SizedBox(
+            width: screenWidth > 1400 ? 400 : 350,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Category Name
+                Text(
+                  'Category Name *',
+                  style: GoogleFonts.cairo(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                SizedBox(height: 8),
+                TextField(
+                  controller: categoryNameController,
+                  decoration: InputDecoration(
+                    hintText: 'Enter category name (e.g., Pet Care Services)',
+                    hintStyle: GoogleFonts.cairo(
+                      color: AppColors.textLight,
+                      fontSize: 13,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: AppColors.border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: AppColors.primary, width: 2),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: screenWidth > 1400 ? 12 : 10,
+                    ),
+                  ),
+                  style: GoogleFonts.cairo(fontSize: 14),
+                ),
+                
+                SizedBox(height: 16),
+                
+                // Description
+                Text(
+                  'Description',
+                  style: GoogleFonts.cairo(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                SizedBox(height: 8),
+                TextField(
+                  controller: descriptionController,
+                  maxLines: 2,
+                  decoration: InputDecoration(
+                    hintText: 'Enter category description (optional)',
+                    hintStyle: GoogleFonts.cairo(
+                      color: AppColors.textLight,
+                      fontSize: 13,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: AppColors.border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: AppColors.primary, width: 2),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: screenWidth > 1400 ? 12 : 10,
+                    ),
+                  ),
+                  style: GoogleFonts.cairo(fontSize: 14),
+                ),
+                
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.cairo(
+                  color: AppColors.textLight,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (categoryNameController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Please enter a category name',
+                        style: GoogleFonts.cairo(),
+                      ),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                  return;
+                }
+                
+                _createCategory(
+                  categoryNameController.text.trim(),
+                  descriptionController.text.trim(),
+                  languageService,
+                );
+                
+                Navigator.of(context).pop();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'Create Category',
+                style: GoogleFonts.cairo(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _createCategory(String name, String description, LanguageService languageService) async {
+    try {
+      // Get AuthService from Provider context
+      final authService = Provider.of<AuthService>(context, listen: false);
+      
+      if (kDebugMode) {
+        print('🔧 Creating category: "$name"');
+      }
+      
+      final createdCategory = await _categoriesService.createCategory(
+        name: name,
+        description: description.isNotEmpty ? description : null,
+        authService: authService,
+      );
+      
+      if (createdCategory != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Category "$name" created successfully',
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // Force dynamic refresh to show the new category immediately
+        await _forceDynamicRefresh();
+        
+        // Notify other widgets that categories have been updated
+        CategoryRefreshNotifier().notifyRefresh();
+        
+        if (kDebugMode) {
+          print('✅ Category created successfully: ${createdCategory.name}');
+          print('📢 Notified all widgets of category refresh');
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to create category: ${e.toString()}',
+            style: GoogleFonts.cairo(),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      
+      if (kDebugMode) {
+        print('❌ Error creating category: $e');
+      }
+    }
+  }
+
+  void _showDeleteConfirmation(ServiceModel service, LanguageService languageService) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'Delete Service',
+            style: GoogleFonts.cairo(
+              fontWeight: FontWeight.w600,
+              color: AppColors.textDark,
+            ),
+          ),
+          content: Text(
+            'Are you sure you want to delete "${service.title}"? This action cannot be undone.',
+            style: GoogleFonts.cairo(
+              color: AppColors.textDark,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.cairo(
+                  color: AppColors.textLight,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _deleteService(service, languageService);
+              },
+              child: Text(
+                'Delete',
+                style: GoogleFonts.cairo(
+                  color: Colors.red,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteService(ServiceModel service, LanguageService languageService) async {
+    try {
+      // Get AuthService from Provider context
+      final authService = Provider.of<AuthService>(context, listen: false);
+      
+      if (kDebugMode) {
+        print('🗑️ Deleting service: "${service.title}" (ID: ${service.id})');
+      }
+      
+      final success = await _servicesService.deleteService(
+        serviceId: service.id,
+        authService: authService,
+      );
+      
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Service "${service.title}" deleted successfully',
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // Refresh the services list to remove the deleted service
+        _loadServices();
+        
+        // Clear category cache to ensure changes are reflected
+        _categoriesService.clearCache();
+        
+        if (kDebugMode) {
+          print('✅ Service deleted successfully');
+        }
+      } else {
+        throw Exception('Delete operation returned false');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to delete service: ${e.toString()}',
+            style: GoogleFonts.cairo(),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      
+      if (kDebugMode) {
+        print('❌ Error deleting service: $e');
+      }
     }
   }
 

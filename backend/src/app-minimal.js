@@ -14,7 +14,7 @@ app.use(cors({
   origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'authorization', 'Idempotency-Key']
 }));
 // Ensure preflight requests are handled for all routes
 app.options('*', cors());
@@ -141,6 +141,20 @@ app.use(celebrateErrors());
 // Simple error handler
 app.use((err, req, res, next) => {
   console.error('Error:', err);
+  console.error('Error name:', err.name);
+  console.error('Error isJoi:', err.isJoi);
+  console.error('Error details:', err.details);
+  
+  // Handle celebrate validation errors
+  if (err.isJoi || err.name === 'ValidationError' || err.name === 'CelebrateError') {
+    console.error('Validation error details:', err.details);
+    return res.status(400).json({ 
+      error: 'Validation failed', 
+      message: 'Validation failed',
+      details: err.details || err.message 
+    });
+  }
+  
   res.status(500).json({ error: 'Server error', message: err.message });
 });
 

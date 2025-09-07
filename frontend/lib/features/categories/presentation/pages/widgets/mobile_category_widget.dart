@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-// screenutil/google_fonts not used in this widget
+import 'package:flutter/foundation.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 import '../../../../../core/constants/app_colors.dart';
@@ -14,10 +16,12 @@ import '../../../../../shared/models/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import '../../../../../shared/services/category_selection_store.dart';
-// chat conversation not used directly here
+import '../../../../../shared/services/category_refresh_notifier.dart';
+import '../../../../profile/presentation/widgets/chat_conversation_widget.dart';
 import '../../../../../shared/services/auth_service.dart';
-import 'package:flutter/foundation.dart';
+import 'package:palhands/features/categories/presentation/widgets/services_listing_widget.dart';
 import '../../../../../shared/widgets/chat_form_dialog.dart';
+import '../../../../../shared/services/service_categories_service.dart';
 import '../../../../../shared/services/services_service.dart' as svc;
 
 class MobileCategoryWidget extends StatefulWidget {
@@ -45,9 +49,21 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
   // Chat is opened via ChatFormDialog directly; no direct ChatService use needed here
   final svc.ServicesService _servicesService = svc.ServicesService();
   
+  // Toggle between providers and services view
+  bool _showServices = false;
+  
+  // Dynamic categories from database
+  List<ServiceCategoryModel> _categories = [];
+  bool _categoriesLoading = false;
+  String? _categoriesError;
+  final ServiceCategoriesService _categoriesService = ServiceCategoriesService();
+  
   // Performance optimization: debounce API calls
   Timer? _debounceTimer;
   static const Duration _debounceDuration = Duration(milliseconds: 500);
+  
+  // Stream subscription for category refresh notifications
+  StreamSubscription? _categoryRefreshSubscription;
   
   // Cache for selected services to prevent unnecessary refreshes
   Set<String> _cachedSelectedServices = {};
@@ -93,10 +109,236 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
     // _bannerController.forward();
     // _cardController.forward();
     
+    _loadCategories();
+    
+    // Listen for category refresh notifications
+    _categoryRefreshSubscription = CategoryRefreshNotifier().refreshStream.listen((_) {
+      if (mounted) {
+        if (kDebugMode) {
+          print('📢 Mobile category widget received refresh notification');
+        }
+        refreshCategoriesWithServices();
+      }
+    });
+    
     // Default: load providers after first frame to show initial list
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _refreshProviders();
     });
+  }
+
+  // Load categories with services from database
+  Future<void> _loadCategories() async {
+    setState(() {
+      _categoriesLoading = true;
+      _categoriesError = null;
+    });
+
+    try {
+      final categories = await _categoriesService.getCategoriesWithServices();
+      if (kDebugMode) {
+        print('📂 Loaded ${categories.length} categories from database');
+        for (final cat in categories) {
+          print('  - ${cat.name}: ${cat.actualServices?.length ?? 0} services');
+        }
+      }
+      if (mounted) {
+        setState(() {
+          _categories = categories;
+          _categoriesLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _categoriesError = e.toString();
+          _categoriesLoading = false;
+        });
+      }
+    }
+  }
+
+  // Force refresh categories (useful when new services are added)
+  Future<void> refreshCategories() async {
+    _categoriesService.clearCache();
+    await _loadCategories();
+  }
+
+  // Force refresh categories with services from database
+  Future<void> refreshCategoriesWithServices() async {
+    try {
+      _categoriesService.clearCache();
+      final categories = await _categoriesService.refreshCategoriesWithServices();
+      if (mounted) {
+        setState(() {
+          _categories = categories;
+          _categoriesLoading = false;
+          _categoriesError = null;
+        });
+      }
+      if (kDebugMode) {
+        print('✅ Mobile category widget refreshed with services from database');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _categoriesError = e.toString();
+          _categoriesLoading = false;
+        });
+      }
+      if (kDebugMode) {
+        print('❌ Error refreshing categories in mobile widget: $e');
+      }
+    }
+  }
+
+  // Method to refresh categories from outside (e.g., when services are created)
+  void refreshCategoriesFromOutside() {
+    if (mounted) {
+      refreshCategoriesWithServices();
+    }
+  }
+
+  // Fallback hardcoded categories method
+  List<Map<String, dynamic>> _getHardcodedCategories() {
+    return [
+      {
+        'id': 'cleaning',
+        'name': 'cleaningServices',
+        'icon': Icons.cleaning_services,
+        'color': const Color(0xFF4CAF50),
+        'description': 'cleaningServicesDescription',
+        'services': [
+          'houseCleaning',
+          'officeCleaning',
+          'bedroomCleaning',
+          'kitchenCleaning',
+          'bathroomCleaning',
+          'windowCleaning',
+          'carpetCleaning',
+          'deepCleaning',
+        ],
+      },
+      {
+        'id': 'organizing',
+        'name': 'organizingServices',
+        'icon': Icons.folder_open,
+        'color': const Color(0xFF2196F3),
+        'description': 'organizingServicesDescription',
+        'services': [
+          'homeOrganization',
+          'closetOrganization',
+          'officeOrganization',
+          'garageOrganization',
+          'kitchenOrganization',
+          'documentOrganization',
+          'digitalOrganization',
+          'eventOrganization',
+        ],
+      },
+      {
+        'id': 'cooking',
+        'name': 'homeCookingServices',
+        'icon': Icons.restaurant,
+        'color': const Color(0xFFFF9800),
+        'description': 'homeCookingServicesDescription',
+        'services': [
+          'mealPreparation',
+          'catering',
+          'cookingClasses',
+          'mealPlanning',
+          'specialDietCooking',
+          'partyCooking',
+          'weeklyMealPrep',
+          'healthyCooking',
+        ],
+      },
+      {
+        'id': 'childcare',
+        'name': 'childCareServices',
+        'icon': Icons.child_care,
+        'color': const Color(0xFF9C27B0),
+        'description': 'childCareServicesDescription',
+        'services': [
+          'babysitting',
+          'tutoring',
+          'childcare',
+          'homeworkHelp',
+          'playtimeSupervision',
+          'mealPreparation',
+          'bedtimeRoutine',
+          'educationalActivities',
+        ],
+      },
+      {
+        'id': 'personalcare',
+        'name': 'personalElderlyCare',
+        'icon': Icons.person,
+        'color': const Color(0xFF607D8B),
+        'description': 'personalElderlyCareDescription',
+        'services': [
+          'elderlyCare',
+          'personalAssistance',
+          'companionship',
+          'medicationReminder',
+          'mealPreparation',
+          'transportation',
+          'housekeeping',
+          'healthMonitoring',
+        ],
+      },
+      {
+        'id': 'maintenance',
+        'name': 'maintenanceRepair',
+        'icon': Icons.build,
+        'color': const Color(0xFF795548),
+        'description': 'maintenanceRepairDescription',
+        'services': [
+          'plumbing',
+          'electrical',
+          'carpentry',
+          'painting',
+          'applianceRepair',
+          'hvacMaintenance',
+          'generalMaintenance',
+          'emergencyRepairs',
+        ],
+      },
+      {
+        'id': 'newhome',
+        'name': 'newHomeServices',
+        'icon': Icons.home,
+        'color': const Color(0xFFE91E63),
+        'description': 'newHomeServicesDescription',
+        'services': [
+          'moving',
+          'homeSetup',
+          'furnitureAssembly',
+          'unpacking',
+          'homeInspection',
+          'utilitySetup',
+          'securitySetup',
+          'cleaning',
+        ],
+      },
+      {
+        'id': 'miscellaneous',
+        'name': 'miscellaneousErrands',
+        'icon': Icons.miscellaneous_services,
+        'color': const Color(0xFF00BCD4),
+        'description': 'miscellaneousErrandsDescription',
+        'services': [
+          'groceryShopping',
+          'documentDelivery',
+          'shoppingDelivery',
+          'specialErrands',
+          'billPayment',
+          'prescriptionPickup',
+          'petCare',
+          'giftShopping',
+        ],
+      },
+    ];
   }
 
   @override
@@ -287,7 +529,24 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
 
   // A compact categories/services selector for mobile similar to the web panel
   Widget _buildCategoriesPanelMobile(LanguageService languageService, StateSetter setSheetState) {
-    final categories = _categories();
+    final categories = _getCategories();
+    
+    if (kDebugMode) {
+      print('🔍 _buildCategoriesPanelMobile: ${categories.length} categories loaded');
+    }
+    
+    if (_categoriesLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    
+    if (_categoriesError != null) {
+      return Center(child: Text('Error: $_categoriesError'));
+    }
+    
+    if (categories.isEmpty) {
+      return const Center(child: Text('No categories found'));
+    }
+    
     return Directionality(
       textDirection: languageService.textDirection,
       child: CheckboxTheme(
@@ -314,9 +573,13 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
               itemCount: categories.length,
               itemBuilder: (context, idx) {
                 final cat = categories[idx];
-                final color = cat['color'] as Color;
-                final services = (cat['services'] as List).cast<String>();
-                final id = cat['id'] as String;
+                final color = Color(ServiceCategoriesService.getColorFromString(cat.color));
+                final services = cat.actualServices ?? [];
+                final id = cat.id;
+                
+                if (kDebugMode) {
+                  print('🔍 Building category: ${cat.name} with ${services.length} services');
+                }
                 _store.selectedServices.putIfAbsent(id, () => <String>{});
                 return Card(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: color.withValues(alpha: 0.25))),
@@ -327,24 +590,27 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                       initiallyExpanded: idx == 0,
                       iconColor: color,
                       collapsedIconColor: color,
-                      title: Text(AppStrings.getString(cat['name'] as String, languageService.currentLanguage), style: TextStyle(color: color, fontWeight: FontWeight.w700)),
+                      title: Text(cat.name, style: TextStyle(color: color, fontWeight: FontWeight.w700)),
           children: [
-                        ...services.map((s) {
-                          final sel = _store.selectedServices[id]!.contains(s);
+                        // Show services from database
+                        ...services.map((service) {
+                          final sel = _store.selectedServices[id]!.contains(service.id);
                           return CheckboxListTile(
                             value: sel,
                             controlAffinity: ListTileControlAffinity.leading,
                             activeColor: color,
-            dense: false,
-                            title: Text(AppStrings.getString(s, languageService.currentLanguage)),
+                            dense: false,
+                            title: Text(service.title),
+                            subtitle: Text(service.description, maxLines: 1, overflow: TextOverflow.ellipsis),
                             onChanged: (v) {
-                              // Update parent data and rebuild the sheet UI
-                              if (v == true) {
-                                _store.selectedServices[id]!.add(s);
-                              } else {
-                                _store.selectedServices[id]!.remove(s);
-                              }
-                              setSheetState(() {});
+                              // Update parent data and rebuild the UI
+                              setState(() {
+                                if (v == true) {
+                                  _store.selectedServices[id]!.add(service.id);
+                                } else {
+                                  _store.selectedServices[id]!.remove(service.id);
+                                }
+                              });
                             },
                           );
                         }),
@@ -383,143 +649,63 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
     );
   }
 
-  // Centralized categories list (mirrors web version)
-  List<Map<String, dynamic>> _categories() {
-    return const [
-      {
-        'id': 'cleaning',
-        'name': 'cleaningServices',
-        'icon': Icons.cleaning_services,
-        'color': Color(0xFF4CAF50),
-        'description': 'cleaningServicesDescription',
-        'services': [
-          'bedroomCleaning',
-          'livingRoomCleaning',
-          'kitchenCleaning',
-          'bathroomCleaning',
-          'windowCleaning',
-          'doorCabinetCleaning',
-          'floorCleaning',
-          'carpetCleaning',
-          'furnitureCleaning',
-          'gardenCleaning',
-          'entranceCleaning',
-          'stairCleaning',
-          'garageCleaning',
-          'postEventCleaning',
-          'postConstructionCleaning',
-          'apartmentCleaning',
-          'regularCleaning',
-        ],
-      },
-      {
-        'id': 'organizing',
-        'name': 'organizingServices',
-        'icon': Icons.folder_open,
-        'color': Color(0xFF2196F3),
-        'description': 'organizingServicesDescription',
-        'services': [
-          'bedroomOrganizing',
-          'kitchenOrganizing',
-          'closetOrganizing',
-          'storageOrganizing',
-          'livingRoomOrganizing',
-          'postPartyOrganizing',
-          'fullHouseOrganizing',
-          'childrenOrganizing',
-        ],
-      },
-      {
-        'id': 'cooking',
-        'name': 'homeCookingServices',
-        'icon': Icons.restaurant,
-        'color': Color(0xFFFF9800),
-        'description': 'homeCookingServicesDescription',
-        'services': [
-          'mainDishes',
-          'desserts',
-          'specialRequests',
-        ],
-      },
-      {
-        'id': 'childcare',
-        'name': 'childCareServices',
-        'icon': Icons.child_care,
-        'color': Color(0xFF9C27B0),
-        'description': 'childCareServicesDescription',
-        'services': [
-          'homeBabysitting',
-          'schoolAccompaniment',
-          'homeworkHelp',
-          'educationalActivities',
-          'childrenMealPrep',
-          'sickChildCare',
-        ],
-      },
-      {
-        'id': 'elderly',
-        'name': 'personalElderlyCare',
-        'icon': Icons.elderly,
-        'color': Color(0xFF607D8B),
-        'description': 'personalElderlyCareDescription',
-        'services': [
-          'homeElderlyCare',
-          'medicalTransport',
-          'healthMonitoring',
-          'medicationAssistance',
-          'emotionalSupport',
-          'mobilityAssistance',
-        ],
-      },
-      {
-        'id': 'maintenance',
-        'name': 'maintenanceRepair',
-        'icon': Icons.build,
-        'color': Color(0xFF795548),
-        'description': 'maintenanceRepairDescription',
-        'services': [
-          'electricalWork',
-          'plumbingWork',
-          'aluminumWork',
-          'carpentryWork',
-          'painting',
-          'hangingItems',
-          'satelliteInstallation',
-          'applianceMaintenance',
-        ],
-      },
-      {
-        'id': 'newhome',
-        'name': 'newHomeServices',
-        'icon': Icons.home,
-        'color': Color(0xFFE91E63),
-        'description': 'newHomeServicesDescription',
-        'services': [
-          'furnitureMoving',
-          'packingUnpacking',
-          'furnitureWrapping',
-          'newHomeArrangement',
-          'newApartmentCleaning',
-          'preOccupancyRepairs',
-          'kitchenSetup',
-          'applianceInstallation',
-        ],
-      },
-      {
-        'id': 'miscellaneous',
-        'name': 'miscellaneousErrands',
-        'icon': Icons.miscellaneous_services,
-        'color': Color(0xFF00BCD4),
-        'description': 'miscellaneousErrandsDescription',
-        'services': [
-          'documentDelivery',
-          'shoppingDelivery',
-          'specialErrands',
-          'billPayment',
-          'prescriptionPickup',
-        ],
-      },
-    ];
+  // Helper method to get icon from string
+  IconData _getIconFromString(String iconString) {
+    switch (iconString) {
+      case 'cleaning_services':
+        return Icons.cleaning_services;
+      case 'folder_open':
+        return Icons.folder_open;
+      case 'restaurant':
+        return Icons.restaurant;
+      case 'child_care':
+        return Icons.child_care;
+      case 'elderly':
+        return Icons.elderly;
+      case 'handyman':
+        return Icons.handyman;
+      case 'home':
+        return Icons.home;
+      case 'miscellaneous_services':
+        return Icons.miscellaneous_services;
+      case 'category':
+        return Icons.category;
+      default:
+        return Icons.category;
+    }
+  }
+
+  // Get categories from database
+  List<ServiceCategoryModel> _getCategories() {
+    return _categories;
+  }
+
+  // Hardcoded categories removed - using dynamic categories from database
+
+  // Helper method to convert icon string to IconData
+  IconData _getIconData(String iconString) {
+    switch (iconString) {
+      case 'cleaning_services':
+        return Icons.cleaning_services;
+      case 'folder_open':
+        return Icons.folder_open;
+      case 'restaurant':
+        return Icons.restaurant;
+      case 'child_care':
+        return Icons.child_care;
+      case 'elderly':
+        return Icons.elderly;
+      case 'handyman':
+        return Icons.handyman;
+      case 'home':
+        return Icons.home;
+      case 'miscellaneous_services':
+        return Icons.miscellaneous_services;
+      case 'category':
+        return Icons.category;
+      default:
+        return Icons.category;
+    }
   }
 
   Widget _buildLabeled(String label, Widget child) {
@@ -541,143 +727,8 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
     );
   }
 
-  // ignore: unused_element
   Widget _buildCategoriesGrid(LanguageService languageService) {
-    final categories = [
-      {
-        'id': 'cleaning',
-        'name': 'cleaningServices',
-        'icon': Icons.cleaning_services,
-        'color': const Color(0xFF4CAF50),
-        'description': 'cleaningServicesDescription',
-        'services': [
-          'bedroomCleaning',
-          'livingRoomCleaning',
-          'kitchenCleaning',
-          'bathroomCleaning',
-          'windowCleaning',
-          'doorCabinetCleaning',
-          'floorCleaning',
-          'carpetCleaning',
-          'furnitureCleaning',
-          'gardenCleaning',
-          'entranceCleaning',
-          'stairCleaning',
-          'garageCleaning',
-          'postEventCleaning',
-          'postConstructionCleaning',
-          'apartmentCleaning',
-          'regularCleaning',
-        ],
-      },
-      {
-        'id': 'organizing',
-        'name': 'organizingServices',
-        'icon': Icons.folder_open,
-        'color': const Color(0xFF2196F3),
-        'description': 'organizingServicesDescription',
-        'services': [
-          'bedroomOrganizing',
-          'kitchenOrganizing',
-          'closetOrganizing',
-          'storageOrganizing',
-          'livingRoomOrganizing',
-          'postPartyOrganizing',
-          'fullHouseOrganizing',
-          'childrenOrganizing',
-        ],
-      },
-      {
-        'id': 'cooking',
-        'name': 'homeCookingServices',
-        'icon': Icons.restaurant,
-        'color': const Color(0xFFFF9800),
-        'description': 'homeCookingServicesDescription',
-        'services': [
-          'mainDishes',
-          'desserts',
-          'specialRequests',
-        ],
-      },
-      {
-        'id': 'childcare',
-        'name': 'childCareServices',
-        'icon': Icons.child_care,
-        'color': const Color(0xFF9C27B0),
-        'description': 'childCareServicesDescription',
-        'services': [
-          'homeBabysitting',
-          'schoolAccompaniment',
-          'homeworkHelp',
-          'educationalActivities',
-          'childrenMealPrep',
-          'sickChildCare',
-        ],
-      },
-      {
-        'id': 'elderly',
-        'name': 'personalElderlyCare',
-        'icon': Icons.elderly,
-        'color': const Color(0xFF607D8B),
-        'description': 'personalElderlyCareDescription',
-        'services': [
-          'homeElderlyCare',
-          'medicalTransport',
-          'healthMonitoring',
-          'medicationAssistance',
-          'emotionalSupport',
-          'mobilityAssistance',
-        ],
-      },
-      {
-        'id': 'maintenance',
-        'name': 'maintenanceRepair',
-        'icon': Icons.build,
-        'color': const Color(0xFF795548),
-        'description': 'maintenanceRepairDescription',
-        'services': [
-          'electricalWork',
-          'plumbingWork',
-          'aluminumWork',
-          'carpentryWork',
-          'painting',
-          'hangingItems',
-          'satelliteInstallation',
-          'applianceMaintenance',
-        ],
-      },
-      {
-        'id': 'newhome',
-        'name': 'newHomeServices',
-        'icon': Icons.home,
-        'color': const Color(0xFFE91E63),
-        'description': 'newHomeServicesDescription',
-        'services': [
-          'furnitureMoving',
-          'packingUnpacking',
-          'furnitureWrapping',
-          'newHomeArrangement',
-          'newApartmentCleaning',
-          'preOccupancyRepairs',
-          'kitchenSetup',
-          'applianceInstallation',
-        ],
-      },
-      {
-        'id': 'miscellaneous',
-        'name': 'miscellaneousErrands',
-        'icon': Icons.miscellaneous_services,
-        'color': const Color(0xFF00BCD4),
-        'description': 'miscellaneousErrandsDescription',
-        'services': [
-          'documentDelivery',
-          'shoppingDelivery',
-          'specialErrands',
-          'billPayment',
-          'prescriptionPickup',
-        ],
-      },
-    ];
+    final categories = _categories;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -729,7 +780,10 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
     );
   }
 
-  Widget _buildCategoryCard(Map<String, dynamic> category, LanguageService languageService) {
+  Widget _buildCategoryCard(ServiceCategoryModel category, LanguageService languageService) {
+    final color = Color(ServiceCategoriesService.getColorFromString(category.color));
+    final iconData = _getIconData(category.icon);
+    
     return GestureDetector(
       onTap: () {
         // TODO: Navigate to category details
@@ -747,7 +801,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
             ),
           ],
           border: Border.all(
-            color: (category['color'] as Color).withValues(alpha: 0.3),
+            color: color.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -758,16 +812,16 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
               width: double.infinity,
               height: 80,
               decoration: BoxDecoration(
-                color: (category['color'] as Color).withValues(alpha: 0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),
                 ),
               ),
               child: Icon(
-                category['icon'] as IconData,
+                iconData,
                 size: 40,
-                color: category['color'] as Color,
+                color: color,
               ),
             ),
             // Content section
@@ -778,7 +832,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AppStrings.getString(category['name'] as String, languageService.currentLanguage),
+                      AppStrings.getString(category.nameKey, languageService.currentLanguage),
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -789,7 +843,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${(category['services'] as List).length} ${AppStrings.getString('services', languageService.currentLanguage)}',
+                      '${category.serviceCount ?? category.actualServices?.length ?? 0} ${AppStrings.getString('services', languageService.currentLanguage)}',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],
@@ -802,7 +856,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                           AppStrings.getString('viewDetails', languageService.currentLanguage),
                           style: TextStyle(
                             fontSize: 12,
-                            color: category['color'] as Color,
+                            color: color,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -810,7 +864,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                         Icon(
                           Icons.arrow_forward_ios,
                           size: 12,
-                          color: category['color'] as Color,
+                          color: color,
                         ),
                       ],
                     ),
@@ -824,7 +878,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
     );
   }
 
-  void _showCategoryDetails(Map<String, dynamic> category, LanguageService languageService) {
+  void _showCategoryDetails(ServiceCategoryModel category, LanguageService languageService) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -835,7 +889,10 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
     );
   }
 
-  Widget _buildCategoryDetailsSheet(Map<String, dynamic> category, LanguageService languageService, StateSetter setModalState) {
+  Widget _buildCategoryDetailsSheet(ServiceCategoryModel category, LanguageService languageService, StateSetter setModalState) {
+    final color = Color(ServiceCategoriesService.getColorFromString(category.color));
+    final iconData = _getIconData(category.icon);
+    
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: const BoxDecoration(
@@ -861,7 +918,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: (category['color'] as Color).withValues(alpha: 0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(20),
                 topRight: Radius.circular(20),
@@ -872,11 +929,11 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: category['color'] as Color,
+                    color: color,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
-                    category['icon'] as IconData,
+                    iconData,
                     color: Colors.white,
                     size: 24,
                   ),
@@ -887,7 +944,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        AppStrings.getString(category['name'] as String, languageService.currentLanguage),
+                        AppStrings.getString(category.nameKey, languageService.currentLanguage),
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -896,7 +953,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        AppStrings.getString(category['description'] as String, languageService.currentLanguage),
+                        AppStrings.getString(category.description, languageService.currentLanguage),
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[600],
@@ -913,19 +970,18 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
-                children: List.generate((category['services'] as List).length, (index) {
-                  final service = category['services'][index] as String;
-                  final categoryId = category['id'] as String;
-                  final isSelected = _store.selectedServices[categoryId]?.contains(service) ?? false;
+                children: (category.actualServices ?? []).map<Widget>((service) {
+                  final categoryId = category.id;
+                  final isSelected = _store.selectedServices[categoryId]?.contains(service.id) ?? false;
                   
                   return Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: isSelected ? (category['color'] as Color).withValues(alpha: 0.1) : Colors.grey[50],
+                      color: isSelected ? color.withValues(alpha: 0.1) : Colors.grey[50],
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isSelected ? (category['color'] as Color) : (category['color'] as Color).withValues(alpha: 0.2),
+                        color: isSelected ? color : color.withValues(alpha: 0.2),
                         width: isSelected ? 2 : 1,
                       ),
                     ),
@@ -934,18 +990,26 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                       children: [
                         Checkbox(
                           value: isSelected,
-                          activeColor: category['color'] as Color,
+                          activeColor: color,
                           onChanged: (v) {
                             setModalState(() {
                               if (_store.selectedServices[categoryId] == null) {
                                 _store.selectedServices[categoryId] = <String>{};
                               }
                               if (v == true) {
-                                _store.selectedServices[categoryId]!.add(service);
+                                _store.selectedServices[categoryId]!.add(service.id);
+                                if (kDebugMode) {
+                                  print('✅ Mobile: Selected service "${service.title}" (${service.id})');
+                                }
                               } else {
-                                _store.selectedServices[categoryId]!.remove(service);
+                                _store.selectedServices[categoryId]!.remove(service.id);
+                                if (kDebugMode) {
+                                  print('❌ Mobile: Deselected service "${service.title}" (${service.id})');
+                                }
                               }
                             });
+                            // Trigger provider refresh when service selection changes
+                            _debouncedRefreshProviders();
                           },
                         ),
                         const SizedBox(width: 12),
@@ -954,16 +1018,16 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                AppStrings.getString(service, languageService.currentLanguage),
+                                service.title,
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                                  color: isSelected ? (category['color'] as Color) : Colors.black,
+                                  color: isSelected ? color : Colors.black,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                _getServiceDescription(service, languageService.currentLanguage),
+                                service.description,
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey[600],
@@ -978,7 +1042,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                       ],
                     ),
                   );
-                }),
+                }).toList(),
               ),
             ),
           ),
@@ -988,25 +1052,25 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
             child: Column(
               children: [
                 // Selected services count
-                if (_store.selectedServices[category['id']]?.isNotEmpty == true)
+                if (_store.selectedServices[category.id]?.isNotEmpty == true)
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
                     margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
-                      color: (category['color'] as Color).withValues(alpha: 0.1),
+                      color: color.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: (category['color'] as Color).withValues(alpha: 0.3),
+                        color: color.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
                     child: Text(
-                      '${_store.selectedServices[category['id']]!.length} ${AppStrings.getString('services', languageService.currentLanguage)} ${AppStrings.getString('selected', languageService.currentLanguage)}',
+                      '${_store.selectedServices[category.id]!.length} ${AppStrings.getString('services', languageService.currentLanguage)} ${AppStrings.getString('selected', languageService.currentLanguage)}',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: category['color'] as Color,
+                        color: color,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -1019,8 +1083,8 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                           Navigator.pop(context);
                         },
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: category['color'] as Color,
-                          side: BorderSide(color: category['color'] as Color, width: 1),
+                          foregroundColor: color,
+                          side: BorderSide(color: color, width: 1),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -1035,14 +1099,14 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: _store.selectedServices[category['id']]?.isNotEmpty == true
+                        onPressed: _store.selectedServices[category.id]?.isNotEmpty == true
                             ? () {
                                 Navigator.pop(context);
                                 _debouncedRefreshProviders();
                               }
                             : null,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: category['color'] as Color,
+                          backgroundColor: color,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
@@ -1161,6 +1225,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
   @override
   void dispose() {
     _debounceTimer?.cancel();
+    _categoryRefreshSubscription?.cancel();
     super.dispose();
   }
 
@@ -1176,6 +1241,10 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
     _cachedSelectedServices = Set.from(currentServices);
     _hasInitialized = true;
     
+    if (kDebugMode) {
+      print('🔄 Mobile: Refreshing providers with selected services: $currentServices');
+    }
+    
     setState(() {
       _loading = true;
       _error = null;
@@ -1189,6 +1258,11 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
         sortOrder: _sortOrder,
       );
       if (!mounted) return;
+      
+      if (kDebugMode) {
+        print('🔄 Mobile: Found ${data.length} providers for selected services');
+      }
+      
       setState(() => _providers = data);
     } catch (e) {
       if (!mounted) return;
@@ -1208,21 +1282,92 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(lang == 'ar' ? 'مقدمو الخدمة' : 'Service Providers', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            if (_loading) const LinearProgressIndicator(),
-            if (_error != null) Text(_error!, style: const TextStyle(color: Colors.red)),
-            const SizedBox(height: 8),
-            if (_providers.isEmpty && !_loading && _error == null) 
-              const Center(child: Text('Select services to see providers')),
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemBuilder: (context, index) => _buildProviderTile(_providers[index], lang),
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemCount: _providers.length,
+            // Header with toggle
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _showServices 
+                      ? (lang == 'ar' ? 'الخدمات' : 'Services')
+                      : (lang == 'ar' ? 'مقدمو الخدمة' : 'Service Providers'), 
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)
+                  ),
+                ),
+                // Toggle buttons
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildToggleButton(
+                        'Providers',
+                        !_showServices,
+                        () => setState(() => _showServices = false),
+                        languageService,
+                      ),
+                      _buildToggleButton(
+                        'Services',
+                        _showServices,
+                        () => setState(() => _showServices = true),
+                        languageService,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
+            const SizedBox(height: 8),
+            // Show either providers or services based on toggle
+            if (_showServices) ...[
+              // Services view
+              ServicesListingWidget(
+                category: _selectedServiceKeys.isNotEmpty ? _selectedServiceKeys.first : null,
+                searchQuery: null, // Could add search functionality later
+                area: _selectedCity,
+                onServiceSelected: () {
+                  // TODO: Handle service selection
+                },
+              ),
+            ] else ...[
+              // Providers view (existing code)
+              if (_loading) const LinearProgressIndicator(),
+              if (_error != null) Text(_error!, style: const TextStyle(color: Colors.red)),
+              const SizedBox(height: 8),
+              if (_providers.isEmpty && !_loading && _error == null) 
+                const Center(child: Text('Select services to see providers')),
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemBuilder: (context, index) => _buildProviderTile(_providers[index], lang),
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemCount: _providers.length,
+              ),
+            ],
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildToggleButton(String label, bool isSelected, VoidCallback onTap, LanguageService languageService) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.grey[600],
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            fontSize: 12,
+          ),
         ),
       ),
     );

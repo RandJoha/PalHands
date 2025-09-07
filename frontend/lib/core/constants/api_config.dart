@@ -43,6 +43,7 @@ class ApiConfig {
   static const String availabilityEndpoint = '/availability';
   static const String paymentsEndpoint = '/payments';
   static const String reviewsEndpoint = '/reviews';
+  static const String providersEndpoint = '/providers';
   static const String adminEndpoint = '/admin';
   
   // Full API URLs
@@ -54,6 +55,7 @@ class ApiConfig {
   static String get availabilityUrl => '$currentApiBaseUrl$availabilityEndpoint';
   static String get paymentsUrl => '$currentApiBaseUrl$paymentsEndpoint';
   static String get reviewsUrl => '$currentApiBaseUrl$reviewsEndpoint';
+  static String get providersUrl => '$currentApiBaseUrl$providersEndpoint';
   static String get adminUrl => '$currentApiBaseUrl$adminEndpoint';
   static String get baseUrl => currentApiBaseUrl; // convenience
   

@@ -74,9 +74,9 @@ class _ContactFormState extends State<ContactForm> {
         formData[entry.key] = entry.value.text;
       }
 
-      // Add dropdown value
+      // Add dropdown value (if any dropdown fields exist)
       if (_selectedDropdownValue != null) {
-        formData['issueType'] = _selectedDropdownValue;
+        // Handle any remaining dropdown fields if needed
       }
 
       // Add selected files

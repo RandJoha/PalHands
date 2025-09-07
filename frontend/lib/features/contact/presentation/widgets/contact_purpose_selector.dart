@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/services/language_service.dart';
@@ -15,6 +16,34 @@ class ContactPurposeSelector extends StatelessWidget {
     required this.selectedPurpose,
     required this.onPurposeSelected,
   });
+
+  // Store the selected purpose for restoration after login
+  static Future<void> _storeSelectedPurpose(ContactPurpose purpose) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('pending_contact_purpose', purpose.toString());
+    } catch (e) {
+      // Handle error silently
+    }
+  }
+
+  // Retrieve and clear the stored purpose
+  static Future<ContactPurpose?> getAndClearStoredPurpose() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final purposeString = prefs.getString('pending_contact_purpose');
+      if (purposeString != null) {
+        await prefs.remove('pending_contact_purpose');
+        return ContactPurpose.values.firstWhere(
+          (purpose) => purpose.toString() == purposeString,
+          orElse: () => ContactPurpose.other,
+        );
+      }
+    } catch (e) {
+      // Handle error silently
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,9 +110,52 @@ class ContactPurposeSelector extends StatelessWidget {
     final isSelected = selectedPurpose == purposeData.purpose;
     
     return GestureDetector(
-      onTap: () {
-                // Allow all report types for both authenticated and anonymous users
-        // Authentication is handled at submission time
+      onTap: () async {
+        // Check if user is authenticated before allowing selection
+        final authService = Provider.of<AuthService>(context, listen: false);
+        if (!authService.isAuthenticated) {
+          // Show login dialog
+          final shouldLogin = await showDialog<bool>(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => AlertDialog(
+              title: Text(
+                AppStrings.getString('loginRequired', languageService.currentLanguage),
+                style: GoogleFonts.cairo(fontWeight: FontWeight.bold),
+              ),
+              content: Text(
+                AppStrings.getString('loginRequiredMessage', languageService.currentLanguage),
+                style: GoogleFonts.cairo(),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text(
+                    'Cancel',
+                    style: GoogleFonts.cairo(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text(
+                    'Login',
+                    style: GoogleFonts.cairo(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+          );
+
+          if (shouldLogin == true) {
+            // Store the selected purpose for restoration after login
+            ContactPurposeSelector._storeSelectedPurpose(purposeData.purpose);
+            // Navigate to login page
+            Navigator.of(context).pushNamed('/login');
+          }
+          return;
+        }
+        
+        // User is authenticated, proceed with selection
         onPurposeSelected(purposeData.purpose);
       },
       child: Container(

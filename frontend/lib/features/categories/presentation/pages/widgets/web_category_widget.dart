@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 import '../../../../../core/constants/app_strings.dart';
+import '../../../../../core/constants/app_colors.dart';
 import '../../../../../shared/services/language_service.dart';
 import '../../../../../shared/widgets/shared_navigation.dart';
 import '../../../../../shared/widgets/shared_hero_section.dart';
@@ -9,9 +10,15 @@ import '../../../../../shared/widgets/booking_dialog.dart';
 import '../../../../../shared/services/responsive_service.dart';
 import '../../../../../shared/services/provider_service.dart';
 import '../../../../../shared/models/provider.dart';
+import '../../../../../shared/services/chat_service.dart';
+import '../../../../../shared/models/chat.dart';
+import 'package:palhands/features/categories/presentation/widgets/services_listing_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import '../../../../../shared/services/category_selection_store.dart';
+import '../../../../../shared/services/category_refresh_notifier.dart';
+import '../../../../../shared/services/service_categories_service.dart';
+import '../../../../profile/presentation/widgets/chat_conversation_widget.dart';
 import '../../../../../shared/services/auth_service.dart';
 import 'package:flutter/foundation.dart';
 import '../../../../../shared/widgets/chat_form_dialog.dart';
@@ -41,9 +48,21 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
   // Chat handled via ChatFormDialog; no direct ChatService usage here
   final svc.ServicesService _servicesService = svc.ServicesService();
   
+  // Toggle between providers and services view
+  bool _showServices = false;
+  
+  // Dynamic categories from database
+  List<ServiceCategoryModel> _categories = [];
+  bool _categoriesLoading = false;
+  String? _categoriesError;
+  final ServiceCategoriesService _categoriesService = ServiceCategoriesService();
+  
   // Performance optimization: debounce API calls
   Timer? _debounceTimer;
   static const Duration _debounceDuration = Duration(milliseconds: 500);
+  
+  // Stream subscription for category refresh notifications
+  StreamSubscription? _categoryRefreshSubscription;
   
   // Cache for selected services to prevent unnecessary refreshes
   Set<String> _cachedSelectedServices = {};
@@ -60,10 +79,88 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
   @override
   void initState() {
     super.initState();
+    _loadCategories();
+    
+    // Listen for category refresh notifications
+    _categoryRefreshSubscription = CategoryRefreshNotifier().refreshStream.listen((_) {
+      if (mounted) {
+        if (kDebugMode) {
+          print('📢 Web category widget received refresh notification');
+        }
+        refreshCategoriesWithServices();
+      }
+    });
+    
     // Default: load providers on first paint so users see providers immediately
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _refreshProviders();
     });
+  }
+
+  // Load categories with services from database
+  Future<void> _loadCategories() async {
+    setState(() {
+      _categoriesLoading = true;
+      _categoriesError = null;
+    });
+
+    try {
+      final categories = await _categoriesService.getCategoriesWithServices();
+      if (mounted) {
+        setState(() {
+          _categories = categories;
+          _categoriesLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _categoriesError = e.toString();
+          _categoriesLoading = false;
+        });
+      }
+    }
+  }
+
+  // Force refresh categories (useful when new services are added)
+  Future<void> refreshCategories() async {
+    _categoriesService.clearCache();
+    await _loadCategories();
+  }
+
+  // Force refresh categories with services from database
+  Future<void> refreshCategoriesWithServices() async {
+    try {
+      _categoriesService.clearCache();
+      final categories = await _categoriesService.refreshCategoriesWithServices();
+      if (mounted) {
+        setState(() {
+          _categories = categories;
+          _categoriesLoading = false;
+          _categoriesError = null;
+        });
+      }
+      if (kDebugMode) {
+        print('✅ Web category widget refreshed with services from database');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _categoriesError = e.toString();
+          _categoriesLoading = false;
+        });
+      }
+      if (kDebugMode) {
+        print('❌ Error refreshing categories in web widget: $e');
+      }
+    }
+  }
+
+  // Method to refresh categories from outside (e.g., when services are created)
+  void refreshCategoriesFromOutside() {
+    if (mounted) {
+      refreshCategoriesWithServices();
+    }
   }
 
   // Debounced version for filter changes to avoid excessive API calls
@@ -79,6 +176,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
   @override
   void dispose() {
     _debounceTimer?.cancel();
+    _categoryRefreshSubscription?.cancel();
     super.dispose();
   }
 
@@ -94,6 +192,10 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
     _cachedSelectedServices = Set.from(currentServices);
     _hasInitialized = true;
     
+    if (kDebugMode) {
+      print('🔄 Web: Refreshing providers with selected services: $currentServices');
+    }
+    
     setState(() {
       _loading = true;
       _error = null;
@@ -107,6 +209,11 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
         sortOrder: _sortOrder,
       );
       if (!mounted) return;
+      
+      if (kDebugMode) {
+        print('🔄 Web: Found ${data.length} providers for selected services');
+      }
+      
       setState(() {
         _providers = data;
       });
@@ -385,8 +492,39 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
     );
   }
 
-  // Centralized categories list
-  List<Map<String, dynamic>> _categories() {
+  // Helper method to get icon from string
+  IconData _getIconFromString(String iconString) {
+    switch (iconString) {
+      case 'cleaning_services':
+        return Icons.cleaning_services;
+      case 'folder_open':
+        return Icons.folder_open;
+      case 'restaurant':
+        return Icons.restaurant;
+      case 'child_care':
+        return Icons.child_care;
+      case 'elderly':
+        return Icons.elderly;
+      case 'handyman':
+        return Icons.handyman;
+      case 'home':
+        return Icons.home;
+      case 'miscellaneous_services':
+        return Icons.miscellaneous_services;
+      case 'category':
+        return Icons.category;
+      default:
+        return Icons.category;
+    }
+  }
+
+  // Get categories from database
+  List<ServiceCategoryModel> _getCategories() {
+    return _categories;
+  }
+
+  // Fallback hardcoded categories (commented out)
+  List<ServiceCategoryModel> _getHardcodedCategories() {
     final categories = [
       {
         'id': 'cleaning',
@@ -522,12 +660,12 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
         ],
       },
     ];
-    return categories;
+    return []; // Fallback method not used - using dynamic categories from database
   }
 
   // ignore: unused_element
   Widget _buildCategoriesGrid(LanguageService languageService) {
-    final categories = _categories();
+    final categories = _getCategories();
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 40),
@@ -583,7 +721,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
 
   // Compact right-side panel that mirrors the category/services selection
   Widget _buildCategoriesPanel(LanguageService languageService, {StateSetter? panelSetState}) {
-    final categories = _categories();
+    final categories = _getCategories();
     return Directionality(
       textDirection: languageService.textDirection,
       child: Container(
@@ -607,9 +745,9 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
               itemCount: categories.length,
               itemBuilder: (context, idx) {
                 final cat = categories[idx];
-                final color = cat['color'] as Color;
-                final services = (cat['services'] as List).cast<String>();
-                final id = cat['id'] as String;
+                final color = Color(ServiceCategoriesService.getColorFromString(cat.color));
+                final services = cat.actualServices ?? [];
+                final id = cat.id;
                 _store.selectedServices.putIfAbsent(id, () => <String>{});
                 return Card(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: color.withValues(alpha: 0.25))),
@@ -620,25 +758,33 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                       initiallyExpanded: idx == 0,
                       iconColor: color,
                       collapsedIconColor: color,
-                      title: Text(AppStrings.getString(cat['name'] as String, languageService.currentLanguage), style: TextStyle(color: color, fontWeight: FontWeight.w700)),
+                      title: Text(cat.name, style: TextStyle(color: color, fontWeight: FontWeight.w700)),
                       children: [
                         const SizedBox(height: 4),
-        ...services.map((s) {
-                          final sel = _store.selectedServices[id]!.contains(s);
+                        // Show actual services from database
+                        ...services.map((service) {
+                          final sel = _store.selectedServices[id]!.contains(service.id);
                           return CheckboxListTile(
                             value: sel,
                             controlAffinity: ListTileControlAffinity.leading,
                             activeColor: color,
                             dense: true,
-                            title: Text(AppStrings.getString(s, languageService.currentLanguage)),
+                            title: Text(service.title),
+                            subtitle: Text(service.description, maxLines: 1, overflow: TextOverflow.ellipsis),
                             onChanged: (v) {
-          // Rebuild either the embedded panel (side) or the dialog copy
-          final fn = panelSetState ?? setState;
-          fn(() {
+                              // Rebuild either the embedded panel (side) or the dialog copy
+                              final fn = panelSetState ?? setState;
+                              fn(() {
                                 if (v == true) {
-                                  _store.selectedServices[id]!.add(s);
+                                  _store.selectedServices[id]!.add(service.id);
+                                  if (kDebugMode) {
+                                    print('✅ Web: Selected service "${service.title}" (${service.id})');
+                                  }
                                 } else {
-                                  _store.selectedServices[id]!.remove(s);
+                                  _store.selectedServices[id]!.remove(service.id);
+                                  if (kDebugMode) {
+                                    print('❌ Web: Deselected service "${service.title}" (${service.id})');
+                                  }
                                 }
                               });
                               _debouncedRefreshProviders();
@@ -658,7 +804,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
     );
   }
 
-  Widget _buildCategoryCard(Map<String, dynamic> category, LanguageService languageService) {
+  Widget _buildCategoryCard(ServiceCategoryModel category, LanguageService languageService) {
     return GestureDetector(
       onTap: () {
         _showCategoryDetails(category, languageService);
@@ -675,7 +821,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
             ),
           ],
           border: Border.all(
-            color: (category['color'] as Color).withValues(alpha: 0.3),
+            color: (Color(ServiceCategoriesService.getColorFromString(category.color))).withValues(alpha: 0.3),
             width: 2,
           ),
         ),
@@ -686,16 +832,16 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
               width: double.infinity,
               height: 100,
               decoration: BoxDecoration(
-                color: (category['color'] as Color).withValues(alpha: 0.1),
+                color: (Color(ServiceCategoriesService.getColorFromString(category.color))).withValues(alpha: 0.1),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(20),
                   topRight: Radius.circular(20),
                 ),
               ),
               child: Icon(
-                category['icon'] as IconData,
+                _getIconFromString(category.icon),
                 size: 48,
-                color: category['color'] as Color,
+                color: Color(ServiceCategoriesService.getColorFromString(category.color)),
               ),
             ),
             // Content section
@@ -706,7 +852,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AppStrings.getString(category['name'] as String, languageService.currentLanguage),
+                      category.name,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -717,7 +863,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '${(category['services'] as List).length} ${AppStrings.getString('services', languageService.currentLanguage)}',
+                      '${category.actualServices?.length ?? 0} ${AppStrings.getString('services', languageService.currentLanguage)}',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[600],
@@ -730,7 +876,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                           AppStrings.getString('viewDetails', languageService.currentLanguage),
                           style: TextStyle(
                             fontSize: 14,
-                            color: category['color'] as Color,
+                            color: Color(ServiceCategoriesService.getColorFromString(category.color)),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -738,7 +884,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                         Icon(
                           Icons.arrow_forward_ios,
                           size: 14,
-                          color: category['color'] as Color,
+                          color: Color(ServiceCategoriesService.getColorFromString(category.color)),
                         ),
                       ],
                     ),
@@ -752,7 +898,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
     );
   }
 
-  void _showCategoryDetails(Map<String, dynamic> category, LanguageService languageService) {
+  void _showCategoryDetails(ServiceCategoryModel category, LanguageService languageService) {
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -844,7 +990,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
     return AppStrings.getString('serviceDescription', language);
   }
 
-  Widget _buildCategoryDetailsDialog(Map<String, dynamic> category, LanguageService languageService, StateSetter setDialogState) {
+  Widget _buildCategoryDetailsDialog(ServiceCategoryModel category, LanguageService languageService, StateSetter setDialogState) {
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
@@ -862,7 +1008,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: (category['color'] as Color).withValues(alpha: 0.1),
+                color: (Color(ServiceCategoriesService.getColorFromString(category.color))).withValues(alpha: 0.1),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(20),
                   topRight: Radius.circular(20),
@@ -873,11 +1019,11 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: category['color'] as Color,
+                      color: Color(ServiceCategoriesService.getColorFromString(category.color)),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(
-                      category['icon'] as IconData,
+                      _getIconFromString(category.icon),
                       color: Colors.white,
                       size: 32,
                     ),
@@ -888,7 +1034,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          AppStrings.getString(category['name'] as String, languageService.currentLanguage),
+                          category.name,
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -897,7 +1043,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          AppStrings.getString(category['description'] as String, languageService.currentLanguage),
+                          category.description,
                           style: TextStyle(
                             fontSize: 16,
                             color: Colors.grey[600],
@@ -925,19 +1071,19 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                   mainAxisSpacing: 16,
                   childAspectRatio: 3,
                 ),
-                itemCount: (category['services'] as List).length,
+                itemCount: category.actualServices?.length ?? 0,
                 itemBuilder: (context, index) {
-                  final service = category['services'][index] as String;
-                  final categoryId = category['id'] as String;
+                  final service = category.actualServices![index];
+                  final categoryId = category.id;
                   final isSelected = _store.selectedServices[categoryId]?.contains(service) ?? false;
                   
                   return Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: isSelected ? (category['color'] as Color).withValues(alpha: 0.1) : Colors.grey[50],
+                      color: isSelected ? (Color(ServiceCategoriesService.getColorFromString(category.color))).withValues(alpha: 0.1) : Colors.grey[50],
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isSelected ? (category['color'] as Color) : (category['color'] as Color).withValues(alpha: 0.2),
+                        color: isSelected ? Color(ServiceCategoriesService.getColorFromString(category.color)) : (Color(ServiceCategoriesService.getColorFromString(category.color))).withValues(alpha: 0.2),
                         width: isSelected ? 2 : 1,
                       ),
                     ),
@@ -951,9 +1097,9 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                                 _store.selectedServices[categoryId] = <String>{};
                               }
                               if (isSelected) {
-                                _store.selectedServices[categoryId]!.remove(service);
+                                _store.selectedServices[categoryId]!.remove(service.id);
                               } else {
-                                _store.selectedServices[categoryId]!.add(service);
+                                _store.selectedServices[categoryId]!.add(service.id);
                               }
                             });
                           },
@@ -961,9 +1107,9 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                             width: 24,
                             height: 24,
                             decoration: BoxDecoration(
-                              color: isSelected ? (category['color'] as Color) : Colors.transparent,
+                              color: isSelected ? Color(ServiceCategoriesService.getColorFromString(category.color)) : Colors.transparent,
                               border: Border.all(
-                                color: isSelected ? (category['color'] as Color) : Colors.grey[400]!,
+                                color: isSelected ? Color(ServiceCategoriesService.getColorFromString(category.color)) : Colors.grey[400]!,
                                 width: 2,
                               ),
                               borderRadius: BorderRadius.circular(4),
@@ -983,17 +1129,17 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  AppStrings.getString(service, languageService.currentLanguage),
+                                  service.title,
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                                    color: isSelected ? (category['color'] as Color) : Colors.black,
+                                    color: isSelected ? Color(ServiceCategoriesService.getColorFromString(category.color)) : Colors.black,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
                                 Expanded(
                                   child: Text(
-                                    _getServiceDescription(service, languageService.currentLanguage),
+                                    service.description,
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: Colors.grey[600],
@@ -1018,24 +1164,24 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
               child: Column(
                 children: [
                   // Selected services count
-                  if (_store.selectedServices[category['id']]?.isNotEmpty == true)
+                  if (_store.selectedServices[category.id]?.isNotEmpty == true)
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       margin: const EdgeInsets.only(bottom: 20),
                       decoration: BoxDecoration(
-                        color: (category['color'] as Color).withValues(alpha: 0.1),
+                        color: (Color(ServiceCategoriesService.getColorFromString(category.color))).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: (category['color'] as Color).withValues(alpha: 0.3),
+                          color: (Color(ServiceCategoriesService.getColorFromString(category.color))).withValues(alpha: 0.3),
                         ),
                       ),
                       child: Text(
-                        '${_store.selectedServices[category['id']]!.length} ${AppStrings.getString('services', languageService.currentLanguage)} ${AppStrings.getString('selected', languageService.currentLanguage)}',
+                        '${_store.selectedServices[category.id]!.length} ${AppStrings.getString('services', languageService.currentLanguage)} ${AppStrings.getString('selected', languageService.currentLanguage)}',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: category['color'] as Color,
+                          color: Color(ServiceCategoriesService.getColorFromString(category.color)),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -1048,8 +1194,8 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                             Navigator.pop(context);
                           },
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: category['color'] as Color,
-                            side: BorderSide(color: category['color'] as Color),
+                            foregroundColor: Color(ServiceCategoriesService.getColorFromString(category.color)),
+                            side: BorderSide(color: Color(ServiceCategoriesService.getColorFromString(category.color))),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -1064,14 +1210,14 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: _store.selectedServices[category['id']]?.isNotEmpty == true
+                          onPressed: _store.selectedServices[category.id]?.isNotEmpty == true
                               ? () {
                                   Navigator.pop(context);
                                   _debouncedRefreshProviders();
                                 }
                               : null,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: category['color'] as Color,
+                            backgroundColor: Color(ServiceCategoriesService.getColorFromString(category.color)),
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
@@ -1104,50 +1250,118 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(languageService.currentLanguage == 'ar' ? 'مقدمو الخدمة' : 'Service Providers', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            if (_loading) const LinearProgressIndicator(),
-            if (_error != null) Text(_error!, style: const TextStyle(color: Colors.red)),
-            if (_providers.isEmpty && !_loading && _error == null)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(40),
-                  child: Text(
-                    languageService.currentLanguage == 'ar'
-                        ? 'لا يوجد مزودون مطابقون حاليًا. جرّب تغيير عوامل التصفية.'
-                        : 'No providers found. Try adjusting filters.',
-                    style: const TextStyle(fontSize: 18),
+            // Header with toggle
+            Row(
+              children: [
+                Text(
+                  _showServices 
+                    ? (languageService.currentLanguage == 'ar' ? 'الخدمات' : 'Services')
+                    : (languageService.currentLanguage == 'ar' ? 'مقدمو الخدمة' : 'Service Providers'), 
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)
+                ),
+                const Spacer(),
+                // Toggle buttons
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildToggleButton(
+                        'Providers',
+                        !_showServices,
+                        () => setState(() => _showServices = false),
+                        languageService,
+                      ),
+                      _buildToggleButton(
+                        'Services',
+                        _showServices,
+                        () => setState(() => _showServices = true),
+                        languageService,
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            const SizedBox(height: 12),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                int crossAxisCount;
-                if (constraints.maxWidth > 1400) {
-                  crossAxisCount = 3;
-                } else if (constraints.maxWidth > 900) crossAxisCount = 2; else crossAxisCount = 1;
-                // Use fixed mainAxisExtent to keep all cards the same height and avoid overflow
-                return GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: crossAxisCount,
-                    crossAxisSpacing: 20,
-                    mainAxisSpacing: 20,
-                    // Ensure uniform height; slightly taller for denser layouts
-                    mainAxisExtent: crossAxisCount == 1
-                        ? 360
-                        : crossAxisCount == 2
-                            ? 380
-                            : 420,
-                  ),
-                  itemCount: _providers.length,
-                  itemBuilder: (context, index) => _buildProviderCard(_providers[index], languageService),
-                );
-              },
+              ],
             ),
+            const SizedBox(height: 12),
+            // Show either providers or services based on toggle
+            if (_showServices) ...[
+              // Services view
+              ServicesListingWidget(
+                category: _selectedServiceKeys.isNotEmpty ? _selectedServiceKeys.first : null,
+                searchQuery: null, // Could add search functionality later
+                area: _selectedCity,
+                onServiceSelected: () {
+                  // TODO: Handle service selection
+                },
+              ),
+            ] else ...[
+              // Providers view (existing code)
+              if (_loading) const LinearProgressIndicator(),
+              if (_error != null) Text(_error!, style: const TextStyle(color: Colors.red)),
+              if (_providers.isEmpty && !_loading && _error == null)
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(40),
+                    child: Text(
+                      languageService.currentLanguage == 'ar'
+                          ? 'لا يوجد مزودون مطابقون حاليًا. جرّب تغيير عوامل التصفية.'
+                          : 'No providers found. Try adjusting filters.',
+                      style: const TextStyle(fontSize: 18),
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 12),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  int crossAxisCount;
+                  if (constraints.maxWidth > 1400) crossAxisCount = 3; else if (constraints.maxWidth > 900) crossAxisCount = 2; else crossAxisCount = 1;
+                  // Use fixed mainAxisExtent to keep all cards the same height and avoid overflow
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: 20,
+                      mainAxisSpacing: 20,
+                      // Ensure uniform height; slightly taller for denser layouts
+                      mainAxisExtent: crossAxisCount == 1
+                          ? 360
+                          : crossAxisCount == 2
+                              ? 380
+                              : 420,
+                    ),
+                    itemCount: _providers.length,
+                    itemBuilder: (context, index) => _buildProviderCard(_providers[index], languageService),
+                  );
+                },
+              ),
+            ],
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildToggleButton(String label, bool isSelected, VoidCallback onTap, LanguageService languageService) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.grey[600],
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            fontSize: 14,
+          ),
         ),
       ),
     );

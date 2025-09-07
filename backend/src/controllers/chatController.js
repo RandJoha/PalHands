@@ -190,9 +190,21 @@ const getUserChats = async (req, res) => {
     const responseData = { chats: transformedChats };
     console.log('📤 Final response data structure:', JSON.stringify(responseData, null, 2));
     
+    // Always return success with chats array, even if empty
     return ok(res, responseData);
   } catch (err) {
     console.error('Get user chats error:', err);
+    console.error('Error details:', {
+      message: err.message,
+      stack: err.stack,
+      name: err.name
+    });
+    
+    // If it's a specific error, provide more context
+    if (err.message && err.message.includes('Cast to ObjectId failed')) {
+      return error(res, 400, 'Invalid user ID format');
+    }
+    
     return error(res, 500, 'Failed to fetch chats');
   }
 };
@@ -430,39 +442,39 @@ const sendMessage = async (req, res) => {
       updatedAt: new Date()
     });
 
-    // Create notifications for other participants
-    try {
-      for (const participantId of otherParticipants) {
-        // Skip if it's the sender
-        if (participantId.toString() === userId.toString()) continue;
+    // Create notifications for other participants - DISABLED
+    // try {
+    //   for (const participantId of otherParticipants) {
+    //     // Skip if it's the sender
+    //     if (participantId.toString() === userId.toString()) continue;
         
-        // Get participant info
-        const participant = await User.findById(participantId).select('firstName lastName role');
-        if (!participant) continue;
+    //     // Get participant info
+    //     const participant = await User.findById(participantId).select('firstName lastName role');
+    //     if (!participant) continue;
 
-        // Create notification
-        const notification = new Notification({
-          recipient: participantId,
-          type: 'new_message',
-          title: 'New Message',
-          message: `You have a new message from ${sender.firstName} ${sender.lastName}`,
-          data: {
-            chatId: chatId,
-            senderId: userId,
-            senderName: `${sender.firstName} ${sender.lastName}`,
-            messageContent: content.substring(0, 100) + (content.length > 100 ? '...' : ''),
-            messageType: messageType
-          },
-          priority: 'medium'
-        });
+    //     // Create notification
+    //     const notification = new Notification({
+    //       recipient: participantId,
+    //       type: 'new_message',
+    //       title: 'New Message',
+    //       message: `You have a new message from ${sender.firstName} ${sender.lastName}`,
+    //       data: {
+    //         chatId: chatId,
+    //         senderId: userId,
+    //         senderName: `${sender.firstName} ${sender.lastName}`,
+    //         messageContent: content.substring(0, 100) + (content.length > 100 ? '...' : ''),
+    //         messageType: messageType
+    //       },
+    //       priority: 'medium'
+    //     });
 
-        await notification.save();
-        console.log(`🔔 Notification created for ${participant.firstName} ${participant.lastName} (${participant.role})`);
-      }
-    } catch (notificationError) {
-      console.error('❌ Failed to create notifications:', notificationError);
-      // Don't fail the message send if notifications fail
-    }
+    //     await notification.save();
+    //     console.log(`🔔 Notification created for ${participant.firstName} ${participant.lastName} (${participant.role})`);
+    //   }
+    // } catch (notificationError) {
+    //   console.error('❌ Failed to create notifications:', notificationError);
+    //   // Don't fail the message send if notifications fail
+    // }
 
   // Populate sender info for response
   // Note: providers authenticate via providers collection; users via users collection
