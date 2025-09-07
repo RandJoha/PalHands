@@ -35,6 +35,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _emailFocusNode = FocusNode();
+  final _passwordFocusNode = FocusNode();
   bool _isLoading = false;
   bool _obscurePassword = true;
 
@@ -42,6 +44,8 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
@@ -267,17 +271,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 48),
-                          Focus(
-                            onKey: (node, event) {
-                              // Handle Enter key press anywhere in the form
-                              if (event.isKeyPressed(LogicalKeyboardKey.enter) && !_isLoading) {
-                                _handleLogin();
-                                return KeyEventResult.handled;
-                              }
-                              return KeyEventResult.ignored;
-                            },
-                            child: _buildLoginForm(),
-                          ),
+                          _buildLoginForm(),
                         ],
                       ),
                     ),
@@ -493,9 +487,14 @@ class _LoginScreenState extends State<LoginScreen> {
         // Check if we're on mobile (green background)
   // screenWidth is used directly below; no need for an extra flag.
         
-        return Form(
-          key: _formKey,
-          child: Column(
+        return GestureDetector(
+          onTap: () {
+            // Dismiss keyboard when tapping outside
+            FocusScope.of(context).unfocus();
+          },
+          child: Form(
+            key: _formKey,
+            child: Column(
           children: [
             // Email field
             Container(
@@ -513,11 +512,17 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               child: TextFormField(
                 controller: _emailController,
+                focusNode: _emailFocusNode,
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
+                enabled: true,
+                readOnly: false,
+                autofocus: false,
+                canRequestFocus: true,
+                enableInteractiveSelection: true,
                 onFieldSubmitted: (value) {
                   // Focus on password field when Enter is pressed
-                  FocusScope.of(context).nextFocus();
+                  _passwordFocusNode.requestFocus();
                 },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -588,7 +593,13 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               child: TextFormField(
                 controller: _passwordController,
+                focusNode: _passwordFocusNode,
                 textInputAction: TextInputAction.done,
+                enabled: true,
+                readOnly: false,
+                autofocus: false,
+                canRequestFocus: true,
+                enableInteractiveSelection: true,
                 autofillHints: const [AutofillHints.password],
                 enableSuggestions: false,
                 autocorrect: false,
@@ -775,6 +786,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ],
         ),
+          ),
         );
       },
     );

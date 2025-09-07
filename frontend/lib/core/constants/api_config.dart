@@ -5,18 +5,23 @@ class ApiConfig {
   static const String _environment = String.fromEnvironment('ENVIRONMENT', defaultValue: 'dev');
   
   // Development vs Production URLs
-  // Prefer 127.0.0.1 to avoid IPv6/localhost resolution issues on Windows/Chrome
-  static const String devBaseUrl = 'http://127.0.0.1:3000';
+  // Use computer's IP address for mobile emulator, localhost for web
+  static const String devBaseUrl = 'http://192.168.56.1:3000';
   static const String prodBaseUrl = 'https://api.palhands.com'; // Change this to your production URL
   
-  // Force backend URL for web development (use backend port 3000)
+  // Force backend URL for web development (use localhost for web)
   static const String webDevBackendUrl = 'http://127.0.0.1:3000';
   
   // Get the appropriate base URL based on environment
   static String get currentBaseUrl {
-    // For web development, always use the backend URL
+    // For web development, always use localhost
     if (kIsWeb && _environment == 'dev') {
       return webDevBackendUrl;
+    }
+    
+    // For mobile, use computer's IP address in development
+    if (!kIsWeb && _environment == 'dev') {
+      return devBaseUrl;
     }
     
     switch (_environment) {
@@ -74,8 +79,8 @@ class ApiConfig {
   };
   
   // Logging configuration
-  // Disable verbose network logging by default to keep console clean in dev
-  static bool get enableLogging => false;
+  // Enable logging for debugging mobile authentication issues
+  static bool get enableLogging => true;
   
   // File upload configurations
   static const int maxFileSize = 5 * 1024 * 1024; // 5MB

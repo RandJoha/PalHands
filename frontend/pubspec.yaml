@@ -58,7 +58,7 @@ dependencies:
   url_launcher: ^6.2.2
 
   # Notifications
-  flutter_local_notifications: ^16.3.0
+  # flutter_local_notifications: ^16.3.0
 
   # Animation
   lottie: ^2.7.0
