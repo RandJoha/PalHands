@@ -1,102 +1,451 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import 'shared/services/language_service.dart';
-import 'shared/services/auth_service.dart';
-import 'core/constants/app_strings.dart';
+
+
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:provider/provider.dart';
+
+// Core imports
 import 'core/constants/app_colors.dart';
+import 'core/constants/app_strings.dart';
+
+// Widget imports
 import 'shared/widgets/auth_wrapper.dart';
-import 'shared/services/responsive_service.dart';
-// Top-level routed screens
-import 'features/home/presentation/pages/home_screen.dart';
-import 'features/categories/presentation/pages/category_screen.dart';
-import 'features/about/presentation/pages/about_screen.dart';
-import 'features/contact/presentation/pages/contact_screen.dart';
-import 'features/faqs/presentation/pages/faqs_screen.dart';
-import 'features/admin/presentation/pages/admin_dashboard_screen.dart';
-import 'features/provider/presentation/pages/provider_dashboard_screen.dart';
-import 'features/profile/presentation/pages/user_dashboard_screen.dart';
 import 'shared/widgets/login_screen.dart';
 import 'shared/widgets/signup_screen.dart';
 import 'shared/widgets/reset_password_screen.dart';
+import 'shared/widgets/verify_email_screen.dart';
+import 'features/home/presentation/pages/home_screen.dart';
+import 'features/categories/presentation/pages/category_screen.dart';
+import 'features/about/presentation/pages/about_screen.dart';
+import 'features/faqs/presentation/pages/faqs_screen.dart';
+import 'features/contact/presentation/pages/contact_screen.dart';
+import 'features/admin/presentation/pages/admin_dashboard_screen.dart';
+import 'features/profile/presentation/pages/user_dashboard_screen.dart';
+import 'features/provider/presentation/pages/provider_dashboard_screen.dart';
+import 'debug_admin_login.dart';
 
-// Minimal app entrypoint for Flutter Web + Mobile
-// Wires core services and routes through AuthWrapper to ensure authentication.
-Future<void> main() async {
-	WidgetsFlutterBinding.ensureInitialized();
+// Services
+import 'shared/services/language_service.dart';
+import 'shared/services/health_service.dart';
+import 'shared/services/auth_service.dart';
+import 'shared/services/responsive_service.dart';
+import 'shared/services/provider_service.dart';
 
-	final language = LanguageService();
-	await language.initializeLanguage();
+// Feature imports (to be implemented)
+// import 'features/auth/presentation/bloc/auth_bloc.dart';
+// import 'features/services/presentation/bloc/services_bloc.dart';
+// import 'features/bookings/presentation/bloc/bookings_bloc.dart';
 
-	final auth = AuthService();
-	await auth.initialize();
-
-	runApp(MyApp(language: language, auth: auth));
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Hive for local storage
+  await Hive.initFlutter();
+  
+  // Initialize screen utilities with error handling
+  try {
+    await ScreenUtil.ensureScreenSize();
+  } catch (e) {
+    print('ScreenUtil initialization warning: $e');
+  }
+  
+  // Enable backend integration for Phase 3
+  ProviderService.useFrontendMocks(false);
+  
+  runApp(const PalHandsApp());
 }
 
-class MyApp extends StatelessWidget {
-	final LanguageService language;
-	final AuthService auth;
-	const MyApp({super.key, required this.language, required this.auth});
+class PalHandsApp extends StatelessWidget {
+  const PalHandsApp({super.key});
 
-	@override
-	Widget build(BuildContext context) {
-		return MultiProvider(
-			providers: [
-				ChangeNotifierProvider<LanguageService>.value(value: language),
-				ChangeNotifierProvider<AuthService>.value(value: auth),
-				ChangeNotifierProvider<ResponsiveService>(create: (_) => ResponsiveService()),
-			],
-			child: Builder(
-				builder: (context) {
-					final lang = context.watch<LanguageService>().currentLanguage;
-					return MaterialApp(
-						debugShowCheckedModeBanner: false,
-						title: AppStrings.appName[lang] ?? 'PalHands',
-						theme: ThemeData(
-							colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
-							textTheme: GoogleFonts.cairoTextTheme(),
-							useMaterial3: true,
-						),
-						home: const AuthWrapper(),
-						routes: {
-							'/home': (context) => const HomeScreen(),
-							'/about': (context) => const AboutScreen(),
-							'/contact': (context) => const ContactScreen(),
-							'/faqs': (context) => const FAQsScreen(),
-							'/categories': (context) => const CategoryScreen(),
-							'/admin': (context) => const AdminDashboardScreen(),
-							'/provider': (context) => const ProviderDashboardScreen(),
-							'/user': (context) => const UserDashboardScreen(),
-							'/login': (context) => const LoginScreen(),
-							'/signup': (context) => const SignupScreen(),
-						},
-						onGenerateRoute: (settings) {
-							final name = settings.name ?? '';
-							final uri = Uri.tryParse(name);
-							if (uri != null) {
-								// Normalize routes that include query parameters
-								switch (uri.path) {
-									case '/':
-										return MaterialPageRoute(builder: (_) => const AuthWrapper());
-									case '/user':
-										// Optional: parse ?tab= but default to dashboard
-										return MaterialPageRoute(builder: (_) => const UserDashboardScreen());
-									case '/reset-password':
-										final token = uri.queryParameters['token'];
-										return MaterialPageRoute(builder: (_) => ResetPasswordScreen(token: token));
-									default:
-										break;
-								}
-							}
-							// Fallback to home for unknown routes
-							return MaterialPageRoute(builder: (_) => const HomeScreen());
-						},
-					);
-				},
-			),
-		);
-	}
+  @override
+  Widget build(BuildContext context) {
+    try {
+      return ScreenUtilInit(
+        designSize: const Size(1920, 1080), // Web-first design size
+        minTextAdapt: true,
+        useInheritedMediaQuery: true,
+        builder: (context, child) {
+          return MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (context) => LanguageService()..initializeLanguage()),
+            ChangeNotifierProvider(create: (context) => HealthService()),
+            ChangeNotifierProvider(
+              create: (context) => AuthService()..initialize(),
+            ),
+            ChangeNotifierProvider(create: (context) => ResponsiveService()),
+          ],
+          child: Consumer<LanguageService>(
+            builder: (context, languageService, child) {
+              return MaterialApp(
+                title: AppStrings.getString('appName', languageService.currentLanguage),
+                debugShowCheckedModeBanner: false,
+                locale: Locale(languageService.currentLanguage),
+                localizationsDelegates: const [
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
+                supportedLocales: const [
+                  Locale('en'),
+                  Locale('ar'),
+                ],
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: AppColors.primary,
+              brightness: Brightness.light,
+            ),
+            textTheme: GoogleFonts.cairoTextTheme(
+              Theme.of(context).textTheme,
+            ),
+            useMaterial3: true,
+            scaffoldBackgroundColor: AppColors.background,
+            appBarTheme: AppBarTheme(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.white,
+              elevation: 0,
+              centerTitle: true,
+              titleTextStyle: GoogleFonts.cairo(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+                color: AppColors.white,
+              ),
+            ),
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.white,
+                padding: EdgeInsets.symmetric(
+                  horizontal: 24.w,
+                  vertical: 12.h,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+              ),
+            ),
+          ),
+                // Do not set `home` or `initialRoute` so the browser URL is respected on web.
+                routes: {
+                  '/home': (context) => const HomeScreen(),
+                  '/categories': (context) => const CategoryScreen(),
+                  '/about': (context) => const AboutScreen(),
+                  '/faqs': (context) => const FAQsScreen(),
+                  '/contact': (context) => const ContactScreen(),
+                  '/admin': (context) => const AdminDashboardScreen(),
+                  '/user': (context) => const UserDashboardScreen(),
+                  '/login': (context) => const LoginScreen(),
+                  '/signup': (context) => const SignupScreen(),
+                  '/provider': (context) => const ProviderDashboardScreen(),
+                  '/debug-admin': (context) => const DebugAdminLoginPage(),
+                },
+                // Handle deep links with query parameters (e.g., /reset-password?token=...)
+                onGenerateRoute: (settings) {
+                  final uri = Uri.tryParse(settings.name ?? '/') ?? Uri(path: '/');
+                  // If backend redirected with evt=email-updated, refresh profile once
+                  if (uri.queryParameters['evt'] == 'email-updated' && uri.path == '/user') {
+                    return MaterialPageRoute(
+                      builder: (_) => const _ProfileRefresh(child: UserDashboardScreen()),
+                      settings: const RouteSettings(name: '/user'),
+                    );
+                  }
+                  if (uri.path == '/reset-password') {
+                    final token = uri.queryParameters['token'];
+                    return MaterialPageRoute(
+                      builder: (_) => ResetPasswordScreen(token: token),
+                      settings: settings,
+                    );
+                  }
+                  if (uri.path == '/verify-email') {
+                    final token = uri.queryParameters['token'];
+                    final ret = uri.queryParameters['r'];
+                    return MaterialPageRoute(
+                      builder: (_) => VerifyEmailScreen(token: token, returnPath: ret),
+                      settings: settings,
+                    );
+                  }
+                  // Default and fallbacks
+                  switch (uri.path) {
+                    case '/':
+                      return MaterialPageRoute(builder: (_) => const AuthWrapper(), settings: settings);
+                    case '/home':
+                      return MaterialPageRoute(builder: (_) => const HomeScreen(), settings: settings);
+                    case '/categories':
+                      return MaterialPageRoute(builder: (_) => const CategoryScreen(), settings: settings);
+                    case '/about':
+                      return MaterialPageRoute(builder: (_) => const AboutScreen(), settings: settings);
+                    case '/faqs':
+                      return MaterialPageRoute(builder: (_) => const FAQsScreen(), settings: settings);
+                    case '/contact':
+                      return MaterialPageRoute(builder: (_) => const ContactScreen(), settings: settings);
+                    case '/admin':
+                      return MaterialPageRoute(builder: (_) => const AdminDashboardScreen(), settings: settings);
+                    case '/user':
+                      final tabIndex = uri.queryParameters['tab'];
+                      int? initialTabIndex;
+                      if (tabIndex == 'chats') {
+                        initialTabIndex = 1; // Chat tab index
+                      }
+                      return MaterialPageRoute(
+                        builder: (_) => UserDashboardScreen(initialTabIndex: initialTabIndex), 
+                        settings: settings
+                      );
+                    case '/login':
+                      return MaterialPageRoute(builder: (_) => const LoginScreen(), settings: settings);
+                    case '/signup':
+                      return MaterialPageRoute(builder: (_) => const SignupScreen(), settings: settings);
+                    case '/provider':
+                      return MaterialPageRoute(builder: (_) => const ProviderDashboardScreen(), settings: settings);
+                    case '/debug-admin':
+                      return MaterialPageRoute(builder: (_) => const DebugAdminLoginPage(), settings: settings);
+                  }
+                  // Unknown route -> home
+                  return MaterialPageRoute(builder: (_) => const AuthWrapper(), settings: settings);
+                },
+                onGenerateInitialRoutes: (initialRoute) {
+                  final uri = Uri.tryParse(Uri.base.toString()) ?? Uri(path: '/');
+                  if (uri.queryParameters['evt'] == 'email-updated' && uri.path == '/user') {
+                    return [
+                      MaterialPageRoute(
+                        builder: (_) => const _ProfileRefresh(child: UserDashboardScreen()),
+                        settings: const RouteSettings(name: '/user'),
+                      )
+                    ];
+                  }
+                  if (uri.path == '/reset-password') {
+                    final token = uri.queryParameters['token'];
+                    return [
+                      MaterialPageRoute(
+                        builder: (_) => ResetPasswordScreen(token: token),
+                        settings: const RouteSettings(name: '/reset-password'),
+                      )
+                    ];
+                  }
+                  if (uri.path == '/verify-email') {
+                    final token = uri.queryParameters['token'];
+                    final ret = uri.queryParameters['r'];
+                    return [
+                      MaterialPageRoute(
+                        builder: (_) => VerifyEmailScreen(token: token, returnPath: ret),
+                        settings: const RouteSettings(name: '/verify-email'),
+                      )
+                    ];
+                  }
+                  // Default initial page
+                  return [
+                    MaterialPageRoute(
+                      builder: (_) => const AuthWrapper(),
+                      settings: const RouteSettings(name: '/'),
+                    )
+                  ];
+                },
+              );
+            },
+          ),
+        );
+      },
+    );
+    } catch (e) {
+      print('ScreenUtil error: $e');
+      // Fallback without ScreenUtil if there's an error
+      return MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (context) => LanguageService()..initializeLanguage()),
+          ChangeNotifierProvider(create: (context) => HealthService()),
+          ChangeNotifierProvider(
+            create: (context) => AuthService()..initialize(),
+          ),
+          ChangeNotifierProvider(create: (context) => ResponsiveService()),
+        ],
+        child: Consumer<LanguageService>(
+          builder: (context, languageService, child) {
+            return MaterialApp(
+              title: AppStrings.getString('appName', languageService.currentLanguage),
+              debugShowCheckedModeBanner: false,
+              locale: Locale(languageService.currentLanguage),
+              localizationsDelegates: const [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [
+                Locale('en'),
+                Locale('ar'),
+              ],
+              theme: ThemeData(
+                colorScheme: ColorScheme.fromSeed(
+                  seedColor: AppColors.primary,
+                  brightness: Brightness.light,
+                ),
+                textTheme: GoogleFonts.cairoTextTheme(
+                  Theme.of(context).textTheme,
+                ),
+                useMaterial3: true,
+                scaffoldBackgroundColor: AppColors.background,
+                appBarTheme: AppBarTheme(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.white,
+                  elevation: 0,
+                  centerTitle: true,
+                  titleTextStyle: GoogleFonts.cairo(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.white,
+                  ),
+                ),
+                elevatedButtonTheme: ElevatedButtonThemeData(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+              routes: {
+                '/home': (context) => const HomeScreen(),
+                '/categories': (context) => const CategoryScreen(),
+                '/about': (context) => const AboutScreen(),
+                '/faqs': (context) => const FAQsScreen(),
+                '/contact': (context) => const ContactScreen(),
+                '/admin': (context) => const AdminDashboardScreen(),
+                '/user': (context) => const UserDashboardScreen(),
+                '/login': (context) => const LoginScreen(),
+                '/signup': (context) => const SignupScreen(),
+                '/provider': (context) => const ProviderDashboardScreen(),
+                '/debug-admin': (context) => const DebugAdminLoginPage(),
+              },
+              onGenerateRoute: (settings) {
+                final uri = Uri.tryParse(settings.name ?? '/') ?? Uri(path: '/');
+                if (uri.queryParameters['evt'] == 'email-updated' && uri.path == '/user') {
+                  return MaterialPageRoute(
+                    builder: (_) => const _ProfileRefresh(child: UserDashboardScreen()),
+                    settings: const RouteSettings(name: '/user'),
+                  );
+                }
+                if (uri.path == '/reset-password') {
+                  final token = uri.queryParameters['token'];
+                  return MaterialPageRoute(
+                    builder: (_) => ResetPasswordScreen(token: token),
+                    settings: settings,
+                  );
+                }
+                if (uri.path == '/verify-email') {
+                  final token = uri.queryParameters['token'];
+                  final ret = uri.queryParameters['r'];
+                  return MaterialPageRoute(
+                    builder: (_) => VerifyEmailScreen(token: token, returnPath: ret),
+                    settings: settings,
+                  );
+                }
+                switch (uri.path) {
+                  case '/':
+                    return MaterialPageRoute(builder: (_) => const AuthWrapper(), settings: settings);
+                  case '/home':
+                    return MaterialPageRoute(builder: (_) => const HomeScreen(), settings: settings);
+                  case '/categories':
+                    return MaterialPageRoute(builder: (_) => const CategoryScreen(), settings: settings);
+                  case '/about':
+                    return MaterialPageRoute(builder: (_) => const AboutScreen(), settings: settings);
+                  case '/faqs':
+                    return MaterialPageRoute(builder: (_) => const FAQsScreen(), settings: settings);
+                  case '/contact':
+                    return MaterialPageRoute(builder: (_) => const ContactScreen(), settings: settings);
+                  case '/admin':
+                    return MaterialPageRoute(builder: (_) => const AdminDashboardScreen(), settings: settings);
+                  case '/user':
+                    final tabIndex = uri.queryParameters['tab'];
+                    int? initialTabIndex;
+                    if (tabIndex == 'chats') {
+                      initialTabIndex = 1;
+                    }
+                    return MaterialPageRoute(
+                      builder: (_) => UserDashboardScreen(initialTabIndex: initialTabIndex), 
+                      settings: settings
+                    );
+                  case '/login':
+                    return MaterialPageRoute(builder: (_) => const LoginScreen(), settings: settings);
+                  case '/signup':
+                    return MaterialPageRoute(builder: (_) => const SignupScreen(), settings: settings);
+                  case '/provider':
+                    return MaterialPageRoute(builder: (_) => const ProviderDashboardScreen(), settings: settings);
+                  case '/debug-admin':
+                    return MaterialPageRoute(builder: (_) => const DebugAdminLoginPage(), settings: settings);
+                }
+                return MaterialPageRoute(builder: (_) => const AuthWrapper(), settings: settings);
+              },
+              onGenerateInitialRoutes: (initialRoute) {
+                final uri = Uri.tryParse(Uri.base.toString()) ?? Uri(path: '/');
+                if (uri.queryParameters['evt'] == 'email-updated' && uri.path == '/user') {
+                  return [
+                    MaterialPageRoute(
+                      builder: (_) => const _ProfileRefresh(child: UserDashboardScreen()),
+                      settings: const RouteSettings(name: '/user'),
+                    )
+                  ];
+                }
+                if (uri.path == '/reset-password') {
+                  final token = uri.queryParameters['token'];
+                  return [
+                    MaterialPageRoute(
+                      builder: (_) => ResetPasswordScreen(token: token),
+                      settings: const RouteSettings(name: '/reset-password'),
+                    )
+                  ];
+                }
+                if (uri.path == '/verify-email') {
+                  final token = uri.queryParameters['token'];
+                  final ret = uri.queryParameters['r'];
+                  return [
+                    MaterialPageRoute(
+                      builder: (_) => VerifyEmailScreen(token: token, returnPath: ret),
+                      settings: const RouteSettings(name: '/verify-email'),
+                    )
+                  ];
+                }
+                return [
+                  MaterialPageRoute(
+                    builder: (_) => const AuthWrapper(),
+                    settings: const RouteSettings(name: '/'),
+                  )
+                ];
+              },
+            );
+          },
+        ),
+      );
+    }
+  }
+} 
+
+// Internal helper: refresh the current profile once, then show the provided child.
+class _ProfileRefresh extends StatefulWidget {
+  final Widget child;
+  const _ProfileRefresh({required this.child});
+  @override
+  State<_ProfileRefresh> createState() => _ProfileRefreshState();
 }
 
+class _ProfileRefreshState extends State<_ProfileRefresh> {
+  bool _refreshed = false;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_refreshed) {
+      _refreshed = true;
+      final auth = Provider.of<AuthService>(context, listen: false);
+      Future.microtask(() async { try { await auth.getProfile(); } catch (_) {} });
+    }
+  }
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
