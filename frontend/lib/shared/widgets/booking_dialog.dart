@@ -95,9 +95,8 @@ class _BookingDialogState extends State<BookingDialog> {
 
   // Load provider services from backend to get real service IDs
   // Ignore errors and gracefully fall back to provider.services list
-  _loadProviderServices();
+  _loadProviderServices(); // This will call _loadResolved() after completion
   _loadAvailability();
-  _loadResolved();
   }
 
   @override
@@ -120,8 +119,33 @@ class _BookingDialogState extends State<BookingDialog> {
 
   Future<void> _loadResolved() async {
     try {
-      final from = DateTime.now().add(const Duration(days: 0));
+      // Validate provider ID - allow mock providers to work
+      if (widget.provider.id.isEmpty) {
+        if (mounted) {
+          setState(() {
+            _resolved = AvailabilityResolved(
+              days: [],
+              step: 60,
+              timezone: 'UTC',
+            );
+          });
+        }
+        return;
+      }
+      
+      final now = DateTime.now();
+      final DateTime from;
+      
+      if (_emergency && _supportsEmergency) {
+        // Emergency mode: 2-hour lead time (same day booking allowed)
+        from = now.add(const Duration(hours: 2));
+      } else {
+        // Normal mode: 2-day lead time (48 hours ahead)
+        from = now.add(const Duration(days: 2));
+      }
+      
       final to = from.add(const Duration(days: 31));
+      
   final r = await _availabilityService.getResolvedAvailability(
     widget.provider.id,
     from: from,
@@ -130,18 +154,50 @@ class _BookingDialogState extends State<BookingDialog> {
     emergency: _emergency,
     serviceId: _selectedServiceId,
   );
+      
       if (!mounted) return;
       setState(() {
-        _resolved = r;
+        _resolved = r ?? AvailabilityResolved(
+          days: [],
+          step: 60,
+          timezone: 'UTC',
+        );
         _calendarMonth = DateTime(from.year, from.month, 1);
       });
-    } catch (_) {}
+    } catch (e) {
+      // Show a fallback or error state instead of silent failure
+      if (mounted) {
+        setState(() {
+          // Set a minimal resolved state to show calendar with no available times
+          _resolved = AvailabilityResolved(
+            days: [],
+            step: 60,
+            timezone: 'UTC',
+          );
+        });
+      }
+    }
   }
 
   Future<void> _loadResolvedForMonth(DateTime monthStart) async {
     try {
-      final from = DateTime(monthStart.year, monthStart.month, 1);
+      final now = DateTime.now();
+      final DateTime minDate;
+      
+      if (_emergency && _supportsEmergency) {
+        // Emergency mode: 2-hour lead time (same day booking allowed)
+        minDate = now.add(const Duration(hours: 2));
+      } else {
+        // Normal mode: 2-day lead time (48 hours ahead)
+        minDate = now.add(const Duration(days: 2));
+      }
+      
+      // Use the later of the requested month start or the minimum allowed date
+      final from = DateTime(monthStart.year, monthStart.month, 1).isBefore(minDate)
+          ? minDate
+          : DateTime(monthStart.year, monthStart.month, 1);
       final to = DateTime(monthStart.year, monthStart.month + 1, 0);
+      
     final r = await _availabilityService.getResolvedAvailability(
         widget.provider.id,
         from: from,
@@ -153,10 +209,19 @@ class _BookingDialogState extends State<BookingDialog> {
       if (!mounted) return;
       setState(() {
         _resolved = r;
-        _calendarMonth = from;
+        _calendarMonth = DateTime(monthStart.year, monthStart.month, 1);
       });
-    } catch (_) {
-      // ignore
+    } catch (e) {
+      // Show a fallback state instead of silent failure
+      if (mounted) {
+        setState(() {
+          _resolved = AvailabilityResolved(
+            days: [],
+            step: 60,
+            timezone: 'UTC',
+          );
+        });
+      }
     }
   }
 
@@ -217,65 +282,7 @@ class _BookingDialogState extends State<BookingDialog> {
     });
   }
 
-  Future<void> _selectDate() async {
-    final now = DateTime.now();
-    
-    // Dynamic minimum date based on emergency mode (Fix #5)
-    final DateTime minUiDate;
-    if (_emergency && _supportsEmergency) {
-      // Emergency mode: same-day booking allowed (today)
-      minUiDate = DateTime(now.year, now.month, now.day);
-    } else {
-      // Normal mode: 48-hour minimum
-      minUiDate = now.add(const Duration(days: 2));
-    }
-    
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate != null && _selectedDate!.isAfter(minUiDate)
-          ? _selectedDate!
-          : minUiDate,
-      firstDate: minUiDate,
-      lastDate: DateTime.now().add(const Duration(days: 90)),
-    );
-    
-    if (picked != null) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
-  }
 
-  Future<void> _selectTime(bool isStartTime) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: isStartTime 
-          ? (_startTime ?? const TimeOfDay(hour: 9, minute: 0))
-          : (_endTime ?? const TimeOfDay(hour: 12, minute: 0)),
-    );
-    
-    if (picked != null) {
-      setState(() {
-        if (isStartTime) {
-          _startTime = picked;
-          // Auto-adjust end time to be at least 1 hour after start time
-          if (_endTime != null) {
-            final startMinutes = picked.hour * 60 + picked.minute;
-            final endMinutes = _endTime!.hour * 60 + _endTime!.minute;
-            if (endMinutes <= startMinutes) {
-              _endTime = TimeOfDay(
-                hour: (startMinutes + 60) ~/ 60,
-                minute: (startMinutes + 60) % 60,
-              );
-            }
-          }
-        } else {
-          _endTime = picked;
-        }
-      });
-      _validateTimeAgainstAvailability();
-    }
-  }
 
   void _validateTimeAgainstAvailability() {
     if (_availability == null || _selectedDate == null || _startTime == null || _endTime == null) return;
@@ -309,11 +316,13 @@ class _BookingDialogState extends State<BookingDialog> {
   Future<void> _loadProviderServices() async {
     try {
       final providerId = widget.provider.id;
-      if (providerId.isEmpty || providerId.startsWith('svc_')) {
-        // Skip fetching if the provider id looks like a mock/fallback
+      
+      if (providerId.isEmpty) {
+        // Skip fetching if the provider id is empty
         return;
       }
       final items = await _servicesService.getServicesByProvider(providerId);
+      
       if (!mounted) return;
       setState(() {
         // Keep only services whose subcategory exists in provider.services
@@ -328,6 +337,7 @@ class _BookingDialogState extends State<BookingDialog> {
           return ia.compareTo(ib);
         });
         _providerServices = filtered.isNotEmpty ? filtered : items;
+        
         // Preselect by incoming selectedService key when possible
         if (_providerServices.isNotEmpty) {
           // Match using subcategory first (exact service key used on provider card),
@@ -348,8 +358,13 @@ class _BookingDialogState extends State<BookingDialog> {
           _selectedServiceId = matched.id;
         }
       });
+      
+      // Load resolved availability after services are loaded
+      _loadResolved();
     } catch (_) {
       // Silent fallback; dropdown will use provider.services (strings)
+      // Still try to load resolved availability even if services failed
+      _loadResolved();
     }
   }
 
@@ -936,6 +951,9 @@ class _BookingDialogState extends State<BookingDialog> {
               } else {
                 _selectedService = value;
               }
+              
+              // Reload availability for the newly selected service
+              _loadResolved();
             });
           },
           validator: (value) {
@@ -966,8 +984,8 @@ class _BookingDialogState extends State<BookingDialog> {
       padding: const EdgeInsets.only(bottom: 6),
       child: Text(
         _emergency
-            ? (lang == 'ar' ? 'الطوارئ: قد تتوفر مواعيد في نفس اليوم وفق توفر المزود' : 'Emergency: same-day slots may be available if the provider supports it')
-            : AppStrings.getString('earliestBookingDate', lang),
+            ? (lang == 'ar' ? 'الطوارئ: يمكن الحجز بعد ساعتين من الآن' : 'Emergency: bookings available 2 hours from now')
+            : (lang == 'ar' ? 'الحد الأدنى للحجز: يومين من الآن' : 'Minimum booking time: 2 days from now'),
         style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
       ),
     ),
@@ -995,117 +1013,125 @@ class _BookingDialogState extends State<BookingDialog> {
         ]
       ],
     ),
-    // Calendar with resolved availability (falls back to pickers if not loaded)
-    if (_resolved != null) ...[
-      // Month navigation
-      if (_calendarMode == 'month') ...[
-        Row(
-          children: [
-            Builder(builder: (context) {
-              // Compute navigation availability (only current + next month)
-              final base = DateTime(DateTime.now().year, DateTime.now().month, 1);
-              final canPrev = _calendarMonth.isAfter(base);
-              return IconButton(
-              icon: const Icon(Icons.chevron_left),
-              tooltip: 'Previous month',
-                onPressed: canPrev ? () => _changeMonth(-1) : null,
-              );
-            }),
-            Expanded(
-              child: Center(
-                child: Text(
-                  '${_calendarMonth.year}-${_calendarMonth.month.toString().padLeft(2,'0')}',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+    // Calendar with resolved availability (always show calendar)
+    Builder(builder: (context) {
+      if (_resolved != null) {
+        // Show calendar with data
+        return Column(children: [
+          // Month navigation
+          if (_calendarMode == 'month') ...[
+            Row(
+              children: [
+                Builder(builder: (context) {
+                  // Compute navigation availability (only current + next month)
+                  final base = DateTime(DateTime.now().year, DateTime.now().month, 1);
+                  final canPrev = _calendarMonth.isAfter(base);
+                  return IconButton(
+                  icon: const Icon(Icons.chevron_left),
+                  tooltip: 'Previous month',
+                    onPressed: canPrev ? () => _changeMonth(-1) : null,
+                  );
+                }),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      '${_calendarMonth.year}-${_calendarMonth.month.toString().padLeft(2,'0')}',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
                 ),
-              ),
+                Builder(builder: (context) {
+                  final base = DateTime(DateTime.now().year, DateTime.now().month, 1);
+                  final limitNext = DateTime(base.year, base.month + 1, 1);
+                  final canNext = _calendarMonth.isBefore(limitNext);
+                  return IconButton(
+                  icon: const Icon(Icons.chevron_right),
+                  tooltip: 'Next month',
+                    onPressed: canNext ? () => _changeMonth(1) : null,
+                  );
+                }),
+              ],
             ),
+            _CalendarSection(
+              month: _calendarMonth,
+              resolved: _resolved!,
+          onSelect: (date, slot) {
+                setState(() {
+                  _selectedDate = date;
+            final dateKey = _dateKey(date);
+            final key = '${slot.start}-${slot.end}';
+            final set = _selectedByDate.putIfAbsent(dateKey, () => <String>{});
+            if (set.contains(key)) {
+              set.remove(key);
+            } else {
+              set.add(key);
+            }
+            _startTime = _parseHHmm(slot.start);
+            _endTime = _parseHHmm(slot.end);
+                });
+              },
+              onOpenDay: (date) => _openDayView(date),
+            ),
+            const SizedBox(height: 8),
+      _Legend(),
+            const SizedBox(height: 6),
             Builder(builder: (context) {
-              final base = DateTime(DateTime.now().year, DateTime.now().month, 1);
-              final limitNext = DateTime(base.year, base.month + 1, 1);
-              final canNext = _calendarMonth.isBefore(limitNext);
-              return IconButton(
-              icon: const Icon(Icons.chevron_right),
-              tooltip: 'Next month',
-                onPressed: canNext ? () => _changeMonth(1) : null,
+              final dateKey = _selectedDate != null ? _dateKey(_selectedDate!) : null;
+              final count = dateKey != null ? (_selectedByDate[dateKey]?.length ?? 0) : 0;
+              final hasSelection = count > 0 && _startTime != null && _endTime != null;
+              return Text(
+                hasSelection
+                    ? 'Selected ($count): ${_formatDate(_selectedDate!)} • ${_formatTime(_startTime!)} - ${_formatTime(_endTime!)}'
+                    : 'Select a day to view available times',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade800),
               );
             }),
+          ] else ...[
+            _DaySlotList(
+              date: _dayViewDate ?? DateTime.now(),
+              resolved: _resolved!,
+              selectedKeys: _selectedByDate[_dateKey(_dayViewDate ?? DateTime.now())] ?? const <String>{},
+              onToggle: (slot) {
+                final d = _dayViewDate ?? DateTime.now();
+                setState(() {
+                  _selectedDate = d;
+                  final key = _dateKey(d);
+                  final m = _selectedByDate.putIfAbsent(key, () => <String>{});
+                  final slotKey = '${slot.start}-${slot.end}';
+                  if (m.contains(slotKey)) {
+                    m.remove(slotKey);
+                  } else {
+                    m.add(slotKey);
+                  }
+                  // Update focused start/end to this single slot
+                  _startTime = _parseHHmm(slot.start);
+                  _endTime = _parseHHmm(slot.end);
+                });
+              },
+              onBack: _backToMonth,
+            ),
           ],
-        ),
-        _CalendarSection(
-          month: _calendarMonth,
-          resolved: _resolved!,
-      onSelect: (date, slot) {
-            setState(() {
-              _selectedDate = date;
-        final dateKey = _dateKey(date);
-        final key = '${slot.start}-${slot.end}';
-        final set = _selectedByDate.putIfAbsent(dateKey, () => <String>{});
-        if (set.contains(key)) {
-          set.remove(key);
-        } else {
-          set.add(key);
-        }
-        _startTime = _parseHHmm(slot.start);
-        _endTime = _parseHHmm(slot.end);
-            });
-          },
-          onOpenDay: (date) => _openDayView(date),
-        ),
-        const SizedBox(height: 8),
-  _Legend(),
-        const SizedBox(height: 6),
-        Builder(builder: (context) {
-          final dateKey = _selectedDate != null ? _dateKey(_selectedDate!) : null;
-          final count = dateKey != null ? (_selectedByDate[dateKey]?.length ?? 0) : 0;
-          final hasSelection = count > 0 && _startTime != null && _endTime != null;
-          return Text(
-            hasSelection
-                ? 'Selected ($count): ${_formatDate(_selectedDate!)} • ${_formatTime(_startTime!)} - ${_formatTime(_endTime!)}'
-                : 'Select a day to view available times',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade800),
-          );
-        }),
-      ] else ...[
-        _DaySlotList(
-          date: _dayViewDate ?? DateTime.now(),
-          resolved: _resolved!,
-          selectedKeys: _selectedByDate[_dateKey(_dayViewDate ?? DateTime.now())] ?? const <String>{},
-          onToggle: (slot) {
-            final d = _dayViewDate ?? DateTime.now();
-            setState(() {
-              _selectedDate = d;
-              final key = _dateKey(d);
-              final m = _selectedByDate.putIfAbsent(key, () => <String>{});
-              final slotKey = '${slot.start}-${slot.end}';
-              if (m.contains(slotKey)) {
-                m.remove(slotKey);
-              } else {
-                m.add(slotKey);
-              }
-              // Update focused start/end to this single slot
-              _startTime = _parseHHmm(slot.start);
-              _endTime = _parseHHmm(slot.end);
-            });
-          },
-          onBack: _backToMonth,
-        ),
-      ],
-    ] else ...[
-      _DateTimeRow(
-        dateLabel: _selectedDate != null
-          ? _formatDate(_selectedDate!)
-          : AppStrings.getString('selectDate', lang),
-        onPickDate: _selectDate,
-        startLabel: _startTime != null
-          ? _formatTime(_startTime!)
-          : AppStrings.getString('startTime', lang),
-        endLabel: _endTime != null
-          ? _formatTime(_endTime!)
-          : AppStrings.getString('endTime', lang),
-        onPickStart: () => _selectTime(true),
-        onPickEnd: () => _selectTime(false),
-      ),
-    ],
+        ]);
+      } else {
+        // Show loading state
+        return Container(
+          padding: const EdgeInsets.all(32),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 16),
+                Text(
+                  lang == 'ar' ? 'جاري تحميل الأوقات المتاحة...' : 'Loading available times...',
+                  style: TextStyle(color: Colors.grey.shade700),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    }),
       ],
     );
   }
@@ -1440,112 +1466,6 @@ class _CalendarSection extends StatelessWidget {
   }
 }
 
-// Internal compact-friendly row for date/time selectors
-class _DateTimeRow extends StatelessWidget {
-  final String dateLabel;
-  final VoidCallback onPickDate;
-  final String startLabel;
-  final String endLabel;
-  final VoidCallback onPickStart;
-  final VoidCallback onPickEnd;
-
-  const _DateTimeRow({
-    required this.dateLabel,
-    required this.onPickDate,
-    required this.startLabel,
-    required this.endLabel,
-    required this.onPickStart,
-    required this.onPickEnd,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final narrow = constraints.maxWidth < 420;
-        final dateField = _ChipField(
-          icon: Icons.calendar_today,
-          label: dateLabel,
-          onTap: onPickDate,
-        );
-        final startField = _ChipField(
-          icon: Icons.access_time,
-          label: startLabel,
-          onTap: onPickStart,
-        );
-        final endField = _ChipField(
-          icon: Icons.access_time,
-          label: endLabel,
-          onTap: onPickEnd,
-        );
-
-        if (narrow) {
-          // Stack vertically for readability
-          return Column(
-            children: [
-              dateField,
-              const SizedBox(height: 8),
-              startField,
-              const SizedBox(height: 8),
-              endField,
-            ],
-          );
-        }
-
-        return Column(
-          children: [
-            Row(children: [Expanded(child: dateField)]),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(child: startField),
-                const SizedBox(width: 8),
-                const Text(' - '),
-                const SizedBox(width: 8),
-                Expanded(child: endField),
-              ],
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _ChipField extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  const _ChipField({required this.icon, required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade400),
-          borderRadius: BorderRadius.circular(8.0),
-          color: Colors.white,
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 22, color: Colors.grey.shade800),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                label,
-                style: const TextStyle(fontSize: 14),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // Simple color legend for slot states
 class _Legend extends StatelessWidget {

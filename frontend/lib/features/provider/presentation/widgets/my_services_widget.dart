@@ -1883,8 +1883,17 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
       debugPrint('  - excludedMap (user excluded during session): ${excludedController.value}');
 
       final api = ProviderServicesApi();
+      print('🔧 [ServiceAvailability] Attempting to save service ${item.id} with data:');
+      print('  - providerId: $providerId');
+      print('  - serviceId: ${item.id}');
+      print('  - weeklyOverrides: ${body['weeklyOverrides']}');
+      print('  - emergencyWeeklyOverrides: ${body['emergencyWeeklyOverrides']}');
+      
       final ok = await api.update(providerId, item.id, body, authService: auth);
+      print('🔧 [ServiceAvailability] Save result: $ok');
+      
       if (ok) {
+        print('✅ [ServiceAvailability] Successfully saved service availability');
         // Clear any cached resolved availability for this provider/service in booking flows if present
         try {
           // Invalidate provider-services cache used by Our Services listing
@@ -1894,6 +1903,7 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
         setState(() { _loading = true; });
         await _load();
       } else {
+        print('❌ [ServiceAvailability] Failed to save service availability');
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.getString('saveFailed', lang.currentLanguage))));
       }

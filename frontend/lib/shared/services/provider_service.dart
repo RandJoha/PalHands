@@ -277,8 +277,10 @@ class ProviderService with BaseApiService {
       final city = cities[i % cities.length];
       final langs = languagePools[i % languagePools.length];
       final baseRate = 45 + (i % 50) + rnd.nextInt(20);
+      // Generate ObjectId-like strings for realistic mock data  
+      final objectIdHex = (1000000 + i).toRadixString(16).padLeft(24, '6');
       providers.add(ProviderModel(
-        id: 'svc_$i',
+        id: objectIdHex,
         providerId: 1000 + i, // Add provider ID starting from 1000
         name: name,
         city: city,
@@ -299,8 +301,10 @@ class ProviderService with BaseApiService {
       for (var k = 0; k < 5; k++) {
         s.add(allServices[(j * 3 + k * 7) % allServices.length]);
       }
+      // Generate ObjectId-like strings for multi-service providers
+      final objectIdHex = (2000000 + j).toRadixString(16).padLeft(24, '6');
       providers.add(ProviderModel(
-        id: 'pro_$j',
+        id: objectIdHex,
         providerId: 1100 + j, // Add provider ID starting from 1100 for multi-service providers
         name: names[(j + 7) % names.length],
         city: cities[(j + 3) % cities.length],

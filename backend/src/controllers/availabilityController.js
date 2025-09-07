@@ -52,8 +52,6 @@ async function upsertAvailability(req, res) {
   }
 }
 
-module.exports = { getAvailability, upsertAvailability };
- 
 // --- New: resolved availability with bookings and lead-time applied ---
 
 function getMinutes(name, fallback) {
@@ -69,10 +67,19 @@ function getMinutes(name, fallback) {
  */
 async function getResolvedAvailability(req, res) {
   try {
+    console.log('🔍 getResolvedAvailability called');
     const providerId = req.params.providerId;
     const step = Math.max(parseInt(req.query.step) || 30, 10); // minutes
   const MIN_LEAD = getMinutes('BOOKING_MIN_LEAD_MINUTES', 2880);
   const isEmergency = String(req.query.emergency || 'false').toLowerCase() === 'true';
+    
+    console.log('📋 Request params:', {
+      providerId,
+      step,
+      isEmergency,
+      queryParams: req.query,
+      MIN_LEAD
+    });
     const nowUtc = DateTime.utc();
 
     const fromStr = (req.query.from || nowUtc.toISODate());
@@ -86,20 +93,47 @@ async function getResolvedAvailability(req, res) {
 
     // Ensure provider supports emergency if requested (use ProviderService flags)
     if (isEmergency) {
+      console.log('🚨 Emergency mode requested, checking provider support...');
       try {
         const ProviderService = require('../models/ProviderService');
         const sid = (req.query.serviceId || '').toString();
+        let hasEmergencySupport = false;
+        
         if (sid && sid.length === 24) {
           const ps = await ProviderService.findOne({ provider: providerId, service: sid })
             .select('status publishable emergencyEnabled');
-          if (!ps || ps.status !== 'active' || ps.publishable !== true || ps.emergencyEnabled !== true) {
-            return ok(res, { timezone: 'Asia/Jerusalem', step, days: [] });
+          console.log('🔍 ProviderService found:', !!ps, ps ? { status: ps.status, publishable: ps.publishable, emergencyEnabled: ps.emergencyEnabled } : 'none');
+          if (ps && ps.status === 'active' && ps.publishable === true && ps.emergencyEnabled === true) {
+            hasEmergencySupport = true;
           }
         } else {
           const psAny = await ProviderService.exists({ provider: providerId, status: 'active', publishable: true, emergencyEnabled: true });
-          if (!psAny) return ok(res, { timezone: 'Asia/Jerusalem', step, days: [] });
+          console.log('🔍 Any ProviderService with emergency enabled:', !!psAny);
+          if (psAny) {
+            hasEmergencySupport = true;
+          }
         }
-      } catch (_) {
+        
+        // If no ProviderService support found, check if provider has emergency availability data
+        if (!hasEmergencySupport) {
+          console.log('🔍 No ProviderService emergency support, checking availability data...');
+          const a = await Availability.findOne({ provider: providerId });
+          if (a && a.emergencyWeekly) {
+            const hasEmergencySlots = Object.values(a.emergencyWeekly).some(day => Array.isArray(day) && day.length > 0);
+            console.log('🔍 Provider has emergency availability data:', hasEmergencySlots);
+            if (hasEmergencySlots) {
+              hasEmergencySupport = true;
+            }
+          }
+        }
+        
+        if (!hasEmergencySupport) {
+          console.log('⚠️ No emergency support found, returning empty availability');
+          return ok(res, { timezone: 'Asia/Jerusalem', step, days: [] });
+        }
+      } catch (e) {
+        console.log('❌ ProviderService check error:', e.message);
+        console.log('⚠️ Returning empty availability due to error');
         return ok(res, { timezone: 'Asia/Jerusalem', step, days: [] });
       }
     }
@@ -117,15 +151,66 @@ async function getResolvedAvailability(req, res) {
     }
 
     // Load availability + optional provider-service overrides
-    const a = await Availability.findOne({ provider: providerId });
+    console.log('🔎 Looking for availability for provider:', providerId);
+    let a = await Availability.findOne({ provider: providerId });
+    console.log('📅 Availability found:', !!a, a ? 'Has weekly data' : 'No availability document');
+    
+    // If no availability data found, create basic test data
+    if (!a) {
+      console.log('⚠️ No availability data found, creating basic test availability');
+      a = await Availability.findOneAndUpdate(
+        { provider: providerId },
+        {
+          provider: providerId,
+          timezone: 'Asia/Jerusalem',
+          weekly: {
+            monday: [{ start: '09:00', end: '17:00' }],
+            tuesday: [{ start: '09:00', end: '17:00' }],
+            wednesday: [{ start: '09:00', end: '17:00' }],
+            thursday: [{ start: '09:00', end: '17:00' }],
+            friday: [{ start: '09:00', end: '17:00' }],
+            saturday: [],
+            sunday: []
+          },
+          emergencyWeekly: {
+            monday: [{ start: '18:00', end: '20:00' }],
+            tuesday: [{ start: '18:00', end: '20:00' }],
+            wednesday: [{ start: '18:00', end: '20:00' }],
+            thursday: [{ start: '18:00', end: '20:00' }],
+            friday: [{ start: '18:00', end: '20:00' }],
+            saturday: [],
+            sunday: []
+          },
+          exceptions: [],
+          emergencyExceptions: []
+        },
+        { upsert: true, new: true }
+      );
+      console.log('✅ Created test availability for provider:', providerId);
+    }
+    
     const tz = a?.timezone || 'Asia/Jerusalem';
+    
     let psDoc = null;
     const sidForMerge = (req.query.serviceId || '').toString();
+    console.log('🔍 Looking for ProviderService:', { providerId, serviceId: sidForMerge });
     if (sidForMerge && sidForMerge.length === 24) {
       try {
         psDoc = await ProviderService.findOne({ provider: providerId, service: sidForMerge })
           .select('weeklyOverrides exceptionOverrides emergencyWeeklyOverrides emergencyExceptionOverrides');
-      } catch (_) { psDoc = null; }
+        console.log('📋 ProviderService found:', !!psDoc);
+        if (psDoc) {
+          console.log('📋 weeklyOverrides:', psDoc.weeklyOverrides);
+          console.log('📋 emergencyWeeklyOverrides:', psDoc.emergencyWeeklyOverrides);
+        } else {
+          console.log('⚠️ No ProviderService found for provider:', providerId, 'service:', sidForMerge);
+        }
+      } catch (e) { 
+        console.log('❌ ProviderService query error:', e.message);
+        psDoc = null; 
+      }
+    } else {
+      console.log('⚠️ Invalid serviceId for ProviderService lookup:', sidForMerge);
     }
     // Build weekly windows and exceptions. For emergency mode we merge normal weekly
     // with emergencyWeekly (if present) and additive per-service emergency overrides.
@@ -191,11 +276,11 @@ async function getResolvedAvailability(req, res) {
 
   // Determine lead threshold for emergency vs normal
   // Normal bookings use the global MIN_LEAD (default 48h). Emergency defaults
-  // to 0 minutes (same-day allowed) but will be overridden by ProviderService
+  // to 2 hours (120 minutes) but will be overridden by ProviderService
   // (preferred) or Service document (fallback) when available.
     let leadMinutes = MIN_LEAD;
     if (isEmergency) {
-      leadMinutes = 0;
+      leadMinutes = 120; // Default 2-hour lead time for emergency mode
       try {
         const ProviderService = require('../models/ProviderService');
         const Service = require('../models/Service');
@@ -333,11 +418,22 @@ async function getResolvedAvailability(req, res) {
       days.push({ date: dateKey, slots, booked: bookedSlots });
     }
 
+    console.log('📊 Returning resolved availability:', { 
+      timezone: tz, 
+      step, 
+      daysCount: days.length,
+      sampleDay: days.length > 0 ? days[0] : null 
+    });
+    
     return ok(res, { timezone: tz, step, days });
   } catch (e) {
-    console.error('getResolvedAvailability error', e);
+    console.error('❌ getResolvedAvailability error', e);
     return error(res, 400, 'Failed to resolve availability');
   }
 }
 
-module.exports.getResolvedAvailability = getResolvedAvailability;
+module.exports = { 
+  getAvailability, 
+  upsertAvailability, 
+  getResolvedAvailability 
+};

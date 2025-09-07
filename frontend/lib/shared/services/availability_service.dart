@@ -108,10 +108,12 @@ class AvailabilityService with BaseApiService {
   // cache-buster to avoid any intermediary/browser caching when provider updates availability
   params['_ts'] = DateTime.now().millisecondsSinceEpoch.toString();
       final qp = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
+      
       final data = await get(
         '${ApiConfig.availabilityEndpoint}/$providerId/resolve${qp.isNotEmpty ? '?$qp' : ''}',
         headers: await _getAuthHeaders(),
       );
+      
       final body = data['data'] ?? data;
       return AvailabilityResolved.fromJson(Map<String, dynamic>.from(body));
     } catch (e) {
