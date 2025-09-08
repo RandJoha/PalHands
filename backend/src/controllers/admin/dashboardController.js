@@ -326,11 +326,55 @@ const getServiceManagementData = async (req, res) => {
       .limit(parseInt(limit));
 
     const total = await Service.countDocuments(filter);
+    
+    // Debug logging
+    console.log(`🔍 Admin services query: Found ${services.length} services`);
+    if (services.length > 0) {
+      console.log(`🔍 First service: ${JSON.stringify(services[0], null, 2)}`);
+    }
+
+    // Get all categories from ServiceCategory collection first
+    const ServiceCategory = require('../../models/ServiceCategory');
+    const storedCategories = await ServiceCategory.find({ isActive: true });
+    
+    // Get categories with service counts (including categories with 0 services)
+    const categoriesWithCounts = await Service.aggregate([
+      { $match: { isActive: true } },
+      { $group: { _id: '$category', count: { $sum: 1 } } }
+    ]);
+
+    // Create a map for service counts
+    const serviceCountMap = categoriesWithCounts.reduce((acc, cat) => {
+      acc[cat._id] = cat.count;
+      return acc;
+    }, {});
+
+    // Create a map for quick lookup of category metadata
+    const categoryMetadata = storedCategories.reduce((acc, cat) => {
+      acc[cat.id] = {
+        name: cat.name,
+        icon: cat.icon,
+        color: cat.color,
+        description: cat.description
+      };
+      return acc;
+    }, {});
+
+    // Enhance ALL stored categories with metadata and service counts
+    const enhancedCategories = storedCategories.map(cat => ({
+      id: cat.id,
+      name: cat.name,
+      icon: cat.icon,
+      color: cat.color,
+      description: cat.description,
+      serviceCount: serviceCountMap[cat.id] || 0 // Show 0 if no services
+    })).sort((a, b) => b.serviceCount - a.serviceCount); // Sort by service count descending
 
     res.json({
       success: true,
       data: {
         services,
+        categories: enhancedCategories,
         pagination: {
           current: parseInt(page),
           total: Math.ceil(total / limit),
@@ -464,6 +508,68 @@ const updateBooking = async (req, res) => {
   }
 };
 
+const deleteCategory = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    
+    console.log(`🗑️ Delete category request for ID: ${categoryId}`);
+    
+    // Import required models
+    const ServiceCategory = require('../../models/ServiceCategory');
+    const Service = require('../../models/Service');
+    
+    // Check if category exists - ServiceCategory uses custom 'id' field (String), not _id
+    const category = await ServiceCategory.findOne({ id: categoryId });
+    
+    console.log(`🗑️ Found category:`, category ? `${category.name} (${category.id})` : 'null');
+    console.log(`🗑️ Searched for categoryId: ${categoryId}`);
+    
+    if (!category) {
+      console.log(`🗑️ Category not found for ID: ${categoryId}`);
+      return res.status(404).json({
+        success: false,
+        message: 'Category not found'
+      });
+    }
+    
+    // Check if category has services (services use category.id, not category.name)
+    const servicesCount = await Service.countDocuments({ category: category.id });
+    console.log(`🗑️ Services count for category "${category.name}": ${servicesCount}`);
+    
+    if (servicesCount > 0) {
+      console.log(`🗑️ Cannot delete category "${category.name}" - has ${servicesCount} services`);
+      return res.status(400).json({
+        success: false,
+        message: `Cannot delete category "${category.name}" because it has ${servicesCount} associated service(s). Please delete or reassign the services first.`
+      });
+    }
+    
+    // Delete the category - ServiceCategory uses custom 'id' field (String), not _id
+    const deleteResult = await ServiceCategory.findOneAndDelete({ id: categoryId });
+    
+    if (!deleteResult) {
+      console.log(`🗑️ Failed to delete category with ID: ${categoryId}`);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to delete category from database'
+      });
+    }
+    
+    console.log(`✅ Category "${category.name}" deleted successfully by admin`);
+    
+    res.json({
+      success: true,
+      message: `Category "${category.name}" deleted successfully`
+    });
+  } catch (error) {
+    console.error('Category deletion error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete category'
+    });
+  }
+};
+
 module.exports = {
   getDashboardOverview,
   getUserManagementData,
@@ -471,5 +577,6 @@ module.exports = {
   getServiceManagementData,
   updateService,
   getBookingManagementData,
-  updateBooking
+  updateBooking,
+  deleteCategory
 }; 

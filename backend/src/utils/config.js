@@ -6,8 +6,8 @@ function validateEnv() {
   return envalid.cleanEnv(process.env, {
     NODE_ENV: str({ default: 'development' }),
     PORT: port({ default: 3000 }),
-    MONGODB_URI: str(),
-    JWT_SECRET: str(),
+    MONGODB_URI: str({ default: 'mongodb://127.0.0.1:27017/palhands-dev' }),
+    JWT_SECRET: str({ default: 'your-super-secret-jwt-key-change-this-in-production' }),
     JWT_EXPIRES_IN: str({ default: '7d' }),
     CORS_ORIGIN: str({ default: 'http://localhost:3000,http://localhost:8080' }),
   ENABLE_EMAIL_VERIFICATION: bool({ default: false }),

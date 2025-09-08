@@ -80,13 +80,24 @@ async function getResolvedAvailability(req, res) {
       queryParams: req.query,
       MIN_LEAD
     });
+    
+    // Validate providerId format
+    if (!providerId || providerId.length !== 24) {
+      console.log('❌ Invalid providerId format:', providerId);
+      return error(res, 400, 'Invalid provider ID format');
+    }
     const nowUtc = DateTime.utc();
 
     const fromStr = (req.query.from || nowUtc.toISODate());
     const toStr = req.query.to || nowUtc.plus({ days: 30 }).toISODate();
+    console.log('📅 Date parsing:', { fromStr, toStr });
     let from = DateTime.fromISO(fromStr, { zone: 'utc' });
     let to = DateTime.fromISO(toStr, { zone: 'utc' });
-    if (!from.isValid || !to.isValid) return error(res, 400, 'Invalid date range');
+    console.log('📅 Parsed dates:', { from: from.isValid ? from.toISO() : 'invalid', to: to.isValid ? to.toISO() : 'invalid' });
+    if (!from.isValid || !to.isValid) {
+      console.log('❌ Invalid date range:', { from: fromStr, to: toStr });
+      return error(res, 400, 'Invalid date range');
+    }
     if (to.diff(from, 'days').days > 62) {
       to = from.plus({ days: 62 });
     }
@@ -427,8 +438,14 @@ async function getResolvedAvailability(req, res) {
     
     return ok(res, { timezone: tz, step, days });
   } catch (e) {
-    console.error('❌ getResolvedAvailability error', e);
-    return error(res, 400, 'Failed to resolve availability');
+    console.error('❌ getResolvedAvailability error:', e);
+    console.error('❌ Error details:', {
+      message: e.message,
+      stack: e.stack,
+      providerId: req.params.providerId,
+      query: req.query
+    });
+    return error(res, 400, `Failed to resolve availability: ${e.message}`);
   }
 }
 

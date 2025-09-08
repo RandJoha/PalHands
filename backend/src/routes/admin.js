@@ -22,6 +22,9 @@ router.put('/users/:userId', checkAdminPermission('userManagement'), logAdminAct
 router.get('/services', checkAdminPermission('serviceManagement'), dashboardController.getServiceManagementData);
 router.put('/services/:serviceId', checkAdminPermission('serviceManagement'), logAdminAction('service_update', 'service', 'req.params.serviceId'), dashboardController.updateService);
 
+// Category Management
+router.delete('/categories/:categoryId', checkAdminPermission('serviceManagement'), logAdminAction('category_delete', 'category', 'req.params.categoryId'), dashboardController.deleteCategory);
+
 // Booking Management
 router.get('/bookings', checkAdminPermission('bookingManagement'), dashboardController.getBookingManagementData);
 router.put('/bookings/:bookingId', checkAdminPermission('bookingManagement'), logAdminAction('booking_update', 'booking', 'req.params.bookingId'), dashboardController.updateBooking);
