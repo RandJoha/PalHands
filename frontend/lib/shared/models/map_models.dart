@@ -8,6 +8,50 @@ enum MapMarkerType {
   admin,
 }
 
+/// Indicates the origin of the resolved user location
+enum LocationSource {
+  gps,
+  address,
+  cityCentroid,
+}
+
+/// Simple address structure used during geocode/reverse-geocode coupling
+class AddressInfo {
+  final String? city;
+  final String? street;
+  final String? area;
+  final LatLng? coordinates;
+  final bool isApproximate;
+  final LocationSource source;
+
+  const AddressInfo({
+    this.city,
+    this.street,
+    this.area,
+    this.coordinates,
+    this.isApproximate = true,
+    this.source = LocationSource.cityCentroid,
+  });
+
+  AddressInfo copyWith({
+    String? city,
+    String? street,
+    String? area,
+    LatLng? coordinates,
+    bool? isApproximate,
+    LocationSource? source,
+  }) {
+    return AddressInfo(
+      city: city ?? this.city,
+      street: street ?? this.street,
+      area: area ?? this.area,
+      coordinates: coordinates ?? this.coordinates,
+      isApproximate: isApproximate ?? this.isApproximate,
+      source: source ?? this.source,
+    );
+  }
+}
+
 /// Map marker data model
 class MapMarker {
   final String id;

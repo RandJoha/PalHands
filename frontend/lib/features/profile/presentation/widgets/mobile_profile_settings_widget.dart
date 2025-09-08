@@ -9,6 +9,7 @@ import '../../../../core/constants/app_strings.dart';
 
 // Shared imports
 import '../../../../shared/services/language_service.dart';
+import '../../../../shared/services/location_service.dart';
 
 class MobileProfileSettingsWidget extends StatefulWidget {
   const MobileProfileSettingsWidget({super.key});
@@ -18,6 +19,9 @@ class MobileProfileSettingsWidget extends StatefulWidget {
 }
 
 class _MobileProfileSettingsWidgetState extends State<MobileProfileSettingsWidget> {
+  final TextEditingController _addressCtrl = TextEditingController();
+  bool _useGps = false;
+  final LocationService _locationService = LocationService();
   @override
   Widget build(BuildContext context) {
     return Consumer<LanguageService>(
@@ -110,11 +114,11 @@ class _MobileProfileSettingsWidgetState extends State<MobileProfileSettingsWidge
             ].where((e) => e.isNotEmpty).join(' ').trim(),
           ),
           const SizedBox(height: 16),
-                      _buildFormField(AppStrings.getString('email', languageService.currentLanguage), 'ahmed@example.com'),
+          _buildFormField(AppStrings.getString('email', languageService.currentLanguage), 'ahmed@example.com'),
           const SizedBox(height: 16),
-                      _buildFormField(AppStrings.getString('phone', languageService.currentLanguage), '+970 59 123 4567'),
+          _buildFormField(AppStrings.getString('phone', languageService.currentLanguage), '+970 59 123 4567'),
           const SizedBox(height: 16),
-                      _buildFormField(AppStrings.getString('address', languageService.currentLanguage), 'Ramallah, Palestine'),
+          _buildAddressSection(languageService),
           const SizedBox(height: 24),
           
           // Save button
@@ -176,6 +180,70 @@ class _MobileProfileSettingsWidgetState extends State<MobileProfileSettingsWidge
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAddressSection(LanguageService languageService) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          AppStrings.getString('address', languageService.currentLanguage),
+          style: GoogleFonts.cairo(
+            fontSize: 14,
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _addressCtrl,
+          readOnly: _useGps,
+          decoration: InputDecoration(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: AppColors.primary),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Switch(
+              value: _useGps,
+              onChanged: (v) async {
+                setState(() { _useGps = v; });
+                if (v) {
+                  final userLoc = await _locationService.simulateGpsForAddress();
+                  final coupled = await _locationService.coupleAddressFromGps(userLoc.position);
+                  final city = (coupled.city ?? '').toString();
+                  final street = (coupled.street ?? '').toString();
+                  setState(() {
+                    _addressCtrl.text = [street, city].where((e) => e.isNotEmpty).join(', ');
+                  });
+                }
+              },
+              activeColor: AppColors.primary,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Use GPS (simulated) for my location and auto-fill address',
+                style: GoogleFonts.cairo(fontSize: 14, color: AppColors.textPrimary),
+              ),
+            ),
+          ],
         ),
       ],
     );

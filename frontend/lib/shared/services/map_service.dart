@@ -417,6 +417,30 @@ class MapService with BaseApiService {
     MapEntry('Al-Zahra', LatLng(31.4697, 34.4228)),
   ];
 
+  /// Expose a centroid for a known city name (case-insensitive); null if unknown
+  LatLng? getCityCentroid(String? cityName) {
+    if (cityName == null) return null;
+    final lower = cityName.toLowerCase();
+    for (final entry in _palestineCityCenters) {
+      if (entry.key.toLowerCase() == lower) return entry.value;
+    }
+    return null;
+  }
+
+  /// Find the nearest known city centroid to the given position
+  MapEntry<String, LatLng> findNearestCity(LatLng position) {
+    MapEntry<String, LatLng>? best;
+    double bestDist = double.infinity;
+    for (final entry in _palestineCityCenters) {
+      final d = MapUtils.calculateDistance(entry.value, position);
+      if (d < bestDist) {
+        bestDist = d;
+        best = entry;
+      }
+    }
+    return best ?? _palestineCityCenters.first;
+  }
+
   Future<List<MapMarker>> _generateDummyProvidersInBounds(
     MapBounds bounds,
     MapFilters? filters,

@@ -7,6 +7,8 @@ import '../models/map_models.dart';
 import '../services/map_service.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
+import '../services/location_service.dart';
+import '../services/auth_service.dart';
 
 class PalHandsMapWidget extends StatefulWidget {
   final LatLng? initialLocation;
@@ -14,7 +16,9 @@ class PalHandsMapWidget extends StatefulWidget {
   final Function(MapMarker)? onMarkerTap;
   final Function(LatLng)? onLocationChanged;
   final bool showUserLocation;
-  final bool showLocationPermissionBanner;
+  final bool showLocationToggle;
+  final double? height;
+  final EdgeInsets? padding;
 
   const PalHandsMapWidget({
     Key? key,
@@ -23,7 +27,9 @@ class PalHandsMapWidget extends StatefulWidget {
     this.onMarkerTap,
     this.onLocationChanged,
     this.showUserLocation = true,
-    this.showLocationPermissionBanner = true,
+    this.showLocationToggle = true,
+    this.height,
+    this.padding,
   }) : super(key: key);
 
   @override
@@ -33,17 +39,22 @@ class PalHandsMapWidget extends StatefulWidget {
 class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
   late GoogleMapController _mapController;
   final MapService _mapService = MapService();
+  final LocationService _locationService = LocationService();
   
   // Map state
   MapState _mapState = const MapState();
   Set<Marker> _markers = {};
   LatLng? _userLocation;
+  bool _userLocationApprox = true;
   bool _isLoading = false;
   String? _error;
   
   // Location permission
   bool _isLocationPermissionGranted = false;
   bool _isLocationSharingEnabled = false;
+  
+  // Stream subscription for GPS state changes
+  StreamSubscription<bool>? _gpsStateSubscription;
   
   // Map settings
   static const CameraPosition _defaultPosition = CameraPosition(
@@ -57,6 +68,20 @@ class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
   void initState() {
     super.initState();
     _initializeMap();
+    
+    // Listen to GPS state changes for immediate updates
+    _gpsStateSubscription = LocationService.gpsStateStream.listen((gpsEnabled) {
+      if (mounted) {
+        _updateUserLocationFromProfile();
+      }
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Listen for auth service changes to update user location immediately
+    _updateUserLocationFromProfile();
   }
 
   Future<void> _initializeMap() async {
@@ -111,6 +136,15 @@ class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
     setState(() {
       _isLocationPermissionGranted = true;
     });
+
+    // Show blue marker only if user has GPS enabled in their profile
+    if (_isLocationSharingEnabled && _shouldShowUserLocation()) {
+      final simulated = await _locationService.simulateGpsForAddress(city: null);
+      _userLocation = simulated.position;
+      _userLocationApprox = simulated.isApproximate;
+      // Add blue marker for current user
+      _injectUserMarker();
+    }
   }
 
   Future<void> _loadUserLocationPreferences() async {
@@ -121,11 +155,72 @@ class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
         if (preferences['lastKnownLocation'] != null) {
           final loc = preferences['lastKnownLocation'];
           _userLocation = LatLng(loc['latitude'], loc['longitude']);
+          _userLocationApprox = loc['isApproximate'] == true;
         }
       });
+      if (_isLocationSharingEnabled && _userLocation != null && _shouldShowUserLocation()) {
+        _injectUserMarker();
+      }
     } catch (e) {
       // Handle error silently
     }
+  }
+
+  // Check if user location should be shown based on GPS preference
+  bool _shouldShowUserLocation() {
+    if (!mounted) return false;
+    
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final user = authService.currentUser;
+      
+      // Only show blue dot if user has GPS enabled in their profile
+      final useGpsLocation = user?['useGpsLocation'] ?? false;
+      return useGpsLocation == true;
+    } catch (e) {
+      // If we can't access auth service, don't show user location
+      return false;
+    }
+  }
+
+  // Update user location based on current profile GPS setting
+  Future<void> _updateUserLocationFromProfile() async {
+    if (!mounted) return;
+    
+    final shouldShow = _shouldShowUserLocation();
+    
+    if (shouldShow && _userLocation == null) {
+      // GPS is ON but no user location set - simulate and add marker
+      final simulated = await _locationService.simulateGpsForAddress(city: null);
+      _userLocation = simulated.position;
+      _userLocationApprox = simulated.isApproximate;
+      _injectUserMarker();
+    } else if (!shouldShow) {
+      // GPS is OFF - remove user marker immediately
+      setState(() {
+        _markers = _markers.where((m) => m.markerId.value != 'me').toSet();
+        _userLocation = null;
+      });
+    } else if (shouldShow && _userLocation != null) {
+      // GPS is ON and we have location - ensure marker is shown
+      _injectUserMarker();
+    }
+  }
+
+  void _injectUserMarker() {
+    final loc = _userLocation;
+    if (loc == null || !_shouldShowUserLocation()) return;
+    final Marker userMarker = Marker(
+      markerId: const MarkerId('me'),
+      position: loc,
+      infoWindow: const InfoWindow(title: 'You'),
+      icon: _userLocationApprox
+          ? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure)
+          : BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+    );
+    setState(() {
+      _markers = {..._markers.where((m) => m.markerId.value != 'me'), userMarker};
+    });
   }
 
   MapBounds _getCurrentBounds() {
@@ -134,9 +229,9 @@ class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
     final lat = _currentPosition.target.latitude;
     final lng = _currentPosition.target.longitude;
     
-    // Approximate bounds calculation
-    final latDelta = 180 / math.pow(2, zoom);
-    final lngDelta = 360 / math.pow(2, zoom);
+    // Calculate approximate bounds based on zoom level
+    final latDelta = 180.0 / math.pow(2, zoom);
+    final lngDelta = 360.0 / math.pow(2, zoom);
     
     return MapBounds(
       northeast: LatLng(lat + latDelta / 2, lng + lngDelta / 2),
@@ -209,6 +304,24 @@ class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
         setState(() {
           _isLocationSharingEnabled = newValue;
         });
+        if (_isLocationSharingEnabled) {
+          final simulated = await _locationService.simulateGpsForAddress(city: null);
+          _userLocation = simulated.position;
+          _userLocationApprox = simulated.isApproximate;
+          await _mapService.updateUserLocation(
+            position: simulated.position,
+            accuracy: simulated.accuracy,
+            isApproximate: true,
+          );
+          _injectUserMarker();
+          if (_mapController != null) {
+            _mapController.animateCamera(CameraUpdate.newLatLng(simulated.position));
+          }
+        } else {
+          setState(() {
+            _markers = _markers.where((m) => m.markerId.value != 'me').toSet();
+          });
+        }
       }
     } catch (e) {
       // Handle error
@@ -216,9 +329,7 @@ class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
   }
 
   Widget _buildLocationPermissionBanner() {
-    if (!widget.showLocationPermissionBanner || _isLocationPermissionGranted) {
-      return const SizedBox.shrink();
-    }
+    if (_isLocationPermissionGranted) return const SizedBox.shrink();
 
     return Container(
       margin: const EdgeInsets.all(16),
@@ -280,7 +391,7 @@ class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
           onPressed: _toggleLocationSharing,
           icon: Icon(
             _isLocationSharingEnabled ? Icons.location_on : Icons.location_off,
-            color: _isLocationSharingEnabled ? AppColors.primary : AppColors.textSecondary,
+            color: _isLocationSharingEnabled ? AppColors.primary : Colors.grey,
           ),
           tooltip: _isLocationSharingEnabled ? 'Disable location sharing' : 'Enable location sharing',
         ),
@@ -292,7 +403,7 @@ class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
     if (!_isLoading) return const SizedBox.shrink();
 
     return Container(
-      color: Colors.white.withOpacity(0.8),
+      color: Colors.black.withOpacity(0.3),
       child: const Center(
         child: CircularProgressIndicator(),
       ),
@@ -344,54 +455,62 @@ class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        GoogleMap(
-          initialCameraPosition: widget.initialLocation != null
-              ? CameraPosition(target: widget.initialLocation!, zoom: 15)
-              : _defaultPosition,
-          onMapCreated: (GoogleMapController controller) {
-            _mapController = controller;
-          },
-          onTap: _onMapTap,
-          onCameraMove: _onCameraMove,
-          onCameraIdle: _onCameraIdle,
-          markers: _markers,
-          myLocationEnabled: widget.showUserLocation && _isLocationPermissionGranted,
-          myLocationButtonEnabled: false, // We'll add custom button
-          mapType: MapType.normal,
-          zoomControlsEnabled: false, // We'll add custom controls
-          compassEnabled: true,
-          mapToolbarEnabled: false,
-        ),
+    return Consumer<AuthService>(
+      builder: (context, authService, child) {
+        // Trigger location update when auth service changes
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _updateUserLocationFromProfile();
+        });
         
-        // Location permission banner
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: _buildLocationPermissionBanner(),
-        ),
-        
-        // Location toggle button
-        _buildLocationToggle(),
-        
-        // Loading overlay
-        _buildLoadingOverlay(),
-        
-        // Error overlay
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: _buildErrorOverlay(),
-        ),
-      ],
+        return Stack(
+          children: [
+            GoogleMap(
+              initialCameraPosition: widget.initialLocation != null
+                  ? CameraPosition(target: widget.initialLocation!, zoom: 15)
+                  : _defaultPosition,
+              onMapCreated: (GoogleMapController controller) {
+                _mapController = controller;
+              },
+              onTap: _onMapTap,
+              onCameraMove: _onCameraMove,
+              onCameraIdle: _onCameraIdle,
+              markers: _markers,
+              myLocationEnabled: false, // We handle this manually
+              myLocationButtonEnabled: false,
+              mapType: MapType.normal,
+              zoomControlsEnabled: false,
+            ),
+            
+            // Location permission banner
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: _buildLocationPermissionBanner(),
+            ),
+            
+            // Location toggle button
+            if (widget.showLocationToggle) _buildLocationToggle(),
+            
+            // Loading overlay
+            _buildLoadingOverlay(),
+            
+            // Error overlay
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: _buildErrorOverlay(),
+            ),
+          ],
+        );
+      },
     );
   }
 
   @override
   void dispose() {
+    _gpsStateSubscription?.cancel();
     _mapController.dispose();
     super.dispose();
   }
@@ -430,7 +549,7 @@ class MapMarkerInfoWidget extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header with close button
+          // Header with name and close button
           Row(
             children: [
               Expanded(
@@ -439,86 +558,88 @@ class MapMarkerInfoWidget extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
                   ),
                 ),
               ),
               if (onClosePressed != null)
                 IconButton(
                   onPressed: onClosePressed,
-                  icon: const Icon(Icons.close, size: 20),
-                  padding: EdgeInsets.zero,
+                  icon: const Icon(Icons.close),
                   constraints: const BoxConstraints(),
+                  padding: EdgeInsets.zero,
                 ),
             ],
           ),
           
           const SizedBox(height: 8),
           
-          // Category and rating
-          Row(
-            children: [
-              if (marker.category != null) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    marker.category!,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+          // Category
+          if (marker.category != null) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                marker.category!,
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
                 ),
-                const SizedBox(width: 8),
-              ],
-              if (marker.rating != null) ...[
-                Icon(
-                  Icons.star,
-                  size: 16,
-                  color: AppColors.secondary,
-                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+          
+          // Rating
+          if (marker.rating != null) ...[
+            Row(
+              children: [
+                ...List.generate(5, (index) {
+                  return Icon(
+                    index < marker.rating!.floor()
+                        ? Icons.star
+                        : (index < marker.rating! ? Icons.star_half : Icons.star_border),
+                    color: Colors.amber,
+                    size: 16,
+                  );
+                }),
                 const SizedBox(width: 4),
                 Text(
                   marker.rating!.toStringAsFixed(1),
                   style: const TextStyle(
-                    fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary,
                   ),
                 ),
                 if (marker.reviewCount != null) ...[
                   const SizedBox(width: 4),
                   Text(
                     '(${marker.reviewCount})',
-                    style: const TextStyle(
+                    style: TextStyle(
+                      color: Colors.grey[600],
                       fontSize: 12,
-                      color: AppColors.textSecondary,
                     ),
                   ),
                 ],
               ],
-            ],
-          ),
-          
-          const SizedBox(height: 8),
+            ),
+            const SizedBox(height: 8),
+          ],
           
           // Description
           if (marker.description != null) ...[
             Text(
               marker.description!,
-              style: const TextStyle(
+              style: TextStyle(
+                color: Colors.grey[600],
                 fontSize: 14,
-                color: AppColors.textSecondary,
               ),
-              maxLines: 2,
+              maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
           ],
           
           // Distance
@@ -528,14 +649,14 @@ class MapMarkerInfoWidget extends StatelessWidget {
                 Icon(
                   Icons.location_on,
                   size: 16,
-                  color: AppColors.textSecondary,
+                  color: Colors.grey[600],
                 ),
                 const SizedBox(width: 4),
                 Text(
                   MapUtils.formatDistance(marker.distanceFromUser!),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
                   ),
                 ),
               ],
@@ -543,37 +664,36 @@ class MapMarkerInfoWidget extends StatelessWidget {
             const SizedBox(height: 12),
           ],
           
-          // Action buttons
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: onBookPressed,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    side: const BorderSide(color: AppColors.primary),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+          // Book button
+          if (onBookPressed != null)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: onBookPressed,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text('Book Service'),
                 ),
+                child: const Text('Book Now'),
               ),
-              const SizedBox(width: 8),
-              IconButton(
-                onPressed: () {
-                  // TODO: Implement call functionality
-                },
-                icon: const Icon(Icons.phone),
-                style: IconButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                  backgroundColor: AppColors.primary.withOpacity(0.1),
-                ),
-              ),
-            ],
-          ),
+            ),
         ],
       ),
     );
+  }
+}
+
+/// Utility class for map-related functions
+class MapUtils {
+  static String formatDistance(double distanceInMeters) {
+    if (distanceInMeters < 1000) {
+      return '${distanceInMeters.round()}m';
+    } else {
+      final km = distanceInMeters / 1000;
+      return '${km.toStringAsFixed(1)}km';
+    }
   }
 }

@@ -513,8 +513,9 @@ class AuthService extends ChangeNotifier with BaseApiService {
     String? phone,
     int? age,
     String? profileImage,
-  Map<String, dynamic>? address,
-  List<Map<String, dynamic>>? addresses,
+    Map<String, dynamic>? address,
+    List<Map<String, dynamic>>? addresses,
+    bool? useGpsLocation,
   }) async {
     try {
       final body = <String, dynamic>{};
@@ -525,7 +526,8 @@ class AuthService extends ChangeNotifier with BaseApiService {
   if (age != null) body['age'] = age;
       if (profileImage != null) body['profileImage'] = profileImage;
       if (address != null) body['address'] = address;
-  if (addresses != null) body['addresses'] = addresses;
+      if (addresses != null) body['addresses'] = addresses;
+      if (useGpsLocation != null) body['useGpsLocation'] = useGpsLocation;
 
       final response = await put(
         '${ApiConfig.usersEndpoint}/profile',

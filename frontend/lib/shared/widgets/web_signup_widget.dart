@@ -11,6 +11,8 @@ import '../services/language_service.dart';
 import '../services/auth_service.dart';
 import '../services/base_api_service.dart';
 import '../services/service_categories_service.dart';
+import '../services/location_service.dart';
+import '../services/map_service.dart';
 
 // Widget imports
 import 'animated_handshake.dart';
@@ -63,6 +65,9 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
   int _serviceProvidersCount = 1;
   String? _selectedLocation;
   String? _selectedStreet;
+  bool _useGps = false;
+  final LocationService _locationService = LocationService();
+  final MapService _mapService = MapService();
   
   // Available cities with their real streets - Palestinian cities
   final Map<String, List<String>> _cityStreets = {
@@ -526,8 +531,8 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
     }
     
     // Additional validation: Ensure city and street are selected
-    if (_selectedLocation == null || _selectedLocation!.trim().isEmpty || 
-        _selectedStreet == null || _selectedStreet!.trim().isEmpty) {
+    if (!_useGps && (_selectedLocation == null || _selectedLocation!.trim().isEmpty || 
+        _selectedStreet == null || _selectedStreet!.trim().isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -819,6 +824,8 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
           // Step content
           if (_currentStep == 0) ...[
             _buildBasicInfoForm(languageService),
+            const SizedBox(height: 16),
+            _buildGpsToggleAndSync(languageService),
           ] else if (_currentStep == 1 && _selectedUserType == 'provider') ...[
             _buildMainCategorySelection(languageService),
           ] else if (_currentStep == 2 && _selectedUserType == 'provider') ...[
@@ -1102,11 +1109,86 @@ class _WebSignupWidgetState extends State<WebSignupWidget> {
           },
         ),
         SizedBox(height: widget.screenHeight * 0.02),
-        _buildLocationDropdown(languageService),
+        if (!_useGps) _buildLocationDropdown(languageService),
         SizedBox(height: widget.screenHeight * 0.02),
         // Street field removed - now handled by dropdown in location section
       ],
     );
+  }
+
+  Widget _buildGpsToggleAndSync(LanguageService languageService) {
+    final isProvider = _selectedUserType == 'provider';
+    
+    // Auto-enable GPS for providers
+    if (isProvider && !_useGps) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() { _useGps = true; });
+        _simulateGpsAndFillAddress();
+      });
+    }
+    
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.inputFieldBackground,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.inputBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Switch(
+                value: _useGps,
+                onChanged: isProvider 
+                  ? null // Providers cannot disable GPS
+                  : (v) async {
+                      setState(() { _useGps = v; });
+                      if (v) {
+                        await _simulateGpsAndFillAddress();
+                      }
+                    },
+                activeColor: AppColors.primary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Use GPS (simulated) to auto-fill your city and street',
+                      style: GoogleFonts.cairo(fontSize: 14, color: AppColors.textPrimary),
+                    ),
+                    if (isProvider) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'GPS is mandatory for service providers',
+                        style: GoogleFonts.cairo(
+                          fontSize: 12,
+                          color: AppColors.error,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _simulateGpsAndFillAddress() async {
+    // Simulate GPS and couple address
+    final userLoc = await _locationService.simulateGpsForAddress(city: _selectedLocation, street: _selectedStreet);
+    final coupled = await _locationService.coupleAddressFromGps(userLoc.position);
+    setState(() {
+      _selectedLocation = (coupled.city ?? _selectedLocation);
+      _selectedStreet = (coupled.street ?? _selectedStreet);
+    });
   }
 
   Widget _buildMainCategorySelection(LanguageService languageService) {

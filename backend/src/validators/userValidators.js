@@ -29,7 +29,8 @@ const updateProfileValidator = celebrate({
     profileImage: Joi.string().uri().optional(),
     age: Joi.number().integer().min(0).max(120).optional(),
     address: addressItem.optional(),
-    addresses: Joi.array().items(addressItem).optional()
+    addresses: Joi.array().items(addressItem).optional(),
+    useGpsLocation: Joi.boolean().optional()
   }).min(1)
 });
 

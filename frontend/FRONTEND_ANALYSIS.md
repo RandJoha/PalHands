@@ -239,6 +239,12 @@ lib/
 - Category pages toggle “Map” shows the appropriate widget per platform
 - Dummy providers are generated across many Palestinian cities (WB + Gaza) with light in‑city jitter; at least 34 markers are shown; all markers use a uniform green color
 
+GPS & Address Coupling (Simulated)
+- Users of any role (client/provider/admin) are treated as a “client” on the map and get a blue “You” marker.
+- GPS is simulated in dev; when enabled, we reverse‑geocode and auto‑fill city/street to keep data consistent.
+- When GPS is off, users provide city/street; we forward‑geocode to derive an approximate coordinate for the blue marker (outline/azure tone).
+- Signup and Profile flows include a “Use GPS (simulated)” toggle with bidirectional sync between GPS and address.
+
 Dependencies
 - `flutter_map` and `latlong2` added to `pubspec.yaml`
 

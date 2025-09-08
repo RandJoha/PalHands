@@ -78,6 +78,7 @@ PalHands/
 ### Notes
 - Web does not need a Google key. If you prefer Google on web, add the JS SDK in `web/index.html` and restore the Google widget.
 - When `/api/map/*` endpoints are not available, the frontend falls back to dummy data for development.
+ - Simulated GPS policy in dev: if a user enables “Use GPS”, we generate a stable dummy coordinate, reverse‑geocode it, and auto‑fill city/street to keep both sides consistent. If GPS is off, users provide city/street and we forward‑geocode to an approximate point. Blue “You” marker is shown for all roles.
 
 ## 🔄 Previous Status Highlights (September 2025)
 

@@ -1399,7 +1399,6 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                     onMarkerTap: _onMarkerTap,
                     onLocationChanged: _onLocationChanged,
                     showUserLocation: true,
-                    showLocationPermissionBanner: true,
                   ),
                 ),
               ),

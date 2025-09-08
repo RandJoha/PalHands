@@ -10,6 +10,8 @@ import '../../core/constants/app_strings.dart';
 import '../services/language_service.dart';
 import '../services/auth_service.dart';
 import '../services/base_api_service.dart';
+import '../services/location_service.dart';
+import '../services/map_service.dart';
 
 // Widget imports
 import 'animated_handshake.dart';
@@ -50,6 +52,9 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
   String? _selectedSubCategory;
   int _serviceProvidersCount = 1;
   String? _selectedLocation;
+  bool _useGps = false;
+  final LocationService _locationService = LocationService();
+  final MapService _mapService = MapService();
   
   // Available cities - Basic Palestinian cities
   final List<String> _availableCities = [
@@ -600,6 +605,8 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
           // Step content
           if (_currentStep == 0) ...[
             _buildBasicInfoForm(languageService),
+            const SizedBox(height: 12),
+            _buildGpsToggleAndSync(languageService),
           ] else if (_currentStep == 1 && _selectedUserType == 'provider') ...[
             _buildMainCategorySelection(languageService),
           ] else if (_currentStep == 2 && _selectedUserType == 'provider') ...[
@@ -874,9 +881,82 @@ class _MobileSignupWidgetState extends State<MobileSignupWidget> {
           },
         ),
         SizedBox(height: widget.screenHeight * 0.02),
-        _buildLocationDropdown(languageService),
+        if (!_useGps) _buildLocationDropdown(languageService),
       ],
     );
+  }
+
+  Widget _buildGpsToggleAndSync(LanguageService languageService) {
+    final isProvider = _selectedUserType == 'provider';
+    
+    // Auto-enable GPS for providers
+    if (isProvider && !_useGps) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() { _useGps = true; });
+        _simulateGpsAndFillAddressMobile();
+      });
+    }
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.inputFieldBackground,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.inputBorder),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Switch(
+                value: _useGps,
+                onChanged: isProvider 
+                  ? null // Providers cannot disable GPS
+                  : (v) async {
+                      setState(() { _useGps = v; });
+                      if (v) {
+                        await _simulateGpsAndFillAddressMobile();
+                      }
+                    },
+                activeColor: AppColors.primary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Use GPS (simulated) to auto-fill your city',
+                      style: GoogleFonts.cairo(fontSize: 14, color: AppColors.textPrimary),
+                    ),
+                    if (isProvider) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'GPS is mandatory for service providers',
+                        style: GoogleFonts.cairo(
+                          fontSize: 12,
+                          color: AppColors.error,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _simulateGpsAndFillAddressMobile() async {
+    final userLoc = await _locationService.simulateGpsForAddress(city: _selectedLocation);
+    final coupled = await _locationService.coupleAddressFromGps(userLoc.position);
+    setState(() {
+      _selectedLocation = (coupled.city ?? _selectedLocation);
+    });
   }
 
   Widget _buildMainCategorySelection(LanguageService languageService) {

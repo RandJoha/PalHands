@@ -17,7 +17,7 @@ const normalizeCity = (c) => {
 };
 
 const updateProfile = asyncHandler(async (req, res) => {
-  const { firstName, lastName, phone, address, addresses, profileImage, email, age } = req.body;
+  const { firstName, lastName, phone, address, addresses, profileImage, email, age, useGpsLocation } = req.body;
     const userId = req.user._id;
 
     // Find user
@@ -35,6 +35,9 @@ const updateProfile = asyncHandler(async (req, res) => {
     }
     if (typeof age !== 'undefined') {
       user.age = age;
+    }
+    if (typeof useGpsLocation !== 'undefined') {
+      user.useGpsLocation = useGpsLocation;
     }
     if (email && email.toLowerCase() !== user.email) {
       // Do NOT immediately change email; store as pending and send a dedicated email-change link
@@ -134,6 +137,7 @@ const updateProfile = asyncHandler(async (req, res) => {
       phone: user.phone,
       age: user.age,
       profileImage: user.profileImage,
+      useGpsLocation: user.useGpsLocation,
       // Account info
       role: user.role,
       isVerified: user.isVerified,

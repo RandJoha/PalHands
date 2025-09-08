@@ -72,6 +72,11 @@ const userSchema = new mongoose.Schema({
     max: 120,
     default: null
   },
+  // GPS location preference
+  useGpsLocation: {
+    type: Boolean,
+    default: false
+  },
   isVerified: {
     type: Boolean,
     default: false

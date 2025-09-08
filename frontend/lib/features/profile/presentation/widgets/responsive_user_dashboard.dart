@@ -14,6 +14,8 @@ import '../../../../shared/services/booking_service.dart';
 import '../../../../shared/models/booking.dart';
 import '../../../../shared/services/auth_service.dart';
 import '../../../../shared/services/favorites_service.dart';
+import '../../../../shared/services/location_service.dart';
+import '../../../../shared/services/map_service.dart';
 
 // Widget imports
 import '../../../admin/presentation/widgets/language_toggle_widget.dart';
@@ -62,6 +64,12 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   List<BookingModel> _myBookings = const [];
   bool _loadingBookings = false;
   final Set<String> _dismissedBookingIds = <String>{};
+
+  // GPS and address state for profile settings
+  bool _useGps = false;
+  final TextEditingController _addressCtrl = TextEditingController();
+  final LocationService _locationService = LocationService();
+  final MapService _mapService = MapService();
 
   // Map selected filter index to server status parameter
   String? _statusFromFilter(int index) {
@@ -133,6 +141,12 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         return ar ? 'حفظ التغييرات' : 'Save Changes';
       case 'cancel':
         return ar ? 'إلغاء' : 'Cancel';
+      case 'address':
+        return ar ? 'العنوان' : 'Address';
+      case 'enterAddress':
+        return ar ? 'أدخل العنوان' : 'Enter Address';
+      case 'currentLocation':
+        return ar ? 'الموقع الحالي' : 'Current Location';
       default:
         return AppStrings.getString(key, languageService.currentLanguage);
     }
@@ -168,12 +182,20 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   }
   // Preload bookings when opening My Bookings by default
   _loadDismissedBookings().then((_) => _maybeLoadBookings(initial: true));
+  
+  // Initialize GPS state based on user role
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (mounted) {
+      _initializeGpsState();
+    }
+  });
   }
 
   @override
   void dispose() {
     _sidebarAnimationController.dispose();
     _contentAnimationController.dispose();
+    _addressCtrl.dispose();
     super.dispose();
   }
 
@@ -613,15 +635,15 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   Widget _buildMobileBottomNavigation() {
     return Consumer<LanguageService>(
       builder: (context, languageService, child) {
-        // Only show bottom navigation for main sections (0-4)
-        // For other sections (5-8), hide the bottom navigation
-        if (_selectedIndex > 4) {
+        // Only show bottom navigation for main sections (0-3)
+        // For other sections (4-7), hide the bottom navigation
+        if (_selectedIndex > 3) {
           return const SizedBox.shrink();
         }
         
         return BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
-          currentIndex: _selectedIndex.clamp(0, 4),
+          currentIndex: _selectedIndex.clamp(0, 3),
           selectedItemColor: AppColors.primary,
           unselectedItemColor: AppColors.textSecondary,
           selectedLabelStyle: GoogleFonts.cairo(
@@ -2271,7 +2293,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               _buildProfileForm(isMobile, isTablet),
               SizedBox(height: isMobile ? 20.0 : 32.0),
               
-              // Addresses
+              // Addresses (combines GPS toggle and saved addresses in one section)
               _buildAddressesSection(isMobile, isTablet),
               SizedBox(height: isMobile ? 20.0 : 32.0),
               
@@ -2477,7 +2499,20 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     );
   }
 
-  Widget _buildAddressesSection(bool isMobile, bool isTablet) {
+  Widget _buildGpsAddressSection(bool isMobile, bool isTablet) {
+    final auth = Provider.of<AuthService>(context, listen: false);
+    final user = auth.currentUser ?? {};
+    final userRole = (user['role'] ?? '').toString().toLowerCase();
+    final isProvider = userRole == 'provider';
+    
+    // Initialize address controller from user data if empty
+    if (_addressCtrl.text.isEmpty) {
+      final currentAddress = (user['address'] is String) 
+          ? user['address'] 
+          : (user['address']?['line1'] ?? '').toString();
+      _addressCtrl.text = currentAddress;
+    }
+
     return Container(
       padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
       decoration: BoxDecoration(
@@ -2489,15 +2524,393 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            children: [
+              Icon(
+                Icons.location_on,
+                color: AppColors.textSecondary,
+                size: isMobile ? 20.0 : 24.0,
+              ),
+              const SizedBox(width: 12.0),
+              Expanded(
+                child: Text(
+                  _getLocalizedString('address'),
+                  style: GoogleFonts.cairo(
+                    fontSize: isMobile ? 16.0 : 18.0,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16.0),
+          
+          // Address text field
+          TextFormField(
+            controller: _addressCtrl,
+            readOnly: _useGps,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.0),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.0),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.0),
+                borderSide: const BorderSide(color: AppColors.primary),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              hintText: _getLocalizedString('enterAddress'),
+            ),
+          ),
+          const SizedBox(height: 16.0),
+          
+          // GPS toggle
+          Row(
+            children: [
+              Switch(
+                value: _useGps,
+                onChanged: isProvider 
+                  ? null // Providers must have GPS enabled
+                  : (v) async {
+                      setState(() { _useGps = v; });
+                      if (v) {
+                        final userLoc = await _locationService.simulateGpsForAddress();
+                        final coupled = await _locationService.coupleAddressFromGps(userLoc.position);
+                        final city = (coupled.city ?? '').toString();
+                        final street = (coupled.street ?? '').toString();
+                        setState(() {
+                          _addressCtrl.text = [street, city].where((e) => e.isNotEmpty).join(', ');
+                        });
+                      }
+                    },
+                activeColor: AppColors.primary,
+              ),
+              const SizedBox(width: 8.0),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Use GPS (simulated) for my location and auto-fill address',
+                      style: GoogleFonts.cairo(
+                        fontSize: isMobile ? 14.0 : 16.0,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    if (isProvider) ...[
+                      const SizedBox(height: 4.0),
+                      Text(
+                        'GPS is mandatory for service providers',
+                        style: GoogleFonts.cairo(
+                          fontSize: isMobile ? 12.0 : 14.0,
+                          color: AppColors.error,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+          
+          // Save button for address changes
+          const SizedBox(height: 20.0),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () async {
+                final auth = Provider.of<AuthService>(context, listen: false);
+                try {
+                  final res = await auth.updateProfile(
+                    useGpsLocation: _useGps,
+                    address: _useGps ? null : {
+                      'line1': _addressCtrl.text.trim(),
+                      'city': _addressCtrl.text.trim().split(',').first.trim(),
+                      'street': _addressCtrl.text.trim().contains(',') 
+                        ? _addressCtrl.text.trim().split(',').last.trim()
+                        : _addressCtrl.text.trim(),
+                    },
+                  );
+                  final ok = res['success'] == true;
+                  if (ok && mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Address updated successfully')),
+                    );
+                  } else {
+                    final msg = (res['message'] as String?) ?? 'Failed to update address';
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(backgroundColor: AppColors.error, content: Text(msg)),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(backgroundColor: AppColors.error, content: Text('Error: $e')),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.white,
+                padding: EdgeInsets.symmetric(vertical: isMobile ? 12.0 : 16.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child: Text(
+                _getLocalizedString('saveChanges'),
+                style: GoogleFonts.cairo(
+                  fontSize: isMobile ? 14.0 : 16.0,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddressesSection(bool isMobile, bool isTablet) {
+    final auth = Provider.of<AuthService>(context, listen: false);
+    final user = auth.currentUser ?? {};
+    final userRole = (user['role'] ?? '').toString().toLowerCase();
+    final isProvider = userRole == 'provider';
+    
+    // Initialize address controller from user data if empty
+    if (_addressCtrl.text.isEmpty) {
+      final currentAddress = (user['address'] is String) 
+          ? user['address'] 
+          : (user['address']?['line1'] ?? '').toString();
+      _addressCtrl.text = currentAddress;
+    }
+
+    return Container(
+      padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(isMobile ? 12.0 : 16.0),
+        border: Border.all(color: AppColors.border, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // GPS Location Section
+          Row(
+            children: [
+              Icon(
+                Icons.gps_fixed,
+                color: _useGps ? AppColors.primary : AppColors.textSecondary,
+                size: isMobile ? 20.0 : 24.0,
+              ),
+              const SizedBox(width: 12.0),
+              Expanded(
+                child: Text(
+                  _useGps ? 'Current Location (GPS Active)' : _getLocalizedString('currentLocation'),
+                  style: GoogleFonts.cairo(
+                    fontSize: isMobile ? 18.0 : 20.0,
+                    fontWeight: FontWeight.w600,
+                    color: _useGps ? AppColors.primary : AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              if (_useGps) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'ACTIVE',
+                    style: GoogleFonts.cairo(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 16.0),
+          
+          // Address text field
+          TextFormField(
+            controller: _addressCtrl,
+            readOnly: _useGps,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.0),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.0),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.0),
+                borderSide: const BorderSide(color: AppColors.primary),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              hintText: _getLocalizedString('enterAddress'),
+            ),
+          ),
+          const SizedBox(height: 16.0),
+          
+          // GPS toggle
+          Row(
+            children: [
+              Switch(
+                value: _useGps,
+                 onChanged: isProvider 
+                   ? null // Providers must have GPS enabled
+                   : (v) async {
+                       setState(() { _useGps = v; });
+                       
+                       // Immediately notify maps about GPS state change
+                       LocationService.notifyGpsStateChanged(v);
+                       
+                       // Update the AuthService to persist the change
+                       final auth = Provider.of<AuthService>(context, listen: false);
+                       
+                       if (v) {
+                         // GPS turned ON - fill address and update profile
+                         await _simulateGpsAndFillFullAddress();
+                         try {
+                           await auth.updateProfile(useGpsLocation: true);
+                         } catch (e) {
+                           // Handle silently, user can still save manually
+                         }
+                       } else {
+                         // GPS turned OFF - clear address and update profile
+                         _addressCtrl.text = '';
+                         try {
+                           await auth.updateProfile(useGpsLocation: false);
+                         } catch (e) {
+                           // Handle silently, user can still save manually
+                         }
+                       }
+                     },
+                activeColor: AppColors.primary,
+              ),
+              const SizedBox(width: 8.0),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Use GPS (simulated) for my location and auto-fill address',
+                      style: GoogleFonts.cairo(
+                        fontSize: isMobile ? 14.0 : 16.0,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    if (isProvider) ...[
+                      const SizedBox(height: 4.0),
+                      Text(
+                        'GPS is mandatory for service providers',
+                        style: GoogleFonts.cairo(
+                          fontSize: isMobile ? 12.0 : 14.0,
+                          color: AppColors.error,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+          
+          // Save button for address changes
+          const SizedBox(height: 20.0),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () async {
+                final auth = Provider.of<AuthService>(context, listen: false);
+                try {
+                  final res = await auth.updateProfile(
+                    useGpsLocation: _useGps,
+                    address: _useGps ? null : {
+                      'line1': _addressCtrl.text.trim(),
+                      'city': _addressCtrl.text.trim().split(',').first.trim(),
+                      'street': _addressCtrl.text.trim().contains(',') 
+                        ? _addressCtrl.text.trim().split(',').last.trim()
+                        : _addressCtrl.text.trim(),
+                    },
+                  );
+                  final ok = res['success'] == true;
+                  if (ok && mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Address updated successfully')),
+                    );
+                  } else {
+                    final msg = (res['message'] as String?) ?? 'Failed to update address';
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(backgroundColor: AppColors.error, content: Text(msg)),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(backgroundColor: AppColors.error, content: Text('Error: $e')),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.white,
+                padding: EdgeInsets.symmetric(vertical: isMobile ? 12.0 : 16.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child: Text(
+                _getLocalizedString('saveChanges'),
+                style: GoogleFonts.cairo(
+                  fontSize: isMobile ? 14.0 : 16.0,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 32.0),
+          
+          // Saved Addresses Section
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                _getLocalizedString('savedAddresses'),
-                style: GoogleFonts.cairo(
-                  fontSize: isMobile ? 18.0 : 20.0,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
+              Row(
+                children: [
+                  Icon(
+                    Icons.bookmark,
+                    color: _useGps ? AppColors.textSecondary : AppColors.textPrimary,
+                    size: isMobile ? 20.0 : 24.0,
+                  ),
+                  const SizedBox(width: 8.0),
+                  Text(
+                    _useGps ? 'Saved Addresses (Inactive)' : _getLocalizedString('savedAddresses'),
+                    style: GoogleFonts.cairo(
+                      fontSize: isMobile ? 18.0 : 20.0,
+                      fontWeight: FontWeight.w600,
+                      color: _useGps ? AppColors.textSecondary : AppColors.textPrimary,
+                    ),
+                  ),
+                ],
               ),
               ElevatedButton.icon(
                 onPressed: _onAddOrEditAddress,
@@ -2536,20 +2949,27 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     VoidCallback? onEdit,
     VoidCallback? onDelete,
   }) {
+    // When GPS is active, saved addresses are inactive (no default highlighting)
+    final isActiveDefault = isDefault && !_useGps;
+    final isInactive = _useGps;
+    
     return Container(
       padding: EdgeInsets.all(isMobile ? 12.0 : 16.0),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: isInactive ? AppColors.background.withValues(alpha: 0.5) : AppColors.background,
         borderRadius: BorderRadius.circular(isMobile ? 8.0 : 12.0),
         border: Border.all(
-          color: isDefault ? AppColors.primary : AppColors.border,
-          width: isDefault ? 2 : 1,
+          color: isActiveDefault ? AppColors.primary : AppColors.border,
+          width: isActiveDefault ? 2 : 1,
         ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.location_on, color: AppColors.primary),
+          Icon(
+            Icons.location_on, 
+            color: isInactive ? AppColors.textSecondary : AppColors.primary,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -2563,11 +2983,11 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                         style: GoogleFonts.cairo(
                           fontSize: isMobile ? 16.0 : 18.0,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                          color: isInactive ? AppColors.textSecondary : AppColors.textPrimary,
                         ),
                       ),
                     ),
-                    if (isDefault)
+                    if (isActiveDefault)
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
@@ -2583,6 +3003,22 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                           ),
                         ),
                       ),
+                    if (isInactive)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.textSecondary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'Inactive',
+                          style: GoogleFonts.cairo(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -2590,7 +3026,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                   address,
                   style: GoogleFonts.cairo(
                     fontSize: isMobile ? 14.0 : 16.0,
-                    color: AppColors.textSecondary,
+                    color: isInactive ? AppColors.textSecondary.withValues(alpha: 0.6) : AppColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -2602,8 +3038,11 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                     if (onDelete != null)
                       TextButton.icon(onPressed: onDelete, icon: const Icon(Icons.delete_outline, size: 18), label: const Text('Delete')),
                     const Spacer(),
-                    if (!isDefault && onMakeDefault != null)
-                      TextButton(onPressed: onMakeDefault, child: const Text('Make Default')),
+                    if (!isActiveDefault && onMakeDefault != null)
+                      TextButton(
+                        onPressed: isInactive ? () => _switchToSavedAddress(onMakeDefault) : onMakeDefault, 
+                        child: Text(isInactive ? 'Use This Address' : 'Make Default'),
+                      ),
                   ],
                 ),
               ],
@@ -4556,6 +4995,137 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
           duration: const Duration(seconds: 2),
         ),
       );
+    }
+  }
+
+  // Initialize GPS state based on user role and preferences
+  void _initializeGpsState() {
+    final auth = Provider.of<AuthService>(context, listen: false);
+    final user = auth.currentUser ?? {};
+    final userRole = (user['role'] ?? '').toString().toLowerCase();
+    final isProvider = userRole == 'provider';
+    
+    // For providers, GPS is mandatory - always enabled
+    if (isProvider) {
+      setState(() {
+        _useGps = true;
+      });
+      
+      // Auto-fill full address from GPS for providers
+      _simulateGpsAndFillFullAddress();
+    } else {
+      // For clients and admins, GPS is optional - check user preference or default to false
+      final useGpsPreference = user['useGpsLocation'] ?? false;
+      setState(() {
+        _useGps = useGpsPreference;
+      });
+      
+      if (_useGps) {
+        // Auto-fill full address from GPS if enabled
+        _simulateGpsAndFillFullAddress();
+      }
+    }
+  }
+
+  // Enhanced GPS simulation that provides full, realistic addresses
+  Future<void> _simulateGpsAndFillFullAddress() async {
+    final userLoc = await _locationService.simulateGpsForAddress();
+    final coupled = await _locationService.coupleAddressFromGps(userLoc.position);
+    
+    // Generate a full, realistic Palestinian address
+    final city = coupled.city ?? 'Ramallah';
+    final streetOptions = _getStreetOptionsForCity(city);
+    final randomStreet = streetOptions.isNotEmpty 
+        ? streetOptions[userLoc.position.latitude.hashCode % streetOptions.length]
+        : 'Main Street';
+    final buildingNumber = (userLoc.position.longitude.abs() * 1000).round() % 999 + 1;
+    
+    final fullAddress = '$buildingNumber $randomStreet, $city, Palestine';
+    
+    if (mounted) {
+      setState(() {
+        _addressCtrl.text = fullAddress;
+      });
+    }
+  }
+
+  // Get realistic street names for Palestinian cities
+  List<String> _getStreetOptionsForCity(String city) {
+    final cityLower = city.toLowerCase();
+    switch (cityLower) {
+      case 'ramallah':
+        return ['Al-Manara Street', 'Rukab Street', 'Al-Irsal Street', 'Main Street', 'Al-Nahda Street'];
+      case 'jerusalem':
+      case 'al-quds':
+        return ['Salah Al-Din Street', 'Sultan Suleiman Street', 'Nablus Road', 'Jaffa Road', 'King George Street'];
+      case 'bethlehem':
+        return ['Manger Street', 'Paul VI Street', 'Hebron Road', 'Star Street', 'Peace Center Street'];
+      case 'hebron':
+      case 'al-khalil':
+        return ['King Talal Street', 'Ein Sarah Street', 'Old City Road', 'University Street', 'Industrial Street'];
+      case 'nablus':
+        return ['Sufian Street', 'Faisal Street', 'An-Najah Street', 'Old City Street', 'Rafidia Street'];
+      case 'gaza':
+        return ['Omar Al-Mukhtar Street', 'Al-Wahda Street', 'Al-Nasr Street', 'Beach Road', 'Al-Rimal Street'];
+      case 'jenin':
+        return ['Haifa Street', 'Al-Yamoun Street', 'Freedom Street', 'Khalil Gibran Street', 'Al-Salam Street'];
+      case 'tulkarm':
+        return ['Nablus Street', 'Al-Alimi Street', 'Iktaba Street', 'Industrial Street', 'Al-Sikka Street'];
+      default:
+        return ['Main Street', 'Al-Salam Street', 'Al-Wahda Street', 'Al-Nasr Street', 'Central Street'];
+    }
+  }
+
+  // Notify any listening map widgets that location preferences have changed
+  void _notifyMapsOfLocationChange() {
+    // The AuthService.notifyListeners() call in updateProfile() will automatically
+    // trigger map widgets to refresh their user location display since they
+    // listen to the AuthService through Provider.of<AuthService>
+  }
+
+  // Switch from GPS to a saved address
+  Future<void> _switchToSavedAddress(VoidCallback? makeDefaultCallback) async {
+    final auth = Provider.of<AuthService>(context, listen: false);
+    final user = auth.currentUser ?? {};
+    final userRole = (user['role'] ?? '').toString().toLowerCase();
+    final isProvider = userRole == 'provider';
+    
+    if (isProvider) {
+      // Providers cannot disable GPS
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.error,
+          content: Text('Service providers must use GPS location'),
+        ),
+      );
+      return;
+    }
+    
+    // Turn off GPS and make this saved address the default
+    setState(() {
+      _useGps = false;
+    });
+    
+    // Update the address field to show we're no longer using GPS
+    _addressCtrl.text = '';
+    
+    // Call the original make default callback
+    if (makeDefaultCallback != null) {
+      makeDefaultCallback();
+    }
+    
+    // Update user profile to turn off GPS
+    try {
+      await auth.updateProfile(useGpsLocation: false);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: AppColors.error,
+            content: Text('Error switching address: $e'),
+          ),
+        );
+      }
     }
   }
 } 

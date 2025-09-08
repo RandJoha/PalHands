@@ -10,6 +10,8 @@ import '../../../../core/constants/app_strings.dart';
 // Shared imports
 import '../../../../shared/services/language_service.dart';
 import '../../../../shared/services/auth_service.dart';
+import '../../../../shared/services/location_service.dart';
+import '../../../../shared/services/map_service.dart';
 import 'security_widget.dart';
 
 class ProfileSettingsWidget extends StatefulWidget {
@@ -25,6 +27,9 @@ class _ProfileSettingsWidgetState extends State<ProfileSettingsWidget> {
   final _phoneCtrl = TextEditingController();
   final _addressCtrl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool _useGps = false;
+  final LocationService _locationService = LocationService();
+  final MapService _mapService = MapService();
 
   @override
   void initState() {
@@ -158,7 +163,35 @@ class _ProfileSettingsWidgetState extends State<ProfileSettingsWidget> {
             _buildTextField(
               AppStrings.getString('address', languageService.currentLanguage),
               _addressCtrl,
-              readOnly: true,
+              readOnly: _useGps,
+            ),
+            SizedBox(height: 12.h),
+            Row(
+              children: [
+                Switch(
+                  value: _useGps,
+                  onChanged: (v) async {
+                    setState(() { _useGps = v; });
+                    if (v) {
+                      final userLoc = await _locationService.simulateGpsForAddress();
+                      final coupled = await _locationService.coupleAddressFromGps(userLoc.position);
+                      final city = (coupled.city ?? '').toString();
+                      final street = (coupled.street ?? '').toString();
+                      setState(() {
+                        _addressCtrl.text = [street, city].where((e) => e.isNotEmpty).join(', ');
+                      });
+                    }
+                  },
+                  activeColor: AppColors.primary,
+                ),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: Text(
+                    'Use GPS (simulated) for my location and auto-fill address',
+                    style: GoogleFonts.cairo(fontSize: 14.sp, color: AppColors.textPrimary),
+                  ),
+                ),
+              ],
             ),
             SizedBox(height: 24.h),
             // Save button
@@ -178,6 +211,8 @@ class _ProfileSettingsWidgetState extends State<ProfileSettingsWidget> {
                       firstName: first.isEmpty ? null : first,
                       lastName: last.isEmpty ? null : last,
                       phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
+                      useGpsLocation: _useGps,
+                      address: _useGps ? null : _addressCtrl.text.trim(),
                     );
                     final ok = res['success'] == true;
                     if (ok) {
