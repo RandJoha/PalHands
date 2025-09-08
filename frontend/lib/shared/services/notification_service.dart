@@ -98,10 +98,17 @@ class NotificationService {
   // Get unread count
   Future<Map<String, dynamic>> getUnreadCount() async {
     final uri = Uri.parse('$_baseUrl/notifications/unread-count');
+    print('🔔 Making API call to: $uri');
+    print('🔔 Headers: $_authHeaders');
+    
     final response = await http.get(
       uri,
       headers: _authHeaders,
     );
+    
+    print('🔔 API response status: ${response.statusCode}');
+    print('🔔 API response body: ${response.body}');
+    
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {

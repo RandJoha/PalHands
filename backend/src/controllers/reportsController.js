@@ -78,13 +78,13 @@ const createReport = async (req, res) => {
       createdAt: report.createdAt
     });
 
-    // Send notification to all admins about the new report - DISABLED
-    // try {
-    //   await NotificationService.notifyNewReport(report);
-    // } catch (notificationError) {
-    //   console.error('Failed to send notification for new report:', notificationError);
-    //   // Don't fail the report creation if notification fails
-    // }
+    // Send notification to all admins about the new report
+    try {
+      await NotificationService.notifyNewReport(report);
+    } catch (notificationError) {
+      console.error('Failed to send notification for new report:', notificationError);
+      // Don't fail the report creation if notification fails
+    }
 
     return res.status(201).json({ success: true, message: 'Report created', data: report });
   } catch (error) {

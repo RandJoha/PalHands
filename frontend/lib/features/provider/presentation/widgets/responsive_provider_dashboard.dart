@@ -11,6 +11,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/services/language_service.dart';
 import '../../../../shared/services/auth_service.dart';
 import '../../../../shared/services/notification_service.dart';
+import '../../../../shared/widgets/notification_dialog.dart';
 
 // Widget imports
 import 'my_services_widget.dart';
@@ -89,6 +90,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
     // Initialize notification service after build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authService = Provider.of<AuthService>(context, listen: false);
+      print('🔔 Initializing notification service with auth: ${authService.token != null ? 'token exists' : 'no token'}');
       _notificationService = NotificationService(authService);
       _loadUnreadNotificationCount();
     });
@@ -111,18 +113,21 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
   // Load unread notification count
   Future<void> _loadUnreadNotificationCount() async {
     try {
+      print('🔔 Loading unread notification count...');
       final response = await _notificationService.getUnreadCount();
+      print('🔔 Notification API response: $response');
       
       if (response['success'] == true) {
         final count = response['data']['unreadCount'] ?? 0;
+        print('🔔 Setting notification count to: $count');
         setState(() {
           _unreadNotificationCount = count;
         });
       } else {
-        // ignore non-success silently
+        print('🔔 Notification API returned non-success: ${response['message']}');
       }
     } catch (e) {
-      // ignore fetch errors silently
+      print('🔔 Error loading notification count: $e');
     }
   }
 
@@ -137,6 +142,48 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
     
     // Refresh notification count
     _loadUnreadNotificationCount();
+  }
+
+  // Show notification dialog
+  void _showNotificationDialog() {
+    if (_notificationService == null) return;
+    
+    showDialog(
+      context: context,
+      builder: (context) => NotificationDialog(
+        notificationService: _notificationService!,
+        onNotificationRead: () {
+          // Refresh notification count when notifications are read
+          _loadUnreadNotificationCount();
+        },
+        onNotificationClicked: (notificationType, data) {
+          // Close the dialog first
+          Navigator.of(context).pop();
+          
+          // Handle different notification types
+          if (notificationType == 'new_booking_request') {
+            // Navigate to bookings tab
+            _navigateToBookingsTab();
+          } else if (notificationType == 'booking_confirmed' || notificationType == 'booking_cancelled') {
+            // Navigate to bookings tab for booking status updates
+            _navigateToBookingsTab();
+          }
+          // Add more notification types here if needed
+        },
+      ),
+    );
+  }
+
+  // Navigate to bookings tab
+  void _navigateToBookingsTab() {
+    // Find the index of the bookings tab in the menu items
+    final bookingsIndex = _menuItems.indexWhere((item) => item['title'] == 'myClientBookings');
+    
+    if (bookingsIndex != -1) {
+      setState(() {
+        _selectedIndex = bookingsIndex;
+      });
+    }
   }
 
   // Get chat widget with callback
@@ -317,12 +364,8 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
           
           // Notifications
           IconButton(
-            onPressed: () {
-              // TODO: Show notifications
-              // Temporary: Manual refresh for testing
-              _loadUnreadNotificationCount();
-            },
-            tooltip: 'Notifications ($_unreadNotificationCount) - Tap to refresh',
+            onPressed: _showNotificationDialog,
+            tooltip: 'Notifications ($_unreadNotificationCount)',
             icon: Stack(
               children: [
                 const Icon(Icons.notifications_outlined, size: 20, color: AppColors.white),
@@ -600,12 +643,8 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
               children: [
                 // Notifications
                 IconButton(
-                  onPressed: () {
-                    // TODO: Show notifications
-                    // Temporary: Manual refresh for testing
-                    _loadUnreadNotificationCount();
-                  },
-                  tooltip: 'Notifications ($_unreadNotificationCount) - Tap to refresh',
+                  onPressed: _showNotificationDialog,
+                  tooltip: 'Notifications ($_unreadNotificationCount)',
                   icon: Stack(
                     children: [
                       Icon(Icons.notifications_outlined, 

@@ -11,6 +11,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/services/auth_service.dart';
 import '../../../../shared/services/language_service.dart';
 import '../../../../shared/services/notification_service.dart';
+import '../../../../shared/widgets/notification_dialog.dart';
 
 // Admin widgets
 import 'user_management_widget.dart';
@@ -32,16 +33,23 @@ class MobileAdminDashboard extends StatefulWidget {
 class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
   int _selectedIndex = 0;
   int _unreadNotificationCount = 0;
-  final NotificationService _notificationService = NotificationService();
+  NotificationService? _notificationService;
 
   @override
   void initState() {
     super.initState();
-    _loadUnreadNotificationCount();
+    print('🔔 [ADMIN-MOBILE] Initializing mobile admin dashboard...');
+    
+    // Initialize notification service after build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      _notificationService = NotificationService(authService);
+      _loadUnreadNotificationCount();
+    });
     
     // Refresh notification count every 30 seconds
     Timer.periodic(const Duration(seconds: 30), (timer) {
-      if (mounted) {
+      if (mounted && _notificationService != null) {
         _loadUnreadNotificationCount();
       } else {
         timer.cancel();
@@ -61,16 +69,60 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
   }
 
   Future<void> _loadUnreadNotificationCount() async {
+    if (_notificationService == null) {
+      print('🔔 [ADMIN-MOBILE] Notification service not initialized yet');
+      return;
+    }
+    
     try {
-      final response = await _notificationService.getUnreadCount();
+      print('🔔 [ADMIN-MOBILE] Loading unread notification count...');
+      final response = await _notificationService!.getUnreadCount();
+      print('🔔 [ADMIN-MOBILE] Notification API response: $response');
+      
       if (response['success'] == true && mounted) {
+        final count = response['data']['unreadCount'] ?? 0;
+        print('🔔 [ADMIN-MOBILE] Setting notification count to: $count');
         setState(() {
-          _unreadNotificationCount = response['data']['unreadCount'] ?? 0;
+          _unreadNotificationCount = count;
         });
+      } else {
+        print('🔔 [ADMIN-MOBILE] Notification API returned non-success: ${response['message']}');
       }
     } catch (e) {
-      // Silently handle notification loading errors
+      print('🔔 [ADMIN-MOBILE] Error loading notification count: $e');
     }
+  }
+
+  // Show notification dialog
+  void _showNotificationDialog() {
+    if (_notificationService == null) {
+      print('🔔 [ADMIN-MOBILE] Cannot show notification dialog - service not initialized');
+      return;
+    }
+    
+    showDialog(
+      context: context,
+      builder: (context) => NotificationDialog(
+        notificationService: _notificationService!,
+        onNotificationRead: () {
+          // Refresh notification count when notifications are read
+          _loadUnreadNotificationCount();
+        },
+        onNotificationClicked: (notificationType, data) {
+          // Close the dialog first
+          Navigator.of(context).pop();
+          
+          // Handle different notification types
+          if (notificationType == 'new_report') {
+            // Navigate to reports tab
+            setState(() {
+              _selectedIndex = 3; // Reports tab
+            });
+          }
+          // Add more notification types here if needed
+        },
+      ),
+    );
   }
 
   List<AdminMenuItem> _getMenuItems(String languageCode) {
@@ -255,13 +307,7 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
 
         // Notifications - Smaller
         IconButton(
-          onPressed: () {
-            setState(() {
-              _selectedIndex = 5; // Switch to notifications tab
-            });
-            // Refresh unread count when notifications tab is opened
-            _loadUnreadNotificationCount();
-          },
+          onPressed: _showNotificationDialog,
           icon: Stack(
             children: [
               const Icon(Icons.notifications_outlined, size: 20),
