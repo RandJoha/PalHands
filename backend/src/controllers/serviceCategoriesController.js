@@ -125,9 +125,10 @@ async function listCategories(req, res) {
     const predefinedIds = new Set(SERVICE_CATEGORIES.map(cat => cat.id));
     const storedCategoryIds = new Set(storedCategories.map(cat => cat.id));
     
-    // Add stored categories that aren't predefined
+    // Add stored categories that aren't predefined, sorted by creation date (newest last)
     const storedDynamicCategories = storedCategories
       .filter(cat => !predefinedIds.has(cat.id))
+      .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)) // Sort by creation date, oldest first
       .map(cat => ({
         id: cat.id,
         name: cat.name,
@@ -282,6 +283,9 @@ async function getDistinctServicesByCategory(req, res) {
  */
 async function getCategoriesWithServices(req, res) {
   try {
+    // Get all stored categories from ServiceCategory collection
+    const storedCategories = await ServiceCategory.find({ isActive: true }).sort({ createdAt: 1 });
+    
     // Get all unique categories from services in the database
     const dbCategories = await Service.aggregate([
       { $match: { isActive: true } },
@@ -289,31 +293,38 @@ async function getCategoriesWithServices(req, res) {
       { $sort: { count: -1 } }
     ]);
     
+    // Start with predefined categories
+    const allCategories = [...SERVICE_CATEGORIES];
+    
+    // Add stored categories that aren't predefined, sorted by creation date
+    const predefinedIds = new Set(SERVICE_CATEGORIES.map(cat => cat.id));
+    const storedDynamicCategories = storedCategories
+      .filter(cat => !predefinedIds.has(cat.id))
+      .map(cat => ({
+        id: cat.id,
+        name: cat.name,
+        nameKey: cat.nameKey,
+        description: cat.description,
+        icon: cat.icon,
+        color: cat.color,
+        services: cat.services,
+        isDynamic: cat.isDynamic
+      }));
+    
+    allCategories.push(...storedDynamicCategories);
+    
     // Get actual services for each category
     const categoriesWithServices = await Promise.all(
-      dbCategories.map(async (cat) => {
+      allCategories.map(async (categoryData) => {
         const services = await Service.find(
-          { category: cat._id, isActive: true },
+          { category: categoryData.id, isActive: true },
           { title: 1, description: 1, category: 1, subcategory: 1, price: 1, rating: 1, provider: 1 }
         ).populate('provider', 'fullName email phone')
          .limit(20); // Limit services per category for performance
         
-        // Find predefined category or create dynamic one
-        const predefinedCategory = SERVICE_CATEGORIES.find(c => c.id === cat._id);
-        const categoryData = predefinedCategory || {
-          id: cat._id,
-          name: cat._id.charAt(0).toUpperCase() + cat._id.slice(1) + ' Services',
-          nameKey: cat._id + 'Services',
-          description: `Services in the ${cat._id} category`,
-          icon: 'category',
-          color: '#9E9E9E',
-          services: [],
-          isDynamic: true
-        };
-        
         return {
           ...categoryData,
-          serviceCount: cat.count,
+          serviceCount: services.length,
           actualServices: services
         };
       })
