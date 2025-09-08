@@ -103,10 +103,19 @@ class _PalHandsOsmMapWidgetState extends State<PalHandsOsmMapWidget> {
 
   Marker _buildMarker(MapMarker m) {
     final pos = ll.LatLng(m.position.latitude, m.position.longitude);
-    // Use a uniform color for all providers (as requested)
-    final color = m.type == MapMarkerType.provider
-        ? Colors.green
-        : (m.type == MapMarkerType.client ? Colors.green : Colors.green);
+    
+    // Check if this marker belongs to the current user (provider viewing their own marker)
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final currentUser = authService.currentUser;
+    final currentUserId = currentUser?['_id'] ?? currentUser?['id'];
+    final isCurrentUserProvider = currentUser?['role'] == 'provider';
+    
+    // If current user is a provider and this marker is theirs, make it blue
+    Color color = Colors.green; // Default green for all markers
+    if (isCurrentUserProvider && currentUserId != null && m.id == currentUserId) {
+      color = Colors.blue; // Blue for provider's own marker
+    }
+    
     return Marker(
       point: pos,
       width: 36,
@@ -149,8 +158,43 @@ class _PalHandsOsmMapWidgetState extends State<PalHandsOsmMapWidget> {
         filters: widget.initialFilters,
       );
       if (!mounted) return;
+      
+      // If current user is a provider, replace the first dummy marker with their real ID
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final currentUser = authService.currentUser;
+      final currentUserId = currentUser?['_id'] ?? currentUser?['id'];
+      final isCurrentUserProvider = currentUser?['role'] == 'provider';
+      
+      final updatedMarkers = <MapMarker>[];
+      bool replacedFirst = false;
+      
+      for (final marker in markers) {
+        if (isCurrentUserProvider && currentUserId != null && !replacedFirst && marker.id.startsWith('prov_')) {
+          // Replace first dummy provider marker with current user's marker
+          updatedMarkers.add(MapMarker(
+            id: currentUserId,
+            name: 'Your Business – ${marker.name.split(' – ').last}',
+            position: marker.position,
+            type: marker.type,
+            category: marker.category,
+            rating: marker.rating,
+            reviewCount: marker.reviewCount,
+            description: 'Your business location',
+            phone: marker.phone,
+            email: marker.email,
+            isAvailable: marker.isAvailable,
+            lastSeenAt: marker.lastSeenAt,
+            distanceFromUser: marker.distanceFromUser,
+            additionalData: marker.additionalData,
+          ));
+          replacedFirst = true;
+        } else {
+          updatedMarkers.add(marker);
+        }
+      }
+      
       setState(() {
-        _markers = markers;
+        _markers = updatedMarkers;
         _loading = false;
       });
       // Inject a simulated user location only if GPS is enabled

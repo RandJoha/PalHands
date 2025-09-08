@@ -240,7 +240,41 @@ class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
   }
 
   Set<Marker> _createMarkers(List<MapMarker> markers) {
-    return markers.map((marker) {
+    // If current user is a provider, replace the first dummy marker with their real ID
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final currentUser = authService.currentUser;
+    final currentUserId = currentUser?['_id'] ?? currentUser?['id'];
+    final isCurrentUserProvider = currentUser?['role'] == 'provider';
+    
+    final updatedMarkers = <MapMarker>[];
+    bool replacedFirst = false;
+    
+    for (final marker in markers) {
+      if (isCurrentUserProvider && currentUserId != null && !replacedFirst && marker.id.startsWith('prov_')) {
+        // Replace first dummy provider marker with current user's marker
+        updatedMarkers.add(MapMarker(
+          id: currentUserId,
+          name: 'Your Business – ${marker.name.split(' – ').last}',
+          position: marker.position,
+          type: marker.type,
+          category: marker.category,
+          rating: marker.rating,
+          reviewCount: marker.reviewCount,
+          description: 'Your business location',
+          phone: marker.phone,
+          email: marker.email,
+          isAvailable: marker.isAvailable,
+          lastSeenAt: marker.lastSeenAt,
+          distanceFromUser: marker.distanceFromUser,
+          additionalData: marker.additionalData,
+        ));
+        replacedFirst = true;
+      } else {
+        updatedMarkers.add(marker);
+      }
+    }
+    
+    return updatedMarkers.map((marker) {
       return Marker(
         markerId: MarkerId(marker.id),
         position: marker.position,
@@ -255,8 +289,18 @@ class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
   }
 
   BitmapDescriptor _getMarkerIcon(MapMarker marker) {
-    // Return different icons based on marker type and availability
-    // Uniform color for all marker types per request
+    // Check if this marker belongs to the current user (provider viewing their own marker)
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final currentUser = authService.currentUser;
+    final currentUserId = currentUser?['_id'] ?? currentUser?['id'];
+    final isCurrentUserProvider = currentUser?['role'] == 'provider';
+    
+    // If current user is a provider and this marker is theirs, make it blue
+    if (isCurrentUserProvider && currentUserId != null && marker.id == currentUserId) {
+      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue);
+    }
+    
+    // All other markers are green (including other providers when viewed by clients/admins)
     return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen);
   }
 
