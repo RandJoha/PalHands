@@ -425,6 +425,63 @@ const updateService = async (req, res) => {
   }
 };
 
+// Delete service
+const deleteService = async (req, res) => {
+  try {
+    const { serviceId } = req.params;
+    
+    console.log(`🗑️ Delete service request for ID: ${serviceId}`);
+    
+    // Import required models
+    const ProviderService = require('../../models/ProviderService');
+    
+    // Find the service first to get provider info
+    const service = await Service.findById(serviceId).populate('provider', 'firstName lastName email');
+    
+    if (!service) {
+      console.log(`🗑️ Service not found for ID: ${serviceId}`);
+      return res.status(404).json({
+        success: false,
+        message: 'Service not found'
+      });
+    }
+    
+    console.log(`🗑️ Found service: "${service.title}" by provider: ${service.provider?.firstName} ${service.provider?.lastName}`);
+    
+    // Delete all provider services that reference this service
+    const providerServicesDeleteResult = await ProviderService.deleteMany({ service: serviceId });
+    console.log(`🗑️ Deleted ${providerServicesDeleteResult.deletedCount} provider services for service "${service.title}"`);
+    
+    // Delete all bookings for this service
+    const bookingsDeleteResult = await Booking.deleteMany({ service: serviceId });
+    console.log(`🗑️ Deleted ${bookingsDeleteResult.deletedCount} bookings for service "${service.title}"`);
+    
+    // Delete the service itself
+    const serviceDeleteResult = await Service.findByIdAndDelete(serviceId);
+    
+    if (!serviceDeleteResult) {
+      console.log(`🗑️ Failed to delete service with ID: ${serviceId}`);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to delete service from database'
+      });
+    }
+    
+    console.log(`✅ Service "${service.title}" and ${providerServicesDeleteResult.deletedCount} provider services and ${bookingsDeleteResult.deletedCount} bookings deleted successfully by admin`);
+    
+    res.json({
+      success: true,
+      message: `Service "${service.title}" and ${providerServicesDeleteResult.deletedCount} provider services and ${bookingsDeleteResult.deletedCount} bookings deleted successfully`
+    });
+  } catch (error) {
+    console.error('Service deletion error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete service'
+    });
+  }
+};
+
 // Get booking management data
 const getBookingManagementData = async (req, res) => {
   try {
@@ -517,6 +574,8 @@ const deleteCategory = async (req, res) => {
     // Import required models
     const ServiceCategory = require('../../models/ServiceCategory');
     const Service = require('../../models/Service');
+    const ProviderService = require('../../models/ProviderService');
+    const Booking = require('../../models/Booking');
     
     // Check if category exists - ServiceCategory uses custom 'id' field (String), not _id
     const category = await ServiceCategory.findOne({ id: categoryId });
@@ -532,16 +591,33 @@ const deleteCategory = async (req, res) => {
       });
     }
     
-    // Check if category has services (services use category.id, not category.name)
-    const servicesCount = await Service.countDocuments({ category: category.id });
+    // Get all services in this category
+    const servicesInCategory = await Service.find({ category: category.id });
+    const servicesCount = servicesInCategory.length;
     console.log(`🗑️ Services count for category "${category.name}": ${servicesCount}`);
     
+    // Delete all services in this category and their related data
     if (servicesCount > 0) {
-      console.log(`🗑️ Cannot delete category "${category.name}" - has ${servicesCount} services`);
-      return res.status(400).json({
-        success: false,
-        message: `Cannot delete category "${category.name}" because it has ${servicesCount} associated service(s). Please delete or reassign the services first.`
+      console.log(`🗑️ Deleting ${servicesCount} services from category "${category.name}"`);
+      
+      // Get all service IDs for this category
+      const serviceIds = servicesInCategory.map(service => service._id);
+      
+      // Delete all provider services that reference these services
+      const providerServicesDeleteResult = await ProviderService.deleteMany({ 
+        service: { $in: serviceIds } 
       });
+      console.log(`🗑️ Deleted ${providerServicesDeleteResult.deletedCount} provider services for services in category "${category.name}"`);
+      
+      // Delete all bookings for these services
+      const bookingsDeleteResult = await Booking.deleteMany({ 
+        service: { $in: serviceIds } 
+      });
+      console.log(`🗑️ Deleted ${bookingsDeleteResult.deletedCount} bookings for services in category "${category.name}"`);
+      
+      // Delete all services in this category
+      const servicesDeleteResult = await Service.deleteMany({ category: category.id });
+      console.log(`🗑️ Deleted ${servicesDeleteResult.deletedCount} services from category "${category.name}"`);
     }
     
     // Delete the category - ServiceCategory uses custom 'id' field (String), not _id
@@ -555,11 +631,11 @@ const deleteCategory = async (req, res) => {
       });
     }
     
-    console.log(`✅ Category "${category.name}" deleted successfully by admin`);
+    console.log(`✅ Category "${category.name}" and ${servicesCount} associated services deleted successfully by admin`);
     
     res.json({
       success: true,
-      message: `Category "${category.name}" deleted successfully`
+      message: `Category "${category.name}" and ${servicesCount} associated services deleted successfully`
     });
   } catch (error) {
     console.error('Category deletion error:', error);
@@ -576,6 +652,7 @@ module.exports = {
   updateUser,
   getServiceManagementData,
   updateService,
+  deleteService,
   getBookingManagementData,
   updateBooking,
   deleteCategory

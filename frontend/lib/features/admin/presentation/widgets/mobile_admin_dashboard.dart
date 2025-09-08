@@ -17,8 +17,6 @@ import 'user_management_widget.dart';
 import 'service_management_widget.dart';
 import 'booking_management_widget.dart';
 import 'reports_widget.dart';
-import 'analytics_widget.dart';
-import 'notification_widget.dart';
 import '../../../profile/presentation/widgets/profile_settings_rich_widget.dart';
 
 // Admin models
@@ -98,19 +96,9 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
         index: 3,
       ),
       AdminMenuItem(
-        title: AppStrings.getString('analytics', languageCode),
-        icon: Icons.analytics,
-        index: 4,
-      ),
-      AdminMenuItem(
-        title: 'Notifications',
-        icon: Icons.notifications,
-        index: 5,
-      ),
-      AdminMenuItem(
         title: AppStrings.getString('profileSettings', languageCode),
         icon: Icons.settings,
-        index: 6,
+        index: 4,
       ),
     ];
   }
@@ -576,14 +564,6 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
           label: AppStrings.getString('reportsDisputes', languageService.currentLanguage),
         ),
         BottomNavigationBarItem(
-          icon: const Icon(Icons.analytics, size: 20),
-          label: AppStrings.getString('analytics', languageService.currentLanguage),
-        ),
-        const BottomNavigationBarItem(
-          icon: Icon(Icons.notifications, size: 20),
-          label: 'Notifications',
-        ),
-        BottomNavigationBarItem(
           icon: const Icon(Icons.settings, size: 20),
           label: AppStrings.getString('profileSettings', languageService.currentLanguage),
         ),
@@ -602,10 +582,6 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
       case 3:
         return const ReportsWidget();
       case 4:
-        return const AnalyticsWidget();
-      case 5:
-        return const NotificationWidget();
-      case 6:
         return const ProfileSettingsRichWidget();
       default:
         return const UserManagementWidget();

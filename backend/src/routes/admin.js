@@ -21,6 +21,7 @@ router.put('/users/:userId', checkAdminPermission('userManagement'), logAdminAct
 // Service Management
 router.get('/services', checkAdminPermission('serviceManagement'), dashboardController.getServiceManagementData);
 router.put('/services/:serviceId', checkAdminPermission('serviceManagement'), logAdminAction('service_update', 'service', 'req.params.serviceId'), dashboardController.updateService);
+router.delete('/services/:serviceId', checkAdminPermission('serviceManagement'), logAdminAction('service_delete', 'service', 'req.params.serviceId'), dashboardController.deleteService);
 
 // Category Management
 router.delete('/categories/:categoryId', checkAdminPermission('serviceManagement'), logAdminAction('category_delete', 'category', 'req.params.categoryId'), dashboardController.deleteCategory);

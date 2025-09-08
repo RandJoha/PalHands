@@ -18,8 +18,6 @@ import 'user_management_widget.dart';
 import 'service_management_widget.dart';
 import 'booking_management_widget.dart';
 import 'reports_widget.dart';
-import 'analytics_widget.dart';
-import 'notification_widget.dart';
 import '../../../profile/presentation/widgets/profile_settings_rich_widget.dart';
 import '../../../provider/presentation/widgets/bookings_as_client_widget.dart';
 
@@ -107,19 +105,9 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
         index: 4,
       ),
       AdminMenuItem(
-        title: AppStrings.getString('analytics', languageCode),
-        icon: Icons.analytics,
-        index: 5,
-      ),
-      AdminMenuItem(
-        title: 'Notifications',
-        icon: Icons.notifications,
-        index: 5,
-      ),
-      AdminMenuItem(
         title: AppStrings.getString('profileSettings', languageCode),
         icon: Icons.settings,
-        index: 6,
+        index: 5,
       ),
     ];
   }
@@ -425,10 +413,6 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
       case 4:
         return const ReportsWidget();
       case 5:
-        return const AnalyticsWidget();
-      case 5:
-        return const NotificationWidget();
-      case 6:
         return const ProfileSettingsRichWidget();
       default:
         return const UserManagementWidget();
