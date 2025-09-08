@@ -59,6 +59,26 @@ PalHands/
 
 ---
 
+## 🗺️ Map View Update (January 2026)
+
+### What changed
+- Implemented an OpenStreetMap-based map for Web using `flutter_map`.
+- Kept Google Maps for Mobile using `google_maps_flutter`.
+- Category pages’ “Map” toggle now renders OSM on web and Google on mobile.
+- Added realistic dummy provider distribution across Palestinian cities (West Bank + Gaza), ensuring at least 34 markers with slight in‑city jitter. All markers render in a uniform green color for clarity.
+
+### Files
+- `frontend/lib/shared/widgets/palhands_osm_map_widget.dart` (new for web)
+- `frontend/lib/shared/widgets/palhands_map_widget.dart` (existing for mobile)
+- `frontend/lib/shared/services/map_service.dart` (dummy distribution + 404 fallback)
+
+### Dependencies
+- `flutter_map` and `latlong2` added to `frontend/pubspec.yaml`.
+
+### Notes
+- Web does not need a Google key. If you prefer Google on web, add the JS SDK in `web/index.html` and restore the Google widget.
+- When `/api/map/*` endpoints are not available, the frontend falls back to dummy data for development.
+
 ## 🔄 Previous Status Highlights (September 2025)
 
 This section reflects the latest decisions and shipped behavior from the booking-hardening work.

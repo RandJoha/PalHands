@@ -397,6 +397,11 @@ This document serves as a comprehensive index of all PalHands project documentat
 **Last Updated**: December 2024
 **Status**: ✅ Complete
 
+### Map View (Jan 2026)
+- Web: OSM via flutter_map; Mobile: Google Maps
+- Realistic dummy distribution across Palestinian cities (≥34 markers), uniform green color
+- Files: `frontend/lib/shared/widgets/palhands_osm_map_widget.dart`, `palhands_map_widget.dart`, `shared/services/map_service.dart`
+
 ### **9. APP_WORKFLOW.md** 🔄
 **Purpose**: Application workflow documentation
 **Content**:

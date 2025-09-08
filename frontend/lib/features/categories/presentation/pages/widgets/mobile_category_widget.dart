@@ -23,6 +23,9 @@ import 'package:palhands/features/categories/presentation/widgets/services_listi
 import '../../../../../shared/widgets/chat_form_dialog.dart';
 import '../../../../../shared/services/service_categories_service.dart';
 import '../../../../../shared/services/services_service.dart' as svc;
+import '../../../../../shared/widgets/palhands_map_widget.dart';
+import '../../../../../shared/services/location_service.dart';
+import '../../../../../shared/models/map_models.dart';
 
 class MobileCategoryWidget extends StatefulWidget {
   const MobileCategoryWidget({super.key});
@@ -51,6 +54,11 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
   
   // Toggle between providers and services view
   bool _showServices = false;
+  
+  // Map view state
+  bool _showMapView = false;
+  MapMarker? _selectedMarker;
+  LatLng? _userLocation;
   
   // Dynamic categories from database
   List<ServiceCategoryModel> _categories = [];
@@ -123,7 +131,10 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
     
     // Default: load providers after first frame to show initial list
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _refreshProviders();
+      if (mounted) {
+        _refreshProviders();
+        _initializeLocation();
+      }
     });
   }
 
@@ -1222,6 +1233,38 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
     });
   }
 
+  // Initialize location services
+  Future<void> _initializeLocation() async {
+    try {
+      final locationService = LocationService();
+      await locationService.loadLocationPreferences();
+      
+      if (mounted) {
+        setState(() {
+          _userLocation = locationService.currentLatLng;
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error initializing location: $e');
+      }
+    }
+  }
+
+  // Handle marker tap
+  void _onMarkerTap(MapMarker marker) {
+    setState(() {
+      _selectedMarker = marker;
+    });
+  }
+
+  // Handle location change
+  void _onLocationChanged(LatLng location) {
+    setState(() {
+      _userLocation = location;
+    });
+  }
+
   @override
   void dispose() {
     _debounceTimer?.cancel();
@@ -1304,15 +1347,31 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
                     children: [
                       _buildToggleButton(
                         'Providers',
-                        !_showServices,
-                        () => setState(() => _showServices = false),
+                        !_showServices && !_showMapView,
+                        () => setState(() {
+                          _showServices = false;
+                          _showMapView = false;
+                        }),
                         languageService,
                       ),
                       _buildToggleButton(
                         'Services',
-                        _showServices,
-                        () => setState(() => _showServices = true),
+                        _showServices && !_showMapView,
+                        () => setState(() {
+                          _showServices = true;
+                          _showMapView = false;
+                        }),
                         languageService,
+                      ),
+                      _buildToggleButton(
+                        'Map',
+                        _showMapView,
+                        () => setState(() {
+                          _showServices = false;
+                          _showMapView = true;
+                        }),
+                        languageService,
+                        icon: Icons.map,
                       ),
                     ],
                   ),
@@ -1320,8 +1379,46 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
               ],
             ),
             const SizedBox(height: 8),
-            // Show either providers or services based on toggle
-            if (_showServices) ...[
+            // Show either providers, services, or map based on toggle
+            if (_showMapView) ...[
+              // Map view
+              Container(
+                height: 400,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: PalHandsMapWidget(
+                    initialLocation: _userLocation,
+                    initialFilters: MapFilters(
+                      category: _selectedServiceKeys.isNotEmpty ? _selectedServiceKeys.first : null,
+                      searchQuery: null,
+                    ),
+                    onMarkerTap: _onMarkerTap,
+                    onLocationChanged: _onLocationChanged,
+                    showUserLocation: true,
+                    showLocationPermissionBanner: true,
+                  ),
+                ),
+              ),
+              // Selected marker info
+              if (_selectedMarker != null) ...[
+                const SizedBox(height: 16),
+                MapMarkerInfoWidget(
+                  marker: _selectedMarker!,
+                  onBookPressed: () {
+                    // TODO: Navigate to booking dialog
+                  },
+                  onClosePressed: () {
+                    setState(() {
+                      _selectedMarker = null;
+                    });
+                  },
+                ),
+              ],
+            ] else if (_showServices) ...[
               // Services view
               ServicesListingWidget(
                 category: _selectedServiceKeys.isNotEmpty ? _selectedServiceKeys.first : null,
@@ -1352,7 +1449,7 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
     );
   }
 
-  Widget _buildToggleButton(String label, bool isSelected, VoidCallback onTap, LanguageService languageService) {
+  Widget _buildToggleButton(String label, bool isSelected, VoidCallback onTap, LanguageService languageService, {IconData? icon}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -1361,13 +1458,26 @@ class _MobileCategoryWidgetState extends State<MobileCategoryWidget> with Ticker
           color: isSelected ? AppColors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.grey[600],
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-            fontSize: 12,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(
+                icon,
+                size: 14,
+                color: isSelected ? Colors.white : Colors.grey[600],
+              ),
+              const SizedBox(width: 4),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.grey[600],
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                fontSize: 12,
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -23,6 +23,11 @@ import '../../../../../shared/services/auth_service.dart';
 import 'package:flutter/foundation.dart';
 import '../../../../../shared/widgets/chat_form_dialog.dart';
 import '../../../../../shared/services/services_service.dart' as svc;
+import '../../../../../shared/widgets/palhands_map_widget.dart';
+import '../../../../../shared/widgets/palhands_osm_map_widget.dart';
+import '../../../../../shared/services/location_service.dart';
+import '../../../../../shared/models/map_models.dart';
+import 'package:latlong2/latlong.dart' as ll;
 
 class WebCategoryWidget extends StatefulWidget {
   const WebCategoryWidget({super.key});
@@ -50,6 +55,11 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
   
   // Toggle between providers and services view
   bool _showServices = false;
+  
+  // Map view state
+  bool _showMapView = false;
+  MapMarker? _selectedMarker;
+  LatLng? _userLocation;
   
   // Dynamic categories from database
   List<ServiceCategoryModel> _categories = [];
@@ -93,7 +103,10 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
     
     // Default: load providers on first paint so users see providers immediately
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _refreshProviders();
+      if (mounted) {
+        _refreshProviders();
+        _initializeLocation();
+      }
     });
   }
 
@@ -171,6 +184,66 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
         _refreshProviders();
       }
     });
+  }
+
+  // Initialize location services
+  Future<void> _initializeLocation() async {
+    try {
+      final locationService = LocationService();
+      await locationService.loadLocationPreferences();
+      
+      if (mounted) {
+        setState(() {
+          _userLocation = locationService.currentLatLng;
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error initializing location: $e');
+      }
+    }
+  }
+
+  // Toggle map view
+  void _toggleMapView() {
+    setState(() {
+      _showMapView = !_showMapView;
+    });
+  }
+
+  // Handle marker tap
+  void _onMarkerTap(MapMarker marker) {
+    setState(() {
+      _selectedMarker = marker;
+    });
+  }
+
+  // Handle location change
+  void _onLocationChanged(LatLng location) {
+    setState(() {
+      _userLocation = location;
+    });
+  }
+
+  // Request location permission
+  Future<void> _requestLocationPermission() async {
+    try {
+      final granted = await LocationPermissionHelper.requestLocationPermission(context);
+      if (granted) {
+        final locationService = LocationService();
+        await locationService.getCurrentPosition();
+        
+        if (mounted) {
+          setState(() {
+            _userLocation = locationService.currentLatLng;
+          });
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error requesting location permission: $e');
+      }
+    }
   }
 
   @override
@@ -1271,15 +1344,31 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                     children: [
                       _buildToggleButton(
                         'Providers',
-                        !_showServices,
-                        () => setState(() => _showServices = false),
+                        !_showServices && !_showMapView,
+                        () => setState(() {
+                          _showServices = false;
+                          _showMapView = false;
+                        }),
                         languageService,
                       ),
                       _buildToggleButton(
                         'Services',
-                        _showServices,
-                        () => setState(() => _showServices = true),
+                        _showServices && !_showMapView,
+                        () => setState(() {
+                          _showServices = true;
+                          _showMapView = false;
+                        }),
                         languageService,
+                      ),
+                      _buildToggleButton(
+                        'Map',
+                        _showMapView,
+                        () => setState(() {
+                          _showServices = false;
+                          _showMapView = true;
+                        }),
+                        languageService,
+                        icon: Icons.map,
                       ),
                     ],
                   ),
@@ -1287,8 +1376,47 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
               ],
             ),
             const SizedBox(height: 12),
-            // Show either providers or services based on toggle
-            if (_showServices) ...[
+            // Show either providers, services, or map based on toggle
+            if (_showMapView) ...[
+              // Map view
+              Container(
+                height: 600,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: PalHandsOsmMapWidget(
+                    initialLocation: _userLocation == null
+                      ? null
+                      : ll.LatLng(_userLocation!.latitude, _userLocation!.longitude),
+                    initialFilters: MapFilters(
+                      category: _selectedServiceKeys.isNotEmpty ? _selectedServiceKeys.first : null,
+                      searchQuery: null,
+                    ),
+                    onMarkerTap: _onMarkerTap,
+                  ),
+                ),
+              ),
+              // Selected marker info
+              if (_selectedMarker != null) ...[
+                const SizedBox(height: 16),
+                Center(
+                  child: MapMarkerInfoWidget(
+                    marker: _selectedMarker!,
+                    onBookPressed: () {
+                      // TODO: Navigate to booking dialog
+                    },
+                    onClosePressed: () {
+                      setState(() {
+                        _selectedMarker = null;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ] else if (_showServices) ...[
               // Services view
               ServicesListingWidget(
                 category: _selectedServiceKeys.isNotEmpty ? _selectedServiceKeys.first : null,
@@ -1346,7 +1474,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
     );
   }
 
-  Widget _buildToggleButton(String label, bool isSelected, VoidCallback onTap, LanguageService languageService) {
+  Widget _buildToggleButton(String label, bool isSelected, VoidCallback onTap, LanguageService languageService, {IconData? icon}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -1355,13 +1483,26 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
           color: isSelected ? AppColors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.grey[600],
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-            fontSize: 14,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(
+                icon,
+                size: 16,
+                color: isSelected ? Colors.white : Colors.grey[600],
+              ),
+              const SizedBox(width: 4),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.grey[600],
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                fontSize: 14,
+              ),
+            ),
+          ],
         ),
       ),
     );

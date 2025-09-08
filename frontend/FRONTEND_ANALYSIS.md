@@ -230,6 +230,23 @@ lib/
 - **Permissions**: Not configured
 - **API Keys**: Not configured
 
+### 7. Map View (Web OSM, Mobile Google) — Added Jan 2026
+
+- Web uses OpenStreetMap via `flutter_map` (no API key required)
+- Mobile keeps Google Maps via `google_maps_flutter`
+- New widget: `shared/widgets/palhands_osm_map_widget.dart` (web)
+- Existing widget: `shared/widgets/palhands_map_widget.dart` (mobile)
+- Category pages toggle “Map” shows the appropriate widget per platform
+- Dummy providers are generated across many Palestinian cities (WB + Gaza) with light in‑city jitter; at least 34 markers are shown; all markers use a uniform green color
+
+Dependencies
+- `flutter_map` and `latlong2` added to `pubspec.yaml`
+
+Notes
+- If you switch web back to Google, add the JS SDK in `web/index.html`:
+  `<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>`
+- Backend `/api/map/*` endpoints are not required for dev; the app falls back to realistic dummy distribution when a 404 is returned
+
 ### 7. Implementation Status Summary
 
 #### ✅ **COMPLETED** (Updated Status)
