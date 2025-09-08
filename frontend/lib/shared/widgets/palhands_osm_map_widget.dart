@@ -1,13 +1,17 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart' as ll;
 import '../models/map_models.dart';
+import '../models/provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' show LatLng;
 import '../services/map_service.dart';
+import '../services/map_provider_service.dart';
 import '../services/location_service.dart' as locsvc;
 import '../services/auth_service.dart';
 import 'package:provider/provider.dart';
+import 'map_provider_card.dart';
 
 class PalHandsOsmMapWidget extends StatefulWidget {
   final ll.LatLng? initialLocation;
@@ -28,6 +32,7 @@ class PalHandsOsmMapWidget extends StatefulWidget {
 class _PalHandsOsmMapWidgetState extends State<PalHandsOsmMapWidget> {
   final MapController _mapController = MapController();
   final MapService _mapService = MapService();
+  final MapProviderService _mapProviderService = MapProviderService();
   final locsvc.LocationService _locationService = locsvc.LocationService();
   List<MapMarker> _markers = const [];
   bool _loading = false;
@@ -35,8 +40,16 @@ class _PalHandsOsmMapWidgetState extends State<PalHandsOsmMapWidget> {
   ll.LatLng? _userLocation;
   bool _userLocationApprox = true;
   
+  // Provider data
+  MapProviderData? _providerData;
+  
   // Stream subscription for GPS state changes
   StreamSubscription<bool>? _gpsStateSubscription;
+  
+  // Hover card state
+  ProviderModel? _hoveredProvider;
+  ProviderModel? _pinnedProvider;
+  Offset? _hoverPosition;
 
   @override
   void initState() {
@@ -121,10 +134,19 @@ class _PalHandsOsmMapWidgetState extends State<PalHandsOsmMapWidget> {
       width: 36,
       height: 36,
       alignment: Alignment.center,
-      child: GestureDetector(
-        onTap: () => widget.onMarkerTap?.call(m),
-        child: Icon(Icons.location_pin, color: color, size: 34),
-      ),
+      child: kIsWeb
+          ? MouseRegion(
+              onEnter: (event) => _onMarkerHover(m, event.position),
+              onExit: (_) => _onMarkerHoverExit(),
+              child: GestureDetector(
+                onTap: () => _onMarkerTap(m),
+                child: Icon(Icons.location_pin, color: color, size: 34),
+              ),
+            )
+          : GestureDetector(
+              onTap: () => _onMarkerTap(m),
+              child: Icon(Icons.location_pin, color: color, size: 34),
+            ),
     );
   }
 
@@ -153,50 +175,20 @@ class _PalHandsOsmMapWidgetState extends State<PalHandsOsmMapWidget> {
         northeast: llToGm(ll.LatLng(center.latitude + latDelta / 2, center.longitude + lngDelta / 2)),
         southwest: llToGm(ll.LatLng(center.latitude - latDelta / 2, center.longitude - lngDelta / 2)),
       );
-      final markers = await _mapService.getProvidersInBounds(
+      
+      final providerData = await _mapProviderService.getProvidersForMap(
         bounds: bounds,
         filters: widget.initialFilters,
       );
+      
       if (!mounted) return;
       
-      // If current user is a provider, replace the first dummy marker with their real ID
-      final authService = Provider.of<AuthService>(context, listen: false);
-      final currentUser = authService.currentUser;
-      final currentUserId = currentUser?['_id'] ?? currentUser?['id'];
-      final isCurrentUserProvider = currentUser?['role'] == 'provider';
-      
-      final updatedMarkers = <MapMarker>[];
-      bool replacedFirst = false;
-      
-      for (final marker in markers) {
-        if (isCurrentUserProvider && currentUserId != null && !replacedFirst && marker.id.startsWith('prov_')) {
-          // Replace first dummy provider marker with current user's marker
-          updatedMarkers.add(MapMarker(
-            id: currentUserId,
-            name: 'Your Business – ${marker.name.split(' – ').last}',
-            position: marker.position,
-            type: marker.type,
-            category: marker.category,
-            rating: marker.rating,
-            reviewCount: marker.reviewCount,
-            description: 'Your business location',
-            phone: marker.phone,
-            email: marker.email,
-            isAvailable: marker.isAvailable,
-            lastSeenAt: marker.lastSeenAt,
-            distanceFromUser: marker.distanceFromUser,
-            additionalData: marker.additionalData,
-          ));
-          replacedFirst = true;
-        } else {
-          updatedMarkers.add(marker);
-        }
-      }
-      
       setState(() {
-        _markers = updatedMarkers;
+        _providerData = providerData;
+        _markers = providerData.markers;
         _loading = false;
       });
+      
       // Inject a simulated user location only if GPS is enabled
       if (_shouldShowUserLocation()) {
         final simulated = await _locationService.simulateGpsForAddress(city: null);
@@ -213,6 +205,68 @@ class _PalHandsOsmMapWidgetState extends State<PalHandsOsmMapWidget> {
     }
   }
 
+  void _onMarkerHover(MapMarker marker, Offset position) {
+    if (_pinnedProvider != null) return; // Don't hover if something is pinned
+    
+    // Get the real provider data for this marker
+    final provider = _providerData?.getProviderByMarkerId(marker.id);
+    if (provider == null) return;
+    
+    setState(() {
+      _hoveredProvider = provider;
+      _hoverPosition = position;
+    });
+  }
+
+  void _onMarkerHoverExit() {
+    if (_pinnedProvider != null) return; // Don't clear hover if something is pinned
+    
+    setState(() {
+      _hoveredProvider = null;
+      _hoverPosition = null;
+    });
+  }
+
+  void _onMarkerTap(MapMarker marker) {
+    // Get the real provider data for this marker
+    final provider = _providerData?.getProviderByMarkerId(marker.id);
+    if (provider == null) return;
+    
+    // For mobile/touch: toggle pinned card
+    if (_pinnedProvider?.id == provider.id) {
+      _closePinnedCard();
+    } else {
+      _pinProviderCard(provider, marker);
+    }
+    
+    // Still call the original callback
+    widget.onMarkerTap?.call(marker);
+  }
+
+  void _pinProviderCard(ProviderModel provider, MapMarker marker) {
+    // For OSM, we need to estimate the screen position from the map position
+    final screenSize = MediaQuery.of(context).size;
+    // Simple approximation - center the card on screen for now
+    // In a real implementation, you'd convert lat/lng to screen coordinates
+    final position = Offset(screenSize.width * 0.5, screenSize.height * 0.3);
+    
+    setState(() {
+      _pinnedProvider = provider;
+      _hoveredProvider = null; // Clear hover when pinning
+      _hoverPosition = position;
+    });
+  }
+
+  void _closePinnedCard() {
+    setState(() {
+      _pinnedProvider = null;
+      _hoveredProvider = null;
+      _hoverPosition = null;
+    });
+  }
+
+  // Hover card method removed - now using MapProviderCard below the map
+
   @override
   Widget build(BuildContext context) {
     return Consumer<AuthService>(
@@ -223,45 +277,65 @@ class _PalHandsOsmMapWidgetState extends State<PalHandsOsmMapWidget> {
         });
         
         final center = widget.initialLocation ?? ll.LatLng(31.9522, 35.2332);
-        return Stack(
+        return Column(
           children: [
-            FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: center,
-                initialZoom: 12,
-                onTap: (_, __) {},
+            // Map section
+            Expanded(
+              child: Stack(
+                children: [
+                  FlutterMap(
+                    mapController: _mapController,
+                    options: MapOptions(
+                      initialCenter: center,
+                      initialZoom: 12,
+                      onTap: (_, __) {
+                        // Close any open cards when tapping on the map
+                        if (_pinnedProvider != null) {
+                          _closePinnedCard();
+                        }
+                      },
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        userAgentPackageName: 'com.example.app',
+                      ),
+                      MarkerLayer(
+                        markers: _markers.map((m) => _buildMarker(m)).toList(),
+                      ),
+                      // User location marker layer - only show if GPS is enabled
+                      if (_userLocation != null && _shouldShowUserLocation())
+                        MarkerLayer(
+                          markers: [_buildUserMarker()],
+                        ),
+                    ],
+                  ),
+                  
+                  if (_loading)
+                    const Center(child: CircularProgressIndicator()),
+                  if (_error != null)
+                    Positioned(
+                      bottom: 12,
+                      left: 12,
+                      right: 12,
+                      child: Material(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Text(_error!, style: const TextStyle(color: Colors.red)),
+                        ),
+                      ),
+                    ),
+                ],
               ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.example.app',
-                ),
-                MarkerLayer(
-                  markers: _markers.map((m) => _buildMarker(m)).toList(),
-                ),
-                // User location marker layer - only show if GPS is enabled
-                if (_userLocation != null && _shouldShowUserLocation())
-                  MarkerLayer(
-                    markers: [_buildUserMarker()],
-                  ),
-              ],
             ),
-            if (_loading)
-              const Center(child: CircularProgressIndicator()),
-            if (_error != null)
-              Positioned(
-                bottom: 12,
-                left: 12,
-                right: 12,
-                child: Material(
-                  color: Colors.red.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Text(_error!, style: const TextStyle(color: Colors.red)),
-                  ),
-                ),
+            
+            // Provider card below map
+            if (_pinnedProvider != null)
+              MapProviderCard(
+                provider: _pinnedProvider!,
+                onClose: _closePinnedCard,
               ),
           ],
         );

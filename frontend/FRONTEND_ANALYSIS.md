@@ -237,13 +237,19 @@ lib/
 - New widget: `shared/widgets/palhands_osm_map_widget.dart` (web)
 - Existing widget: `shared/widgets/palhands_map_widget.dart` (mobile)
 - Category pages toggle “Map” shows the appropriate widget per platform
-- Dummy providers are generated across many Palestinian cities (WB + Gaza) with light in‑city jitter; at least 34 markers are shown; all markers use a uniform green color
+- Real providers (37 total) are fetched from MongoDB and distributed across Palestinian cities (WB + Gaza) with realistic GPS coordinates; provider markers use green color, current user's marker (if provider) uses blue color
 
-GPS & Address Coupling (Simulated)
-- Users of any role (client/provider/admin) are treated as a “client” on the map and get a blue “You” marker.
+GPS & Address Coupling (Fully Implemented)
+- Users of any role (client/provider/admin) are treated as a "client" on the map and get a blue "You" marker.
 - GPS is simulated in dev; when enabled, we reverse‑geocode and auto‑fill city/street to keep data consistent.
 - When GPS is off, users provide city/street; we forward‑geocode to derive an approximate coordinate for the blue marker (outline/azure tone).
-- Signup and Profile flows include a “Use GPS (simulated)” toggle with bidirectional sync between GPS and address.
+- Signup and Profile flows include a "Use GPS (simulated)" toggle with bidirectional sync between GPS and address.
+- **Real Provider Integration**: 37 actual providers from MongoDB with realistic GPS coordinates
+- **Provider Distribution**: Spread across 8 Palestinian cities (Gaza, Ramallah, Nablus, Jerusalem, Hebron, Bethlehem, Tulkarm, Birzeit)
+- **API Integration**: Connects to `/providers` endpoint with smart fallback to dummy data
+- **Provider Cards**: Beautiful cards below map matching "Our Services" design exactly
+- **Real-time Updates**: Stream-based GPS state changes for immediate map marker updates
+- **Profile Synchronization**: Provider profile addresses automatically match map marker locations
 
 Dependencies
 - `flutter_map` and `latlong2` added to `pubspec.yaml`

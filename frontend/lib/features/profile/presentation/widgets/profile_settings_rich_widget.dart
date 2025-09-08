@@ -108,6 +108,14 @@ class _ProfileSettingsRichWidgetState extends State<ProfileSettingsRichWidget> {
       'main_street', 'al_quds_street', 'al_rasheed_street', 'al_amman_street',
       'al_balata_street', 'al_asira_street', 'al_quds_street_2', 'al_rasheed_street_2',
       'al_amman_street_2', 'al_balata_street_2', 'al_asira_street_2', 'al_quds_street_3'
+    ],
+    'tulkarm': [
+      'main_street', 'al_quds_street', 'al_rasheed_street', 'al_nour_street',
+      'al_salam_street', 'al_watan_street', 'al_hurria_street', 'al_majd_street'
+    ],
+    'birzeit': [
+      'main_street', 'university_street', 'al_quds_street', 'al_nour_street',
+      'al_salam_street', 'al_watan_street', 'al_hurria_street', 'al_majd_street'
     ]
   };
 
@@ -200,9 +208,21 @@ class _ProfileSettingsRichWidgetState extends State<ProfileSettingsRichWidget> {
     final providerName = user['firstName'] ?? 'Provider';
     
     // Generate deterministic address based on provider data
-    final cities = ['ramallah', 'nablus', 'jerusalem', 'hebron', 'bethlehem'];
-    final cityIndex = providerId.hashCode.abs() % cities.length;
-    final selectedCity = cities[cityIndex];
+    // Use the same city distribution as the map service for consistency
+    final cities = [
+      'ramallah', 'gaza', 'jerusalem', 'nablus', 'jerusalem',
+      'bethlehem', 'jerusalem', 'hebron', 'jerusalem', 'ramallah',
+      'ramallah', 'nablus', 'bethlehem', 'bethlehem', 'gaza',
+      'gaza', 'nablus', 'nablus', 'gaza', 'hebron',
+      'ramallah', 'hebron', 'tulkarm', 'hebron', 'gaza',
+      'bethlehem', 'birzeit', 'hebron', 'hebron', 'jerusalem',
+      'jerusalem', 'jerusalem', 'nablus', 'bethlehem', 'ramallah',
+      'nablus', 'ramallah'
+    ];
+    
+    // Use a more sophisticated index based on provider ID to match map distribution
+    final providerIndex = (providerId.hashCode.abs() % 37); // Match 37 providers
+    final selectedCity = cities[providerIndex % cities.length];
     
     final availableStreets = _getStreetOptionsForCity(selectedCity);
     final streetIndex = (providerId.hashCode.abs() ~/ 10) % availableStreets.length;

@@ -1,14 +1,18 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import '../models/map_models.dart';
+import '../models/provider.dart';
 import '../services/map_service.dart';
+import '../services/map_provider_service.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 import '../services/location_service.dart';
 import '../services/auth_service.dart';
+import 'map_provider_card.dart';
 
 class PalHandsMapWidget extends StatefulWidget {
   final LatLng? initialLocation;
@@ -39,6 +43,7 @@ class PalHandsMapWidget extends StatefulWidget {
 class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
   late GoogleMapController _mapController;
   final MapService _mapService = MapService();
+  final MapProviderService _mapProviderService = MapProviderService();
   final LocationService _locationService = LocationService();
   
   // Map state
@@ -49,12 +54,20 @@ class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
   bool _isLoading = false;
   String? _error;
   
+  // Provider data
+  MapProviderData? _providerData;
+  
   // Location permission
   bool _isLocationPermissionGranted = false;
   bool _isLocationSharingEnabled = false;
   
   // Stream subscription for GPS state changes
   StreamSubscription<bool>? _gpsStateSubscription;
+  
+  // Hover card state
+  ProviderModel? _hoveredProvider;
+  ProviderModel? _pinnedProvider;
+  Offset? _hoverPosition;
   
   // Map settings
   static const CameraPosition _defaultPosition = CameraPosition(
@@ -114,14 +127,15 @@ class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
   Future<void> _loadMarkers() async {
     try {
       final bounds = _getCurrentBounds();
-      final markers = await _mapService.getProvidersInBounds(
+      final providerData = await _mapProviderService.getProvidersForMap(
         bounds: bounds,
         filters: _mapState.filters,
       );
       
       setState(() {
-        _mapState = _mapState.copyWith(markers: markers);
-        _markers = _createMarkers(markers);
+        _providerData = providerData;
+        _mapState = _mapState.copyWith(markers: providerData.markers);
+        _markers = _createMarkers(providerData.markers);
       });
     } catch (e) {
       setState(() {
@@ -304,17 +318,65 @@ class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
     return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen);
   }
 
-  void _onMarkerTap(MapMarker marker) {
+  void _onMarkerTap(MapMarker marker) async {
+    // Get the real provider data for this marker
+    final provider = _providerData?.getProviderByMarkerId(marker.id);
+    if (provider == null) return;
+    
+    // For mobile/touch: toggle pinned card
+    if (kIsWeb) {
+      // On web, clicking pins/unpins the card
+      if (_pinnedProvider?.id == provider.id) {
+        _closePinnedCard();
+      } else {
+        await _pinProviderCard(provider, marker);
+      }
+    } else {
+      // On mobile, tap to show card (no hover)
+      if (_pinnedProvider?.id == provider.id) {
+        _closePinnedCard();
+      } else {
+        await _pinProviderCard(provider, marker);
+      }
+    }
+    
+    // Still call the original callback
     if (widget.onMarkerTap != null) {
       widget.onMarkerTap!(marker);
     }
   }
 
   void _onMapTap(LatLng position) {
+    // Close any open hover/pinned cards when tapping on the map
+    if (_pinnedProvider != null) {
+      _closePinnedCard();
+    }
+    
     if (widget.onLocationChanged != null) {
       widget.onLocationChanged!(position);
     }
   }
+
+  Future<void> _pinProviderCard(ProviderModel provider, MapMarker marker) async {
+    // Convert marker position to screen coordinates
+    final screenCoordinate = await _mapController.getScreenCoordinate(marker.position);
+    
+    setState(() {
+      _pinnedProvider = provider;
+      _hoveredProvider = null; // Clear hover when pinning
+      _hoverPosition = Offset(screenCoordinate.x.toDouble(), screenCoordinate.y.toDouble());
+    });
+  }
+
+  void _closePinnedCard() {
+    setState(() {
+      _pinnedProvider = null;
+      _hoveredProvider = null;
+      _hoverPosition = null;
+    });
+  }
+
+  // Hover card method completely removed - only using MapProviderCard below the map
 
   void _onCameraMove(CameraPosition position) {
     _currentPosition = position;
@@ -506,46 +568,60 @@ class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
           _updateUserLocationFromProfile();
         });
         
-        return Stack(
+        return Column(
           children: [
-            GoogleMap(
-              initialCameraPosition: widget.initialLocation != null
-                  ? CameraPosition(target: widget.initialLocation!, zoom: 15)
-                  : _defaultPosition,
-              onMapCreated: (GoogleMapController controller) {
-                _mapController = controller;
-              },
-              onTap: _onMapTap,
-              onCameraMove: _onCameraMove,
-              onCameraIdle: _onCameraIdle,
-              markers: _markers,
-              myLocationEnabled: false, // We handle this manually
-              myLocationButtonEnabled: false,
-              mapType: MapType.normal,
-              zoomControlsEnabled: false,
+            // Map section
+            Expanded(
+              child: Stack(
+                children: [
+                  GoogleMap(
+                    initialCameraPosition: widget.initialLocation != null
+                        ? CameraPosition(target: widget.initialLocation!, zoom: 15)
+                        : _defaultPosition,
+                    onMapCreated: (GoogleMapController controller) {
+                      _mapController = controller;
+                    },
+                    onTap: _onMapTap,
+                    onCameraMove: _onCameraMove,
+                    onCameraIdle: _onCameraIdle,
+                    markers: _markers,
+                    myLocationEnabled: false, // We handle this manually
+                    myLocationButtonEnabled: false,
+                    mapType: MapType.normal,
+                    zoomControlsEnabled: false,
+                  ),
+                  
+                  // Location permission banner
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: _buildLocationPermissionBanner(),
+                  ),
+                  
+                  // Location toggle button
+                  if (widget.showLocationToggle) _buildLocationToggle(),
+                  
+                  // Loading overlay
+                  _buildLoadingOverlay(),
+                  
+                  // Error overlay
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: _buildErrorOverlay(),
+                  ),
+                ],
+              ),
             ),
             
-            // Location permission banner
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: _buildLocationPermissionBanner(),
-            ),
-            
-            // Location toggle button
-            if (widget.showLocationToggle) _buildLocationToggle(),
-            
-            // Loading overlay
-            _buildLoadingOverlay(),
-            
-            // Error overlay
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: _buildErrorOverlay(),
-            ),
+            // Provider card below map
+            if (_pinnedProvider != null)
+              MapProviderCard(
+                provider: _pinnedProvider!,
+                onClose: _closePinnedCard,
+              ),
           ],
         );
       },

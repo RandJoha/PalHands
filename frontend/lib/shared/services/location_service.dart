@@ -102,11 +102,13 @@ class LocationService {
         source: LocationSource.gps,
       );
     }
-    // Fallback to nearest city centroid
+    // Fallback to nearest city centroid with a default street
     final nearest = _mapService.findNearestCity(position);
+    // Generate a default street name for the city to satisfy validation
+    final defaultStreet = 'Main Street';
     return AddressInfo(
       city: nearest.key,
-      street: null,
+      street: defaultStreet,
       coordinates: nearest.value,
       isApproximate: true,
       source: LocationSource.cityCentroid,
