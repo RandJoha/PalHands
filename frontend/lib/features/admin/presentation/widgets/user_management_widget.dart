@@ -724,6 +724,19 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                   ),
                   tooltip: AppStrings.getString('edit', languageService.currentLanguage),
                 ),
+                if (user['isActive'] == true) ...[
+                  IconButton(
+                    onPressed: () {
+                      _showInactivationDialog(user, languageService);
+                    },
+                    icon: Icon(
+                      Icons.block,
+                      size: screenWidth > 1400 ? 18 : 16,
+                      color: Colors.red,
+                    ),
+                    tooltip: AppStrings.getString('inactivate', languageService.currentLanguage),
+                  ),
+                ],
               ],
             ),
           ),
@@ -818,7 +831,6 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
   void _showEditUserDialog(Map<String, dynamic> user, LanguageService languageService) {
     bool isActive = user['isActive'] ?? false;
     String selectedRole = user['role'] ?? 'client';
-    String deactivationReason = '';
 
     showDialog(
       context: context,
@@ -905,31 +917,6 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                     },
                   ),
                   
-                  // Deactivation reason field (only show when deactivating)
-                  if (!isActive) ...[
-                    const SizedBox(height: 16),
-                    Text(
-                      AppStrings.getString('deactivationReason', languageService.currentLanguage),
-                      style: GoogleFonts.cairo(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textDark,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      decoration: InputDecoration(
-                        hintText: AppStrings.getString('enterDeactivationReason', languageService.currentLanguage),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      ),
-                      maxLines: 3,
-                      onChanged: (value) {
-                        deactivationReason = value;
-                      },
-                    ),
-                  ],
                 ],
               ),
               actions: [
@@ -948,7 +935,6 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
                       userId: user['_id'],
                       isActive: isActive,
                       role: selectedRole,
-                      deactivationReason: deactivationReason,
                       languageService: languageService,
                     );
                     Navigator.of(context).pop();
@@ -972,11 +958,268 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
     );
   }
 
+  void _showInactivationDialog(Map<String, dynamic> user, LanguageService languageService) {
+    String reason = '';
+    bool isProcessing = false;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Row(
+                children: [
+                  Icon(Icons.warning, color: Colors.red),
+                  SizedBox(width: 8),
+                  Text(
+                    AppStrings.getString('inactivateUser', languageService.currentLanguage),
+                    style: GoogleFonts.cairo(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${AppStrings.getString('inactivateUserConfirmation', languageService.currentLanguage)} ${user['firstName']} ${user['lastName']}?',
+                    style: GoogleFonts.cairo(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppStrings.getString('inactivationImpact', languageService.currentLanguage),
+                          style: GoogleFonts.cairo(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.red,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          user['role'] == 'provider' 
+                            ? '• ${AppStrings.getString('allBookingsCancelled', languageService.currentLanguage)}\n• ${AppStrings.getString('accountDisabled', languageService.currentLanguage)}\n• ${AppStrings.getString('servicesRemoved', languageService.currentLanguage)}'
+                            : '• ${AppStrings.getString('allBookingsCancelled', languageService.currentLanguage)}\n• ${AppStrings.getString('accountDisabled', languageService.currentLanguage)}',
+                          style: GoogleFonts.cairo(
+                            fontSize: 14,
+                            color: AppColors.textDark,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    AppStrings.getString('reasonRequired', languageService.currentLanguage),
+                    style: GoogleFonts.cairo(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                    TextField(
+                      decoration: InputDecoration(
+                        hintText: AppStrings.getString('enterInactivationReason', languageService.currentLanguage),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                      maxLines: 3,
+                      onChanged: (value) {
+                        setState(() {
+                          reason = value;
+                        });
+                      },
+                    ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isProcessing ? null : () => Navigator.of(context).pop(),
+                  child: Text(
+                    AppStrings.getString('cancel', languageService.currentLanguage),
+                    style: GoogleFonts.cairo(
+                      color: AppColors.textLight,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: isProcessing || reason.trim().isEmpty
+                      ? null
+                      : () async {
+                          setState(() {
+                            isProcessing = true;
+                          });
+                          await _inactivateUser(
+                            userId: user['_id'],
+                            reason: reason.trim(),
+                            languageService: languageService,
+                          );
+                          Navigator.of(context).pop();
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: isProcessing
+                      ? SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Text(
+                          AppStrings.getString('inactivate', languageService.currentLanguage),
+                          style: GoogleFonts.cairo(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _inactivateUser({
+    required String userId,
+    required String reason,
+    required LanguageService languageService,
+  }) async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      // Get AuthService from Provider context
+      final authService = Provider.of<AuthService>(context, listen: false);
+
+      print('🚫 Frontend: Starting inactivation for user $userId with reason: $reason');
+
+      final response = await _userService.inactivateUser(
+        userId: userId,
+        reason: reason,
+        authService: authService,
+      );
+
+      print('🚫 Frontend: Received response: $response');
+
+      if (response['success'] == true) {
+        print('🚫 Frontend: Inactivation successful, updating UI');
+        
+        // Always refresh the user list to ensure UI is in sync with backend
+        await _loadUsers();
+        print('🚫 Frontend: Refreshed user list after inactivation');
+
+        // Show success message with impact details
+        final data = response['data'];
+        final impact = data?['impact'];
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppStrings.getString('userInactivatedSuccessfully', languageService.currentLanguage),
+                    style: GoogleFonts.cairo(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    '${AppStrings.getString('cancelledBookings', languageService.currentLanguage)}: ${impact?['cancelledBookings'] ?? 0}\n${AppStrings.getString('affectedUsers', languageService.currentLanguage)}: ${impact?['affectedUsers'] ?? 0}',
+                    style: GoogleFonts.cairo(fontSize: 12),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 5),
+            ),
+          );
+        }
+      } else {
+        print('🚫 Frontend: Inactivation failed: ${response['message']}');
+        
+        // Check if user is already inactive - this means the operation actually succeeded
+        if (response['alreadyInactive'] == true || response['message']?.contains('already inactive') == true) {
+          print('🚫 Frontend: User already inactive, refreshing UI...');
+          // Refresh the user list to show current state
+          await _loadUsers();
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'User successfully inactivated',
+                    style: GoogleFonts.cairo(),
+                  ),
+                  backgroundColor: Colors.green,
+                  duration: Duration(seconds: 3),
+                ),
+            );
+          }
+        } else {
+          // Show error message for other failures
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  response['message'] ?? AppStrings.getString('inactivationFailed', languageService.currentLanguage),
+                  style: GoogleFonts.cairo(),
+                ),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      print('🚫 Frontend: Exception during inactivation: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Inactivation failed: ${e.toString()}',
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   Future<void> _updateUserStatus({
     required String userId,
     required bool isActive,
     required String role,
-    String? deactivationReason,
     required LanguageService languageService,
   }) async {
     try {
@@ -991,7 +1234,6 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
         userId: userId,
         isActive: isActive,
         role: role,
-        deactivationReason: deactivationReason,
         authService: authService,
       );
 

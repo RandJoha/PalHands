@@ -117,6 +117,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  deactivatedAt: {
+    type: Date,
+    default: null
+  },
+  deactivatedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
   rating: {
     average: {
       type: Number,

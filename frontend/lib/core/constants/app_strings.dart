@@ -3166,6 +3166,72 @@ class AppStrings {
   'ar': 'مراقبة الحجوزات',
   };
 
+  // User inactivation strings
+  static const Map<String, String> inactivate = {
+    'en': 'Inactivate',
+    'ar': 'إلغاء تفعيل',
+  };
+
+  static const Map<String, String> inactivateUser = {
+    'en': 'Inactivate User',
+    'ar': 'إلغاء تفعيل المستخدم',
+  };
+
+  static const Map<String, String> inactivateUserConfirmation = {
+    'en': 'Are you sure you want to inactivate',
+    'ar': 'هل أنت متأكد من أنك تريد إلغاء تفعيل',
+  };
+
+  static const Map<String, String> inactivationImpact = {
+    'en': 'This action will:',
+    'ar': 'هذا الإجراء سيقوم بـ:',
+  };
+
+  static const Map<String, String> allBookingsCancelled = {
+    'en': 'Cancel all pending and confirmed bookings',
+    'ar': 'إلغاء جميع الحجوزات المعلقة والمؤكدة',
+  };
+
+  static const Map<String, String> accountDisabled = {
+    'en': 'Disable the user account immediately',
+    'ar': 'تعطيل حساب المستخدم فوراً',
+  };
+
+  static const Map<String, String> servicesRemoved = {
+    'en': 'Remove all provider services from public listings',
+    'ar': 'إزالة جميع خدمات المزود من القوائم العامة',
+  };
+
+  static const Map<String, String> reasonRequired = {
+    'en': 'Reason for inactivation (required):',
+    'ar': 'سبب إلغاء التفعيل (مطلوب):',
+  };
+
+  static const Map<String, String> enterInactivationReason = {
+    'en': 'Enter the reason for inactivating this user...',
+    'ar': 'أدخل سبب إلغاء تفعيل هذا المستخدم...',
+  };
+
+  static const Map<String, String> userInactivatedSuccessfully = {
+    'en': 'User inactivated successfully',
+    'ar': 'تم إلغاء تفعيل المستخدم بنجاح',
+  };
+
+  static const Map<String, String> inactivationFailed = {
+    'en': 'Failed to inactivate user',
+    'ar': 'فشل في إلغاء تفعيل المستخدم',
+  };
+
+  static const Map<String, String> cancelledBookings = {
+    'en': 'Cancelled Bookings',
+    'ar': 'الحجوزات الملغاة',
+  };
+
+  static const Map<String, String> affectedUsers = {
+    'en': 'Affected Users',
+    'ar': 'المستخدمون المتأثرون',
+  };
+
   static const Map<String, String> reportsDisputes = {
     'en': 'Reports & Disputes',
     'ar': 'التقارير والنزاعات',
@@ -5264,6 +5330,19 @@ class AppStrings {
       'userManagement': userManagement,
       'serviceManagement': serviceManagement,
       'bookingManagement': bookingManagement,
+      'inactivate': inactivate,
+      'inactivateUser': inactivateUser,
+      'inactivateUserConfirmation': inactivateUserConfirmation,
+      'inactivationImpact': inactivationImpact,
+      'allBookingsCancelled': allBookingsCancelled,
+      'accountDisabled': accountDisabled,
+      'servicesRemoved': servicesRemoved,
+      'reasonRequired': reasonRequired,
+      'enterInactivationReason': enterInactivationReason,
+      'userInactivatedSuccessfully': userInactivatedSuccessfully,
+      'inactivationFailed': inactivationFailed,
+      'cancelledBookings': cancelledBookings,
+      'affectedUsers': affectedUsers,
       'reportsDisputes': reportsDisputes,
       'analytics': analytics,
       'systemSettings': systemSettings,

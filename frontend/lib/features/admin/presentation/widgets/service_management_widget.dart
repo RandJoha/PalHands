@@ -1931,18 +1931,61 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(
-            'Delete Service',
-            style: GoogleFonts.cairo(
-              fontWeight: FontWeight.w600,
-              color: AppColors.textDark,
-            ),
+          title: Row(
+            children: [
+              Icon(Icons.warning, color: Colors.red),
+              SizedBox(width: 8),
+              Text(
+                'Delete Service',
+                style: GoogleFonts.cairo(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.red,
+                ),
+              ),
+            ],
           ),
-          content: Text(
-            'Are you sure you want to delete "${service.title}"? This action cannot be undone.',
-            style: GoogleFonts.cairo(
-              color: AppColors.textDark,
-            ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Are you sure you want to delete "${service.title}"?',
+                style: GoogleFonts.cairo(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textDark,
+                ),
+              ),
+              SizedBox(height: 16),
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'This action will:',
+                      style: GoogleFonts.cairo(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.red,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      '• Cancel all pending and confirmed bookings for this service\n• Remove the service from all provider listings\n• Notify all affected clients and providers\n• This action cannot be undone',
+                      style: GoogleFonts.cairo(
+                        fontSize: 14,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -1954,15 +1997,18 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                 ),
               ),
             ),
-            TextButton(
+            ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
                 _deleteService(service, languageService);
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
               child: Text(
                 'Delete',
                 style: GoogleFonts.cairo(
-                  color: Colors.red,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1988,13 +2034,28 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
       );
       
       if (success) {
+        // Show success message with impact details
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Service "${service.title}" deleted successfully',
-              style: GoogleFonts.cairo(),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Service "${service.title}" deleted successfully',
+                  style: GoogleFonts.cairo(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'All related bookings have been cancelled and affected users notified.',
+                  style: GoogleFonts.cairo(fontSize: 12),
+                ),
+              ],
             ),
             backgroundColor: Colors.green,
+            duration: Duration(seconds: 5),
           ),
         );
         

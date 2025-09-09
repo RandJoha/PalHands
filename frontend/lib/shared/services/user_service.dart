@@ -136,4 +136,55 @@ class UserService with BaseApiService {
       rethrow;
     }
   }
+
+  /// Inactivate user with comprehensive booking cancellation (admin only)
+  Future<Map<String, dynamic>> inactivateUser({
+    required String userId,
+    required String reason,
+    AuthService? authService,
+  }) async {
+    try {
+      final body = {
+        'reason': reason,
+        'adminId': authService?.userId, // Include admin ID for audit trail
+      };
+
+      // Use provided authService or fall back to default
+      final headers = authService != null 
+          ? {
+              'Authorization': 'Bearer ${authService.token}',
+              ...ApiConfig.defaultHeaders,
+            }
+          : _authHeaders;
+
+      print('🚫 UserService: Inactivating user ID: $userId');
+      print('🚫 UserService: Reason: $reason');
+      print('🚫 UserService: Admin ID: ${authService?.userId}');
+      print('🚫 UserService: Endpoint: ${ApiConfig.adminEndpoint}/users/$userId/inactivate');
+
+      final response = await put(
+        '${ApiConfig.adminEndpoint}/users/$userId/inactivate',
+        body: body,
+        headers: headers,
+      );
+
+      print('🚫 UserService: Response received: $response');
+
+      return response;
+    } catch (e) {
+      print('🚫 UserService: Error inactivating user: $e');
+      
+      // Handle "already inactive" case specially
+      if (e.toString().contains('User is already inactive')) {
+        print('🚫 UserService: User already inactive, treating as success');
+        return {
+          'success': false,
+          'message': 'User is already inactive',
+          'alreadyInactive': true,
+        };
+      }
+      
+      rethrow;
+    }
+  }
 }

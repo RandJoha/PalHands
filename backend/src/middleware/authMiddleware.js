@@ -21,7 +21,14 @@ const authenticate = async (req, res, next) => {
       const provider = await Provider.findById(decoded.userId).select('-password');
       if (provider) {
         if (!provider.isActive) {
-          return res.status(401).json({ success: false, message: 'Account is deactivated.' });
+          return res.status(401).json({ 
+            success: false, 
+            message: 'Account is deactivated.',
+            code: 'ACCOUNT_DEACTIVATED',
+            reason: provider.deactivationReason || 'Account deactivated by administrator',
+            deactivatedAt: provider.deactivatedAt,
+            deactivatedBy: provider.deactivatedBy
+          });
         }
         req.user = provider;
         return next();
@@ -31,7 +38,14 @@ const authenticate = async (req, res, next) => {
     // If we found a user in users collection
     if (user) {
       if (!user.isActive) {
-        return res.status(401).json({ success: false, message: 'Account is deactivated.' });
+        return res.status(401).json({ 
+          success: false, 
+          message: 'Account is deactivated.',
+          code: 'ACCOUNT_DEACTIVATED',
+          reason: user.deactivationReason || 'Account deactivated by administrator',
+          deactivatedAt: user.deactivatedAt,
+          deactivatedBy: user.deactivatedBy
+        });
       }
       req.user = user;
       // console.log('🔍 User authenticated:', {

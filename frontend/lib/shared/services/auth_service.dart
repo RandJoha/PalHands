@@ -583,12 +583,57 @@ class AuthService extends ChangeNotifier with BaseApiService {
       }
       return isValid;
     } catch (e) {
+      // Check if this is an account deactivation error
+      if (e.toString().contains('ACCOUNT_DEACTIVATED') || 
+          (e is Map && e['code'] == 'ACCOUNT_DEACTIVATED')) {
+        // Handle account deactivation
+        await _handleAccountDeactivation(e);
+        return false;
+      }
+      
       // if (kDebugMode) {
       //   print('❌ Token validation failed: $e');
       // }
       // If token validation fails, clear the data
       await _clearAllData();
       return false;
+    }
+  }
+
+  // Handle account deactivation
+  Future<void> _handleAccountDeactivation(dynamic error) async {
+    try {
+      // Clear authentication data
+      await _clearAllData();
+      
+      // Extract deactivation details
+      String reason = 'Account deactivated by administrator';
+      String? deactivatedAt;
+      String? deactivatedBy;
+      
+      if (error is Map) {
+        reason = error['reason'] ?? reason;
+        deactivatedAt = error['deactivatedAt'];
+        deactivatedBy = error['deactivatedBy'];
+      }
+      
+      // Store deactivation info for display
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('account_deactivation_reason', reason);
+      if (deactivatedAt != null) {
+        await prefs.setString('account_deactivation_date', deactivatedAt);
+      }
+      if (deactivatedBy != null) {
+        await prefs.setString('account_deactivation_by', deactivatedBy);
+      }
+      
+      // if (kDebugMode) {
+      //   print('🚫 Account deactivated: $reason');
+      // }
+    } catch (e) {
+      // if (kDebugMode) {
+      //   print('❌ Failed to handle account deactivation: $e');
+      // }
     }
   }
 
@@ -613,6 +658,36 @@ class AuthService extends ChangeNotifier with BaseApiService {
 
   // Check if user is provider
   bool get isProvider => _currentUser?['role'] == 'provider';
+
+  // Check for account deactivation and return details
+  Future<Map<String, dynamic>?> checkAccountDeactivation() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final reason = prefs.getString('account_deactivation_reason');
+      
+      if (reason != null) {
+        final deactivatedAt = prefs.getString('account_deactivation_date');
+        final deactivatedBy = prefs.getString('account_deactivation_by');
+        
+        // Clear the stored deactivation info after retrieving it
+        await prefs.remove('account_deactivation_reason');
+        await prefs.remove('account_deactivation_date');
+        await prefs.remove('account_deactivation_by');
+        
+        return {
+          'reason': reason,
+          'deactivatedAt': deactivatedAt,
+          'deactivatedBy': deactivatedBy,
+        };
+      }
+      return null;
+    } catch (e) {
+      // if (kDebugMode) {
+      //   print('❌ Failed to check account deactivation: $e');
+      // }
+      return null;
+    }
+  }
 
   // Check if user is client
   bool get isClient => _currentUser?['role'] == 'client';

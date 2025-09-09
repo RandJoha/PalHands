@@ -17,6 +17,7 @@ router.get('/dashboard/overview', checkAdminPermission('analytics'), dashboardCo
 // User Management
 router.get('/users', checkAdminPermission('userManagement'), dashboardController.getUserManagementData);
 router.put('/users/:userId', checkAdminPermission('userManagement'), logAdminAction('user_update', 'user', 'req.params.userId'), dashboardController.updateUser);
+router.put('/users/:userId/inactivate', checkAdminPermission('userManagement'), logAdminAction('user_inactivation', 'user', 'req.params.userId'), dashboardController.inactivateUser);
 
 // Service Management
 router.get('/services', checkAdminPermission('serviceManagement'), dashboardController.getServiceManagementData);

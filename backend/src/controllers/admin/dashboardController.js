@@ -495,9 +495,77 @@ const deleteService = async (req, res) => {
     const providerServicesDeleteResult = await ProviderService.deleteMany({ service: serviceId });
     console.log(`🗑️ Deleted ${providerServicesDeleteResult.deletedCount} provider services for service "${service.title}"`);
     
+    // Get all bookings for this service before deletion (for notifications)
+    const affectedBookings = await Booking.find({ service: serviceId })
+      .populate('client', 'firstName lastName email')
+      .populate('provider', 'firstName lastName email');
+    
+    // Cancel all bookings and notify affected users
+    const cancelledBookings = [];
+    const affectedUsers = new Set();
+    
+    for (const booking of affectedBookings) {
+      if (booking.status === 'pending' || booking.status === 'confirmed') {
+        booking.status = 'cancelled';
+        booking.cancellation = {
+          cancelledBy: req.user._id,
+          reason: `Service "${service.title}" deleted by administrator`,
+          cancelledAt: new Date(),
+          refundAmount: booking.payment.status === 'paid' ? booking.pricing.totalAmount : 0
+        };
+        
+        // Add admin action log
+        booking.adminActions.push({
+          actor: req.user._id,
+          role: 'admin',
+          action: 'admin_service_deletion_cancel',
+          fromStatus: booking.status,
+          toStatus: 'cancelled',
+          note: `Booking cancelled due to service deletion: ${service.title}`,
+          at: new Date()
+        });
+        
+        await booking.save();
+        cancelledBookings.push(booking);
+        
+        // Track affected users
+        affectedUsers.add(booking.client._id.toString());
+        affectedUsers.add(booking.provider._id.toString());
+      }
+    }
+    
     // Delete all bookings for this service
     const bookingsDeleteResult = await Booking.deleteMany({ service: serviceId });
     console.log(`🗑️ Deleted ${bookingsDeleteResult.deletedCount} bookings for service "${service.title}"`);
+    
+    // Send notifications to affected users
+    const Notification = require('../../models/Notification');
+    for (const affectedUserId of affectedUsers) {
+      // Determine if the affected user is a User or Provider
+      const isProvider = await Provider.findById(affectedUserId);
+      const userRef = isProvider ? 'Provider' : 'User';
+      
+      await Notification.create({
+        user: affectedUserId,
+        userRef: userRef,
+        type: 'booking_cancelled_service_deletion',
+        title: 'Booking Cancelled - Service Deleted',
+        message: `A booking has been cancelled because the service "${service.title}" was deleted by an administrator`,
+        data: {
+          serviceTitle: service.title,
+          cancelledBy: 'admin',
+          affectedBookings: cancelledBookings.filter(b => 
+            b.client._id.toString() === affectedUserId || b.provider._id.toString() === affectedUserId
+          ).map(b => ({
+            bookingId: b.bookingId,
+            service: service.title,
+            date: b.schedule.date
+          }))
+        },
+        read: false,
+        createdAt: new Date()
+      });
+    }
     
     // Delete the service itself
     const serviceDeleteResult = await Service.findByIdAndDelete(serviceId);
@@ -510,11 +578,41 @@ const deleteService = async (req, res) => {
       });
     }
     
+    // Create audit log
+    const AdminAction = require('../../models/AdminAction');
+    await AdminAction.create({
+      admin: req.user._id,
+      action: 'service_deletion',
+      targetType: 'service',
+      targetId: serviceId,
+      details: {
+        serviceTitle: service.title,
+        providerName: `${service.provider?.firstName} ${service.provider?.lastName}`,
+        cancelledBookings: cancelledBookings.length,
+        affectedUsers: Array.from(affectedUsers),
+        deletedProviderServices: providerServicesDeleteResult.deletedCount
+      },
+      timestamp: new Date()
+    });
+    
     console.log(`✅ Service "${service.title}" and ${providerServicesDeleteResult.deletedCount} provider services and ${bookingsDeleteResult.deletedCount} bookings deleted successfully by admin`);
+    console.log(`✅ Notified ${affectedUsers.size} affected users about booking cancellations`);
     
     res.json({
       success: true,
-      message: `Service "${service.title}" and ${providerServicesDeleteResult.deletedCount} provider services and ${bookingsDeleteResult.deletedCount} bookings deleted successfully`
+      message: `Service "${service.title}" deleted successfully`,
+      data: {
+        service: {
+          id: service._id,
+          title: service.title,
+          provider: `${service.provider?.firstName} ${service.provider?.lastName}`
+        },
+        impact: {
+          cancelledBookings: cancelledBookings.length,
+          affectedUsers: affectedUsers.size,
+          deletedProviderServices: providerServicesDeleteResult.deletedCount
+        }
+      }
     });
   } catch (error) {
     console.error('Service deletion error:', error);
@@ -688,10 +786,204 @@ const deleteCategory = async (req, res) => {
   }
 };
 
+// Inactivate user (admin-initiated with comprehensive booking cancellation)
+const inactivateUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { reason, adminId } = req.body;
+    
+    console.log(`🚫 Admin inactivation request for user ID: ${userId}, reason: ${reason}`);
+    
+    // Find user or provider
+    let user = await User.findById(userId);
+    let entity = 'user';
+    if (!user) {
+      user = await Provider.findById(userId);
+      entity = 'provider';
+    }
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User/Provider not found'
+      });
+    }
+    
+    // Check if already inactive
+    if (!user.isActive) {
+      return res.status(400).json({
+        success: false,
+        message: 'User is already inactive'
+      });
+    }
+    
+    // Get all bookings for this user (as client or provider)
+    const userBookings = await Booking.find({
+      $or: [
+        { client: userId },
+        { provider: userId }
+      ],
+      status: { $in: ['pending', 'confirmed'] }
+    }).populate('client', 'firstName lastName email')
+      .populate('provider', 'firstName lastName email')
+      .populate('service', 'title');
+    
+    console.log(`🚫 Found ${userBookings.length} active bookings for ${entity}: ${user.firstName} ${user.lastName}`);
+    
+    // Cancel all bookings
+    const cancelledBookings = [];
+    const affectedUsers = new Set();
+    
+    for (const booking of userBookings) {
+      const oldStatus = booking.status;
+      booking.status = 'cancelled';
+      booking.cancellation = {
+        cancelledBy: adminId,
+        reason: `Account inactivation: ${reason}`,
+        cancelledAt: new Date(),
+        refundAmount: booking.payment.status === 'paid' ? booking.pricing.totalAmount : 0
+      };
+      
+      // Add admin action log
+      booking.adminActions.push({
+        actor: adminId,
+        role: 'admin',
+        action: 'admin_inactivation_cancel',
+        fromStatus: oldStatus,
+        toStatus: 'cancelled',
+        note: `Booking cancelled due to ${entity} account inactivation: ${reason}`,
+        at: new Date()
+      });
+      
+      await booking.save();
+      cancelledBookings.push(booking);
+      
+      // Track affected users (the other party in each booking)
+      if (booking.client._id.toString() === userId) {
+        affectedUsers.add(booking.provider._id.toString());
+      } else {
+        affectedUsers.add(booking.client._id.toString());
+      }
+    }
+    
+    // If provider, remove their services from public listings
+    if (entity === 'provider') {
+      const ProviderService = require('../../models/ProviderService');
+      await ProviderService.updateMany(
+        { provider: userId },
+        { isActive: false }
+      );
+      console.log(`🚫 Deactivated provider services for ${user.firstName} ${user.lastName}`);
+    }
+    
+    // Mark user as inactive
+    user.isActive = false;
+    user.deactivationReason = reason;
+    user.deactivatedAt = new Date();
+    user.deactivatedBy = adminId;
+    await user.save();
+    
+    // Create audit log
+    const AdminAction = require('../../models/AdminAction');
+    await AdminAction.create({
+      admin: req.user._id,
+      action: 'user_inactivation',
+      targetType: entity,
+      targetId: userId,
+      details: {
+        reason,
+        cancelledBookings: cancelledBookings.length,
+        affectedUsers: Array.from(affectedUsers),
+        userInfo: {
+          name: `${user.firstName} ${user.lastName}`,
+          email: user.email,
+          role: user.role || 'provider'
+        }
+      },
+      timestamp: new Date()
+    });
+    
+    // Send notifications to affected users
+    const Notification = require('../../models/Notification');
+    for (const affectedUserId of affectedUsers) {
+      try {
+        // Determine if the affected user is a User or Provider
+        const isProvider = await Provider.findById(affectedUserId);
+        const userRef = isProvider ? 'Provider' : 'User';
+        
+        console.log(`📧 Creating notification for ${userRef}: ${affectedUserId}`);
+        
+        await Notification.create({
+          user: affectedUserId,
+          userRef: userRef,
+          type: 'booking_cancelled_inactivation',
+          title: 'Booking Cancelled - Account Inactivation',
+          message: `A booking has been cancelled because the other party's account was deactivated by admin for: ${reason}`,
+          data: {
+            reason,
+            cancelledBy: 'admin',
+            affectedBookings: cancelledBookings.filter(b => 
+              b.client._id.toString() === affectedUserId || b.provider._id.toString() === affectedUserId
+            ).map(b => ({
+              bookingId: b.bookingId,
+              service: b.service.title,
+              date: b.schedule.date
+            }))
+          },
+          read: false,
+          createdAt: new Date()
+        });
+        
+        console.log(`✅ Notification created for ${userRef}: ${affectedUserId}`);
+      } catch (notificationError) {
+        console.error(`❌ Failed to create notification for ${affectedUserId}:`, notificationError);
+        // Continue with other notifications even if one fails
+      }
+    }
+    
+    console.log(`✅ Successfully inactivated ${entity}: ${user.firstName} ${user.lastName}`);
+    console.log(`✅ Cancelled ${cancelledBookings.length} bookings and notified ${affectedUsers.size} affected users`);
+    
+    res.json({
+      success: true,
+      message: `${entity === 'provider' ? 'Provider' : 'User'} inactivated successfully`,
+      data: {
+        user: {
+          id: user._id,
+          name: `${user.firstName} ${user.lastName}`,
+          email: user.email,
+          role: user.role || 'provider',
+          isActive: user.isActive,
+          deactivationReason: user.deactivationReason
+        },
+        impact: {
+          cancelledBookings: cancelledBookings.length,
+          affectedUsers: affectedUsers.size,
+          providerServicesDeactivated: entity === 'provider' ? 'yes' : 'n/a'
+        }
+      }
+    });
+    
+  } catch (error) {
+    console.error('User inactivation error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to inactivate user',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getDashboardOverview,
   getUserManagementData,
   updateUser,
+  inactivateUser,
   getServiceManagementData,
   updateService,
   deleteService,
