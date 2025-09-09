@@ -222,10 +222,14 @@ class SharedHeroSections {
             width: isMobile ? 2 : 3,
           ),
         ),
-        child: Icon(
-          Icons.person,
-          size: isMobile ? 80 : 120,
-          color: AppColors.primary,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(isMobile ? 100 : 140),
+          child: Image.asset(
+            'assets/images/hijab_girl_mobile.png',
+            width: isMobile ? 200 : 280,
+            height: isMobile ? 200 : 280,
+            fit: BoxFit.cover,
+          ),
         ),
       ),
       actionButtons: [

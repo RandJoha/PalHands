@@ -15,8 +15,6 @@ import '../../../../shared/services/language_service.dart';
 import 'user_sidebar.dart';
 import 'my_bookings_widget.dart';
 import 'chat_messages_widget.dart';
-import 'payments_widget.dart';
-import 'my_reviews_widget.dart';
 import 'profile_settings_widget.dart';
 import 'saved_providers_widget.dart';
 import 'support_help_widget.dart';
@@ -52,34 +50,24 @@ class _WebUserDashboardState extends State<WebUserDashboard> {
         badge: '2', // Example badge for unread messages
       ),
       UserMenuItem(
-        title: AppStrings.getString('payments', languageCode),
-        icon: Icons.payment,
-        index: 2,
-      ),
-      UserMenuItem(
-        title: AppStrings.getString('myReviews', languageCode),
-        icon: Icons.star,
-        index: 3,
-      ),
-      UserMenuItem(
         title: AppStrings.getString('profileSettings', languageCode),
         icon: Icons.person,
-        index: 4,
+        index: 2,
       ),
       UserMenuItem(
         title: AppStrings.getString('savedProviders', languageCode),
         icon: Icons.favorite,
-        index: 5,
+        index: 3,
       ),
       UserMenuItem(
         title: AppStrings.getString('supportHelp', languageCode),
         icon: Icons.help,
-        index: 6,
+        index: 4,
       ),
       UserMenuItem(
         title: AppStrings.getString('security', languageCode),
         icon: Icons.security,
-        index: 7,
+        index: 5,
       ),
     ];
   }
@@ -391,12 +379,8 @@ class _WebUserDashboardState extends State<WebUserDashboard> {
               case 1:
           return ChatMessagesWidget(key: _chatMessagesKey);
       case 2:
-        return const PaymentsWidget();
-      case 3:
-        return const MyReviewsWidget();
-      case 4:
         return const ProfileSettingsWidget();
-      case 5:
+      case 3:
         return const SavedProvidersWidget();
       default:
         return const MyBookingsWidget();

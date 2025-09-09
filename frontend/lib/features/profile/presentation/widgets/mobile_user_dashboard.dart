@@ -18,8 +18,6 @@ import '../../domain/models/user_menu_item.dart';
 // Mobile-specific widgets
 import 'mobile_my_bookings_widget.dart';
 import 'chat_messages_widget.dart';
-import 'mobile_payments_widget.dart';
-import 'mobile_my_reviews_widget.dart';
 import 'mobile_profile_settings_widget.dart';
 import 'mobile_saved_providers_widget.dart';
 import 'mobile_support_help_widget.dart';
@@ -51,34 +49,24 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
         badge: '2',
       ),
       UserMenuItem(
-        title: AppStrings.getString('payments', languageCode),
-        icon: Icons.payment,
-        index: 2,
-      ),
-      UserMenuItem(
-        title: AppStrings.getString('myReviews', languageCode),
-        icon: Icons.star,
-        index: 3,
-      ),
-      UserMenuItem(
         title: AppStrings.getString('profileSettings', languageCode),
         icon: Icons.person,
-        index: 4,
+        index: 2,
       ),
       UserMenuItem(
         title: AppStrings.getString('savedProviders', languageCode),
         icon: Icons.favorite,
-        index: 5,
+        index: 3,
       ),
       UserMenuItem(
         title: AppStrings.getString('supportHelp', languageCode),
         icon: Icons.help,
-        index: 6,
+        index: 4,
       ),
       UserMenuItem(
         title: AppStrings.getString('security', languageCode),
         icon: Icons.security,
-        index: 7,
+        index: 5,
       ),
     ];
   }
@@ -392,7 +380,7 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
 
   Widget _buildBottomNavigation(LanguageService languageService) {
     // Show bottom navigation only for main sections
-    if (_selectedIndex > 4) return const SizedBox.shrink();
+    if (_selectedIndex > 2) return const SizedBox.shrink();
     
     return BottomNavigationBar(
       type: BottomNavigationBarType.fixed,
@@ -407,7 +395,7 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
         fontSize: 12,
         fontWeight: FontWeight.w400,
       ),
-      currentIndex: _selectedIndex.clamp(0, 4),
+      currentIndex: _selectedIndex.clamp(0, 2),
       onTap: (index) {
         if (mounted) {
           setState(() {
@@ -458,14 +446,6 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
           ),
           label: AppStrings.getString('chatMessages', languageService.currentLanguage),
         ),
-        BottomNavigationBarItem(
-          icon: const Icon(Icons.payment, size: 20),
-          label: AppStrings.getString('payments', languageService.currentLanguage),
-        ),
-        BottomNavigationBarItem(
-          icon: const Icon(Icons.star, size: 20),
-          label: AppStrings.getString('myReviews', languageService.currentLanguage),
-        ),
       ],
     );
   }
@@ -477,16 +457,12 @@ class _MobileUserDashboardState extends State<MobileUserDashboard> {
       case 1:
         return const ChatMessagesWidget();
       case 2:
-        return const MobilePaymentsWidget();
-      case 3:
-        return const MobileMyReviewsWidget();
-      case 4:
         return const MobileProfileSettingsWidget();
-      case 5:
+      case 3:
         return const MobileSavedProvidersWidget();
-      case 6:
+      case 4:
         return const MobileSupportHelpWidget();
-      case 7:
+      case 5:
         return const MobileSecurityWidget();
       default:
         return const MobileMyBookingsWidget();

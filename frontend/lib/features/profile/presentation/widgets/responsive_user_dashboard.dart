@@ -99,10 +99,8 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     return [
       UserMenuItem(title: _getLocalizedString('my_bookings'), icon: Icons.calendar_today, index: 0, badge: '3'),
       UserMenuItem(title: _getLocalizedString('chat_messages'), icon: Icons.chat, index: 1, badge: '2'),
-      UserMenuItem(title: _getLocalizedString('payments'), icon: Icons.payment, index: 2),
-      UserMenuItem(title: _getLocalizedString('my_reviews'), icon: Icons.star, index: 3),
-      UserMenuItem(title: _getLocalizedString('profile_settings'), icon: Icons.person, index: 4),
-      UserMenuItem(title: _getLocalizedString('saved_providers'), icon: Icons.favorite, index: 5),
+      UserMenuItem(title: _getLocalizedString('profile_settings'), icon: Icons.person, index: 2),
+      UserMenuItem(title: _getLocalizedString('saved_providers'), icon: Icons.favorite, index: 3),
     ];
   }
 
@@ -633,12 +631,8 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       case 1:
         return _buildChatMessages();
       case 2:
-        return _buildPayments();
-      case 3:
-        return _buildMyReviews();
-      case 4:
         return _buildProfileSettings();
-      case 5:
+      case 3:
         return _buildSavedProviders();
       default:
         return _buildMyBookings();
@@ -655,9 +649,9 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   Widget _buildMobileBottomNavigation() {
     return Consumer<LanguageService>(
       builder: (context, languageService, child) {
-        // Only show bottom navigation for main sections (0-5)
+        // Only show bottom navigation for main sections (0-3)
         // For other sections, hide the bottom navigation
-        if (_selectedIndex > 5) {
+        if (_selectedIndex > 3) {
           return const SizedBox.shrink();
         }
         
@@ -728,20 +722,8 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               label: _getLocalizedString('chat_messages'),
             ),
             BottomNavigationBarItem(
-              icon: const Icon(Icons.payment, size: 20),
-              label: _getLocalizedString('payments'),
-            ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.star, size: 20),
-              label: _getLocalizedString('my_reviews'),
-            ),
-            BottomNavigationBarItem(
               icon: const Icon(Icons.person, size: 20),
               label: _getLocalizedString('profile_settings'),
-            ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.favorite, size: 20),
-              label: _getLocalizedString('saved_providers'),
             ),
           ],
         );
@@ -756,8 +738,6 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   // Content sections with responsive layouts
   Widget _buildMyBookings() => _buildMyBookingsContent();
   Widget _buildChatMessages() => _buildChatMessagesContent();
-  Widget _buildPayments() => _buildPaymentsContent();
-  Widget _buildMyReviews() => _buildMyReviewsContent();
   Widget _buildProfileSettings() => _buildProfileSettingsContent();
   Widget _buildSavedProviders() => _buildSavedProvidersContent();
 
@@ -1787,582 +1767,46 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     return Container();
   }
 
-  // Payments Section
-  Widget _buildPaymentsContent() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isMobile = constraints.maxWidth <= 768;
-        final isTablet = constraints.maxWidth > 768 && constraints.maxWidth <= 1200;
-        
-        return SingleChildScrollView(
-          padding: EdgeInsets.all(isMobile ? 16.0 : 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Payment Summary
-              _buildPaymentSummary(isMobile, isTablet, constraints.maxWidth),
-              SizedBox(height: isMobile ? 20.0 : 32.0),
-              
-              // Payment Methods
-              _buildPaymentMethods(isMobile, isTablet),
-              SizedBox(height: isMobile ? 20.0 : 32.0),
-              
-              // Payment History
-              _buildPaymentHistory(isMobile, isTablet),
-            ],
-          ),
-        );
-      },
-    );
+
+
+  // Payment methods removed
+  Widget _buildPaymentMethodsRemoved(bool isMobile, bool isTablet) {
+    return Container(); // Payment methods removed
   }
 
-  Widget _buildPaymentSummary(bool isMobile, bool isTablet, double screenWidth) {
-    final languageService = Provider.of<LanguageService>(context, listen: false);
-    final summaryCards = [
-      {'title': AppStrings.getString('totalSpent', languageService.currentLanguage), 'amount': '₪2,450', 'icon': Icons.account_balance_wallet, 'color': AppColors.primary},
-      {'title': AppStrings.getString('thisMonth', languageService.currentLanguage), 'amount': '₪580', 'icon': Icons.calendar_today, 'color': AppColors.success},
-      {'title': AppStrings.getString('pending', languageService.currentLanguage), 'amount': '₪150', 'icon': Icons.pending, 'color': AppColors.warning},
-    ];
-
-    return Wrap(
-      spacing: isMobile ? 12.0 : 16.0,
-      runSpacing: isMobile ? 12.0 : 16.0,
-      children: summaryCards.map((card) {
-        final cardWidth = isMobile 
-            ? (screenWidth - 48) / 2 
-            : (screenWidth - 96) / 3;
-        
-        return Container(
-          width: cardWidth,
-          padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(isMobile ? 12.0 : 16.0),
-            border: Border.all(color: AppColors.border, width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.shadow.withValues(alpha: 0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Icon(
-                card['icon'] as IconData?,
-                color: card['color'] as Color?,
-                size: isMobile ? 32.0 : 40.0,
-              ),
-              SizedBox(height: isMobile ? 8.0 : 12.0),
-              Text(
-                (card['count'] ?? '0').toString(),
-                style: GoogleFonts.cairo(
-                  fontSize: isMobile ? 24.0 : 32.0,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 4.0),
-              Text(
-                (card['title'] ?? '').toString(),
-                style: GoogleFonts.cairo(
-                  fontSize: isMobile ? 14.0 : 16.0,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
+  // Payment method card removed
+  Widget _buildPaymentMethodCardRemoved(String title, String status, IconData icon, Color color, bool isDefault, bool isMobile) {
+    return Container(); // Payment method card removed
   }
 
-  Widget _buildPaymentMethods(bool isMobile, bool isTablet) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              _getLocalizedString('paymentMethods'),
-              style: GoogleFonts.cairo(
-                fontSize: isMobile ? 18.0 : 20.0,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            ElevatedButton.icon(
-              onPressed: () {},
-              icon: Icon(Icons.add, size: isMobile ? 16.0 : 18.0),
-              label: Text(
-                _getLocalizedString('addNew'),
-                style: GoogleFonts.cairo(
-                  fontSize: isMobile ? 14.0 : 16.0,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.white,
-                padding: EdgeInsets.symmetric(
-                  horizontal: isMobile ? 12.0 : 16.0,
-                  vertical: isMobile ? 8.0 : 10.0,
-                ),
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: isMobile ? 12.0 : 16.0),
-        
-        // Payment methods list
-        _buildPaymentMethodCard(
-          _getLocalizedString('visaEndingIn'),
-          _getLocalizedString('defaultText'),
-          Icons.credit_card,
-          AppColors.primary,
-          true,
-          isMobile,
-        ),
-        const SizedBox(height: 12.0),
-        _buildPaymentMethodCard(
-          _getLocalizedString('paypal'),
-          _getLocalizedString('connected'),
-          Icons.payment,
-          AppColors.info,
-          false,
-          isMobile,
-        ),
-      ],
-    );
+  // Payment history removed
+  Widget _buildPaymentHistoryRemoved(bool isMobile, bool isTablet) {
+    return Container(); // Payment history removed
   }
 
-  Widget _buildPaymentMethodCard(String title, String status, IconData icon, Color color, bool isDefault, bool isMobile) {
-    return Container(
-      padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(isMobile ? 12.0 : 16.0),
-        border: Border.all(
-          color: isDefault ? AppColors.primary : AppColors.border,
-          width: isDefault ? 2 : 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            color: color,
-            size: isMobile ? 24.0 : 28.0,
-          ),
-          const SizedBox(width: 12.0),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 16.0 : 18.0,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                Text(
-                  status,
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 14.0 : 16.0,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (isDefault)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                _getLocalizedString('defaultText'),
-                style: GoogleFonts.cairo(
-                  fontSize: isMobile ? 12.0 : 14.0,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
+  // Payment history card removed
+  Widget _buildPaymentHistoryCardRemoved(Map<String, dynamic> payment, bool isMobile, bool isTablet) {
+    return Container(); // Payment history card removed
   }
 
-  Widget _buildPaymentHistory(bool isMobile, bool isTablet) {
-    final languageService = Provider.of<LanguageService>(context, listen: false);
-    final payments = [
-      {
-        'service': AppStrings.getString('homeCleaning', languageService.currentLanguage),
-        'provider': 'Fatima Al-Zahra',
-        'amount': '₪150',
-        'date': '${AppStrings.getString('today', languageService.currentLanguage)}, 10:00 AM',
-        'status': AppStrings.getString('completed', languageService.currentLanguage),
-        'statusColor': AppColors.success,
-      },
-      {
-        'service': AppStrings.getString('elderlyCare', languageService.currentLanguage),
-        'provider': 'Mariam Hassan',
-        'amount': '₪200',
-        'date': '${AppStrings.getString('yesterday', languageService.currentLanguage)}, 2:00 PM',
-        'status': AppStrings.getString('pending', languageService.currentLanguage),
-        'statusColor': AppColors.warning,
-      },
-      {
-        'service': AppStrings.getString('babysitting', languageService.currentLanguage),
-        'provider': 'Aisha Mohammed',
-        'amount': '₪120',
-        'date': '2 ${AppStrings.getString('daysAgo', languageService.currentLanguage)}',
-        'status': AppStrings.getString('completed', languageService.currentLanguage),
-        'statusColor': AppColors.success,
-      },
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          _getLocalizedString('paymentHistory'),
-          style: GoogleFonts.cairo(
-            fontSize: isMobile ? 18.0 : 20.0,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        SizedBox(height: isMobile ? 12.0 : 16.0),
-        
-        ...payments.map((payment) {
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12.0),
-            child: _buildPaymentHistoryCard(payment, isMobile, isTablet),
-          );
-        }),
-      ],
-    );
+  // My Reviews Section removed
+  Widget _buildMyReviewsContentRemoved() {
+    return Container(); // Reviews section removed
   }
 
-  Widget _buildPaymentHistoryCard(Map<String, dynamic> payment, bool isMobile, bool isTablet) {
-    return Container(
-      padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(isMobile ? 12.0 : 16.0),
-        border: Border.all(color: AppColors.border, width: 1),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  payment['service'],
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 16.0 : 18.0,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4.0),
-                Text(
-                  payment['provider'],
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 14.0 : 16.0,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 4.0),
-                Text(
-                  payment['date'],
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 12.0 : 14.0,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                payment['amount'],
-                style: GoogleFonts.cairo(
-                  fontSize: isMobile ? 18.0 : 20.0,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 4.0),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: payment['statusColor'].withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  payment['status'],
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 12.0 : 14.0,
-                    fontWeight: FontWeight.w600,
-                    color: payment['statusColor'],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+  // Reviews summary removed
+  Widget _buildReviewsSummaryRemoved(bool isMobile, bool isTablet, double screenWidth) {
+    return Container(); // Reviews summary removed
   }
 
-  // My Reviews Section
-  Widget _buildMyReviewsContent() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isMobile = constraints.maxWidth <= 768;
-        final isTablet = constraints.maxWidth > 768 && constraints.maxWidth <= 1200;
-        
-        return SingleChildScrollView(
-          padding: EdgeInsets.all(isMobile ? 16.0 : 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Reviews Summary
-              _buildReviewsSummary(isMobile, isTablet, constraints.maxWidth),
-              SizedBox(height: isMobile ? 20.0 : 32.0),
-              
-              // My Reviews List
-              _buildMyReviewsList(isMobile, isTablet),
-            ],
-          ),
-        );
-      },
-    );
+  // Reviews list removed
+  Widget _buildMyReviewsListRemoved(bool isMobile, bool isTablet) {
+    return Container(); // Reviews list removed
   }
 
-  Widget _buildReviewsSummary(bool isMobile, bool isTablet, double screenWidth) {
-    final languageService = Provider.of<LanguageService>(context, listen: false);
-    final summaryCards = [
-      {'title': AppStrings.getString('totalReviews', languageService.currentLanguage), 'count': '8', 'icon': Icons.rate_review, 'color': AppColors.primary},
-      {'title': AppStrings.getString('averageRating', languageService.currentLanguage), 'count': '4.8', 'icon': Icons.star, 'color': AppColors.warning},
-      {'title': AppStrings.getString('thisMonth', languageService.currentLanguage), 'count': '3', 'icon': Icons.calendar_today, 'color': AppColors.success},
-    ];
-
-    return Wrap(
-      spacing: isMobile ? 12.0 : 16.0,
-      runSpacing: isMobile ? 12.0 : 16.0,
-      children: summaryCards.map((card) {
-        final cardWidth = isMobile 
-            ? (screenWidth - 48) / 2 
-            : (screenWidth - 96) / 3;
-        
-        return Container(
-          width: cardWidth,
-          padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(isMobile ? 12.0 : 16.0),
-            border: Border.all(color: AppColors.border, width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.shadow.withValues(alpha: 0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Icon(
-                card['icon'] as IconData?,
-                color: card['color'] as Color?,
-                size: isMobile ? 32.0 : 40.0,
-              ),
-              SizedBox(height: isMobile ? 8.0 : 12.0),
-              Text(
-                card['count'] as String,
-                style: GoogleFonts.cairo(
-                  fontSize: isMobile ? 24.0 : 32.0,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 4.0),
-              Text(
-                (card['title'] ?? '').toString(),
-                style: GoogleFonts.cairo(
-                  fontSize: isMobile ? 14.0 : 16.0,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildMyReviewsList(bool isMobile, bool isTablet) {
-    final languageService = Provider.of<LanguageService>(context, listen: false);
-    final reviews = [
-      {
-        'provider': 'Fatima Al-Zahra',
-        'service': AppStrings.getString('homeCleaning', languageService.currentLanguage),
-        'rating': 5.0,
-        'comment': 'Excellent service! Very professional and thorough cleaning.',
-        'date': '2 ${AppStrings.getString('daysAgo', languageService.currentLanguage)}',
-        'canEdit': true,
-      },
-      {
-        'provider': 'Mariam Hassan',
-        'service': AppStrings.getString('elderlyCare', languageService.currentLanguage),
-        'rating': 4.5,
-        'comment': 'Very caring and attentive. Highly recommended.',
-        'date': '1 ${AppStrings.getString('weekAgo', languageService.currentLanguage)}',
-        'canEdit': false,
-      },
-      {
-        'provider': 'Aisha Mohammed',
-        'service': AppStrings.getString('babysitting', languageService.currentLanguage),
-        'rating': 5.0,
-        'comment': 'Great with kids! Very reliable and trustworthy.',
-        'date': '2 ${AppStrings.getString('weeksAgo', languageService.currentLanguage)}',
-        'canEdit': false,
-      },
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          _getLocalizedString('myReviews'),
-          style: GoogleFonts.cairo(
-            fontSize: isMobile ? 18.0 : 20.0,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        SizedBox(height: isMobile ? 12.0 : 16.0),
-        
-        ...reviews.map((review) {
-          return Container(
-            margin: const EdgeInsets.only(bottom: 16.0),
-            child: _buildReviewCard(review, isMobile, isTablet),
-          );
-        }),
-      ],
-    );
-  }
-
-  Widget _buildReviewCard(Map<String, dynamic> review, bool isMobile, bool isTablet) {
-    return Container(
-      padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(isMobile ? 12.0 : 16.0),
-        border: Border.all(color: AppColors.border, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadow.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      review['provider'],
-                      style: GoogleFonts.cairo(
-                        fontSize: isMobile ? 16.0 : 18.0,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      review['service'],
-                      style: GoogleFonts.cairo(
-                        fontSize: isMobile ? 14.0 : 16.0,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (review['canEdit'])
-                TextButton(
-                  onPressed: () {},
-                  child: Text(
-                    _getLocalizedString('edit'),
-                    style: GoogleFonts.cairo(
-                      fontSize: isMobile ? 14.0 : 16.0,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 8.0),
-          
-          // Rating stars
-          Row(
-            children: List.generate(5, (index) {
-              return Icon(
-                index < review['rating'] ? Icons.star : Icons.star_border,
-                color: AppColors.ratingFilled,
-                size: isMobile ? 20.0 : 24.0,
-              );
-            }),
-          ),
-          const SizedBox(height: 8.0),
-          
-          Text(
-            review['comment'],
-            style: GoogleFonts.cairo(
-              fontSize: isMobile ? 14.0 : 16.0,
-              fontWeight: FontWeight.w400,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8.0),
-          
-          Text(
-            review['date'],
-            style: GoogleFonts.cairo(
-              fontSize: isMobile ? 12.0 : 14.0,
-              fontWeight: FontWeight.w400,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
+  // Review card removed
+  Widget _buildReviewCardRemoved(Map<String, dynamic> review, bool isMobile, bool isTablet) {
+    return Container(); // Review card removed
   }
 
   // Profile Settings Section

@@ -230,14 +230,16 @@ lib/
 - **Permissions**: Not configured
 - **API Keys**: Not configured
 
-### 7. Map View (Web OSM, Mobile Google) — Added Jan 2026
+### 7. Unified Map View (OpenStreetMap for All Platforms) — Updated Jan 2026
 
-- Web uses OpenStreetMap via `flutter_map` (no API key required)
-- Mobile keeps Google Maps via `google_maps_flutter`
-- New widget: `shared/widgets/palhands_osm_map_widget.dart` (web)
-- Existing widget: `shared/widgets/palhands_map_widget.dart` (mobile)
-- Category pages toggle “Map” shows the appropriate widget per platform
-- Real providers (37 total) are fetched from MongoDB and distributed across Palestinian cities (WB + Gaza) with realistic GPS coordinates; provider markers use green color, current user's marker (if provider) uses blue color
+- **Unified Approach**: Both web and mobile now use OpenStreetMap via `flutter_map`
+- **No API Keys**: Eliminates Google Maps API key requirements across all platforms
+- **Consistent Experience**: Same map implementation and UI across web, Android, and iOS
+- **New Widget**: `shared/widgets/palhands_unified_map_widget.dart` (recommended for new implementations)
+- **Updated Widgets**: 
+  - `shared/widgets/palhands_map_widget.dart` (mobile, updated to use OSM)
+  - `shared/widgets/palhands_osm_map_widget.dart` (web, can be deprecated)
+- Real providers (37 total) are fetched from MongoDB and distributed across Palestinian cities with realistic GPS coordinates; provider markers use green color, current user's marker (if provider) uses blue color
 
 GPS & Address Coupling (Fully Implemented)
 - Users of any role (client/provider/admin) are treated as a "client" on the map and get a blue "You" marker.
@@ -252,12 +254,19 @@ GPS & Address Coupling (Fully Implemented)
 - **Profile Synchronization**: Provider profile addresses automatically match map marker locations
 
 Dependencies
-- `flutter_map` and `latlong2` added to `pubspec.yaml`
+- `flutter_map` and `latlong2` for OpenStreetMap integration
+- `google_maps_flutter` kept for compatibility but OSM is preferred
+
+Benefits of Unified OSM Approach
+- **Cost Effective**: No Google Maps API usage fees
+- **Privacy Friendly**: No tracking by Google Maps
+- **Consistent UI**: Same look and feel across all platforms
+- **Offline Capable**: Can work with cached tiles when offline
+- **No API Keys**: Eliminates API key management complexity
 
 Notes
-- If you switch web back to Google, add the JS SDK in `web/index.html`:
-  `<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>`
 - Backend `/api/map/*` endpoints are not required for dev; the app falls back to realistic dummy distribution when a 404 is returned
+- To use Google Maps instead, add the JS SDK in `web/index.html` and use the original Google Maps widgets
 
 ### 7. Implementation Status Summary
 

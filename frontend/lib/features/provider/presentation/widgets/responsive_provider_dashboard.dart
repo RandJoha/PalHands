@@ -16,8 +16,6 @@ import '../../../../shared/widgets/notification_dialog.dart';
 // Widget imports
 import 'my_services_widget.dart';
 import 'bookings_widget.dart';
-import 'earnings_widget.dart';
-import 'reviews_widget.dart';
 import 'bookings_as_client_widget.dart';
 
 import '../../../admin/presentation/widgets/language_toggle_widget.dart';
@@ -55,16 +53,6 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
       'title': 'myBookings',
       'icon': Icons.event_note,
       'widget': const BookingsAsClientWidget(),
-    },
-    {
-      'title': 'earnings',
-      'icon': Icons.attach_money,
-      'widget': const EarningsWidget(),
-    },
-    {
-      'title': 'reviews',
-      'icon': Icons.star,
-      'widget': const ReviewsWidget(),
     },
     {
       'title': 'chat',
