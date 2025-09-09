@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -120,8 +121,20 @@ class _BookingDialogState extends State<BookingDialog> {
 
   Future<void> _loadResolved() async {
     try {
+      // Debug logging to see what provider ID is being used
+      if (kDebugMode) {
+        print('🔍 BookingDialog._loadResolved called with:');
+        print('  Provider ID: ${widget.provider.id}');
+        print('  Provider Name: ${widget.provider.name}');
+        print('  Emergency Mode: $_emergency');
+        print('  Selected Service ID: $_selectedServiceId');
+      }
+      
       // Validate provider ID - allow mock providers to work
       if (widget.provider.id.isEmpty) {
+        if (kDebugMode) {
+          print('⚠️ Provider ID is empty, returning empty availability');
+        }
         if (mounted) {
           setState(() {
             _resolved = AvailabilityResolved(
@@ -147,6 +160,14 @@ class _BookingDialogState extends State<BookingDialog> {
       
       final to = from.add(const Duration(days: 31));
       
+      if (kDebugMode) {
+        print('🔍 Date range for availability:');
+        print('  Now: $now');
+        print('  From: $from');
+        print('  To: $to');
+        print('  Emergency mode: $_emergency');
+      }
+      
   final r = await _availabilityService.getResolvedAvailability(
     widget.provider.id,
     from: from,
@@ -155,6 +176,19 @@ class _BookingDialogState extends State<BookingDialog> {
     emergency: _emergency,
     serviceId: _selectedServiceId,
   );
+      
+      if (kDebugMode) {
+        print('🔍 Availability API call completed:');
+        print('  Result: ${r != null ? 'Success' : 'Failed'}');
+        if (r != null) {
+          print('  Timezone: ${r.timezone}');
+          print('  Step: ${r.step}');
+          print('  Days: ${r.days.length}');
+          if (r.days.isNotEmpty) {
+            print('  First day: ${r.days.first.date} - Available: ${r.days.first.slots.length}, Booked: ${r.days.first.booked.length}');
+          }
+        }
+      }
       
       if (!mounted) return;
       setState(() {
@@ -166,6 +200,11 @@ class _BookingDialogState extends State<BookingDialog> {
         _calendarMonth = DateTime(from.year, from.month, 1);
       });
     } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error in _loadResolved: $e');
+        print('  Provider ID: ${widget.provider.id}');
+        print('  Provider Name: ${widget.provider.name}');
+      }
       // Show a fallback or error state instead of silent failure
       if (mounted) {
         setState(() {
@@ -619,6 +658,19 @@ class _BookingDialogState extends State<BookingDialog> {
     final languageService = Provider.of<LanguageService>(context);
     final lang = languageService.currentLanguage;
     final isRtl = languageService.textDirection == TextDirection.rtl;
+    
+    // Debug logging to see calendar state
+    if (kDebugMode) {
+      print('📅 BookingDialog build - Availability: ${_availability != null}, Resolved: ${_resolved != null}');
+      if (_resolved != null) {
+        print('📅 Resolved data - Days: ${_resolved!.days.length}, Timezone: ${_resolved!.timezone}');
+        final daysWithData = _resolved!.days.where((d) => d.slots.isNotEmpty || d.booked.isNotEmpty).toList();
+        print('📅 Days with data: ${daysWithData.length}');
+        for (var day in daysWithData.take(3)) {
+          print('  📅 ${day.date}: Available=${day.slots.length}, Booked=${day.booked.length}');
+        }
+      }
+    }
   final media = MediaQuery.of(context);
   final screenW = media.size.width;
   final screenH = media.size.height;
@@ -1515,6 +1567,39 @@ class _CalendarSection extends StatelessWidget {
       final availCount = day?.slots.length ?? 0;
       final bookedCount = day?.booked.length ?? 0; // includes pending + confirmed
       final hasAny = (availCount + bookedCount) > 0;
+      
+      // Debug logging to see what data we're getting from the database
+      if (kDebugMode && (availCount > 0 || bookedCount > 0)) {
+        print('📅 Date: $key - Available: $availCount, Booked: $bookedCount');
+        if (day?.booked.isNotEmpty == true) {
+          for (var booking in day!.booked) {
+            print('  📋 Booking: ${booking.start}-${booking.end} Status: ${booking.status}');
+          }
+        }
+      }
+      
+      // Determine the primary color and background based on availability status
+      Color primaryColor;
+      Color backgroundColor;
+      Color borderColor;
+      
+      if (availCount > 0) {
+        // Has available slots - Green background
+        primaryColor = Colors.green.shade600;
+        backgroundColor = Colors.green.shade50;
+        borderColor = Colors.green.shade600;
+      } else if (bookedCount > 0) {
+        // Only booked slots - Red background
+        primaryColor = Colors.red.shade600;
+        backgroundColor = Colors.red.shade50;
+        borderColor = Colors.red.shade600;
+      } else {
+        // Not available - Grey
+        primaryColor = Colors.grey.shade400;
+        backgroundColor = Colors.grey.shade200;
+        borderColor = Colors.grey.shade400;
+      }
+      
       current.add(Expanded(
         child: GestureDetector(
           onTap: !hasAny ? null : () async {
@@ -1530,18 +1615,20 @@ class _CalendarSection extends StatelessWidget {
             height: 40,
             margin: const EdgeInsets.all(2),
             decoration: BoxDecoration(
-              color: availCount > 0 ? Colors.green.shade50 : Colors.grey.shade200,
+              color: backgroundColor,
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: availCount > 0 ? Colors.green.shade600 : Colors.grey.shade400),
+              border: Border.all(color: borderColor, width: 2),
             ),
             child: Stack(children: [
               Align(alignment: Alignment.center, child: Text('${dayDate.day}')),
+              // Show available count in green (top-right)
               if (availCount > 0)
                 Positioned(right: 4, top: 4, child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(color: Colors.green.shade600, borderRadius: BorderRadius.circular(10)),
                   child: Text('$availCount', style: const TextStyle(color: Colors.white, fontSize: 10)),
                 )),
+              // Show booked count in red (bottom-right)
               if (bookedCount > 0)
                 Positioned(right: 4, bottom: 4, child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),

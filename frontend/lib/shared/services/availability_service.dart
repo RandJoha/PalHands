@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'base_api_service.dart';
 import '../../core/constants/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -98,6 +99,17 @@ class AvailabilityService with BaseApiService {
   String? serviceId,
   }) async {
     try {
+      // Debug logging to see what provider ID is being used
+      if (kDebugMode) {
+        print('🔍 AvailabilityService.getResolvedAvailability called with:');
+        print('  Provider ID: $providerId');
+        print('  From: $from');
+        print('  To: $to');
+        print('  Step: $stepMinutes');
+        print('  Emergency: $emergency');
+        print('  Service ID: $serviceId');
+      }
+      
       final params = <String, String>{
         'step': stepMinutes.toString(),
       };
@@ -109,14 +121,50 @@ class AvailabilityService with BaseApiService {
   params['_ts'] = DateTime.now().millisecondsSinceEpoch.toString();
       final qp = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
       
+      final url = '${ApiConfig.availabilityEndpoint}/$providerId/resolve${qp.isNotEmpty ? '?$qp' : ''}';
+      
+      if (kDebugMode) {
+        print('🔍 Making API call to: $url');
+      }
+      
       final data = await get(
-        '${ApiConfig.availabilityEndpoint}/$providerId/resolve${qp.isNotEmpty ? '?$qp' : ''}',
+        url,
         headers: await _getAuthHeaders(),
       );
       
       final body = data['data'] ?? data;
-      return AvailabilityResolved.fromJson(Map<String, dynamic>.from(body));
+      
+      // Debug logging to see what data we're getting from the database
+      if (kDebugMode) {
+        print('🔍 Availability data received from database:');
+        print('  Timezone: ${body['timezone']}');
+        print('  Step: ${body['step']}');
+        print('  Days count: ${(body['days'] as List?)?.length ?? 0}');
+        if ((body['days'] as List?)?.isNotEmpty == true) {
+          final firstDay = (body['days'] as List)[0];
+          print('  First day: ${firstDay['date']} - Available: ${(firstDay['slots'] as List?)?.length ?? 0}, Booked: ${(firstDay['booked'] as List?)?.length ?? 0}');
+        } else {
+          print('  ⚠️ No days returned from API - this means no availability data');
+        }
+        print('  Raw response body: $body');
+      }
+      
+      final result = AvailabilityResolved.fromJson(Map<String, dynamic>.from(body));
+      
+      if (kDebugMode) {
+        print('🔍 Parsed AvailabilityResolved:');
+        print('  Timezone: ${result.timezone}');
+        print('  Step: ${result.step}');
+        print('  Days: ${result.days.length}');
+      }
+      
+      return result;
     } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error in getResolvedAvailability: $e');
+        print('  Provider ID: $providerId');
+        print('  URL: ${ApiConfig.availabilityEndpoint}/$providerId/resolve');
+      }
       return null;
     }
   }

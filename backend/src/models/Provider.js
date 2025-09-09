@@ -5,7 +5,6 @@ const providerSchema = new mongoose.Schema({
   // Provider ID - 4 digit unique identifier starting from 1000
   providerId: {
     type: Number,
-    unique: true,
   // Not required at validation time; it's auto-assigned in pre('save')
   required: false,
     min: 1000,
@@ -27,7 +26,6 @@ const providerSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
-    unique: true,
     lowercase: true,
     trim: true
   },
@@ -43,8 +41,7 @@ const providerSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    required: true,
-    unique: true
+    required: true
   },
   profileImage: {
     type: String,

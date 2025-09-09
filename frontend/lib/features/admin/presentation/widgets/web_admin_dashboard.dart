@@ -11,6 +11,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/services/auth_service.dart';
 import '../../../../shared/services/language_service.dart';
 import '../../../../shared/services/notification_service.dart';
+import '../../../../shared/widgets/notification_dialog.dart';
 
 // Admin widgets
 import 'admin_sidebar.dart';
@@ -18,8 +19,6 @@ import 'user_management_widget.dart';
 import 'service_management_widget.dart';
 import 'booking_management_widget.dart';
 import 'reports_widget.dart';
-import 'analytics_widget.dart';
-import 'notification_widget.dart';
 import '../../../profile/presentation/widgets/profile_settings_rich_widget.dart';
 import '../../../provider/presentation/widgets/bookings_as_client_widget.dart';
 
@@ -37,16 +36,23 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
   int _selectedIndex = 0;
   bool _isSidebarCollapsed = false;
   int _unreadNotificationCount = 0;
-  final NotificationService _notificationService = NotificationService();
+  NotificationService? _notificationService;
 
   @override
   void initState() {
     super.initState();
-    _loadUnreadNotificationCount();
+    print('🔔 [ADMIN] Initializing admin dashboard...');
+    
+    // Initialize notification service after build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      _notificationService = NotificationService(authService);
+      _loadUnreadNotificationCount();
+    });
     
     // Refresh notification count every 30 seconds
     Timer.periodic(const Duration(seconds: 30), (timer) {
-      if (mounted) {
+      if (mounted && _notificationService != null) {
         _loadUnreadNotificationCount();
       } else {
         timer.cancel();
@@ -66,16 +72,60 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
   }
 
   Future<void> _loadUnreadNotificationCount() async {
+    if (_notificationService == null) {
+      print('🔔 [ADMIN] Notification service not initialized yet');
+      return;
+    }
+    
     try {
-      final response = await _notificationService.getUnreadCount();
+      print('🔔 [ADMIN] Loading unread notification count...');
+      final response = await _notificationService!.getUnreadCount();
+      print('🔔 [ADMIN] Notification API response: $response');
+      
       if (response['success'] == true && mounted) {
+        final count = response['data']['unreadCount'] ?? 0;
+        print('🔔 [ADMIN] Setting notification count to: $count');
         setState(() {
-          _unreadNotificationCount = response['data']['unreadCount'] ?? 0;
+          _unreadNotificationCount = count;
         });
+      } else {
+        print('🔔 [ADMIN] Notification API returned non-success: ${response['message']}');
       }
     } catch (e) {
-      // Silently handle notification loading errors
+      print('🔔 [ADMIN] Error loading notification count: $e');
     }
+  }
+
+  // Show notification dialog
+  void _showNotificationDialog() {
+    if (_notificationService == null) {
+      print('🔔 [ADMIN] Cannot show notification dialog - service not initialized');
+      return;
+    }
+    
+    showDialog(
+      context: context,
+      builder: (context) => NotificationDialog(
+        notificationService: _notificationService!,
+        onNotificationRead: () {
+          // Refresh notification count when notifications are read
+          _loadUnreadNotificationCount();
+        },
+        onNotificationClicked: (notificationType, data) {
+          // Close the dialog first
+          Navigator.of(context).pop();
+          
+          // Handle different notification types
+          if (notificationType == 'new_report') {
+            // Navigate to reports tab
+            setState(() {
+              _selectedIndex = 3; // Reports tab
+            });
+          }
+          // Add more notification types here if needed
+        },
+      ),
+    );
   }
 
   List<AdminMenuItem> _getMenuItems(String languageCode) {
@@ -107,19 +157,9 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
         index: 4,
       ),
       AdminMenuItem(
-        title: AppStrings.getString('analytics', languageCode),
-        icon: Icons.analytics,
-        index: 5,
-      ),
-      AdminMenuItem(
-        title: 'Notifications',
-        icon: Icons.notifications,
-        index: 5,
-      ),
-      AdminMenuItem(
         title: AppStrings.getString('profileSettings', languageCode),
         icon: Icons.settings,
-        index: 6,
+        index: 5,
       ),
     ];
   }
@@ -285,13 +325,7 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
 
                 // Notifications
                 IconButton(
-                  onPressed: () {
-                    setState(() {
-                      _selectedIndex = 5; // Switch to notifications tab
-                    });
-                    // Refresh unread count when notifications tab is opened
-                    _loadUnreadNotificationCount();
-                  },
+                  onPressed: _showNotificationDialog,
                   icon: Stack(
                     children: [
                       Icon(Icons.notifications_outlined, 
@@ -425,10 +459,6 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
       case 4:
         return const ReportsWidget();
       case 5:
-        return const AnalyticsWidget();
-      case 5:
-        return const NotificationWidget();
-      case 6:
         return const ProfileSettingsRichWidget();
       default:
         return const UserManagementWidget();

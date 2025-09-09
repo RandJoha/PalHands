@@ -92,8 +92,16 @@ async function listMy(req, res) {
       try { await ProviderService.insertMany(toCreate, { ordered: false }); } catch (_) {}
     }
     const items = await ProviderService.find({ provider: providerId, status: { $ne: 'deleted' } })
-      .populate('service', 'title category emergencyEnabled');
-    return ok(res, { items });
+      .populate({
+        path: 'service',
+        select: 'title category emergencyEnabled',
+        match: { isActive: true } // Only populate if service is active
+      });
+    
+    // Filter out items where service is null (deleted services)
+    const filteredItems = items.filter(item => item.service !== null);
+    
+    return ok(res, { items: filteredItems });
   } catch (e) { return error(res, 400, e.message || 'Failed to list services'); }
 }
 
@@ -231,11 +239,17 @@ async function listPublic(req, res) {
       provider: providerId,
       status: 'active'
     })
-      .populate('service', 'title category subcategory description price duration images emergencyEnabled emergencyLeadTimeMinutes emergencySurcharge emergencyRateMultiplier emergencyTypes')
+      .populate({
+        path: 'service',
+        select: 'title category subcategory description price duration images emergencyEnabled emergencyLeadTimeMinutes emergencySurcharge emergencyRateMultiplier emergencyTypes',
+        match: { isActive: true } // Only populate if service is active
+      })
       .lean();
 
-  let items = docs.map(ps => {
-      const svc = ps.service || {};
+  let items = docs
+    .filter(ps => ps.service !== null) // Only include items where service exists and is active
+    .map(ps => {
+      const svc = ps.service;
       const priceObj = (svc.price && typeof svc.price === 'object') ? svc.price : {};
       const pricing = {
         amount: Number.isFinite(ps.hourlyRate) ? ps.hourlyRate : (priceObj.amount || 0),
@@ -246,7 +260,7 @@ async function listPublic(req, res) {
         && Number.isFinite(ps.experienceYears) && ps.experienceYears >= 0;
       return {
         providerServiceId: ps._id,
-        serviceId: svc._id || ps.service, // populated or raw id
+        serviceId: svc._id,
         title: svc.title || '',
         category: svc.category || '',
         subcategory: svc.subcategory || '',

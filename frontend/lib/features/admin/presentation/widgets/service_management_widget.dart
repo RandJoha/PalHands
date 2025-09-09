@@ -4,10 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 // Core imports
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/constants/api_config.dart';
 
 // Shared imports
 import '../../../../shared/services/language_service.dart';
@@ -27,6 +30,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
   bool _isLoading = false;
   List<ServiceModel> _services = [];
   List<ServiceCategoryModel> _categories = [];
+  List<Map<String, dynamic>> _adminCategories = []; // Categories with counts from admin API
   String _searchQuery = '';
   String _selectedCategory = 'all';
   String _selectedStatus = 'all';
@@ -203,17 +207,9 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
       // Get AuthService from Provider context
       final authService = Provider.of<AuthService>(context, listen: false);
       
-      final services = await _servicesService.getServices(
-        category: _selectedCategory != 'all' ? _selectedCategory : null,
-        q: _searchQuery.isNotEmpty ? _searchQuery : null,
-        limit: 100, // Get more services for admin view
-        authService: authService,
-      );
+      // Fetch admin service data which includes categories with counts
+      await _loadAdminServiceData(authService);
       
-      setState(() {
-        _services = services;
-        _isLoading = false;
-      });
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -230,6 +226,89 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
           ),
         );
       }
+    }
+  }
+
+  Future<void> _loadAdminServiceData(AuthService authService) async {
+    try {
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        if (authService.token != null) 'Authorization': 'Bearer ${authService.token}',
+      };
+
+      // Build query parameters
+      final queryParams = <String, String>{};
+      if (_selectedCategory != 'all') queryParams['category'] = _selectedCategory;
+      if (_selectedStatus != 'all') queryParams['status'] = _selectedStatus;
+      if (_searchQuery.isNotEmpty) queryParams['location'] = _searchQuery;
+      queryParams['limit'] = '100';
+
+      final uri = Uri.parse('${ApiConfig.baseUrl}/admin/services')
+          .replace(queryParameters: queryParams);
+
+      final response = await http.get(uri, headers: headers);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          final responseData = data['data'];
+          
+          // Parse services
+          final servicesData = responseData['services'] as List<dynamic>;
+          if (kDebugMode) {
+            print('🔍 Raw services data: ${servicesData.length} items');
+            if (servicesData.isNotEmpty) {
+              print('🔍 First service data: ${servicesData[0]}');
+            }
+          }
+          
+          final services = <ServiceModel>[];
+          for (int i = 0; i < servicesData.length; i++) {
+            try {
+              final service = ServiceModel.fromJson(servicesData[i]);
+              services.add(service);
+            } catch (e) {
+              if (kDebugMode) {
+                print('❌ Error parsing service $i: $e');
+                print('❌ Service data: ${servicesData[i]}');
+              }
+            }
+          }
+          
+          // Parse categories with counts
+          final categoriesData = responseData['categories'] as List<dynamic>;
+          final adminCategories = categoriesData.map((json) => Map<String, dynamic>.from(json)).toList();
+          
+          if (kDebugMode) {
+            print('🔍 Categories loaded: ${adminCategories.length}');
+            for (var cat in adminCategories) {
+              print('🔍 Category: ${cat['name']} (ID: ${cat['id']}) - Count: ${cat['serviceCount']}');
+            }
+          }
+          
+          setState(() {
+            _services = services;
+            _adminCategories = adminCategories;
+            _isLoading = false;
+          });
+          
+          if (kDebugMode) {
+            print('✅ Loaded ${services.length} services and ${adminCategories.length} categories');
+            print('🔍 Services data: ${services.map((s) => s.title).toList()}');
+            print('🔍 Filtered services: ${_filteredServices.length}');
+          }
+        } else {
+          throw Exception(data['message'] ?? 'Failed to load admin service data');
+        }
+      } else {
+        throw Exception('HTTP ${response.statusCode}: ${response.body}');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error loading admin service data: $e');
+      }
+      rethrow;
     }
   }
 
@@ -270,7 +349,9 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
   Widget build(BuildContext context) {
     return Consumer<LanguageService>(
       builder: (context, languageService, child) {
-        return _buildServiceManagement(context, languageService);
+        return SingleChildScrollView(
+          child: _buildServiceManagement(context, languageService),
+        );
       },
     );
   }
@@ -286,23 +367,29 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header - More compact
+            // Header
             _buildHeader(languageService),
             
             SizedBox(height: screenWidth > 1400 ? 20 : screenWidth > 1024 ? 16 : 12),
+            
+            // Categories with counts
+            _buildCategoriesDisplay(languageService),
+            
+            SizedBox(height: screenWidth > 1400 ? 16 : screenWidth > 1024 ? 12 : 8),
             
             // Services count
             _buildServicesCount(languageService),
             
             SizedBox(height: screenWidth > 1400 ? 16 : screenWidth > 1024 ? 12 : 8),
             
-            // Filters - Improved sizing
+            // Filters
             _buildFilters(languageService),
             
             SizedBox(height: screenWidth > 1400 ? 20 : screenWidth > 1024 ? 16 : 12),
             
-            // Services table
-            Expanded(
+            // Services table - Fixed height for proper scrolling
+            SizedBox(
+              height: 500, // Fixed height to ensure scrolling works
               child: _buildServicesTable(languageService),
             ),
           ],
@@ -514,6 +601,229 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
         ],
       ),
     );
+  }
+
+  Widget _buildCategoriesDisplay(LanguageService languageService) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    
+    return Container(
+      padding: EdgeInsets.all(screenWidth > 1400 ? 16 : screenWidth > 1024 ? 14 : 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(screenWidth > 1400 ? 10 : 8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 3,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.category,
+                size: screenWidth > 1400 ? 20 : 18,
+                color: AppColors.primary,
+              ),
+              SizedBox(width: screenWidth > 1400 ? 8 : 6),
+              Text(
+                'Service Categories',
+                style: GoogleFonts.cairo(
+                  fontSize: screenWidth > 1400 ? 16 : 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textDark,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: screenWidth > 1400 ? 12 : 10),
+          
+          // Categories grid
+          if (_adminCategories.isEmpty && !_isLoading)
+            Center(
+              child: Padding(
+                padding: EdgeInsets.all(20),
+                child: Text(
+                  'No categories found',
+                  style: GoogleFonts.cairo(
+                    color: AppColors.textLight,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            )
+          else if (_isLoading)
+            Center(
+              child: Padding(
+                padding: EdgeInsets.all(20),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                ),
+              ),
+            )
+          else
+            LayoutBuilder(
+              builder: (context, constraints) {
+                // Calculate responsive grid parameters
+                final crossAxisCount = constraints.maxWidth > 1200 ? 4 : 
+                                     constraints.maxWidth > 800 ? 3 : 2;
+                final childAspectRatio = constraints.maxWidth > 1200 ? 2.4 : 1.8; // Even more height for content
+                final spacing = constraints.maxWidth > 1400 ? 12.0 : 10.0;
+                
+                return SizedBox(
+                  height: 300, // Increased height to show more categories
+                  child: GridView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: spacing,
+                      mainAxisSpacing: spacing,
+                      childAspectRatio: childAspectRatio,
+                    ),
+                    itemCount: _adminCategories.length,
+                    itemBuilder: (context, index) {
+                      final category = _adminCategories[index];
+                      final count = category['serviceCount'] ?? 0;
+                      final name = category['name'] ?? 'Unknown';
+                      final color = category['color'] ?? '#9E9E9E';
+                      final icon = category['icon'] ?? 'category';
+                      
+                      return Stack(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(constraints.maxWidth > 1400 ? 12 : 10), // Increased padding for better spacing
+                            decoration: BoxDecoration(
+                              color: Color(int.parse(color.replaceFirst('#', '0xFF'))).withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Color(int.parse(color.replaceFirst('#', '0xFF'))).withValues(alpha: 0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Category icon
+                                Container(
+                                  width: constraints.maxWidth > 1400 ? 30 : 26, // Slightly smaller icon
+                                  height: constraints.maxWidth > 1400 ? 30 : 26,
+                                  decoration: BoxDecoration(
+                                    color: Color(int.parse(color.replaceFirst('#', '0xFF'))),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    _getIconData(icon),
+                                    size: constraints.maxWidth > 1400 ? 16 : 14, // Slightly smaller icon size
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                SizedBox(height: constraints.maxWidth > 1400 ? 8 : 6), // Increased spacing for better visibility
+                                
+                                // Category name
+                                Flexible(
+                                  child: Text(
+                                    name,
+                                    style: GoogleFonts.cairo(
+                                      fontSize: constraints.maxWidth > 1400 ? 12 : 11, // Slightly larger font for better readability
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textDark,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                SizedBox(height: 6), // Increased spacing for better separation
+                                
+                                // Service count
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: constraints.maxWidth > 1400 ? 6 : 5, // Reduced padding
+                                    vertical: 1, // Reduced vertical padding
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Color(int.parse(color.replaceFirst('#', '0xFF'))),
+                                    borderRadius: BorderRadius.circular(10), // Slightly smaller radius
+                                  ),
+                                  child: Text(
+                                    '$count',
+                                    style: GoogleFonts.cairo(
+                                      fontSize: constraints.maxWidth > 1400 ? 10 : 9, // Slightly smaller font
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Delete button positioned close to the card edge
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: GestureDetector(
+                              onTap: () => _showCategoryDeleteConfirmation(context, category, languageService),
+                              child: Container(
+                                width: 22,
+                                height: 22,
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withValues(alpha: 0.9),
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.2),
+                                      blurRadius: 2,
+                                      offset: const Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  size: 13,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getIconData(String iconName) {
+    switch (iconName) {
+      case 'cleaning_services':
+        return Icons.cleaning_services;
+      case 'folder_open':
+        return Icons.folder_open;
+      case 'restaurant':
+        return Icons.restaurant;
+      case 'child_care':
+        return Icons.child_care;
+      case 'elderly':
+        return Icons.elderly;
+      case 'handyman':
+        return Icons.handyman;
+      case 'home':
+        return Icons.home;
+      case 'miscellaneous_services':
+        return Icons.miscellaneous_services;
+      default:
+        return Icons.category;
+    }
   }
 
   Widget _buildFilters(LanguageService languageService) {
@@ -814,9 +1124,10 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
             ),
           ),
           
-          // Table body
+          // Table body - Full height with proper scrolling
           Expanded(
             child: ListView.builder(
+              physics: const BouncingScrollPhysics(),
               itemCount: _filteredServices.length,
               itemBuilder: (context, index) {
                 final service = _filteredServices[index];
@@ -1696,6 +2007,168 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
       
       if (kDebugMode) {
         print('❌ Error deleting service: $e');
+      }
+    }
+  }
+
+  /// Show delete confirmation dialog for categories
+  void _showCategoryDeleteConfirmation(BuildContext context, Map<String, dynamic> category, LanguageService languageService) {
+    final categoryName = category['name'] ?? 'Unknown';
+    final serviceCount = category['serviceCount'] ?? 0;
+    
+    if (kDebugMode) {
+      print('🗑️ Delete confirmation for category: $category');
+      print('🗑️ Category ID: ${category['id']}');
+      print('🗑️ Category name: $categoryName');
+      print('🗑️ Service count: $serviceCount');
+    }
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'Delete Category',
+            style: GoogleFonts.cairo(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textDark,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Are you sure you want to delete the category "$categoryName"?',
+                style: GoogleFonts.cairo(
+                  fontSize: 14,
+                  color: AppColors.textDark,
+                ),
+              ),
+              if (serviceCount > 0) ...[
+                const SizedBox(height: 8),
+                Text(
+                  '⚠️ This category has $serviceCount service(s). Deleting it will also remove all associated services.',
+                  style: GoogleFonts.cairo(
+                    fontSize: 12,
+                    color: Colors.orange[700],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.cairo(
+                  color: AppColors.textLight,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _deleteCategory(category);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: Text(
+                'Delete',
+                style: GoogleFonts.cairo(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Delete category from both frontend and database
+  Future<void> _deleteCategory(Map<String, dynamic> category) async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final token = authService.token;
+      
+      if (token == null) {
+        throw Exception('Authentication required');
+      }
+
+      final categoryId = category['id'];
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+
+      // Delete from database
+      final deleteUri = Uri.parse('${ApiConfig.baseUrl}/admin/categories/$categoryId');
+      
+      if (kDebugMode) {
+        print('🗑️ Deleting category: $categoryId');
+        print('🗑️ Delete URL: $deleteUri');
+        print('🗑️ Headers: $headers');
+      }
+      
+      final deleteResponse = await http.delete(deleteUri, headers: headers);
+      
+      if (kDebugMode) {
+        print('🗑️ Delete response status: ${deleteResponse.statusCode}');
+        print('🗑️ Delete response body: ${deleteResponse.body}');
+      }
+
+      if (deleteResponse.statusCode == 200) {
+        // Remove from frontend list
+        setState(() {
+          _adminCategories.removeWhere((cat) => cat['id'] == categoryId);
+        });
+
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Category "${category['name']}" deleted successfully',
+                style: GoogleFonts.cairo(),
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+
+        // Refresh the data to update service counts
+        await _loadAdminServiceData(authService);
+      } else {
+        final errorData = json.decode(deleteResponse.body);
+        throw Exception(errorData['message'] ?? 'Failed to delete category');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error deleting category: ${e.toString()}',
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }

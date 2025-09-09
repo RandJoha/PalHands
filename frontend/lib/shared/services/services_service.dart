@@ -589,7 +589,7 @@ class ServicesService with BaseApiService {
   }) async {
     try {
       await delete(
-        '${ApiConfig.servicesEndpoint}/$serviceId',
+        '${ApiConfig.adminEndpoint}/services/$serviceId',
         headers: _getAuthHeaders(authService),
       );
 

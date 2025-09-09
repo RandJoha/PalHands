@@ -9,7 +9,7 @@ const notificationSchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ['new_report', 'report_update', 'system_alert', 'new_message']
+    enum: ['new_report', 'report_update', 'system_alert', 'new_message', 'new_booking_request', 'booking_confirmed', 'booking_cancelled']
   },
   title: {
     type: String,

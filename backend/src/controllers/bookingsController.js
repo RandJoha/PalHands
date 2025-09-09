@@ -231,6 +231,15 @@ async function createBooking(req, res) {
       .populate('client', 'firstName lastName email')
       .populate({ path: 'provider', select: 'firstName lastName email', model: 'Provider' })
       .populate({ path: 'service', select: 'title category provider', populate: { path: 'provider', select: 'firstName lastName email', model: 'Provider' } });
+
+    // Send notification to provider about new booking request (fire-and-forget)
+    try {
+      const NotificationService = require('../services/notificationService');
+      await NotificationService.notifyNewBookingRequest(populated);
+    } catch (notifErr) {
+      console.warn('Failed to send booking notification (non-fatal):', notifErr?.message || notifErr);
+    }
+
     return created(res, populated, 'Booking created');
   } catch (e) {
     console.error('createBooking error', e);
@@ -432,6 +441,27 @@ async function cancelBooking(req, res) {
         booking.notes.adminNotes = booking.notes.adminNotes ? `${booking.notes.adminNotes}\n${info}` : info;
       }
       await booking.save();
+
+      // Send appropriate notification based on who cancelled the booking
+      try {
+        const NotificationService = require('../services/notificationService');
+        
+        // Determine who cancelled the booking
+        const cancelledBy = req.user._id.toString();
+        const clientId = booking.client.toString();
+        const providerId = booking.provider.toString();
+        
+        if (cancelledBy === clientId) {
+          // Client cancelled - notify provider
+          await NotificationService.notifyProviderBookingCancelled(booking);
+        } else if (cancelledBy === providerId || req.user.role === 'admin') {
+          // Provider or admin cancelled - notify client
+          await NotificationService.notifyBookingCancelled(booking);
+        }
+      } catch (notifErr) {
+        console.warn('Failed to send booking cancellation notification (non-fatal):', notifErr?.message || notifErr);
+      }
+
       return ok(res, booking, 'Booking cancelled');
     }
 
@@ -481,6 +511,27 @@ async function respondCancellationRequest(req, res) {
       booking.cancellation.cancelledBy = cReq.requestedBy;
       booking.cancellation.cancelledAt = new Date();
       await booking.save();
+
+      // Send appropriate notification based on who originally requested the cancellation
+      try {
+        const NotificationService = require('../services/notificationService');
+        
+        // Determine who originally requested the cancellation
+        const requestedBy = cReq.requestedBy.toString();
+        const clientId = booking.client.toString();
+        const providerId = booking.provider.toString();
+        
+        if (requestedBy === clientId) {
+          // Client requested cancellation, provider accepted - notify client
+          await NotificationService.notifyBookingCancelled(booking);
+        } else if (requestedBy === providerId) {
+          // Provider requested cancellation, client accepted - notify provider
+          await NotificationService.notifyProviderBookingCancelled(booking);
+        }
+      } catch (notifErr) {
+        console.warn('Failed to send booking cancellation notification (non-fatal):', notifErr?.message || notifErr);
+      }
+
       return ok(res, booking, 'Cancellation request accepted');
     }
     if (action === 'decline') {
@@ -504,6 +555,15 @@ async function confirmBooking(req, res) {
   if (booking.status !== 'pending') return error(res, 409, 'Only pending bookings can be confirmed');
     booking.status = 'confirmed';
     await booking.save();
+
+    // Send notification to client about booking confirmation (fire-and-forget)
+    try {
+      const NotificationService = require('../services/notificationService');
+      await NotificationService.notifyBookingConfirmed(booking);
+    } catch (notifErr) {
+      console.warn('Failed to send booking confirmation notification (non-fatal):', notifErr?.message || notifErr);
+    }
+
     return ok(res, booking, 'Booking confirmed');
   } catch (e) {
     return error(res, 400, 'Failed to confirm booking');

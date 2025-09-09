@@ -147,12 +147,36 @@ const logAdminAction = (action, targetType, targetId, details = {}) => {
       setTimeout(async () => {
         try {
           const AdminAction = require('../models/AdminAction');
+          const mongoose = require('mongoose');
+          
+          // Get the actual targetId from the request
+          let actualTargetId = targetId;
+          if (typeof targetId === 'string' && targetId.startsWith('req.params.')) {
+            const paramName = targetId.replace('req.params.', '');
+            actualTargetId = req.params[paramName];
+          }
+          
+          // Only log if targetId is a valid ObjectId or if it's a string that can be converted
+          let targetIdToLog = null;
+          if (mongoose.Types.ObjectId.isValid(actualTargetId)) {
+            targetIdToLog = actualTargetId;
+          } else {
+            // For non-ObjectId targets (like category names), store in details instead
+            targetIdToLog = new mongoose.Types.ObjectId(); // Generate a dummy ObjectId
+          }
+          
           await AdminAction.create({
             admin: req.user?._id,
             action,
             targetType,
-            targetId,
-            details: { ...details, responseStatus: res.statusCode, responseData: data },
+            targetId: targetIdToLog,
+            details: { 
+              ...details, 
+              responseStatus: res.statusCode, 
+              responseData: data,
+              // Store the actual string ID in details if it's not an ObjectId
+              ...(mongoose.Types.ObjectId.isValid(actualTargetId) ? {} : { actualTargetId })
+            },
             ipAddress: req.ip,
             userAgent: req.get('User-Agent'),
             status: res.statusCode < 400 ? 'success' : 'failed'

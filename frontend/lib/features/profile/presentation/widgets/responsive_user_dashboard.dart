@@ -1,4 +1,5 @@
 // ignore_for_file: dead_code
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -16,6 +17,8 @@ import '../../../../shared/services/auth_service.dart';
 import '../../../../shared/services/favorites_service.dart';
 import '../../../../shared/services/location_service.dart';
 import '../../../../shared/services/map_service.dart';
+import '../../../../shared/services/notification_service.dart';
+import '../../../../shared/widgets/notification_dialog.dart';
 
 // Widget imports
 import '../../../admin/presentation/widgets/language_toggle_widget.dart';
@@ -70,6 +73,10 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   final TextEditingController _addressCtrl = TextEditingController();
   final LocationService _locationService = LocationService();
   final MapService _mapService = MapService();
+
+  // Notification state
+  NotificationService? _notificationService;
+  int _unreadNotificationCount = 0;
 
   // Map selected filter index to server status parameter
   String? _statusFromFilter(int index) {
@@ -181,10 +188,17 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   // Preload bookings when opening My Bookings by default
   _loadDismissedBookings().then((_) => _maybeLoadBookings(initial: true));
   
-  // Initialize GPS state based on user role
+  // Initialize both GPS state and notification service after build
   WidgetsBinding.instance.addPostFrameCallback((_) {
     if (mounted) {
+      // Initialize GPS state based on user role
       _initializeGpsState();
+      
+      // Initialize notification service
+      final authService = Provider.of<AuthService>(context, listen: false);
+      _notificationService = NotificationService(authService);
+      _loadUnreadNotificationCount();
+      _setupNotificationRefresh();
     }
   });
   }
@@ -468,9 +482,8 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             SizedBox(width: isTablet ? 12.0 : 16.0),
             // Notifications
             IconButton(
-              onPressed: () {
-                // TODO: Show notifications
-              },
+              onPressed: _showNotificationDialog,
+              tooltip: 'Notifications ($_unreadNotificationCount)',
               icon: Stack(
                 children: [
           Icon(
@@ -478,16 +491,29 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             color: AppColors.textSecondary,
             size: isTablet ? 22.0 : 24.0,
           ),
+                  if (_unreadNotificationCount > 0)
                   Positioned(
                     right: 0,
                     top: 0,
                     child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                      ),
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          _unreadNotificationCount > 99 ? '99+' : _unreadNotificationCount.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
                     ),
                   ),
                 ],
@@ -947,6 +973,72 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     } finally {
       if (mounted) setState(() => _loadingBookings = false);
     }
+  }
+
+  // Notification methods
+  void _setupNotificationRefresh() {
+    // Refresh notification count every 30 seconds
+    Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (mounted) {
+        _loadUnreadNotificationCount();
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  // Load unread notification count
+  Future<void> _loadUnreadNotificationCount() async {
+    try {
+      final response = await _notificationService?.getUnreadCount();
+      
+      if (response?['success'] == true) {
+        final count = response?['data']?['unreadCount'] ?? 0;
+        setState(() {
+          _unreadNotificationCount = count;
+        });
+      } else {
+        // ignore non-success silently
+      }
+    } catch (e) {
+      // ignore fetch errors silently
+    }
+  }
+
+  // Show notification dialog
+  void _showNotificationDialog() {
+    if (_notificationService == null) return;
+    
+    showDialog(
+      context: context,
+      builder: (context) => NotificationDialog(
+        notificationService: _notificationService!,
+        onNotificationRead: () {
+          // Refresh notification count when notifications are read
+          _loadUnreadNotificationCount();
+        },
+        onNotificationClicked: (notificationType, data) {
+          // Close the dialog first
+          Navigator.of(context).pop();
+          
+          // Handle different notification types
+          if (notificationType == 'booking_confirmed' || notificationType == 'booking_cancelled') {
+            // Navigate to bookings tab for booking status updates
+            _navigateToBookingsTab();
+          }
+          // Add more notification types here if needed
+        },
+      ),
+    );
+  }
+
+  // Navigate to bookings tab
+  void _navigateToBookingsTab() {
+    setState(() {
+      _selectedIndex = 0; // My Bookings is at index 0
+    });
+    _persistSelectedTab();
+    _maybeLoadBookings();
   }
 
   Future<void> _loadDismissedBookings() async {
