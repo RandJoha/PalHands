@@ -113,7 +113,8 @@ class _ProfileSettingsWidgetState extends State<ProfileSettingsWidget> {
                     width: 100.w,
                     height: 100.w,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
+                      // withValues is unstable / newer API; use withOpacity for wider SDK compatibility
+                      color: AppColors.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(50.r),
                     ),
                     child: Icon(
@@ -207,12 +208,15 @@ class _ProfileSettingsWidgetState extends State<ProfileSettingsWidget> {
                   final last = parts.length > 1 ? parts.sublist(1).join(' ') : '';
 
                   try {
+                    final addressText = _addressCtrl.text.trim();
                     final res = await auth.updateProfile(
                       firstName: first.isEmpty ? null : first,
                       lastName: last.isEmpty ? null : last,
                       phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
                       useGpsLocation: _useGps,
-                      address: _useGps ? null : _addressCtrl.text.trim(),
+                      address: _useGps || addressText.isEmpty
+                          ? null
+                          : { 'line1': addressText },
                     );
                     final ok = res['success'] == true;
                     if (ok) {

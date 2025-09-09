@@ -2628,7 +2628,11 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 try {
                   final res = await auth.updateProfile(
                     useGpsLocation: _useGps,
-                    address: _useGps ? null : {
+                    address: _useGps ? {
+                      'line1': _addressCtrl.text.trim(),
+                      'city': _addressCtrl.text.trim().split(',').last.trim(),
+                      'street': _addressCtrl.text.trim().split(',').first.trim(),
+                    } : {
                       'line1': _addressCtrl.text.trim(),
                       'city': _addressCtrl.text.trim().split(',').first.trim(),
                       'street': _addressCtrl.text.trim().contains(',') 
@@ -2786,7 +2790,14 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                          // GPS turned ON - fill address and update profile
                          await _simulateGpsAndFillFullAddress();
                          try {
-                           await auth.updateProfile(useGpsLocation: true);
+                           await auth.updateProfile(
+                             useGpsLocation: true,
+                             address: {
+                               'line1': _addressCtrl.text.trim(),
+                               'city': _addressCtrl.text.trim().split(',').last.trim(),
+                               'street': _addressCtrl.text.trim().split(',').first.trim(),
+                             },
+                           );
                          } catch (e) {
                            // Handle silently, user can still save manually
                          }
@@ -2841,7 +2852,11 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                 try {
                   final res = await auth.updateProfile(
                     useGpsLocation: _useGps,
-                    address: _useGps ? null : {
+                    address: _useGps ? {
+                      'line1': _addressCtrl.text.trim(),
+                      'city': _addressCtrl.text.trim().split(',').last.trim(),
+                      'street': _addressCtrl.text.trim().split(',').first.trim(),
+                    } : {
                       'line1': _addressCtrl.text.trim(),
                       'city': _addressCtrl.text.trim().split(',').first.trim(),
                       'street': _addressCtrl.text.trim().contains(',') 

@@ -207,12 +207,14 @@ class MapBounds {
 
 /// Map filter options
 class MapFilters {
-  final String? category;
+  final String? category; // legacy single category/service slug (kept for backward compatibility)
   final double? minRating;
   final double? maxDistance; // in kilometers
   final bool? isAvailable;
   final MapMarkerType? markerType;
   final String? searchQuery;
+  // NEW: list of service slugs; providers offering ANY of these should be shown
+  final List<String>? servicesAny;
 
   const MapFilters({
     this.category,
@@ -221,6 +223,7 @@ class MapFilters {
     this.isAvailable,
     this.markerType,
     this.searchQuery,
+    this.servicesAny,
   });
 
   Map<String, dynamic> toQueryParams() {
@@ -232,6 +235,9 @@ class MapFilters {
     if (isAvailable != null) params['isAvailable'] = isAvailable;
     if (markerType != null) params['type'] = markerType!.name;
     if (searchQuery != null) params['search'] = searchQuery;
+    if (servicesAny != null && servicesAny!.isNotEmpty) {
+      params['services'] = servicesAny!.join(',');
+    }
     
     return params;
   }
@@ -243,6 +249,7 @@ class MapFilters {
     bool? isAvailable,
     MapMarkerType? markerType,
     String? searchQuery,
+    List<String>? servicesAny,
   }) {
     return MapFilters(
       category: category ?? this.category,
@@ -251,6 +258,7 @@ class MapFilters {
       isAvailable: isAvailable ?? this.isAvailable,
       markerType: markerType ?? this.markerType,
       searchQuery: searchQuery ?? this.searchQuery,
+      servicesAny: servicesAny ?? this.servicesAny,
     );
   }
 }

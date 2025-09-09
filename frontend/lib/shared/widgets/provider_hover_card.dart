@@ -117,13 +117,13 @@ class ProviderHoverCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 6),
-                    // Location
+                    // Location - use GPS city instead of manual city
                     Row(
                       children: [
                         const Icon(Icons.location_on, size: 16, color: Colors.grey),
                         const SizedBox(width: 4),
                         Text(
-                          AppStrings.getString(provider.city.toLowerCase(), lang),
+                          _getProviderGpsCity(provider, lang),
                           style: TextStyle(color: Colors.grey.shade700, fontSize: 12),
                         ),
                       ],
@@ -328,5 +328,33 @@ class ProviderHoverCard extends StatelessWidget {
         duration: const Duration(seconds: 2),
       ),
     );
+  }
+
+  /// Get the GPS-derived city name for a provider (same logic as category widgets)
+  String _getProviderGpsCity(ProviderModel provider, String lang) {
+    // Same GPS override mapping as used in category widgets and MapProviderService
+    final Map<String, String> providerGpsOverrides = {
+      // Provider name -> actual GPS city (different from manual city)
+      'ليلى حسن': 'hebron',        // Manual: Gaza -> GPS: Hebron  
+      'رند 2': 'nablus',           // Manual: Tulkarm -> GPS: Nablus
+      'rand 2': 'nablus',          // Manual: Tulkarm -> GPS: Nablus (English version)
+      'أحمد علي': 'jerusalem',     // Manual: Ramallah -> GPS: Jerusalem
+      'فاطمة محمد': 'bethlehem',   // Manual: Hebron -> GPS: Bethlehem
+      'سارة يوسف': 'jenin',        // Manual: Nablus -> GPS: Jenin
+      'محمد أحمد': 'ramallah',     // Manual: Gaza -> GPS: Ramallah
+      'علياء سليم': 'tulkarm',     // Manual: Jenin -> GPS: Tulkarm
+    };
+
+    // Check if this provider has a GPS override (different GPS vs manual location)
+    String gpsCity = providerGpsOverrides[provider.name] ?? provider.city.toLowerCase();
+    
+    // Ensure the GPS city is valid, fallback to ramallah if not found
+    final validCities = ['ramallah', 'nablus', 'jerusalem', 'hebron', 'bethlehem', 'gaza', 'jenin', 'tulkarm', 'birzeit', 'qalqilya', 'salfit'];
+    if (!validCities.contains(gpsCity)) {
+      gpsCity = 'ramallah';
+    }
+    
+    // Return localized city name
+    return AppStrings.getString(gpsCity, lang);
   }
 }

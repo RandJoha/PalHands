@@ -289,6 +289,7 @@ class MapProviderCard extends StatelessWidget {
       // Provider name -> actual GPS city (different from manual city)
       'ليلى حسن': 'hebron',        // Manual: Gaza -> GPS: Hebron  
       'رند 2': 'nablus',           // Manual: Tulkarm -> GPS: Nablus
+      'rand 2': 'nablus',          // Manual: Tulkarm -> GPS: Nablus (English version)
       'أحمد علي': 'jerusalem',     // Manual: Ramallah -> GPS: Jerusalem
       'فاطمة محمد': 'bethlehem',   // Manual: Hebron -> GPS: Bethlehem
       'سارة يوسف': 'jenin',        // Manual: Nablus -> GPS: Jenin

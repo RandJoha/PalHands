@@ -14,6 +14,7 @@ import 'app_toast.dart';
 import '../services/auth_service.dart';
 import '../services/services_service.dart';
 import '../services/services_service.dart' as svc;
+import '../services/location_service.dart';
 // Legacy emergency whitelist removed; we now respect provider-configured flags only.
 import '../services/availability_service.dart';
 // Calendar UI will be declared at bottom of this file for simplicity
@@ -625,18 +626,58 @@ class _BookingDialogState extends State<BookingDialog> {
   final isNarrow = screenW < 640;  // small tablets/narrow windows
   final dialogMaxWidth = isCompact ? screenW - 24 : (isNarrow ? 560.0 : 640.0);
     final auth = Provider.of<AuthService>(context, listen: true);
-    final savedAddresses = (auth.currentUser?['addresses'] as List<dynamic>?)
+    final user = auth.currentUser;
+    final isProvider = user?['role'] == 'provider';
+    final useGpsLocation = user?['useGpsLocation'] ?? false;
+    final shouldShowGpsAddress = isProvider || useGpsLocation;
+    
+    final savedAddresses = (user?['addresses'] as List<dynamic>?)
             ?.map((e) => Map<String, dynamic>.from(e as Map))
             .toList() ??
         const <Map<String, dynamic>>[];
-    // Prefill default address text on first build
-    if (_addressController.text.isEmpty && savedAddresses.isNotEmpty) {
-      final def = savedAddresses.firstWhere(
-        (a) => a['isDefault'] == true,
-        orElse: () => savedAddresses.first,
-      );
-      _addressController.text = _formatAddress(def, lang);
-      _selectedAddressId = savedAddresses.indexOf(def).toString();
+    
+    // Prefill GPS address if GPS is enabled, otherwise use saved addresses
+    if (_addressController.text.isEmpty) {
+      if (shouldShowGpsAddress) {
+        // Try to get GPS address from user's profile
+        String gpsAddress = '';
+        if (user != null) {
+          if (user['address'] is String && user['address'].isNotEmpty) {
+            gpsAddress = user['address'];
+          } else if (user['address'] is Map) {
+            final addressMap = user['address'] as Map;
+            final line1 = addressMap['line1'] ?? '';
+            final city = addressMap['city'] ?? '';
+            final street = addressMap['street'] ?? '';
+            if (line1.isNotEmpty) {
+              gpsAddress = line1;
+            } else if (street.isNotEmpty && city.isNotEmpty) {
+              gpsAddress = '$street, $city';
+            }
+          }
+        }
+        
+        if (gpsAddress.isNotEmpty) {
+          _addressController.text = gpsAddress;
+          _selectedAddressId = 'gps';
+        } else if (savedAddresses.isNotEmpty) {
+          // Fallback to saved addresses if no GPS address found
+          final def = savedAddresses.firstWhere(
+            (a) => a['isDefault'] == true,
+            orElse: () => savedAddresses.first,
+          );
+          _addressController.text = _formatAddress(def, lang);
+          _selectedAddressId = savedAddresses.indexOf(def).toString();
+        }
+      } else if (savedAddresses.isNotEmpty) {
+        // Use saved addresses if GPS is not enabled
+        final def = savedAddresses.firstWhere(
+          (a) => a['isDefault'] == true,
+          orElse: () => savedAddresses.first,
+        );
+        _addressController.text = _formatAddress(def, lang);
+        _selectedAddressId = savedAddresses.indexOf(def).toString();
+      }
     }
     
     return Directionality(
@@ -1160,6 +1201,15 @@ class _BookingDialogState extends State<BookingDialog> {
   }
 
   Widget _buildAddressField(List<Map<String, dynamic>> savedAddresses, String lang) {
+    final auth = Provider.of<AuthService>(context, listen: false);
+    final user = auth.currentUser;
+    final isProvider = user?['role'] == 'provider';
+    final useGpsLocation = user?['useGpsLocation'] ?? false;
+    
+    // For providers, GPS is always mandatory, so always show GPS address
+    // For clients/admins, only show GPS address if GPS toggle is enabled
+    final shouldShowGpsAddress = isProvider || useGpsLocation;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1171,6 +1221,91 @@ class _BookingDialogState extends State<BookingDialog> {
           ),
         ),
         const SizedBox(height: 8),
+        
+        // GPS Address option (if GPS is enabled or user is provider)
+        if (shouldShowGpsAddress) ...[
+          Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.green.shade300),
+              borderRadius: BorderRadius.circular(8.0),
+              color: Colors.green.shade50,
+            ),
+            child: RadioListTile<String>(
+              value: 'gps',
+              groupValue: _selectedAddressId,
+              onChanged: (v) async {
+                setState(() {
+                  _selectedAddressId = v;
+                });
+                
+                // Get GPS address from user's profile instead of generating new one
+                final auth = Provider.of<AuthService>(context, listen: false);
+                final user = auth.currentUser;
+                String gpsAddress = '';
+                
+                if (user != null) {
+                  // Try to get GPS address from user's profile
+                  if (user['address'] is String && user['address'].isNotEmpty) {
+                    gpsAddress = user['address'];
+                  } else if (user['address'] is Map) {
+                    final addressMap = user['address'] as Map;
+                    final line1 = addressMap['line1'] ?? '';
+                    final city = addressMap['city'] ?? '';
+                    final street = addressMap['street'] ?? '';
+                    if (line1.isNotEmpty) {
+                      gpsAddress = line1;
+                    } else if (street.isNotEmpty && city.isNotEmpty) {
+                      gpsAddress = '$street, $city';
+                    }
+                  }
+                }
+                
+                // If no GPS address found in profile, generate one as fallback
+                if (gpsAddress.isEmpty) {
+                  final locationService = LocationService();
+                  final userLoc = await locationService.simulateGpsForAddress();
+                  final coupled = await locationService.coupleAddressFromGps(userLoc.position);
+                  final city = (coupled.city ?? '').toString();
+                  final street = (coupled.street ?? '').toString();
+                  gpsAddress = [street, city].where((e) => e.isNotEmpty).join(', ');
+                }
+                
+                setState(() {
+                  _addressController.text = gpsAddress;
+                });
+              },
+              title: Row(
+                children: [
+                  Icon(Icons.gps_fixed, size: 16, color: Colors.green.shade700),
+                  const SizedBox(width: 8),
+                  Text(
+                    AppStrings.getString('gpsLocation', lang),
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade100,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      AppStrings.getString('live', lang),
+                      style: TextStyle(fontSize: 10, color: Colors.green.shade700),
+                    ),
+                  ),
+                ],
+              ),
+              subtitle: Text(
+                lang == 'ar' ? 'العنوان المستمد من نظام تحديد المواقع العالمي' : 'Address derived from GPS location',
+                style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+              ),
+            ),
+          ),
+        ],
+        
+        // Saved addresses
         if (savedAddresses.isNotEmpty)
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1222,23 +1357,25 @@ class _BookingDialogState extends State<BookingDialog> {
               const SizedBox(height: 8),
             ],
           ),
-        TextFormField(
-          controller: _addressController,
-          decoration: InputDecoration(
-            hintText: AppStrings.getString('enterYourAddress', lang),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.0),
+        // Only show text field if no address is selected (GPS or saved address)
+        if (_selectedAddressId == null || _addressController.text.isEmpty)
+          TextFormField(
+            controller: _addressController,
+            decoration: InputDecoration(
+              hintText: AppStrings.getString('enterYourAddress', lang),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            maxLines: 2,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return AppStrings.getString('pleaseEnterAddress', lang);
+              }
+              return null;
+            },
           ),
-          maxLines: 2,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return AppStrings.getString('pleaseEnterAddress', lang);
-            }
-            return null;
-          },
-        ),
       ],
     );
   }

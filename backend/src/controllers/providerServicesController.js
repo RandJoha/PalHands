@@ -280,3 +280,144 @@ async function listPublic(req, res) {
 }
 
 module.exports.listPublic = listPublic;
+
+// GET /api/provider-services/public/providers-by-services?serviceIds=ID1,ID2
+// Returns providers (distinct) who have at least one active & publishable provider-service for the given serviceIds
+async function providersByServices(req, res) {
+  try {
+    const { serviceIds } = req.query;
+    if (!serviceIds) return error(res, 400, 'serviceIds required');
+
+    const tokens = String(serviceIds).split(',').map(s => s.trim()).filter(Boolean);
+    if (!tokens.length) return ok(res, { data: [] });
+
+    const objectIdTokens = [];
+    const slugTokens = [];
+    for (const t of tokens) {
+      if (/^[a-f0-9]{24}$/i.test(t)) objectIdTokens.push(t); else slugTokens.push(t);
+    }
+
+    // Resolve slugs -> Service ObjectIds by matching subcategory (service key)
+    let resolvedSlugIds = [];
+    if (slugTokens.length) {
+      const svcDocs = await Service.find({ subcategory: { $in: slugTokens } }).select('_id subcategory');
+      resolvedSlugIds = svcDocs.map(s => String(s._id));
+    }
+    const allServiceObjectIds = [...new Set([...objectIdTokens, ...resolvedSlugIds])];
+    if (!allServiceObjectIds.length) return ok(res, { data: [] });
+
+    const psDocs = await ProviderService.find({
+      service: { $in: allServiceObjectIds },
+      status: 'active',
+      publishable: true
+    }).populate('service', 'subcategory title').select('provider service').lean();
+
+    if (!psDocs.length) return ok(res, { data: [] });
+
+    const providerIds = [...new Set(psDocs.map(d => String(d.provider)))];
+    const providers = await Provider.find({ _id: { $in: providerIds }, isActive: true })
+      .select('_id firstName lastName email phone city rating hourlyRate services') // legacy services retained
+      .lean();
+
+    // Map provider -> matched service slugs (subcategory) for display & filtering
+    const matchedSlugsByProvider = {};
+    for (const d of psDocs) {
+      const pid = String(d.provider);
+      const subcat = d.service && d.service.subcategory ? d.service.subcategory : null;
+      if (!subcat) continue;
+      if (!matchedSlugsByProvider[pid]) matchedSlugsByProvider[pid] = new Set();
+      matchedSlugsByProvider[pid].add(subcat);
+    }
+
+    const result = providers.map(p => ({
+      ...p,
+      services: Array.from(matchedSlugsByProvider[String(p._id)] || [])
+    }));
+
+    return ok(res, { data: result, count: result.length, meta: { requested: tokens.length, matchedServiceIds: allServiceObjectIds.length } });
+  } catch (e) {
+    return error(res, 500, 'Failed to list providers by services');
+  }
+}
+
+module.exports.providersByServices = providersByServices;
+
+// GET /api/provider-services/public/providers-by-services-expanded?serviceIds=ID1,slug2
+// Returns providers with only the matched ProviderService details (hourlyRate, experience, emergency flags)
+async function providersByServicesExpanded(req, res) {
+  try {
+    const { serviceIds } = req.query;
+    if (!serviceIds) return error(res, 400, 'serviceIds required');
+    const tokens = String(serviceIds).split(',').map(s => s.trim()).filter(Boolean);
+    if (!tokens.length) return ok(res, { data: [] });
+
+    const objectIdTokens = [];
+    const slugTokens = [];
+    for (const t of tokens) {
+      if (/^[a-f0-9]{24}$/i.test(t)) objectIdTokens.push(t); else slugTokens.push(t);
+    }
+    let resolvedSlugIds = [];
+    if (slugTokens.length) {
+      const svcDocs = await Service.find({ subcategory: { $in: slugTokens } }).select('_id subcategory');
+      resolvedSlugIds = svcDocs.map(s => String(s._id));
+    }
+    const allServiceObjectIds = [...new Set([...objectIdTokens, ...resolvedSlugIds])];
+    if (!allServiceObjectIds.length) return ok(res, { data: [] });
+
+    let psDocs = await ProviderService.find({
+      service: { $in: allServiceObjectIds },
+      status: 'active',
+      publishable: true
+    }).populate('service', 'subcategory title').lean();
+
+    if (!psDocs.length) return ok(res, { data: [] });
+
+    // Group ProviderService docs by provider
+    const byProvider = new Map();
+    for (const ps of psDocs) {
+      const pid = String(ps.provider);
+      if (!byProvider.has(pid)) byProvider.set(pid, []);
+      byProvider.get(pid).push(ps);
+    }
+    const providerIds = Array.from(byProvider.keys());
+    const providers = await Provider.find({ _id: { $in: providerIds }, isActive: true })
+      .select('_id firstName lastName addresses rating hourlyRate experienceYears providerId services')
+      .lean();
+    const providerMap = Object.fromEntries(providers.map(p => [String(p._id), p]));
+
+    const items = [];
+    for (const pid of providerIds) {
+      const prov = providerMap[pid];
+      if (!prov) continue; // skip inactive or missing
+      const psList = byProvider.get(pid) || [];
+      const matched = psList.map(ps => ({
+        providerServiceId: ps._id,
+        serviceId: ps.service?._id,
+        subcategory: ps.service?.subcategory,
+        title: ps.service?.title,
+        hourlyRate: ps.hourlyRate,
+        experienceYears: ps.experienceYears,
+        emergencyEnabled: ps.emergencyEnabled
+      }));
+      items.push({
+        provider: {
+          _id: prov._id,
+          providerId: prov.providerId,
+          firstName: prov.firstName,
+          lastName: prov.lastName,
+          city: (prov.addresses && prov.addresses[0] && prov.addresses[0].city) || '',
+          rating: prov.rating,
+          baseHourlyRate: prov.hourlyRate,
+          baseExperienceYears: prov.experienceYears
+        },
+        matchedServices: matched
+      });
+    }
+
+    return ok(res, { data: items, count: items.length, meta: { requestedTokens: tokens.length } });
+  } catch (e) {
+    return error(res, 500, 'Failed to list expanded providers by services');
+  }
+}
+
+module.exports.providersByServicesExpanded = providersByServicesExpanded;

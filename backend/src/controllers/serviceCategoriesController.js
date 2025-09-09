@@ -2,6 +2,37 @@ const { ok, error, created } = require('../utils/response');
 const ServiceCategory = require('../models/ServiceCategory');
 const Service = require('../models/Service');
 
+// Deduplicate services by title to avoid duplicates from provider-service relationships
+function deduplicateServicesByTitle(services) {
+  if (!services || services.length === 0) return services;
+  
+  // Use a map to track unique services by title (case-insensitive)
+  const uniqueServices = new Map();
+  
+  for (const service of services) {
+    const titleKey = service.title.toLowerCase().trim();
+    
+    // Only add if we haven't seen this title before
+    if (!uniqueServices.has(titleKey)) {
+      uniqueServices.set(titleKey, service);
+    } else {
+      // If we have a duplicate, keep the one with more bookings or better rating
+      const existingService = uniqueServices.get(titleKey);
+      if (service.totalBookings > existingService.totalBookings ||
+          (service.totalBookings === existingService.totalBookings && 
+           service.rating?.average > existingService.rating?.average)) {
+        uniqueServices.set(titleKey, service);
+      }
+    }
+  }
+  
+  const deduplicatedServices = Array.from(uniqueServices.values());
+  
+  console.log(`🔄 Deduplicated services: ${services.length} -> ${deduplicatedServices.length}`);
+  
+  return deduplicatedServices;
+}
+
 // Categories data for the frontend
 const SERVICE_CATEGORIES = [
   {
@@ -292,11 +323,14 @@ async function getCategoriesWithServices(req, res) {
     // Get actual services for each category
     const categoriesWithServices = await Promise.all(
       dbCategories.map(async (cat) => {
-        const services = await Service.find(
+        const allServices = await Service.find(
           { category: cat._id, isActive: true },
-          { title: 1, description: 1, category: 1, subcategory: 1, price: 1, rating: 1, provider: 1 }
+          { title: 1, description: 1, category: 1, subcategory: 1, price: 1, rating: 1, provider: 1, totalBookings: 1 }
         ).populate('provider', 'fullName email phone')
-         .limit(20); // Limit services per category for performance
+         .limit(100); // Get more services to allow for deduplication
+        
+        // Deduplicate services by title
+        const services = deduplicateServicesByTitle(allServices).slice(0, 20); // Limit after deduplication
         
         // Find predefined category or create dynamic one
         const predefinedCategory = SERVICE_CATEGORIES.find(c => c.id === cat._id);

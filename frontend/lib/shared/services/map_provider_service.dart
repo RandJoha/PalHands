@@ -11,6 +11,12 @@ class MapProviderService with BaseApiService {
   static const String _tag = 'MapProviderService';
   final ProviderService _providerService = ProviderService();
 
+  // Normalize service key: lowercase alphanumerics only
+  String _normalize(String input) => input
+      .trim()
+      .toLowerCase()
+      .replaceAll(RegExp(r'[^a-z0-9]+'), '');
+
   /// Get providers from the same source as "Our Services" and convert to map format
   Future<MapProviderData> getProvidersForMap({
     required MapBounds bounds,
@@ -20,11 +26,13 @@ class MapProviderService with BaseApiService {
       // Use ProviderService to get the exact same data as "Our Services"
       // This ensures both the map and "Our Services" show identical provider information
       final providers = await _providerService.fetchProviders(
-        servicesAny: [], // Get all providers regardless of services
-        city: null, // Get all cities
+        servicesAny: (filters?.servicesAny != null && filters!.servicesAny!.isNotEmpty)
+            ? filters.servicesAny!
+            : <String>[],
+        city: null, // City filter currently handled at page level
         sortBy: null,
         sortOrder: null,
-        limit: 100, // Get all providers
+        limit: 100,
       );
       
       if (kDebugMode) {
@@ -37,8 +45,22 @@ class MapProviderService with BaseApiService {
         }
       }
       
-      // Filter providers that are within map bounds (optional, can be removed if needed)
-      final filteredProviders = providers.where((provider) => _isProviderInBounds(provider, bounds)).toList();
+    // Apply service filtering (ANY match) if servicesAny provided
+    final serviceFiltered = (filters?.servicesAny != null && filters!.servicesAny!.isNotEmpty)
+      ? providers.where((p) {
+          final sel = filters.servicesAny!;
+          final selNorm = sel.map(_normalize).toSet();
+          final provNorm = p.services.map(_normalize).toSet();
+          final matches = provNorm.intersection(selNorm).isNotEmpty;
+          if (!matches && kDebugMode) {
+            print('🗺️ Filtering out provider ${p.id} (${p.name}) - services: ${p.services}');
+          }
+          return matches;
+        }).toList()
+      : providers;
+
+    // Bounds filter (currently pass-through; keep for future geo filtering)
+    final filteredProviders = serviceFiltered.where((provider) => _isProviderInBounds(provider, bounds)).toList();
       
       // Convert ProviderModels to MapMarkers with GPS coordinates using the same GPS override system
       final markers = filteredProviders.map((provider) => _providerToMapMarker(provider)).toList();
@@ -99,6 +121,7 @@ class MapProviderService with BaseApiService {
       // Provider name -> actual GPS city (different from manual city)
       'ليلى حسن': 'hebron',        // Manual: Gaza -> GPS: Hebron  
       'رند 2': 'nablus',           // Manual: Tulkarm -> GPS: Nablus
+      'rand 2': 'nablus',          // Manual: Tulkarm -> GPS: Nablus (English version)
       'أحمد علي': 'jerusalem',     // Manual: Ramallah -> GPS: Jerusalem
       'فاطمة محمد': 'bethlehem',   // Manual: Hebron -> GPS: Bethlehem
       'سارة يوسف': 'jenin',        // Manual: Nablus -> GPS: Jenin
@@ -139,25 +162,25 @@ class MapProviderService with BaseApiService {
   /// Get coordinates for Palestinian cities
   LatLng _getCityCoordinates(String city) {
     final cityCoordinates = {
-      'ramallah': LatLng(31.9522, 35.2332),
-      'nablus': LatLng(32.2211, 35.2544),
-      'jerusalem': LatLng(31.7683, 35.2137),
-      'hebron': LatLng(31.5326, 35.0998),
-      'bethlehem': LatLng(31.7054, 35.2024),
-      'gaza': LatLng(31.3547, 34.3088),
-      'jenin': LatLng(32.4615, 35.2969),
-      'tulkarm': LatLng(32.3128, 35.0273),
-      'birzeit': LatLng(31.9667, 35.1833), // Near Ramallah
-      'qalqilya': LatLng(32.1896, 34.9706),
-      'salfit': LatLng(32.0833, 35.1833),
+      'ramallah': const LatLng(31.9522, 35.2332),
+      'nablus': const LatLng(32.2211, 35.2544),
+      'jerusalem': const LatLng(31.7683, 35.2137),
+      'hebron': const LatLng(31.5326, 35.0998),
+      'bethlehem': const LatLng(31.7054, 35.2024),
+      'gaza': const LatLng(31.3547, 34.3088),
+      'jenin': const LatLng(32.4615, 35.2969),
+      'tulkarm': const LatLng(32.3128, 35.0273),
+      'birzeit': const LatLng(31.9667, 35.1833), // Near Ramallah
+      'qalqilya': const LatLng(32.1896, 34.9706),
+      'salfit': const LatLng(32.0833, 35.1833),
     };
 
-    return cityCoordinates[city.toLowerCase()] ?? LatLng(31.9522, 35.2332);
+    return cityCoordinates[city.toLowerCase()] ?? const LatLng(31.9522, 35.2332);
   }
 
   /// Generate dummy provider data with real names from database (37 providers)
   MapProviderData _generateDummyProviderData(MapBounds bounds, MapFilters? filters) {
-    final providers = <ProviderModel>[];
+  final providers = <ProviderModel>[];
     final markers = <MapMarker>[];
 
     // Generate 37 dummy providers using real names and data from the database
@@ -169,9 +192,25 @@ class MapProviderService with BaseApiService {
       markers.add(marker);
     }
 
+    // Apply servicesAny filter if present
+    List<ProviderModel> filteredProviders = providers;
+    if (filters?.servicesAny != null && filters!.servicesAny!.isNotEmpty) {
+      final selNorm = filters.servicesAny!.map(_normalize).toSet();
+      filteredProviders = providers.where((p) {
+        final provNorm = p.services.map(_normalize).toSet();
+        return provNorm.intersection(selNorm).isNotEmpty;
+      }).toList();
+    }
+    final filteredMarkers = markers.where((m) {
+      if (filters?.servicesAny == null || filters!.servicesAny!.isEmpty) return true;
+      // marker.category holds first provider service; treat as match if in list
+  final cat = m.category ?? '';
+  return filters.servicesAny!.map(_normalize).contains(_normalize(cat));
+    }).toList();
+
     return MapProviderData(
-      providers: providers,
-      markers: markers,
+      providers: filteredProviders,
+      markers: filteredMarkers,
     );
   }
 

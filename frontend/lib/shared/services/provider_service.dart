@@ -31,145 +31,101 @@ class ProviderService with BaseApiService {
     String? sortBy, // 'rating' or 'price'
     String? sortOrder, // 'asc' | 'desc'
     int? page,
-  int? limit,
-  String emergencyFilter = 'both', // 'both' | 'emergency' | 'normal'
+    int? limit,
+    String emergencyFilter = 'both', // 'both' | 'emergency' | 'normal'
   }) async {
-    // Use mock data if frontend-only mode is enabled
+    // 1. Frontend mock mode
     if (frontendOnly) {
       final items = _mockProviders();
-      return items.where((p) {
+      var filtered = items.where((p) {
         final matchesServices = servicesAny.isEmpty || p.services.any((s) => servicesAny.contains(s));
         final matchesCity = city == null || city.isEmpty || p.city.toLowerCase() == city.toLowerCase();
         return matchesServices && matchesCity;
-      }).toList()
-        ..sort((a, b) {
-          if (sortBy == 'price') {
-            return sortOrder == 'asc' ? a.hourlyRate.compareTo(b.hourlyRate) : b.hourlyRate.compareTo(a.hourlyRate);
-          } else if (sortBy == 'rating') {
-            // Weighted rating using Bayesian average to consider review count
-            // score = (v/(v+C))*R + (C/(v+C))*m, where m is global mean and C is prior weight
-            final m = items.isEmpty ? 0.0 : items.map((e) => e.ratingAverage).reduce((x, y) => x + y) / items.length;
-            const C = 20.0;
-            double score(ProviderModel p) {
-              final v = p.ratingCount.toDouble();
-              final R = p.ratingAverage;
-              return (v / (v + C)) * R + (C / (v + C)) * m;
-            }
-            final sA = score(a);
-            final sB = score(b);
-            return sortOrder == 'asc' ? sA.compareTo(sB) : sB.compareTo(sA);
-          }
-          return 0;
-        });
+      }).toList();
+      _applySorting(filtered, sortBy, sortOrder);
+      return filtered;
     }
 
-    // Use real backend API
     try {
-  final queryParams = <String, String>{};
-      if (city != null && city.isNotEmpty) queryParams['city'] = city;
-      if (sortBy != null) queryParams['sortBy'] = sortBy;
-      if (sortOrder != null) queryParams['sortOrder'] = sortOrder;
-      if (page != null) queryParams['page'] = page.toString();
-      if (limit != null) queryParams['limit'] = limit.toString();
-  if (emergencyFilter != 'both') queryParams['emergency'] = emergencyFilter; // backend may ignore gracefully
-      
-      // Add services filter if any services are selected
+      List<ProviderModel> providers = [];
+
       if (servicesAny.isNotEmpty) {
-        queryParams['services'] = servicesAny.join(',');
-      }
+        // 2. Prefer expanded endpoint for detailed per-service linkage
+        final endpoint = '/provider-services/public/providers-by-services-expanded?serviceIds=${servicesAny.join(',')}';
+        final response = await get(endpoint, headers: _authHeaders);
+        dynamic raw = response['data'] ?? response['providers'] ?? response['results'];
+        if (raw is Map<String, dynamic>) {
+          raw = raw['data'] ?? raw['items'] ?? raw['providers'] ?? raw['results'] ?? [];
+        }
+        final rawList = (raw is List) ? raw : <dynamic>[];
+        providers = rawList.map((j) => ProviderModel.fromJson(j)).toList();
 
-      final endpoint = '/providers${queryParams.isNotEmpty 
-              ? '?${Uri(queryParameters: queryParams).query}' 
-              : ''}';
+        if (kDebugMode) {
+          print('🏢 providers-by-services-expanded => ${providers.length} providers (selected=${servicesAny.length})');
+        }
 
-  final response = await get(endpoint, headers: _authHeaders);
-
-      // Extract providers array from various backend shapes
-      dynamic raw = response['data'] ?? response['providers'] ?? response['results'];
-      if (raw is Map<String, dynamic>) {
-        raw = raw['data'] ?? raw['providers'] ?? raw['items'] ?? raw['results'] ?? [];
-      }
-      final List<dynamic> providersData = (raw is List) ? raw : <dynamic>[];
-
-      if (kDebugMode && ApiConfig.enableLogging) {
-        print('🏢 Fetched providers: ${providersData.length} items');
-        print('🔍 Services filter: $servicesAny');
-        print('🔍 City filter: $city');
-        print('🔍 Response data: $response');
-      }
-      var list = providersData
-          .map((json) => ProviderModel.fromJson(json))
-          .where((p) {
-            // Client-side post-filter in case backend doesn't support emergency yet
-            if (emergencyFilter == 'both') return true;
-            // We do not have service-level flags on provider listing; approximate by allowing all
-            // The precise filter will happen on booking dialog and service-level selection.
-            return true;
-          })
-          .toList();
-
-      // Fallback: if strict services filter returned nothing, try category-based fetch for the first service
-      if (list.isEmpty && servicesAny.isNotEmpty) {
-        try {
-          final cat = _categoryOf(servicesAny.first);
-          if (cat != null) {
-            if (kDebugMode) {
-              print('🔄 No providers found with service filter, trying category-based fetch for: $cat');
-            }
-            list = await getProvidersByCategory(cat, city: city, sortBy: sortBy, sortOrder: sortOrder, page: page, limit: limit);
-          }
-        } catch (_) {}
-      }
-      
-      // Final fallback: if still no providers, try fetching all providers without service filter
-      if (list.isEmpty && servicesAny.isNotEmpty) {
-        try {
-          if (kDebugMode) {
-            print('🔄 Still no providers found, trying to fetch all providers without service filter');
-          }
-          final allProvidersResponse = await get('/providers', headers: _authHeaders);
-          final allProvidersData = allProvidersResponse['data']?['data'] ?? allProvidersResponse['data'] ?? allProvidersResponse['providers'] ?? [];
-          if (allProvidersData is List) {
-            list = allProvidersData.map((json) => ProviderModel.fromJson(json)).toList();
-            if (kDebugMode) {
-              print('🔄 Fetched ${list.length} providers without service filter');
-            }
-          }
-        } catch (e) {
-          if (kDebugMode) {
-            print('❌ Error in final fallback: $e');
-          }
+        // Optional city filter (backend endpoint might not support city yet)
+        if (city != null && city.isNotEmpty) {
+          providers = providers.where((p) => p.city.toLowerCase() == city.toLowerCase()).toList();
+        }
+      } else {
+        // 3. Generic /providers listing (no service filter)
+        final qp = <String, String>{};
+        if (city != null && city.isNotEmpty) qp['city'] = city;
+        if (page != null) qp['page'] = page.toString();
+        if (limit != null) qp['limit'] = limit.toString();
+        if (sortBy != null) qp['sortBy'] = sortBy;
+        if (sortOrder != null) qp['sortOrder'] = sortOrder;
+        final endpoint = '/providers${qp.isNotEmpty ? '?${Uri(queryParameters: qp).query}' : ''}';
+        final response = await get(endpoint, headers: _authHeaders);
+        dynamic raw = response['data'] ?? response['providers'] ?? response['results'];
+        if (raw is Map<String, dynamic>) {
+          raw = raw['data'] ?? raw['items'] ?? raw['providers'] ?? raw['results'] ?? [];
+        }
+        final rawList = (raw is List) ? raw : <dynamic>[];
+        providers = rawList.map((j) => ProviderModel.fromJson(j)).toList();
+        if (kDebugMode) {
+          print('🏢 /providers => ${providers.length} providers (no service filter)');
         }
       }
-      return list;
+
+      // 4. Emergency filter placeholder (currently pass-through)
+      if (emergencyFilter != 'both') {
+        // Future: refine when provider emergency capabilities exposed.
+      }
+
+      // 5. Secondary service verification (only if backend returned a superset – should not be needed now)
+      // We trust backend; only apply if we detect provider.services missing or looks broader.
+      if (servicesAny.isNotEmpty) {
+        final hasObjectIds = servicesAny.any((s) => RegExp(r'^[a-f0-9]{24}$', caseSensitive: false).hasMatch(s));
+        if (!hasObjectIds) {
+          final selectedNorm = servicesAny.map(_normalizeServiceKey).toSet();
+          providers = providers.where((p) => p.services.map(_normalizeServiceKey).toSet().intersection(selectedNorm).isNotEmpty).toList();
+        }
+      }
+
+      // 6. Sorting (fallback if backend didn't sort)
+      _applySorting(providers, sortBy, sortOrder);
+      return providers;
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error fetching providers from backend: $e');
+        print('❌ fetchProviders error: $e');
       }
-      
-      // Don't fall back to mock data - return empty list instead
-      // This prevents the issue with invalid provider IDs
       return [];
     }
   }
 
-  // Map a subcategory service key to its canonical category id (frontend taxonomy)
-  String? _categoryOf(String subKey) {
-    const categories = {
-      'cleaning': ['bedroomCleaning','livingRoomCleaning','kitchenCleaning','bathroomCleaning','windowCleaning','doorCabinetCleaning','floorCleaning','carpetCleaning','furnitureCleaning','gardenCleaning','entranceCleaning','stairCleaning','garageCleaning','postEventCleaning','postConstructionCleaning','apartmentCleaning','regularCleaning'],
-      'organizing': ['bedroomOrganizing','kitchenOrganizing','closetOrganizing','storageOrganizing','livingRoomOrganizing','postPartyOrganizing','fullHouseOrganizing','childrenOrganizing'],
-      'cooking': ['mainDishes','desserts','specialRequests'],
-      'childcare': ['homeBabysitting','schoolAccompaniment','homeworkHelp','educationalActivities','childrenMealPrep','sickChildCare'],
-      'elderly': ['homeElderlyCare','medicalTransport','healthMonitoring','medicationAssistance','emotionalSupport','mobilityAssistance'],
-      'maintenance': ['electricalWork','plumbingWork','aluminumWork','carpentryWork','painting','hangingItems','satelliteInstallation','applianceMaintenance'],
-      'newhome': ['furnitureMoving','packingUnpacking','furnitureWrapping','newHomeArrangement','newApartmentCleaning','preOccupancyRepairs','kitchenSetup','applianceInstallation'],
-      'miscellaneous': ['documentDelivery','shoppingDelivery','specialErrands','billPayment','prescriptionPickup']
-    };
-    for (final entry in categories.entries) {
-      if (entry.value.contains(subKey)) return entry.key;
+  void _applySorting(List<ProviderModel> list, String? sortBy, String? sortOrder) {
+    if (list.isEmpty || sortBy == null) return;
+    if (sortBy == 'price') {
+      list.sort((a, b) => (sortOrder == 'desc') ? b.hourlyRate.compareTo(a.hourlyRate) : a.hourlyRate.compareTo(b.hourlyRate));
+    } else if (sortBy == 'rating') {
+      list.sort((a, b) => (sortOrder == 'desc') ? b.ratingAverage.compareTo(a.ratingAverage) : a.ratingAverage.compareTo(b.ratingAverage));
     }
-    return null;
   }
+
+  String _normalizeServiceKey(String v) => v.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '');
+
 
   /// Get a specific provider by ID
   Future<ProviderModel?> getProviderById(String providerId) async {

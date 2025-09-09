@@ -31,6 +31,8 @@ const updateSchema = celebrate({
 
 // Public aggregated read (migration safe) - active & publishable only
 router.get('/public', ctrl.listPublic);
+router.get('/public/providers-by-services', ctrl.providersByServices);
+router.get('/public/providers-by-services-expanded', ctrl.providersByServicesExpanded);
 
 // Authenticated management routes
 router.get('/:providerId', authenticate, ctrl.listMy);

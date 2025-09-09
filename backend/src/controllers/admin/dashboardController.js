@@ -6,6 +6,37 @@ const Report = require('../../models/Report');
 const AdminAction = require('../../models/AdminAction');
 const SystemSetting = require('../../models/SystemSetting');
 
+// Deduplicate services by title to avoid duplicates from provider-service relationships
+function deduplicateServicesByTitle(services) {
+  if (!services || services.length === 0) return services;
+  
+  // Use a map to track unique services by title (case-insensitive)
+  const uniqueServices = new Map();
+  
+  for (const service of services) {
+    const titleKey = service.title.toLowerCase().trim();
+    
+    // Only add if we haven't seen this title before
+    if (!uniqueServices.has(titleKey)) {
+      uniqueServices.set(titleKey, service);
+    } else {
+      // If we have a duplicate, keep the one with more bookings or better rating
+      const existingService = uniqueServices.get(titleKey);
+      if (service.totalBookings > existingService.totalBookings ||
+          (service.totalBookings === existingService.totalBookings && 
+           service.rating?.average > existingService.rating?.average)) {
+        uniqueServices.set(titleKey, service);
+      }
+    }
+  }
+  
+  const deduplicatedServices = Array.from(uniqueServices.values());
+  
+  console.log(`🔄 Deduplicated services: ${services.length} -> ${deduplicatedServices.length}`);
+  
+  return deduplicatedServices;
+}
+
 // Get dashboard overview data
 const getDashboardOverview = async (req, res) => {
   try {
@@ -319,13 +350,16 @@ const getServiceManagementData = async (req, res) => {
     if (status !== undefined) filter.isActive = status === 'active';
     if (location) filter['location.serviceArea'] = { $regex: location, $options: 'i' };
 
-    const services = await Service.find(filter)
+    const allServices = await Service.find(filter)
       .populate('provider', 'firstName lastName email phone')
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(parseInt(limit));
+      .limit(parseInt(limit) * 2); // Get more services to allow for deduplication
 
-    const total = await Service.countDocuments(filter);
+    // Deduplicate services by title
+    const services = deduplicateServicesByTitle(allServices).slice(0, parseInt(limit));
+
+    const total = services.length; // Use deduplicated count
 
     res.json({
       success: true,

@@ -6,6 +6,37 @@ const { validateEnv } = require('../utils/config');
 const { getPresignedPutUrls, objectExists, cleanupOrphansForService, ALLOWED_IMAGE_TYPES } = require('../services/storage');
 const env = validateEnv();
 
+// Deduplicate services by title to avoid duplicates from provider-service relationships
+function deduplicateServicesByTitle(services) {
+  if (!services || services.length === 0) return services;
+  
+  // Use a map to track unique services by title (case-insensitive)
+  const uniqueServices = new Map();
+  
+  for (const service of services) {
+    const titleKey = service.title.toLowerCase().trim();
+    
+    // Only add if we haven't seen this title before
+    if (!uniqueServices.has(titleKey)) {
+      uniqueServices.set(titleKey, service);
+    } else {
+      // If we have a duplicate, keep the one with more bookings or better rating
+      const existingService = uniqueServices.get(titleKey);
+      if (service.totalBookings > existingService.totalBookings ||
+          (service.totalBookings === existingService.totalBookings && 
+           service.rating?.average > existingService.rating?.average)) {
+        uniqueServices.set(titleKey, service);
+      }
+    }
+  }
+  
+  const deduplicatedServices = Array.from(uniqueServices.values());
+  
+  console.log(`🔄 Deduplicated services: ${services.length} -> ${deduplicatedServices.length}`);
+  
+  return deduplicatedServices;
+}
+
 // List services with basic filters
 async function listServices(req, res) {
   try {
@@ -118,12 +149,15 @@ async function listServices(req, res) {
       }
     }
 
-    const total = services.length; // simple total post-filter to avoid double queries
+    // Deduplicate services by title to avoid duplicates from provider-service relationships
+    const deduplicatedServices = deduplicateServicesByTitle(services);
+
+    const total = deduplicatedServices.length; // simple total post-filter to avoid double queries
     const totalPages = Math.ceil(total / limit);
     const currentPage = totalPages ? parseInt(page) : 0;
 
     return ok(res, {
-      services,
+      services: deduplicatedServices,
       pagination: { current: currentPage, total: totalPages, totalRecords: total }
     });
   } catch (e) {

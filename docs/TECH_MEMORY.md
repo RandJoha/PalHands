@@ -12,6 +12,22 @@ This document serves as the **comprehensive technical memory** for the PalHands 
 
 ### **Critical Issues RESOLVED**
 
+#### **6. Service Deduplication System (✅ FIXED)**
+- **Problem**: Services collection contained duplicates because each provider-service relationship created a new record
+- **UI Impact**: Both "Our Services" categories list and "Service Management" admin dashboard showed duplicate entries (e.g., "Bedroom Cleaning" appeared multiple times)
+- **Root Cause**: Database structure stores provider-service relationships directly in services collection instead of normalized structure
+- **Solution**: Implemented backend-level deduplication with smart selection logic:
+  - **Deduplication Function**: `deduplicateServicesByTitle()` added to all service endpoints
+  - **Smart Selection**: When duplicates exist, keeps service with more bookings or better rating
+  - **Performance**: Map-based deduplication for O(n) efficiency
+  - **Logging**: Console output shows deduplication results (e.g., "85 -> 54 services")
+- **Files Modified**: 
+  - `src/controllers/servicesController.js` - Main services endpoint
+  - `src/controllers/serviceCategoriesController.js` - Categories with services
+  - `src/controllers/admin/dashboardController.js` - Admin service management
+  - `frontend/lib/shared/services/services_service.dart` - Removed frontend deduplication
+- **Result**: Clean service lists with unique entries only, no database structure changes required
+
 #### **1. Global Slot Inheritance Logic (✅ FIXED)**
 - **Problem**: Global slots were appearing as excluded (red) by default instead of active (blue)
 - **Root Cause**: Circular logic issue in `_openServiceAvailabilityDialog` method
@@ -62,6 +78,43 @@ This document serves as the **comprehensive technical memory** for the PalHands 
 ---
 
 ## 🏗️ **System Architecture Patterns**
+
+### **Service Deduplication Architecture**
+
+```javascript
+// Backend Deduplication Pattern
+function deduplicateServicesByTitle(services) {
+  if (!services || services.length === 0) return services;
+  
+  const uniqueServices = new Map();
+  
+  for (const service of services) {
+    const titleKey = service.title.toLowerCase().trim();
+    
+    if (!uniqueServices.has(titleKey)) {
+      uniqueServices.set(titleKey, service);
+    } else {
+      // Smart selection: keep best version
+      const existing = uniqueServices.get(titleKey);
+      if (service.totalBookings > existing.totalBookings ||
+          (service.totalBookings === existing.totalBookings && 
+           service.rating?.average > existing.rating?.average)) {
+        uniqueServices.set(titleKey, service);
+      }
+    }
+  }
+  
+  console.log(`🔄 Deduplicated services: ${services.length} -> ${uniqueServices.size}`);
+  return Array.from(uniqueServices.values());
+}
+```
+
+**Key Principles:**
+- **Backend Responsibility**: Deduplication happens at API level, not frontend
+- **Smart Selection**: Prioritizes services with more bookings or better ratings
+- **Performance**: O(n) complexity using Map for efficient lookups
+- **Logging**: Console output for monitoring deduplication effectiveness
+- **Database Integrity**: No changes to existing database structure
 
 ### **Service Availability Inheritance Model**
 
@@ -267,6 +320,11 @@ if (effectiveSchedule === globalSchedule) {
 - ✅ Fixed dynamic booking rules for emergency mode
 - ✅ Enhanced user exclusion persistence
 - ✅ Added restore functionality for excluded slots
+- ✅ **NEW**: Implemented service deduplication system across all endpoints
+  - Backend-level deduplication eliminates UI duplicates
+  - Smart selection keeps best version (bookings/rating)
+  - Performance optimized with Map-based O(n) algorithm
+  - Console logging for monitoring effectiveness
 
 ### **September 2025 - Initial Emergency Feature** 
 - ✅ Basic emergency mode implementation

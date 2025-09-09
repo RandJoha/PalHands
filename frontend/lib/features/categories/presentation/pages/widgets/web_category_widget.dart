@@ -10,20 +10,15 @@ import '../../../../../shared/widgets/booking_dialog.dart';
 import '../../../../../shared/services/responsive_service.dart';
 import '../../../../../shared/services/provider_service.dart';
 import '../../../../../shared/models/provider.dart';
-import '../../../../../shared/services/chat_service.dart';
-import '../../../../../shared/models/chat.dart';
-import 'package:palhands/features/categories/presentation/widgets/services_listing_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import '../../../../../shared/services/category_selection_store.dart';
 import '../../../../../shared/services/category_refresh_notifier.dart';
 import '../../../../../shared/services/service_categories_service.dart';
-import '../../../../profile/presentation/widgets/chat_conversation_widget.dart';
 import '../../../../../shared/services/auth_service.dart';
 import 'package:flutter/foundation.dart';
 import '../../../../../shared/widgets/chat_form_dialog.dart';
 import '../../../../../shared/services/services_service.dart' as svc;
-import '../../../../../shared/widgets/palhands_map_widget.dart';
 import '../../../../../shared/widgets/palhands_osm_map_widget.dart';
 import '../../../../../shared/services/location_service.dart';
 import '../../../../../shared/models/map_models.dart';
@@ -53,12 +48,8 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
   // Chat handled via ChatFormDialog; no direct ChatService usage here
   final svc.ServicesService _servicesService = svc.ServicesService();
   
-  // Toggle between providers and services view
-  bool _showServices = false;
-  
   // Map view state
   bool _showMapView = false;
-  MapMarker? _selectedMarker;
   LatLng? _userLocation;
   
   // Dynamic categories from database
@@ -213,9 +204,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
 
   // Handle marker tap
   void _onMarkerTap(MapMarker marker) {
-    setState(() {
-      _selectedMarker = marker;
-    });
+    // Marker tap handled by map widget itself
   }
 
   // Handle location change
@@ -258,6 +247,14 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
     
     // Check if selected services have actually changed
     final currentServices = _selectedServiceKeys;
+    // Guard: if we already had a non-empty selection and now it appears empty right after init,
+    // skip this refresh to avoid overwriting filtered results with the full provider list.
+    if (_hasInitialized && _cachedSelectedServices.isNotEmpty && currentServices.isEmpty) {
+      if (kDebugMode) {
+        print('⏭️ Skipping refresh: transient empty selection detected (cached=${_cachedSelectedServices.length})');
+      }
+      return;
+    }
     if (_hasInitialized && setEquals(currentServices, _cachedSelectedServices)) {
       return; // No change, don't refresh
     }
@@ -284,7 +281,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
       if (!mounted) return;
       
       if (kDebugMode) {
-        print('🔄 Web: Found ${data.length} providers for selected services');
+  print('🔄 Web: Found ${data.length} providers for selected services (after fetch)');
       }
       
       setState(() {
@@ -418,18 +415,31 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: _selectedServiceKeys.map((s) {
+              children: _selectedServiceKeys.map((rawKey) {
+                String display = rawKey;
+                for (final cat in _categories) {
+                  final list = cat.actualServices;
+                  if (list == null) continue;
+                  for (final s in list) {
+                    if (s.id == rawKey || s.subcategory == rawKey || s.slug == rawKey) {
+                      if (s.title.isNotEmpty) display = s.title;
+                      break;
+                    }
+                  }
+                  if (display != rawKey) break;
+                }
+                display = AppStrings.getString(display, languageService.currentLanguage);
                 return Chip(
-                  label: Text(AppStrings.getString(s, languageService.currentLanguage)),
+                  label: Text(display, maxLines: 1, overflow: TextOverflow.ellipsis),
                   deleteIcon: const Icon(Icons.close, size: 16),
-                    onDeleted: () {
-                      setState(() {
-                        for (final entry in _store.selectedServices.entries) {
-                          entry.value.remove(s);
-                        }
-                      });
-                      _debouncedRefreshProviders();
-                    },
+                  onDeleted: () {
+                    setState(() {
+                      for (final entry in _store.selectedServices.entries) {
+                        entry.value.remove(rawKey);
+                      }
+                    });
+                    _debouncedRefreshProviders();
+                  },
                 );
               }).toList(),
             ),
@@ -1327,8 +1337,8 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
             Row(
               children: [
                 Text(
-                  _showServices 
-                    ? (languageService.currentLanguage == 'ar' ? 'الخدمات' : 'Services')
+                  _showMapView 
+                    ? (languageService.currentLanguage == 'ar' ? 'الخريطة' : 'Map')
                     : (languageService.currentLanguage == 'ar' ? 'مقدمو الخدمة' : 'Service Providers'), 
                   style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)
                 ),
@@ -1344,18 +1354,8 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                     children: [
                       _buildToggleButton(
                         'Providers',
-                        !_showServices && !_showMapView,
+                        !_showMapView,
                         () => setState(() {
-                          _showServices = false;
-                          _showMapView = false;
-                        }),
-                        languageService,
-                      ),
-                      _buildToggleButton(
-                        'Services',
-                        _showServices && !_showMapView,
-                        () => setState(() {
-                          _showServices = true;
                           _showMapView = false;
                         }),
                         languageService,
@@ -1364,7 +1364,6 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                         'Map',
                         _showMapView,
                         () => setState(() {
-                          _showServices = false;
                           _showMapView = true;
                         }),
                         languageService,
@@ -1399,33 +1398,6 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                   ),
                 ),
               ),
-              // Selected marker info
-              if (_selectedMarker != null) ...[
-                const SizedBox(height: 16),
-                Center(
-                  child: MapMarkerInfoWidget(
-                    marker: _selectedMarker!,
-                    onBookPressed: () {
-                      // TODO: Navigate to booking dialog
-                    },
-                    onClosePressed: () {
-                      setState(() {
-                        _selectedMarker = null;
-                      });
-                    },
-                  ),
-                ),
-              ],
-            ] else if (_showServices) ...[
-              // Services view
-              ServicesListingWidget(
-                category: _selectedServiceKeys.isNotEmpty ? _selectedServiceKeys.first : null,
-                searchQuery: null, // Could add search functionality later
-                area: _selectedCity,
-                onServiceSelected: () {
-                  // TODO: Handle service selection
-                },
-              ),
             ] else ...[
               // Providers view (existing code)
               if (_loading) const LinearProgressIndicator(),
@@ -1446,7 +1418,9 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
               LayoutBuilder(
                 builder: (context, constraints) {
                   int crossAxisCount;
-                  if (constraints.maxWidth > 1400) crossAxisCount = 3; else if (constraints.maxWidth > 900) crossAxisCount = 2; else crossAxisCount = 1;
+                  if (constraints.maxWidth > 1400) {
+                    crossAxisCount = 3;
+                  } else if (constraints.maxWidth > 900) crossAxisCount = 2; else crossAxisCount = 1;
                   // Use fixed mainAxisExtent to keep all cards the same height and avoid overflow
                   return GridView.builder(
                     shrinkWrap: true,
@@ -1697,6 +1671,7 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
       // Provider name -> actual GPS city (different from manual city)
       'ليلى حسن': 'hebron',        // Manual: Gaza -> GPS: Hebron  
       'رند 2': 'nablus',           // Manual: Tulkarm -> GPS: Nablus
+      'rand 2': 'nablus',          // Manual: Tulkarm -> GPS: Nablus (English version)
       'أحمد علي': 'jerusalem',     // Manual: Ramallah -> GPS: Jerusalem
       'فاطمة محمد': 'bethlehem',   // Manual: Hebron -> GPS: Bethlehem
       'سارة يوسف': 'jenin',        // Manual: Nablus -> GPS: Jenin

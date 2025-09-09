@@ -25,7 +25,7 @@ class PalHandsMapWidget extends StatefulWidget {
   final EdgeInsets? padding;
 
   const PalHandsMapWidget({
-    Key? key,
+    super.key,
     this.initialLocation,
     this.initialFilters,
     this.onMarkerTap,
@@ -34,7 +34,7 @@ class PalHandsMapWidget extends StatefulWidget {
     this.showLocationToggle = true,
     this.height,
     this.padding,
-  }) : super(key: key);
+  });
 
   @override
   State<PalHandsMapWidget> createState() => _PalHandsMapWidgetState();
@@ -80,6 +80,10 @@ class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
   @override
   void initState() {
     super.initState();
+    // Apply initial filters (including servicesAny) before loading markers
+    if (widget.initialFilters != null) {
+      _mapState = _mapState.copyWith(filters: widget.initialFilters);
+    }
     _initializeMap();
     
     // Listen to GPS state changes for immediate updates
@@ -129,12 +133,12 @@ class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
       final bounds = _getCurrentBounds();
       final providerData = await _mapProviderService.getProvidersForMap(
         bounds: bounds,
-        filters: _mapState.filters,
+  filters: _mapState.filters,
       );
       
       setState(() {
         _providerData = providerData;
-        _mapState = _mapState.copyWith(markers: providerData.markers);
+  _mapState = _mapState.copyWith(markers: providerData.markers);
         _markers = _createMarkers(providerData.markers);
       });
     } catch (e) {
@@ -204,11 +208,39 @@ class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
     final shouldShow = _shouldShowUserLocation();
     
     if (shouldShow && _userLocation == null) {
-      // GPS is ON but no user location set - simulate and add marker
-      final simulated = await _locationService.simulateGpsForAddress(city: null);
-      _userLocation = simulated.position;
-      _userLocationApprox = simulated.isApproximate;
-      _injectUserMarker();
+      // GPS is ON but no user location set - get GPS address from profile
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final user = authService.currentUser;
+      
+      if (user != null) {
+        // Try to get GPS coordinates from user's profile address
+        LatLng? profileCoordinates;
+        
+        if (user['address'] is Map) {
+          final addressMap = user['address'] as Map;
+          final coordinates = addressMap['coordinates'];
+          if (coordinates is Map) {
+            final lat = coordinates['latitude'];
+            final lng = coordinates['longitude'];
+            if (lat != null && lng != null) {
+              profileCoordinates = LatLng(lat.toDouble(), lng.toDouble());
+            }
+          }
+        }
+        
+        if (profileCoordinates != null) {
+          // Use GPS coordinates from profile
+          _userLocation = profileCoordinates;
+          _userLocationApprox = false; // More accurate since it's from profile
+        } else {
+          // Fallback to simulated GPS if no profile coordinates
+          final simulated = await _locationService.simulateGpsForAddress(city: null);
+          _userLocation = simulated.position;
+          _userLocationApprox = simulated.isApproximate;
+        }
+        
+        _injectUserMarker();
+      }
     } else if (!shouldShow) {
       // GPS is OFF - remove user marker immediately
       setState(() {
@@ -420,10 +452,8 @@ class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
             isApproximate: true,
           );
           _injectUserMarker();
-          if (_mapController != null) {
-            _mapController.animateCamera(CameraUpdate.newLatLng(simulated.position));
-          }
-        } else {
+          _mapController.animateCamera(CameraUpdate.newLatLng(simulated.position));
+                } else {
           setState(() {
             _markers = _markers.where((m) => m.markerId.value != 'me').toSet();
           });
@@ -447,13 +477,13 @@ class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
       ),
       child: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.location_on,
             color: AppColors.primary,
             size: 20,
           ),
           const SizedBox(width: 8),
-          Expanded(
+          const Expanded(
             child: Text(
               'Enable location to see your position and find nearby providers',
               style: TextStyle(
@@ -464,7 +494,7 @@ class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
           ),
           TextButton(
             onPressed: _requestLocationPermission,
-            child: Text(
+            child: const Text(
               'Enable',
               style: TextStyle(
                 color: AppColors.primary,
@@ -529,7 +559,7 @@ class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
       ),
       child: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.error_outline,
             color: AppColors.error,
             size: 20,
@@ -538,7 +568,7 @@ class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
           Expanded(
             child: Text(
               _error!,
-              style: TextStyle(
+              style: const TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 14,
               ),
@@ -546,7 +576,7 @@ class _PalHandsMapWidgetState extends State<PalHandsMapWidget> {
           ),
           TextButton(
             onPressed: _initializeMap,
-            child: Text(
+            child: const Text(
               'Retry',
               style: TextStyle(
                 color: AppColors.error,
@@ -643,11 +673,11 @@ class MapMarkerInfoWidget extends StatelessWidget {
   final VoidCallback? onClosePressed;
 
   const MapMarkerInfoWidget({
-    Key? key,
+    super.key,
     required this.marker,
     this.onBookPressed,
     this.onClosePressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -703,7 +733,7 @@ class MapMarkerInfoWidget extends StatelessWidget {
               ),
               child: Text(
                 marker.category!,
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppColors.primary,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,

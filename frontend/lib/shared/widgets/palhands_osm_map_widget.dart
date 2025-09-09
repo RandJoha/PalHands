@@ -98,11 +98,39 @@ class _PalHandsOsmMapWidgetState extends State<PalHandsOsmMapWidget> {
     final shouldShow = _shouldShowUserLocation();
     
     if (shouldShow && _userLocation == null) {
-      // GPS is ON but no user location set - simulate and add marker
-      final simulated = await _locationService.simulateGpsForAddress(city: null);
-      _userLocation = ll.LatLng(simulated.position.latitude, simulated.position.longitude);
-      _userLocationApprox = simulated.isApproximate;
-      if (mounted) setState(() {});
+      // GPS is ON but no user location set - get GPS address from profile
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final user = authService.currentUser;
+      
+      if (user != null) {
+        // Try to get GPS coordinates from user's profile address
+        LatLng? profileCoordinates;
+        
+        if (user['address'] is Map) {
+          final addressMap = user['address'] as Map;
+          final coordinates = addressMap['coordinates'];
+          if (coordinates is Map) {
+            final lat = coordinates['latitude'];
+            final lng = coordinates['longitude'];
+            if (lat != null && lng != null) {
+              profileCoordinates = LatLng(lat.toDouble(), lng.toDouble());
+            }
+          }
+        }
+        
+        if (profileCoordinates != null) {
+          // Use GPS coordinates from profile
+          _userLocation = ll.LatLng(profileCoordinates.latitude, profileCoordinates.longitude);
+          _userLocationApprox = false; // More accurate since it's from profile
+        } else {
+          // Fallback to simulated GPS if no profile coordinates
+          final simulated = await _locationService.simulateGpsForAddress(city: null);
+          _userLocation = ll.LatLng(simulated.position.latitude, simulated.position.longitude);
+          _userLocationApprox = simulated.isApproximate;
+        }
+        
+        if (mounted) setState(() {});
+      }
     } else if (!shouldShow) {
       // GPS is OFF - remove user marker immediately
       setState(() {
@@ -134,19 +162,10 @@ class _PalHandsOsmMapWidgetState extends State<PalHandsOsmMapWidget> {
       width: 36,
       height: 36,
       alignment: Alignment.center,
-      child: kIsWeb
-          ? MouseRegion(
-              onEnter: (event) => _onMarkerHover(m, event.position),
-              onExit: (_) => _onMarkerHoverExit(),
-              child: GestureDetector(
-                onTap: () => _onMarkerTap(m),
-                child: Icon(Icons.location_pin, color: color, size: 34),
-              ),
-            )
-          : GestureDetector(
-              onTap: () => _onMarkerTap(m),
-              child: Icon(Icons.location_pin, color: color, size: 34),
-            ),
+      child: GestureDetector(
+        onTap: () => _onMarkerTap(m),
+        child: Icon(Icons.location_pin, color: color, size: 34),
+      ),
     );
   }
 
@@ -189,12 +208,40 @@ class _PalHandsOsmMapWidgetState extends State<PalHandsOsmMapWidget> {
         _loading = false;
       });
       
-      // Inject a simulated user location only if GPS is enabled
+      // Inject user location from profile if GPS is enabled
       if (_shouldShowUserLocation()) {
-        final simulated = await _locationService.simulateGpsForAddress(city: null);
-        _userLocation = ll.LatLng(simulated.position.latitude, simulated.position.longitude);
-        _userLocationApprox = simulated.isApproximate;
-        if (mounted) setState(() {});
+        final authService = Provider.of<AuthService>(context, listen: false);
+        final user = authService.currentUser;
+        
+        if (user != null) {
+          // Try to get GPS coordinates from user's profile address
+          LatLng? profileCoordinates;
+          
+          if (user['address'] is Map) {
+            final addressMap = user['address'] as Map;
+            final coordinates = addressMap['coordinates'];
+            if (coordinates is Map) {
+              final lat = coordinates['latitude'];
+              final lng = coordinates['longitude'];
+              if (lat != null && lng != null) {
+                profileCoordinates = LatLng(lat.toDouble(), lng.toDouble());
+              }
+            }
+          }
+          
+          if (profileCoordinates != null) {
+            // Use GPS coordinates from profile
+            _userLocation = ll.LatLng(profileCoordinates.latitude, profileCoordinates.longitude);
+            _userLocationApprox = false; // More accurate since it's from profile
+          } else {
+            // Fallback to simulated GPS if no profile coordinates
+            final simulated = await _locationService.simulateGpsForAddress(city: null);
+            _userLocation = ll.LatLng(simulated.position.latitude, simulated.position.longitude);
+            _userLocationApprox = simulated.isApproximate;
+          }
+          
+          if (mounted) setState(() {});
+        }
       }
     } catch (e) {
       if (!mounted) return;
@@ -205,27 +252,6 @@ class _PalHandsOsmMapWidgetState extends State<PalHandsOsmMapWidget> {
     }
   }
 
-  void _onMarkerHover(MapMarker marker, Offset position) {
-    if (_pinnedProvider != null) return; // Don't hover if something is pinned
-    
-    // Get the real provider data for this marker
-    final provider = _providerData?.getProviderByMarkerId(marker.id);
-    if (provider == null) return;
-    
-    setState(() {
-      _hoveredProvider = provider;
-      _hoverPosition = position;
-    });
-  }
-
-  void _onMarkerHoverExit() {
-    if (_pinnedProvider != null) return; // Don't clear hover if something is pinned
-    
-    setState(() {
-      _hoveredProvider = null;
-      _hoverPosition = null;
-    });
-  }
 
   void _onMarkerTap(MapMarker marker) {
     // Get the real provider data for this marker
