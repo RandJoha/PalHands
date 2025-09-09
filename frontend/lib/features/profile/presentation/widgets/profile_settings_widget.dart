@@ -259,17 +259,88 @@ class _ProfileSettingsWidgetState extends State<ProfileSettingsWidget> {
               ),
             ),
             SizedBox(height: 16.h),
-            // Inline Change Password entry point
+            // Security section (Delete Account - same design as Admin/Provider)
             const Divider(),
             Text(
               AppStrings.getString('security', languageService.currentLanguage),
               style: GoogleFonts.cairo(fontSize: 16.sp, fontWeight: FontWeight.w700),
             ),
             SizedBox(height: 8.h),
-            const SecurityWidget(),
+            GestureDetector(
+              onTap: () => _showDeleteAccountDialog(context, languageService),
+              child: Container(
+                padding: EdgeInsets.all(16.w),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(color: AppColors.border, width: 1),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.delete_forever, color: AppColors.error),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            AppStrings.getString('deleteAccount', languageService.currentLanguage),
+                            style: GoogleFonts.cairo(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.error,
+                            ),
+                          ),
+                          SizedBox(height: 2.h),
+                          Text(
+                            AppStrings.getString('permanentlyDeleteAccount', languageService.currentLanguage),
+                            style: GoogleFonts.cairo(fontSize: 14.sp, color: AppColors.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios, color: AppColors.textSecondary, size: 16),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  void _showDeleteAccountDialog(BuildContext context, LanguageService languageService) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: Text(
+            AppStrings.getString('deleteAccount', languageService.currentLanguage),
+            style: GoogleFonts.cairo(fontWeight: FontWeight.w700, color: AppColors.error),
+          ),
+          content: Text(
+            AppStrings.getString('deleteAccountWarning', languageService.currentLanguage).isNotEmpty
+                ? AppStrings.getString('deleteAccountWarning', languageService.currentLanguage)
+                : 'Are you sure you want to delete your account? This action cannot be undone.',
+            style: GoogleFonts.cairo(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(AppStrings.getString('cancel', languageService.currentLanguage)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(ctx).pop();
+                await _deleteAccount(context);
+              },
+              style: TextButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: AppColors.white),
+              child: Text(AppStrings.getString('delete', languageService.currentLanguage)),
+            ),
+          ],
+        );
+      },
     );
   }
 

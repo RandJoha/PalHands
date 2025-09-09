@@ -2391,11 +2391,136 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               
               // Notifications
               _buildNotificationsSection(isMobile, isTablet),
+              SizedBox(height: isMobile ? 20.0 : 32.0),
+              // Security (Delete Account)
+              _buildSecuritySection(isMobile, isTablet),
             ],
           ),
         );
       },
     );
+  }
+
+  // Security section for client dashboard (Delete Account)
+  Widget _buildSecuritySection(bool isMobile, bool isTablet) {
+    return Container(
+      padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(isMobile ? 12.0 : 16.0),
+        border: Border.all(color: AppColors.border, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _getLocalizedString('security'),
+            style: GoogleFonts.cairo(
+              fontSize: isMobile ? 18.0 : 20.0,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          SizedBox(height: isMobile ? 12.0 : 16.0),
+          InkWell(
+            onTap: () => _showDeleteAccountDialog(context),
+            child: Container(
+              padding: EdgeInsets.all(isMobile ? 12.0 : 16.0),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(isMobile ? 8.0 : 12.0),
+                border: Border.all(color: AppColors.border, width: 1),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.delete_forever, color: AppColors.error, size: isMobile ? 24.0 : 28.0),
+                  const SizedBox(width: 12.0),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _getLocalizedString('deleteAccount'),
+                          style: GoogleFonts.cairo(
+                            fontSize: isMobile ? 16.0 : 18.0,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.error,
+                          ),
+                        ),
+                        Text(
+                          _getLocalizedString('permanentlyDeleteAccount'),
+                          style: GoogleFonts.cairo(
+                            fontSize: isMobile ? 14.0 : 16.0,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.arrow_forward_ios, color: AppColors.textSecondary, size: isMobile ? 16.0 : 18.0),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteAccountDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: Text(
+            _getLocalizedString('deleteAccount'),
+            style: GoogleFonts.cairo(fontWeight: FontWeight.w700, color: AppColors.error),
+          ),
+          content: Text(
+            _getLocalizedString('deleteAccountWarning') ?? 'Are you sure you want to delete your account? This action cannot be undone.',
+            style: GoogleFonts.cairo(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(_getLocalizedString('cancel')),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(ctx).pop();
+                await _deleteAccount(context);
+              },
+              style: TextButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: AppColors.white),
+              child: Text(_getLocalizedString('delete')),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteAccount(BuildContext context) async {
+    try {
+      final auth = Provider.of<AuthService>(context, listen: false);
+      final response = await auth.deleteAccount();
+      if (response['success'] == true) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Account deleted successfully'), backgroundColor: Colors.green),
+        );
+        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response['message'] ?? 'Failed to delete account'), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete account: ${e.toString()}'), backgroundColor: Colors.red),
+      );
+    }
   }
 
   Widget _buildProfileHeader(bool isMobile, bool isTablet) {

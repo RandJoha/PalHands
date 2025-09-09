@@ -145,6 +145,48 @@ class _MobileProfileSettingsWidgetState extends State<MobileProfileSettingsWidge
               ),
             ),
           ),
+
+          const SizedBox(height: 16),
+          const Divider(),
+          Text(
+            AppStrings.getString('security', languageService.currentLanguage),
+            style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () => _showDeleteAccountDialog(context, languageService),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border, width: 1),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.delete_forever, color: AppColors.error),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppStrings.getString('deleteAccount', languageService.currentLanguage),
+                          style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.error),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          AppStrings.getString('permanentlyDeleteAccount', languageService.currentLanguage),
+                          style: GoogleFonts.cairo(fontSize: 14, color: AppColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.arrow_forward_ios, color: AppColors.textSecondary, size: 16),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -183,6 +225,64 @@ class _MobileProfileSettingsWidgetState extends State<MobileProfileSettingsWidge
         ),
       ],
     );
+  }
+
+  void _showDeleteAccountDialog(BuildContext context, LanguageService languageService) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: Text(
+            AppStrings.getString('deleteAccount', languageService.currentLanguage),
+            style: GoogleFonts.cairo(fontWeight: FontWeight.w700, color: AppColors.error),
+          ),
+          content: Text(
+            AppStrings.getString('deleteAccountWarning', languageService.currentLanguage).isNotEmpty
+                ? AppStrings.getString('deleteAccountWarning', languageService.currentLanguage)
+                : 'Are you sure you want to delete your account? This action cannot be undone.',
+            style: GoogleFonts.cairo(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(AppStrings.getString('cancel', languageService.currentLanguage)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(ctx).pop();
+                await _deleteAccount(context);
+              },
+              style: TextButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: AppColors.white),
+              child: Text(AppStrings.getString('delete', languageService.currentLanguage)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteAccount(BuildContext context) async {
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final response = await authService.deleteAccount();
+      if (response['success'] == true) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Account deleted successfully'), backgroundColor: Colors.green),
+        );
+        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response['message'] ?? 'Failed to delete account'), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete account: ${e.toString()}'), backgroundColor: Colors.red),
+      );
+    }
   }
 
   Widget _buildAddressSection(LanguageService languageService) {

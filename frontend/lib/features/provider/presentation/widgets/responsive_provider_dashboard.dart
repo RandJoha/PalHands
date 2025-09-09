@@ -90,7 +90,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
     // Initialize notification service after build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authService = Provider.of<AuthService>(context, listen: false);
-      print('🔔 Initializing notification service with auth: ${authService.token != null ? 'token exists' : 'no token'}');
+     //rint('🔔 Initializing notification service with auth: ${authService.token != null ? 'token exists' : 'no token'}');
       _notificationService = NotificationService(authService);
       _loadUnreadNotificationCount();
     });
@@ -113,21 +113,21 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
   // Load unread notification count
   Future<void> _loadUnreadNotificationCount() async {
     try {
-      print('🔔 Loading unread notification count...');
+    //print('🔔 Loading unread notification count...');
       final response = await _notificationService.getUnreadCount();
       // debug log disabled
       
       if (response['success'] == true) {
         final count = response['data']['unreadCount'] ?? 0;
-        print('🔔 Setting notification count to: $count');
+     // print('🔔 Setting notification count to: $count');
         setState(() {
           _unreadNotificationCount = count;
         });
       } else {
-        print('🔔 Notification API returned non-success: ${response['message']}');
+     // print('🔔 Notification API returned non-success: ${response['message']}');
       }
     } catch (e) {
-      print('🔔 Error loading notification count: $e');
+     //rint('🔔 Error loading notification count: $e');
     }
   }
 
