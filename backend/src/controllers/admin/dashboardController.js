@@ -5,6 +5,7 @@ const Booking = require('../../models/Booking');
 const Report = require('../../models/Report');
 const AdminAction = require('../../models/AdminAction');
 const SystemSetting = require('../../models/SystemSetting');
+const ServiceCategory = require('../../models/ServiceCategory');
 
 // Deduplicate services by title to avoid duplicates from provider-service relationships
 function deduplicateServicesByTitle(services) {
@@ -342,7 +343,9 @@ const updateUser = async (req, res) => {
 const getServiceManagementData = async (req, res) => {
   try {
     const { page = 1, limit = 20, category, status, location } = req.query;
-    const skip = (page - 1) * limit;
+    const pageNum = parseInt(page);
+    const pageSize = parseInt(limit);
+    const skip = (pageNum - 1) * pageSize;
 
     // Build filter
     const filter = {};
@@ -354,9 +357,61 @@ const getServiceManagementData = async (req, res) => {
       .populate('provider', 'firstName lastName email phone')
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(parseInt(limit) * 2); // Get more services to allow for deduplication
+      .limit(pageSize * 2); // Get more services to allow for deduplication
 
-    const total = await Service.countDocuments(filter);
+    // Deduplicate services by title
+    const dedupedServices = deduplicateServicesByTitle(allServices);
+    const services = dedupedServices.slice(0, pageSize); // Limit after deduplication
+
+    // Get all categories from ServiceCategory collection (for icon/color metadata)
+    const storedCategories = await ServiceCategory.find({ isActive: true })
+      .select('id name icon color');
+
+    // Build a lookup map for stored category metadata
+    const categoryMetaById = new Map(
+      (storedCategories || []).map((c) => [c.id, {
+        id: c.id,
+        name: c.name,
+        icon: c.icon || 'category',
+        color: c.color || '#9E9E9E'
+      }])
+    );
+
+    // Aggregate distinct services per category (deduplicated by title)
+    const dbCategories = await Service.aggregate([
+      { $match: { isActive: true } },
+      // Distinct by category + title
+      { $group: { _id: { category: '$category', title: { $toLower: { $trim: { input: '$title' } } } } } },
+      // Regroup by category and count distinct titles
+      { $group: { _id: '$_id.category', serviceCount: { $sum: 1 } } },
+      { $sort: { serviceCount: -1 } }
+    ]);
+
+    // Create enhanced categories with counts and metadata
+    const enhancedCategories = dbCategories.map((cat) => {
+      const meta = categoryMetaById.get(cat._id) || {
+        id: cat._id,
+        name: (cat._id || '').charAt(0).toUpperCase() + (cat._id || '').slice(1) + ' Services',
+        icon: 'category',
+        color: '#9E9E9E'
+      };
+      return {
+        id: meta.id,
+        name: meta.name,
+        icon: meta.icon,
+        color: meta.color,
+        serviceCount: cat.serviceCount
+      };
+    });
+
+    // Calculate accurate total for deduplicated services
+    const total = await Service.aggregate([
+      { $match: filter },
+      { $group: { _id: '$title' } },
+      { $count: 'total' }
+    ]);
+
+    const totalCount = total.length > 0 ? total[0].total : 0;
 
     res.json({
       success: true,
@@ -364,9 +419,9 @@ const getServiceManagementData = async (req, res) => {
         services,
         categories: enhancedCategories,
         pagination: {
-          current: parseInt(page),
-          total: Math.ceil(total / limit),
-          totalRecords: total
+          current: pageNum,
+          total: Math.ceil(totalCount / pageSize),
+          totalRecords: totalCount
         }
       }
     });
@@ -560,7 +615,6 @@ const deleteCategory = async (req, res) => {
     console.log(`🗑️ Delete category request for ID: ${categoryId}`);
     
     // Import required models
-    const ServiceCategory = require('../../models/ServiceCategory');
     const Service = require('../../models/Service');
     const ProviderService = require('../../models/ProviderService');
     const Booking = require('../../models/Booking');

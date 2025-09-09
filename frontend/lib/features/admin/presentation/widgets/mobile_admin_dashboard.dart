@@ -38,7 +38,7 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
   @override
   void initState() {
     super.initState();
-    print('🔔 [ADMIN-MOBILE] Initializing mobile admin dashboard...');
+    // debug log disabled
     
     // Initialize notification service after build
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -70,33 +70,33 @@ class _MobileAdminDashboardState extends State<MobileAdminDashboard> {
 
   Future<void> _loadUnreadNotificationCount() async {
     if (_notificationService == null) {
-      print('🔔 [ADMIN-MOBILE] Notification service not initialized yet');
+      // debug log disabled
       return;
     }
     
     try {
-      print('🔔 [ADMIN-MOBILE] Loading unread notification count...');
+      // debug log disabled
       final response = await _notificationService!.getUnreadCount();
-      print('🔔 [ADMIN-MOBILE] Notification API response: $response');
+      // debug log disabled
       
       if (response['success'] == true && mounted) {
         final count = response['data']['unreadCount'] ?? 0;
-        print('🔔 [ADMIN-MOBILE] Setting notification count to: $count');
+        // debug log disabled
         setState(() {
           _unreadNotificationCount = count;
         });
       } else {
-        print('🔔 [ADMIN-MOBILE] Notification API returned non-success: ${response['message']}');
+        // debug log disabled
       }
     } catch (e) {
-      print('🔔 [ADMIN-MOBILE] Error loading notification count: $e');
+      // debug log disabled
     }
   }
 
   // Show notification dialog
   void _showNotificationDialog() {
     if (_notificationService == null) {
-      print('🔔 [ADMIN-MOBILE] Cannot show notification dialog - service not initialized');
+      // debug log disabled
       return;
     }
     

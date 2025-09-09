@@ -346,25 +346,15 @@ async function getCategoriesWithServices(req, res) {
     
     // Get actual services for each category
     const categoriesWithServices = await Promise.all(
-      dbCategories.map(async (cat) => {
-        const services = await Service.find(
-          { category: cat._id, isActive: true },
-          { title: 1, description: 1, category: 1, subcategory: 1, price: 1, rating: 1, provider: 1 }
+      allCategories.map(async (categoryData) => {
+        const allServices = await Service.find(
+          { category: categoryData.id, isActive: true },
+          { title: 1, description: 1, category: 1, subcategory: 1, price: 1, rating: 1, provider: 1, totalBookings: 1 }
         ).populate('provider', 'fullName email phone')
          .limit(100); // Get more services to allow for deduplication
         
-        // Find predefined category or create dynamic one
-        const predefinedCategory = SERVICE_CATEGORIES.find(c => c.id === cat._id);
-        const categoryData = predefinedCategory || {
-          id: cat._id,
-          name: cat._id.charAt(0).toUpperCase() + cat._id.slice(1) + ' Services',
-          nameKey: cat._id + 'Services',
-          description: `Services in the ${cat._id} category`,
-          icon: 'category',
-          color: '#9E9E9E',
-          services: [],
-          isDynamic: true
-        };
+        // Deduplicate services by title
+        const services = deduplicateServicesByTitle(allServices).slice(0, 20); // Limit after deduplication
         
         return {
           ...categoryData,
@@ -421,3 +411,12 @@ async function createCategory(req, res) {
     return error(res, 400, e.message || 'Failed to create category');
   }
 }
+
+module.exports = {
+  listCategories,
+  getCategoryById,
+  getCategoriesWithCounts,
+  getDistinctServicesByCategory,
+  getCategoriesWithServices,
+  createCategory
+};

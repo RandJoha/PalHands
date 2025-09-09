@@ -115,7 +115,7 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
     try {
       print('🔔 Loading unread notification count...');
       final response = await _notificationService.getUnreadCount();
-      print('🔔 Notification API response: $response');
+      // debug log disabled
       
       if (response['success'] == true) {
         final count = response['data']['unreadCount'] ?? 0;

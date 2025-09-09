@@ -41,7 +41,7 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
   @override
   void initState() {
     super.initState();
-    print('🔔 [ADMIN] Initializing admin dashboard...');
+    // debug log disabled
     
     // Initialize notification service after build
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -73,33 +73,33 @@ class _WebAdminDashboardState extends State<WebAdminDashboard> {
 
   Future<void> _loadUnreadNotificationCount() async {
     if (_notificationService == null) {
-      print('🔔 [ADMIN] Notification service not initialized yet');
+      // debug log disabled
       return;
     }
     
     try {
-      print('🔔 [ADMIN] Loading unread notification count...');
+      // debug log disabled
       final response = await _notificationService!.getUnreadCount();
-      print('🔔 [ADMIN] Notification API response: $response');
+      // debug log disabled
       
       if (response['success'] == true && mounted) {
         final count = response['data']['unreadCount'] ?? 0;
-        print('🔔 [ADMIN] Setting notification count to: $count');
+        // debug log disabled
         setState(() {
           _unreadNotificationCount = count;
         });
       } else {
-        print('🔔 [ADMIN] Notification API returned non-success: ${response['message']}');
+        // debug log disabled
       }
     } catch (e) {
-      print('🔔 [ADMIN] Error loading notification count: $e');
+      // debug log disabled
     }
   }
 
   // Show notification dialog
   void _showNotificationDialog() {
     if (_notificationService == null) {
-      print('🔔 [ADMIN] Cannot show notification dialog - service not initialized');
+      // debug log disabled
       return;
     }
     

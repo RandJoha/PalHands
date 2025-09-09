@@ -27,6 +27,8 @@ class ServiceManagementWidget extends StatefulWidget {
 }
 
 class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
+  // Silence console logs from this widget
+  static const bool _adminLogsEnabled = false;
   bool _isLoading = false;
   List<ServiceModel> _services = [];
   List<ServiceCategoryModel> _categories = [];
@@ -58,7 +60,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
   void _startPeriodicRefresh() {
     _categoryRefreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
       if (mounted) {
-        if (kDebugMode) {
+        if (kDebugMode && _adminLogsEnabled) {
           print('🔄 Periodic category refresh triggered');
         }
         _refreshCategories();
@@ -85,7 +87,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
         _categories = categories;
       });
       
-      if (kDebugMode) {
+      if (kDebugMode && _adminLogsEnabled) {
         print('🔄 Categories refreshed: ${categories.length} categories loaded');
         for (final category in categories) {
           print('  - ${category.name} (${category.id})');
@@ -112,7 +114,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
 
   /// Force refresh categories from database
   Future<void> _refreshCategories() async {
-    if (kDebugMode) {
+    if (kDebugMode && _adminLogsEnabled) {
       print('🔄 Force refreshing categories...');
     }
     
@@ -127,14 +129,14 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
       });
     }
     
-    if (kDebugMode) {
+    if (kDebugMode && _adminLogsEnabled) {
       print('✅ Categories refresh completed - UI updated');
     }
   }
 
   /// Enhanced refresh with multiple strategies to ensure dynamic updates
   Future<void> _forceDynamicRefresh() async {
-    if (kDebugMode) {
+    if (kDebugMode && _adminLogsEnabled) {
       print('🚀 Starting dynamic category refresh...');
     }
     
@@ -162,14 +164,14 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
         });
       }
       
-      if (kDebugMode) {
+      if (kDebugMode && _adminLogsEnabled) {
         print('✅ Dynamic refresh completed - ${freshCategories.length} categories loaded');
         for (final category in freshCategories) {
           print('  📂 ${category.name} (${category.id})');
         }
       }
     } catch (e) {
-      if (kDebugMode) {
+      if (kDebugMode && _adminLogsEnabled) {
         print('❌ Error in dynamic refresh: $e');
       }
       // Fallback to regular refresh
@@ -256,7 +258,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
           
           // Parse services
           final servicesData = responseData['services'] as List<dynamic>;
-          if (kDebugMode) {
+          if (kDebugMode && _adminLogsEnabled) {
             print('🔍 Raw services data: ${servicesData.length} items');
             if (servicesData.isNotEmpty) {
               print('🔍 First service data: ${servicesData[0]}');
@@ -269,7 +271,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
               final service = ServiceModel.fromJson(servicesData[i]);
               services.add(service);
             } catch (e) {
-              if (kDebugMode) {
+              if (kDebugMode && _adminLogsEnabled) {
                 print('❌ Error parsing service $i: $e');
                 print('❌ Service data: ${servicesData[i]}');
               }
@@ -280,7 +282,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
           final categoriesData = responseData['categories'] as List<dynamic>;
           final adminCategories = categoriesData.map((json) => Map<String, dynamic>.from(json)).toList();
           
-          if (kDebugMode) {
+          if (kDebugMode && _adminLogsEnabled) {
             print('🔍 Categories loaded: ${adminCategories.length}');
             for (var cat in adminCategories) {
               print('🔍 Category: ${cat['name']} (ID: ${cat['id']}) - Count: ${cat['serviceCount']}');
@@ -293,7 +295,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
             _isLoading = false;
           });
           
-          if (kDebugMode) {
+          if (kDebugMode && _adminLogsEnabled) {
             print('✅ Loaded ${services.length} services and ${adminCategories.length} categories');
             print('🔍 Services data: ${services.map((s) => s.title).toList()}');
             print('🔍 Filtered services: ${_filteredServices.length}');
@@ -305,7 +307,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
         throw Exception('HTTP ${response.statusCode}: ${response.body}');
       }
     } catch (e) {
-      if (kDebugMode) {
+      if (kDebugMode && _adminLogsEnabled) {
         print('❌ Error loading admin service data: $e');
       }
       rethrow;
@@ -675,10 +677,10 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                 final childAspectRatio = constraints.maxWidth > 1200 ? 2.4 : 1.8; // Even more height for content
                 final spacing = constraints.maxWidth > 1400 ? 12.0 : 10.0;
                 
-                return SizedBox(
-                  height: 300, // Increased height to show more categories
-                  child: GridView.builder(
-                    physics: const AlwaysScrollableScrollPhysics(),
+                return GridView.builder(
+                    // Let the grid grow with content so it remains visible on smaller screens
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: crossAxisCount,
                       crossAxisSpacing: spacing,
@@ -688,49 +690,63 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                     itemCount: _adminCategories.length,
                     itemBuilder: (context, index) {
                       final category = _adminCategories[index];
-                      final count = category['serviceCount'] ?? 0;
+                      // Support both new (serviceCount) and legacy (count) keys
+                      final count = category['serviceCount'] ?? category['count'] ?? 0;
                       final name = category['name'] ?? 'Unknown';
                       final color = category['color'] ?? '#9E9E9E';
                       final icon = category['icon'] ?? 'category';
+                      // Dynamic sizing based on the computed grid cell width
+                      final cellWidth = (constraints.maxWidth / crossAxisCount) - spacing;
+                      final double scale = ((cellWidth / 360).clamp(0.85, 1.15)).toDouble();
+                      final double pad = (12 * scale).clamp(10, 16);
+                      final double iconCircle = (28 * scale).clamp(22, 34);
+                      final double iconSize = (iconCircle * 0.55).clamp(12, 18);
+                      final double nameFont = (13 * scale).clamp(11, 16);
+                      final double countFont = (11 * scale).clamp(9, 13);
+                      final double vSpace1 = (8 * scale).clamp(6, 12);
+                      final double vSpace2 = (6 * scale).clamp(4, 10);
                       
                       return Stack(
+                        clipBehavior: Clip.none,
                         children: [
-                          Container(
-                            padding: EdgeInsets.all(constraints.maxWidth > 1400 ? 12 : 10), // Increased padding for better spacing
-                            decoration: BoxDecoration(
-                              color: Color(int.parse(color.replaceFirst('#', '0xFF'))).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: Color(int.parse(color.replaceFirst('#', '0xFF'))).withValues(alpha: 0.3),
-                                width: 1,
+                          // Make the card fill the grid cell so the delete button aligns to its corner
+                          Positioned.fill(
+                            child: Container(
+                              padding: EdgeInsets.all(pad),
+                              decoration: BoxDecoration(
+                                color: Color(int.parse(color.replaceFirst('#', '0xFF'))).withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Color(int.parse(color.replaceFirst('#', '0xFF'))).withValues(alpha: 0.3),
+                                  width: 1,
+                                ),
                               ),
-                            ),
-                            child: Column(
+                              child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 // Category icon
                                 Container(
-                                  width: constraints.maxWidth > 1400 ? 30 : 26, // Slightly smaller icon
-                                  height: constraints.maxWidth > 1400 ? 30 : 26,
+                                  width: iconCircle,
+                                  height: iconCircle,
                                   decoration: BoxDecoration(
                                     color: Color(int.parse(color.replaceFirst('#', '0xFF'))),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(
                                     _getIconData(icon),
-                                    size: constraints.maxWidth > 1400 ? 16 : 14, // Slightly smaller icon size
+                                    size: iconSize,
                                     color: Colors.white,
                                   ),
                                 ),
-                                SizedBox(height: constraints.maxWidth > 1400 ? 8 : 6), // Increased spacing for better visibility
+                                SizedBox(height: vSpace1),
                                 
                                 // Category name
                                 Flexible(
                                   child: Text(
                                     name,
                                     style: GoogleFonts.cairo(
-                                      fontSize: constraints.maxWidth > 1400 ? 12 : 11, // Slightly larger font for better readability
+                                      fontSize: nameFont,
                                       fontWeight: FontWeight.w600,
                                       color: AppColors.textDark,
                                     ),
@@ -739,13 +755,13 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                SizedBox(height: 6), // Increased spacing for better separation
+                                SizedBox(height: vSpace2),
                                 
                                 // Service count
                                 Container(
                                   padding: EdgeInsets.symmetric(
-                                    horizontal: constraints.maxWidth > 1400 ? 6 : 5, // Reduced padding
-                                    vertical: 1, // Reduced vertical padding
+                                    horizontal: (6 * scale).clamp(5, 9),
+                                    vertical: (2 * scale).clamp(1, 3),
                                   ),
                                   decoration: BoxDecoration(
                                     color: Color(int.parse(color.replaceFirst('#', '0xFF'))),
@@ -754,19 +770,20 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                                   child: Text(
                                     '$count',
                                     style: GoogleFonts.cairo(
-                                      fontSize: constraints.maxWidth > 1400 ? 10 : 9, // Slightly smaller font
+                                      fontSize: countFont,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
                                     ),
                                   ),
                                 ),
                               ],
+                              ),
                             ),
                           ),
-                          // Delete button positioned close to the card edge
+                          // Delete button aligned to the card's top-right edge
                           Positioned(
-                            top: 4,
-                            right: 4,
+                            top: 6,
+                            right: 6,
                             child: GestureDetector(
                               onTap: () => _showCategoryDeleteConfirmation(context, category, languageService),
                               child: Container(
@@ -794,8 +811,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                         ],
                       );
                     },
-                  ),
-                );
+                  );
               },
             ),
         ],
@@ -1470,7 +1486,7 @@ class _ServiceManagementWidgetState extends State<ServiceManagementWidget> {
                       ),
                       items: [
                         ..._categories.map((category) {
-                          if (kDebugMode) {
+                          if (kDebugMode && _adminLogsEnabled) {
                             print('📋 Adding category to dropdown: ${category.name} (${category.id})');
                           }
                           return DropdownMenuItem(
