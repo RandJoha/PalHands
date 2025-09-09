@@ -35,15 +35,15 @@ class MapProviderService with BaseApiService {
         limit: 100,
       );
       
-      if (kDebugMode) {
-        print('🗺️ MapProviderService: Using same data source as "Our Services"');
-        print('🗺️ Total providers loaded: ${providers.length}');
-        final lilaProviders = providers.where((p) => p.name.contains('ليلى')).toList();
-        if (lilaProviders.isNotEmpty) {
-          final lila = lilaProviders.first;
-          print('🗺️ ليلى حسن - ID: ${lila.id}, Provider ID: ${lila.providerId}, Services: ${lila.services.join(', ')}');
-        }
-      }
+      // if (kDebugMode) {
+      //   print('🗺️ MapProviderService: Using same data source as "Our Services"');
+      //   print('🗺️ Total providers loaded: ${providers.length}');
+      //   final lilaProviders = providers.where((p) => p.name.contains('ليلى')).toList();
+      //   if (lilaProviders.isNotEmpty) {
+      //     final lila = lilaProviders.first;
+      //     print('🗺️ ليلى حسن - ID: ${lila.id}, Provider ID: ${lila.providerId}, Services: ${lila.services.join(', ')}');
+      //   }
+      // }
       
     // Apply service filtering (ANY match) if servicesAny provided
     final serviceFiltered = (filters?.servicesAny != null && filters!.servicesAny!.isNotEmpty)

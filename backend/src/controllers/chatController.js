@@ -28,60 +28,60 @@ const getUserChats = async (req, res) => {
       updatedAt: -1 
     });
     
-    console.log(`🔍 Database query completed:`);
-    console.log(`  - Query: participants: ${userId}, isActive: true`);
-    console.log(`  - Sort: lastMessage.timestamp: -1, updatedAt: -1`);
-    console.log(`  - Found ${chats.length} chats`);
+    // console.log(`🔍 Database query completed:`);
+    // console.log(`  - Query: participants: ${userId}, isActive: true`);
+    // console.log(`  - Sort: lastMessage.timestamp: -1, updatedAt: -1`);
+    // console.log(`  - Found ${chats.length} chats`);
 
-    console.log(`📱 Found ${chats.length} chats for user ${userId.toString()}`);
+    // console.log(`📱 Found ${chats.length} chats for user ${userId.toString()}`);
     
-    if (chats.length > 0) {
-      console.log('📋 Raw chats data:');
-      chats.forEach((chat, index) => {
-        console.log(`  - Chat ${index + 1}:`);
-        console.log(`    - ID: ${chat._id}`);
-        console.log(`    - Participants: ${chat.participants.map(p => p.toString())}`);
-        console.log(`    - Last message text: ${chat.lastMessage?.text || 'No message'}`);
-        console.log(`    - Last message content: ${chat.lastMessage?.content || 'No content'}`);
-        console.log(`    - Last message sender: ${chat.lastMessage?.sender || 'No sender'}`);
-        console.log(`    - Last message timestamp: ${chat.lastMessage?.timestamp || 'No timestamp'}`);
-        console.log(`    - Updated at: ${chat.updatedAt}`);
-        console.log(`    - Service name: ${chat.serviceName || 'No service'}`);
-        console.log(`    - Is new chat: ${!chat.lastMessage ? 'YES' : 'NO'}`);
-        console.log(`    - Full lastMessage object:`, chat.lastMessage);
-      });
-    }
+    // if (chats.length > 0) {
+    //   console.log('📋 Raw chats data:');
+    //   chats.forEach((chat, index) => {
+    //     console.log(`  - Chat ${index + 1}:`);
+    //     console.log(`    - ID: ${chat._id}`);
+    //     console.log(`    - Participants: ${chat.participants.map(p => p.toString())}`);
+    //     console.log(`    - Last message text: ${chat.lastMessage?.text || 'No message'}`);
+    //     console.log(`    - Last message content: ${chat.lastMessage?.content || 'No content'}`);
+    //     console.log(`    - Last message sender: ${chat.lastMessage?.sender || 'No sender'}`);
+    //     console.log(`    - Last message timestamp: ${chat.lastMessage?.timestamp || 'No timestamp'}`);
+    //     console.log(`    - Updated at: ${chat.updatedAt}`);
+    //     console.log(`    - Service name: ${chat.serviceName || 'No service'}`);
+    //     console.log(`    - Is new chat: ${!chat.lastMessage ? 'YES' : 'NO'}`);
+    //     console.log(`    - Full lastMessage object:`, chat.lastMessage);
+    //   });
+    // }
 
   // Populate participants manually - try User first, then Provider (supports provider-only participants)
     const populatedChats = await Promise.all(chats.map(async (chat) => {
-      console.log(`🔍 Populating participants for chat ${chat._id}:`);
-      console.log(`  - Raw participants: ${chat.participants.map(p => p.toString())}`);
-      console.log(`  - Participants type: ${chat.participants.map(p => typeof p)}`);
-      console.log(`  - Participants are ObjectIds: ${chat.participants.map(p => p instanceof mongoose.Types.ObjectId)}`);
+      // console.log(`🔍 Populating participants for chat ${chat._id}:`);
+      // console.log(`  - Raw participants: ${chat.participants.map(p => p.toString())}`);
+      // console.log(`  - Participants type: ${chat.participants.map(p => typeof p)}`);
+      // console.log(`  - Participants are ObjectIds: ${chat.participants.map(p => p instanceof mongoose.Types.ObjectId)}`);
       
       // Validate that participants are valid ObjectIds
       const validParticipants = chat.participants.filter(p => {
         const isValid = mongoose.Types.ObjectId.isValid(p);
-        if (!isValid) {
-          console.log(`  - ⚠️ Invalid participant ID: ${p} (type: ${typeof p})`);
-        }
+        // if (!isValid) {
+        //   console.log(`  - ⚠️ Invalid participant ID: ${p} (type: ${typeof p})`);
+        // }
         return isValid;
       });
       
-      if (validParticipants.length !== chat.participants.length) {
-        console.log(`  - ⚠️ WARNING: ${chat.participants.length - validParticipants.length} invalid participant IDs found`);
-      }
+      // if (validParticipants.length !== chat.participants.length) {
+      //   console.log(`  - ⚠️ WARNING: ${chat.participants.length - validParticipants.length} invalid participant IDs found`);
+      // }
       
       const populatedParticipants = await Promise.all(validParticipants.map(async (participantId) => {
-        console.log(`  - Looking up participant: ${participantId}`);
+        // console.log(`  - Looking up participant: ${participantId}`);
         let user = await User.findById(participantId).select('firstName lastName email profileImage role');
         if (user) {
-          console.log(`  - Found user: ${user.firstName} ${user.lastName}`);
+          // console.log(`  - Found user: ${user.firstName} ${user.lastName}`);
           return user;
         }
         const provider = await Provider.findById(participantId).select('firstName lastName email profileImage');
         if (provider) {
-          console.log(`  - Found provider: ${provider.firstName} ${provider.lastName}`);
+          // console.log(`  - Found provider: ${provider.firstName} ${provider.lastName}`);
           return {
             _id: provider._id,
             firstName: provider.firstName,
@@ -91,7 +91,7 @@ const getUserChats = async (req, res) => {
             role: 'provider'
           };
         }
-        console.log(`  - ❌ Participant not found in User or Provider for ID: ${participantId}`);
+        // console.log(`  - ❌ Participant not found in User or Provider for ID: ${participantId}`);
         return null;
       }));
 
@@ -126,23 +126,23 @@ const getUserChats = async (req, res) => {
         ) : null
       };
       
-      console.log(`  - Populated result participants: ${result.participants.map(p => p ? `${p.firstName} ${p.lastName}` : 'NULL')}`);
+      // console.log(`  - Populated result participants: ${result.participants.map(p => p ? `${p.firstName} ${p.lastName}` : 'NULL')}`);
       return result;
     }));
 
     // Transform chats to include participant info and unread counts
     const transformedChats = populatedChats.map(chat => {
-      console.log(`🔄 Transforming chat ${chat._id}:`);
-      console.log(`  - All participants: ${chat.participants.map(p => p ? `${p.firstName} ${p.lastName} (${p._id})` : 'NULL')}`);
-      console.log(`  - Current user ID: ${userId}`);
+      // console.log(`🔄 Transforming chat ${chat._id}:`);
+      // console.log(`  - All participants: ${chat.participants.map(p => p ? `${p.firstName} ${p.lastName} (${p._id})` : 'NULL')}`);
+      // console.log(`  - Current user ID: ${userId}`);
       
       const otherParticipant = chat.participants.find(p => p._id.toString() !== userId.toString());
-      console.log(`  - Other participant found: ${otherParticipant ? `${otherParticipant.firstName} ${otherParticipant.lastName}` : 'NOT FOUND'}`);
+      // console.log(`  - Other participant found: ${otherParticipant ? `${otherParticipant.firstName} ${otherParticipant.lastName}` : 'NOT FOUND'}`);
       
-      if (!otherParticipant) {
-        console.log(`  - ⚠️ WARNING: No other participant found for chat ${chat._id}`);
-        console.log(`  - This might indicate a data integrity issue`);
-      }
+      // if (!otherParticipant) {
+      //   console.log(`  - ⚠️ WARNING: No other participant found for chat ${chat._id}`);
+      //   console.log(`  - This might indicate a data integrity issue`);
+      // }
       
       const unreadCount = chat.unreadCounts.get(userId.toString()) || 0;
       
@@ -167,28 +167,28 @@ const getUserChats = async (req, res) => {
         updatedAt: chat.updatedAt
       };
       
-      console.log(`  - Transformed participant: ${transformedChat.participant.name}`);
+      // console.log(`  - Transformed participant: ${transformedChat.participant.name}`);
       return transformedChat;
     });
 
-    console.log(`📤 Returning ${transformedChats.length} transformed chats to frontend`);
+    // console.log(`📤 Returning ${transformedChats.length} transformed chats to frontend`);
     
     // Log each transformed chat with detailed participant info
-    transformedChats.forEach((chat, index) => {
-      console.log(`✅ Transformed chat ${index + 1}:`);
-      console.log(`  - Chat ID: ${chat._id}`);
-      console.log(`  - Participant ID: ${chat.participant._id}`);
-      console.log(`  - Participant name: "${chat.participant.name}"`);
-      console.log(`  - Participant email: ${chat.participant.email}`);
-      console.log(`  - Participant role: ${chat.participant.role}`);
-      console.log(`  - Last message: ${chat.lastMessage?.content || 'No message'}`);
-      console.log(`  - Service name: ${chat.serviceName || 'No service'}`);
-      console.log(`  - Full participant object:`, chat.participant);
-    });
+    // transformedChats.forEach((chat, index) => {
+    //   console.log(`✅ Transformed chat ${index + 1}:`);
+    //   console.log(`  - Chat ID: ${chat._id}`);
+    //   console.log(`  - Participant ID: ${chat.participant._id}`);
+    //   console.log(`  - Participant name: "${chat.participant.name}"`);
+    //   console.log(`  - Participant email: ${chat.participant.email}`);
+    //   console.log(`  - Participant role: ${chat.participant.role}`);
+    //   console.log(`  - Last message: ${chat.lastMessage?.content || 'No message'}`);
+    //   console.log(`  - Service name: ${chat.serviceName || 'No service'}`);
+    //   console.log(`  - Full participant object:`, chat.participant);
+    // });
     
     // Also log the raw response being sent
     const responseData = { chats: transformedChats };
-    console.log('📤 Final response data structure:', JSON.stringify(responseData, null, 2));
+    // console.log('📤 Final response data structure:', JSON.stringify(responseData, null, 2));
     
     // Always return success with chats array, even if empty
     return ok(res, responseData);
@@ -229,25 +229,25 @@ const getChatMessages = async (req, res) => {
     }
 
     // Get messages
-    console.log('🔍 Backend - Fetching messages for chat:', {
-      chatId: chatId.toString(),
-      userId: userId.toString(),
-      query: { chatId },
-      skip,
-      limit: parseInt(limit)
-    });
+    // console.log('🔍 Backend - Fetching messages for chat:', {
+    //   chatId: chatId.toString(),
+    //   userId: userId.toString(),
+    //   query: { chatId },
+    //   skip,
+    //   limit: parseInt(limit)
+    // });
     
     const messages = await Message.find({ chatId })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
       
-    console.log('📱 Backend - Found messages:', {
-      chatId: chatId.toString(),
-      messageCount: messages.length,
-      messageIds: messages.map(m => m._id.toString()),
-      firstMessageContent: messages.length > 0 ? messages[0].content : 'None'
-    });
+    // console.log('📱 Backend - Found messages:', {
+    //   chatId: chatId.toString(),
+    //   messageCount: messages.length,
+    //   messageIds: messages.map(m => m._id.toString()),
+    //   firstMessageContent: messages.length > 0 ? messages[0].content : 'None'
+    // });
 
     // Populate senders manually - try User first, then Provider
     const populatedMessages = await Promise.all(messages.map(async (message) => {
@@ -342,14 +342,14 @@ const sendMessage = async (req, res) => {
     const userId = req.user._id;
     const userRole = req.user.role;
 
-    console.log('💬 Send message request:', {
-      chatId,
-      content: content?.substring(0, 50) + (content?.length > 50 ? '...' : ''),
-      messageType,
-      userId: userId.toString(),
-      userRole,
-      timestamp: new Date().toISOString()
-    });
+    // console.log('💬 Send message request:', {
+    //   chatId,
+    //   content: content?.substring(0, 50) + (content?.length > 50 ? '...' : ''),
+    //   messageType,
+    //   userId: userId.toString(),
+    //   userRole,
+    //   timestamp: new Date().toISOString()
+    // });
 
     // Verify user is participant in this chat
     const chat = await Chat.findOne({
@@ -359,24 +359,24 @@ const sendMessage = async (req, res) => {
     });
 
     if (!chat) {
-      console.log('❌ Chat not found:', chatId);
+      // console.log('❌ Chat not found:', chatId);
       return error(res, 404, 'Chat not found');
     }
 
-    console.log('✅ Chat found:', {
-      chatId: chat._id.toString(),
-      participants: chat.participants.map(p => p.toString()),
-      lastMessage: chat.lastMessage?.content || 'No previous message'
-    });
+    // console.log('✅ Chat found:', {
+    //   chatId: chat._id.toString(),
+    //   participants: chat.participants.map(p => p.toString()),
+    //   lastMessage: chat.lastMessage?.content || 'No previous message'
+    // });
 
     // Validate message content
     if (!content || content.trim().length === 0) {
-      console.log('❌ Empty message content');
+      // console.log('❌ Empty message content');
       return error(res, 400, 'Message content is required');
     }
 
     if (content.length > 1000) {
-      console.log('❌ Message too long:', content.length);
+      // console.log('❌ Message too long:', content.length);
       return error(res, 400, 'Message too long (max 1000 characters)');
     }
 
@@ -391,12 +391,12 @@ const sendMessage = async (req, res) => {
     });
 
     await message.save();
-    console.log('✅ Message saved:', {
-      messageId: message._id.toString(),
-      content: message.content,
-      sender: message.sender.toString(),
-      createdAt: message.createdAt
-    });
+    // console.log('✅ Message saved:', {
+    //   messageId: message._id.toString(),
+    //   content: message.content,
+    //   sender: message.sender.toString(),
+    //   createdAt: message.createdAt
+    // });
 
     // Update chat's last message and unread counts
     const otherParticipants = chat.participants.filter(p => p.toString() !== userId.toString());
@@ -406,7 +406,7 @@ const sendMessage = async (req, res) => {
       unreadUpdates[participantId.toString()] = currentCount + 1;
     });
 
-    console.log('📊 Unread count updates:', unreadUpdates);
+    // console.log('📊 Unread count updates:', unreadUpdates);
 
     // Populate sender info for last message
     let sender = await User.findById(userId).select('firstName lastName profileImage');
@@ -416,11 +416,11 @@ const sendMessage = async (req, res) => {
         sender = { _id: prov._id, firstName: prov.firstName, lastName: prov.lastName || '', profileImage: prov.profileImage };
       }
     }
-    console.log('👤 Sender info:', {
-      id: sender._id.toString(),
-      name: `${sender.firstName} ${sender.lastName}`,
-      email: sender.email
-    });
+    // console.log('👤 Sender info:', {
+    //   id: sender._id.toString(),
+    //   name: `${sender.firstName} ${sender.lastName}`,
+    //   email: sender.email
+    // });
 
     const updateResult = await Chat.updateOne(
       { _id: chatId },
@@ -435,12 +435,12 @@ const sendMessage = async (req, res) => {
       }
     );
 
-    console.log('✅ Chat updated:', {
-      matchedCount: updateResult.matchedCount,
-      modifiedCount: updateResult.modifiedCount,
-      lastMessageContent: content,
-      updatedAt: new Date()
-    });
+    // console.log('✅ Chat updated:', {
+    //   matchedCount: updateResult.matchedCount,
+    //   modifiedCount: updateResult.modifiedCount,
+    //   lastMessageContent: content,
+    //   updatedAt: new Date()
+    // });
 
     // Create notifications for other participants - DISABLED
     // try {
@@ -526,7 +526,7 @@ const createOrGetChat = async (req, res) => {
 
     // Validate participantId is a valid MongoDB ObjectId
     if (!participantId || typeof participantId !== 'string' || participantId.length !== 24) {
-      console.log('Invalid participantId:', participantId);
+      // console.log('Invalid participantId:', participantId);
       return error(res, 400, 'Invalid provider ID. Please select a valid provider.');
     }
 
@@ -537,11 +537,11 @@ const createOrGetChat = async (req, res) => {
       participantProvider = await Provider.findById(participantId);
     }
     if (!participantUser && !participantProvider) {
-      console.log('Participant not found in User or Provider:', participantId);
+      // console.log('Participant not found in User or Provider:', participantId);
       return error(res, 404, 'Provider not found. Please select a valid provider.');
     }
     const participantObjectId = participantUser ? participantUser._id : participantProvider._id;
-    console.log('Participant found:', participantObjectId);
+    // console.log('Participant found:', participantObjectId);
 
     // Check if chat already exists
     let chat = await Chat.findOne({
@@ -550,7 +550,7 @@ const createOrGetChat = async (req, res) => {
     });
 
     if (!chat) {
-      console.log('Creating new chat');
+      // console.log('Creating new chat');
       // Create new chat
       chat = new Chat({
         participants: [userId, participantObjectId],
@@ -563,9 +563,9 @@ const createOrGetChat = async (req, res) => {
       });
 
       await chat.save();
-      console.log('New chat created:', chat._id);
+      // console.log('New chat created:', chat._id);
     } else {
-      console.log('Existing chat found:', chat._id);
+      // console.log('Existing chat found:', chat._id);
     }
 
     // Populate participant info manually
@@ -579,7 +579,7 @@ const createOrGetChat = async (req, res) => {
       return null;
     }));
 
-    console.log('Populated participants:', populatedParticipants.map(p => ({ id: p._id, name: `${p.firstName} ${p.lastName}` })));
+    // console.log('Populated participants:', populatedParticipants.map(p => ({ id: p._id, name: `${p.firstName} ${p.lastName}` })));
 
     const otherParticipant = populatedParticipants.find(p => p._id.toString() !== userId.toString());
     
@@ -588,7 +588,7 @@ const createOrGetChat = async (req, res) => {
       return error(res, 500, 'Failed to find chat participant');
     }
 
-    console.log('Other participant found:', otherParticipant._id);
+    // console.log('Other participant found:', otherParticipant._id);
     
   const responseChat = {
       _id: chat._id,
@@ -605,7 +605,7 @@ const createOrGetChat = async (req, res) => {
       updatedAt: chat.updatedAt
     };
 
-    console.log('Sending response:', { chatId: responseChat._id, participantName: responseChat.participant.name });
+    // console.log('Sending response:', { chatId: responseChat._id, participantName: responseChat.participant.name });
     return ok(res, { chat: responseChat });
   } catch (err) {
     console.error('Create or get chat error:', err);

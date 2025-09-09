@@ -27,23 +27,23 @@ class AuthService extends ChangeNotifier with BaseApiService {
   // Initialize auth service and load persisted data
   Future<void> initialize() async {
     try {
-      if (kDebugMode) {
-        print('🚀 Auth service - Starting initialization...');
-      }
+      // if (kDebugMode) {
+      //   print('🚀 Auth service - Starting initialization...');
+      // }
       
       final prefs = await SharedPreferences.getInstance();
       final savedToken = prefs.getString(_tokenKey);
       final savedUser = prefs.getString(_userKey);
       
-      if (kDebugMode) {
-        print('🔍 Auth service - Checking persisted data:');
-        print('  - Saved token present: ${savedToken != null}');
-        print('  - Saved user present: ${savedUser != null}');
-        if (savedToken != null) {
-          print('  - Saved token length: ${savedToken.length}');
-          print('  - Saved token preview: ${savedToken.substring(0, savedToken.length > 30 ? 30 : savedToken.length)}...');
-        }
-      }
+      // if (kDebugMode) {
+      //   print('🔍 Auth service - Checking persisted data:');
+      //   print('  - Saved token present: ${savedToken != null}');
+      //   print('  - Saved user present: ${savedUser != null}');
+      //   if (savedToken != null) {
+      //     print('  - Saved token length: ${savedToken.length}');
+      //     print('  - Saved token preview: ${savedToken.substring(0, savedToken.length > 30 ? 30 : savedToken.length)}...');
+      //   }
+      // }
       
       if (savedToken != null && savedUser != null) {
         _token = savedToken;
@@ -51,56 +51,56 @@ class AuthService extends ChangeNotifier with BaseApiService {
         _isAuthenticated = true;
         notifyListeners();
         
-        if (kDebugMode) {
-          print('✅ Auth service initialized with persisted data');
-          print('  - Token loaded: ${_token != null}');
-          print('  - User loaded: ${_currentUser != null}');
-          print('  - Is authenticated: $_isAuthenticated');
-          print('  - Current user email: ${_currentUser?['email'] ?? 'None'}');
-        }
+        // if (kDebugMode) {
+        //   print('✅ Auth service initialized with persisted data');
+        //   print('  - Token loaded: ${_token != null}');
+        //   print('  - User loaded: ${_currentUser != null}');
+        //   print('  - Is authenticated: $_isAuthenticated');
+        //   print('  - Current user email: ${_currentUser?['email'] ?? 'None'}');
+        // }
         // Always refresh profile in the background to sync latest fields (e.g., email changed)
         try { await getProfile(); } catch (_) {}
       } else if (savedToken != null && savedUser == null) {
         // Recover session if we have a token but no user data persisted
-        if (kDebugMode) {
-          print('🔄 Auth service - Token found but no user data, attempting recovery...');
-        }
+        // if (kDebugMode) {
+        //   print('🔄 Auth service - Token found but no user data, attempting recovery...');
+        // }
         _token = savedToken;
         final valid = await validateToken();
         _isAuthenticated = valid;
         if (valid) {
-          if (kDebugMode) {
-            print('✅ Auth service restored session via token validation');
-          }
+          // if (kDebugMode) {
+          //   print('✅ Auth service restored session via token validation');
+          // }
           // Fetch full profile after validating token
           try { await getProfile(); } catch (_) {}
         } else {
-          if (kDebugMode) {
-            print('❌ Auth service - Token validation failed, clearing token');
-          }
+          // if (kDebugMode) {
+          //   print('❌ Auth service - Token validation failed, clearing token');
+          // }
           await _clearPersistedData();
         }
       } else {
-        if (kDebugMode) {
-          print('ℹ️ Auth service - No persisted data found, starting fresh');
-          print('  - Token: null');
-          print('  - User: null');
-          print('  - Is authenticated: false');
-        }
+        // if (kDebugMode) {
+        //   print('ℹ️ Auth service - No persisted data found, starting fresh');
+        //   print('  - Token: null');
+        //   print('  - User: null');
+        //   print('  - Is authenticated: false');
+        // }
       }
       
-      if (kDebugMode) {
-        print('🏁 Auth service - Initialization complete');
-        print('  - Final token state: ${_token != null}');
-        print('  - Final user state: ${_currentUser != null}');
-        print('  - Final auth state: $_isAuthenticated');
-      }
+      // if (kDebugMode) {
+      //   print('🏁 Auth service - Initialization complete');
+      //   print('  - Final token state: ${_token != null}');
+      //   print('  - Final user state: ${_currentUser != null}');
+      //   print('  - Final auth state: $_isAuthenticated');
+      // }
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to initialize auth service: $e');
-        print('  - Error type: ${e.runtimeType}');
-        print('  - Stack trace: ${StackTrace.current}');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Failed to initialize auth service: $e');
+      //   print('  - Error type: ${e.runtimeType}');
+      //   print('  - Stack trace: ${StackTrace.current}');
+      // }
       // Clear any corrupted data
       await _clearPersistedData();
     }
@@ -109,44 +109,44 @@ class AuthService extends ChangeNotifier with BaseApiService {
   // Save token and user data to persistent storage
   Future<void> _savePersistedData() async {
     try {
-      if (kDebugMode) {
-        print('💾 Auth service - _savePersistedData called');
-        print('  - Token to save: ${_token != null}');
-        print('  - User to save: ${_currentUser != null}');
-      }
+      // if (kDebugMode) {
+      //   print('💾 Auth service - _savePersistedData called');
+      //   print('  - Token to save: ${_token != null}');
+      //   print('  - User to save: ${_currentUser != null}');
+      // }
       
       final prefs = await SharedPreferences.getInstance();
       if (_token != null) {
         await prefs.setString(_tokenKey, _token!);
-        if (kDebugMode) {
-          print('✅ Token saved to persistent storage');
-        }
+        // if (kDebugMode) {
+        //   print('✅ Token saved to persistent storage');
+        // }
       } else {
-        if (kDebugMode) {
-          print('⚠️ No token to save');
-        }
+        // if (kDebugMode) {
+        //   print('⚠️ No token to save');
+        // }
       }
       
       if (_currentUser != null) {
         await prefs.setString(_userKey, json.encode(_currentUser));
-        if (kDebugMode) {
-          print('✅ User data saved to persistent storage');
-        }
+        // if (kDebugMode) {
+        //   print('✅ User data saved to persistent storage');
+        // }
       } else {
-        if (kDebugMode) {
-          print('⚠️ No user data to save');
-        }
+        // if (kDebugMode) {
+        //   print('⚠️ No user data to save');
+        // }
       }
       
-      if (kDebugMode) {
-        print('✅ _savePersistedData completed successfully');
-      }
+      // if (kDebugMode) {
+      //   print('✅ _savePersistedData completed successfully');
+      // }
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to save persisted data: $e');
-        print('  - Error type: ${e.runtimeType}');
-        print('  - Stack trace: ${StackTrace.current}');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Failed to save persisted data: $e');
+      //   print('  - Error type: ${e.runtimeType}');
+      //   print('  - Stack trace: ${StackTrace.current}');
+      // }
     }
   }
 
@@ -157,9 +157,9 @@ class AuthService extends ChangeNotifier with BaseApiService {
       await prefs.remove(_tokenKey);
       await prefs.remove(_userKey);
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to clear persisted data: $e');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Failed to clear persisted data: $e');
+      // }
     }
   }
 
@@ -190,28 +190,28 @@ class AuthService extends ChangeNotifier with BaseApiService {
         _isAuthenticated = true;
         
         // Save to persistent storage
-        if (kDebugMode) {
-          print('💾 Auth service - Saving login data to persistent storage...');
-          print('  - Token to save: ${_token != null}');
-          print('  - User to save: ${_currentUser != null}');
-        }
+        // if (kDebugMode) {
+        //   print('💾 Auth service - Saving login data to persistent storage...');
+        //   print('  - Token to save: ${_token != null}');
+        //   print('  - User to save: ${_currentUser != null}');
+        // }
         
         await _savePersistedData();
         notifyListeners();
         
-        if (kDebugMode) {
-          print('✅ User logged in successfully: ${_currentUser?['email']}');
-          print('  - Final token state: ${_token != null}');
-          print('  - Final user state: ${_currentUser != null}');
-          print('  - Final auth state: $_isAuthenticated');
-        }
+        // if (kDebugMode) {
+        //   print('✅ User logged in successfully: ${_currentUser?['email']}');
+        //   print('  - Final token state: ${_token != null}');
+        //   print('  - Final user state: ${_currentUser != null}');
+        //   print('  - Final auth state: $_isAuthenticated');
+        // }
       }
 
       return response;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Login failed: $e');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Login failed: $e');
+      // }
       rethrow;
     }
   }
@@ -271,16 +271,16 @@ class AuthService extends ChangeNotifier with BaseApiService {
         await _savePersistedData();
         notifyListeners();
         
-        if (kDebugMode) {
-          print('✅ User registered successfully: ${_currentUser?['email']}');
-        }
+        // if (kDebugMode) {
+        //   print('✅ User registered successfully: ${_currentUser?['email']}');
+        // }
       }
 
       return response;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Registration failed: $e');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Registration failed: $e');
+      // }
       rethrow;
     }
   }
@@ -303,9 +303,9 @@ class AuthService extends ChangeNotifier with BaseApiService {
         }
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Logout request failed: $e');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Logout request failed: $e');
+      // }
     } finally {
       // Always clear local data regardless of backend response
       await _clearAllData();
@@ -325,9 +325,9 @@ class AuthService extends ChangeNotifier with BaseApiService {
     // Notify listeners
     notifyListeners();
     
-    if (kDebugMode) {
-      print('✅ User logged out - all data cleared');
-    }
+    // if (kDebugMode) {
+    //   print('✅ User logged out - all data cleared');
+    // }
   }
 
   // Get current user profile
@@ -353,9 +353,9 @@ class AuthService extends ChangeNotifier with BaseApiService {
 
       return response;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Get profile failed: $e');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Get profile failed: $e');
+      // }
       rethrow;
     }
   }
@@ -378,9 +378,9 @@ class AuthService extends ChangeNotifier with BaseApiService {
       // On success, backend returns ok({}) with a message; no user change expected
       return response;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Change password failed: $e');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Change password failed: $e');
+      // }
       rethrow;
     }
   }
@@ -403,9 +403,9 @@ class AuthService extends ChangeNotifier with BaseApiService {
       );
       return response;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Change password direct failed: $e');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Change password direct failed: $e');
+      // }
       rethrow;
     }
   }
@@ -420,9 +420,9 @@ class AuthService extends ChangeNotifier with BaseApiService {
       );
       return response;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Forgot password failed: $e');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Forgot password failed: $e');
+      // }
       rethrow;
     }
   }
@@ -440,9 +440,9 @@ class AuthService extends ChangeNotifier with BaseApiService {
       );
       return response;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Reset password failed: $e');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Reset password failed: $e');
+      // }
       rethrow;
     }
   }
@@ -456,9 +456,9 @@ class AuthService extends ChangeNotifier with BaseApiService {
       );
       return response;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Request verification failed: $e');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Request verification failed: $e');
+      // }
       rethrow;
     }
   }
@@ -477,9 +477,9 @@ class AuthService extends ChangeNotifier with BaseApiService {
       }
       return response;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Confirm email change failed: $e');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Confirm email change failed: $e');
+      // }
       rethrow;
     }
   }
@@ -498,9 +498,9 @@ class AuthService extends ChangeNotifier with BaseApiService {
       }
       return response;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Verify email failed: $e');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Verify email failed: $e');
+      // }
       rethrow;
     }
   }
@@ -554,9 +554,9 @@ class AuthService extends ChangeNotifier with BaseApiService {
 
       return response;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Update profile failed: $e');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Update profile failed: $e');
+      // }
       rethrow;
     }
   }
@@ -583,9 +583,9 @@ class AuthService extends ChangeNotifier with BaseApiService {
       }
       return isValid;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Token validation failed: $e');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Token validation failed: $e');
+      // }
       // If token validation fails, clear the data
       await _clearAllData();
       return false;
@@ -650,9 +650,9 @@ class AuthService extends ChangeNotifier with BaseApiService {
 
       return response;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Delete account failed: $e');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Delete account failed: $e');
+      // }
       rethrow;
     }
   }

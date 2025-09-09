@@ -182,7 +182,7 @@ async function listProviders(req, res) {
       }
     });
   } catch (e) {
-    console.error('listProviders error', e);
+    // console.error('listProviders error', e);
     return error(res, 500, 'Failed to fetch providers');
   }
 }

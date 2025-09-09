@@ -34,12 +34,12 @@ const authenticate = async (req, res, next) => {
         return res.status(401).json({ success: false, message: 'Account is deactivated.' });
       }
       req.user = user;
-      console.log('🔍 User authenticated:', {
-        userId: user._id,
-        role: user.role,
-        email: user.email,
-        isActive: user.isActive
-      });
+      // console.log('🔍 User authenticated:', {
+      //   userId: user._id,
+      //   role: user.role,
+      //   email: user.email,
+      //   isActive: user.isActive
+      // });
       return next();
     }
     

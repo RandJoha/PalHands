@@ -381,7 +381,7 @@ async function providersByServicesExpanded(req, res) {
     }
     const providerIds = Array.from(byProvider.keys());
     const providers = await Provider.find({ _id: { $in: providerIds }, isActive: true })
-      .select('_id firstName lastName addresses rating hourlyRate experienceYears providerId services')
+      .select('_id firstName lastName addresses rating hourlyRate experienceYears providerId services languages')
       .lean();
     const providerMap = Object.fromEntries(providers.map(p => [String(p._id), p]));
 
@@ -408,7 +408,8 @@ async function providersByServicesExpanded(req, res) {
           city: (prov.addresses && prov.addresses[0] && prov.addresses[0].city) || '',
           rating: prov.rating,
           baseHourlyRate: prov.hourlyRate,
-          baseExperienceYears: prov.experienceYears
+          baseExperienceYears: prov.experienceYears,
+          languages: prov.languages || []
         },
         matchedServices: matched
       });

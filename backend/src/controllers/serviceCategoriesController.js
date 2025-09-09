@@ -28,7 +28,7 @@ function deduplicateServicesByTitle(services) {
   
   const deduplicatedServices = Array.from(uniqueServices.values());
   
-  console.log(`🔄 Deduplicated services: ${services.length} -> ${deduplicatedServices.length}`);
+  // console.log(`🔄 Deduplicated services: ${services.length} -> ${deduplicatedServices.length}`);
   
   return deduplicatedServices;
 }

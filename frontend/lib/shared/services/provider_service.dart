@@ -60,9 +60,9 @@ class ProviderService with BaseApiService {
         final rawList = (raw is List) ? raw : <dynamic>[];
         providers = rawList.map((j) => ProviderModel.fromJson(j)).toList();
 
-        if (kDebugMode) {
-          print('🏢 providers-by-services-expanded => ${providers.length} providers (selected=${servicesAny.length})');
-        }
+        // if (kDebugMode) {
+        //   print('🏢 providers-by-services-expanded => ${providers.length} providers (selected=${servicesAny.length})');
+        // }
 
         // Optional city filter (backend endpoint might not support city yet)
         if (city != null && city.isNotEmpty) {
@@ -84,9 +84,9 @@ class ProviderService with BaseApiService {
         }
         final rawList = (raw is List) ? raw : <dynamic>[];
         providers = rawList.map((j) => ProviderModel.fromJson(j)).toList();
-        if (kDebugMode) {
-          print('🏢 /providers => ${providers.length} providers (no service filter)');
-        }
+        // if (kDebugMode) {
+        //   print('🏢 /providers => ${providers.length} providers (no service filter)');
+        // }
       }
 
       // 4. Emergency filter placeholder (currently pass-through)

@@ -31,7 +31,7 @@ class ServiceCategoryModel {
 
   factory ServiceCategoryModel.fromJson(Map<String, dynamic> json) {
     if (kDebugMode) {
-      print('?? Parsing category: ${json['name']} - actualServices: ${json['actualServices']?.length ?? 0}');
+      // print('?? Parsing category: ${json['name']} - actualServices: ${json['actualServices']?.length ?? 0}');
     }
     
     return ServiceCategoryModel(
@@ -124,7 +124,7 @@ class ServiceCategoriesService with BaseApiService {
         return <dynamic>[];
       }();
       if (kDebugMode) {
-        print('📂 Fetched service categories: ${categoriesData.length} items');
+        // print('📂 Fetched service categories: ${categoriesData.length} items');
       }
       final categories = categoriesData.map((json) => ServiceCategoryModel.fromJson(Map<String, dynamic>.from(json as Map))).toList();
 
@@ -157,7 +157,7 @@ class ServiceCategoriesService with BaseApiService {
         return <dynamic>[];
       }();
       if (kDebugMode) {
-        print('📂 Fetched service categories with counts: ${categoriesData.length} items');
+        // print('📂 Fetched service categories with counts: ${categoriesData.length} items');
       }
       final categories = categoriesData.map((json) => ServiceCategoryModel.fromJson(Map<String, dynamic>.from(json as Map))).toList();
 
@@ -178,7 +178,7 @@ class ServiceCategoriesService with BaseApiService {
       final response = await get('/servicecategories/with-services', headers: _authHeaders);
 
       if (kDebugMode) {
-        print('?? Fetched service categories with services: ${response['categories']?.length ?? 0} items');
+        // print('?? Fetched service categories with services: ${response['categories']?.length ?? 0} items');
         print('?? Response keys: ${response.keys}');
       }
 

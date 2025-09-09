@@ -69,25 +69,22 @@ class UserService with BaseApiService {
             }
           : _authHeaders;
       
-      if (kDebugMode) {
-        print('🌐 Making API call to: $endpoint');
-        print('🔍 Query parameters: $queryParams');
-        if (authService != null) {
-  // debug removed
-        }
-      }
+      // if (kDebugMode) {
+      //   print('🌐 Making API call to: $endpoint');
+      //   print('🔍 Query parameters: $queryParams');
+      // }
       
       final response = await get(endpoint, headers: headers);
 
-      if (kDebugMode) {
-        print('👥 Fetched users: ${response['data']?['users']?.length ?? 0} items');
-      }
+      // if (kDebugMode) {
+      //   print('👥 Fetched users: ${response['data']?['users']?.length ?? 0} items');
+      // }
 
       return response;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error fetching users: $e');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Error fetching users: $e');
+      // }
       rethrow;
     }
   }
@@ -116,10 +113,10 @@ class UserService with BaseApiService {
             }
           : _authHeaders;
 
-      if (kDebugMode) {
-        print('🔄 Updating user status for ID: $userId');
-        print('📝 Request body: $body');
-      }
+      // if (kDebugMode) {
+      //   print('🔄 Updating user status for ID: $userId');
+      //   print('📝 Request body: $body');
+      // }
 
       final response = await put(
         '${ApiConfig.adminEndpoint}/users/$userId',
@@ -127,15 +124,15 @@ class UserService with BaseApiService {
         headers: headers,
       );
 
-      if (kDebugMode) {
-        print('✅ User status updated: $response');
-      }
+      // if (kDebugMode) {
+      //   print('✅ User status updated: $response');
+      // }
 
       return response;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error updating user status: $e');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Error updating user status: $e');
+      // }
       rethrow;
     }
   }

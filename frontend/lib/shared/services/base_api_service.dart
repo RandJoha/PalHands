@@ -231,28 +231,28 @@ mixin BaseApiService {
   }) {
     if (!ApiConfig.enableLogging) return;
     
-    if (kDebugMode) {
+    // if (kDebugMode) {
   // Keep request logging minimal and disabled by default via ApiConfig.enableLogging
-  print('🌐 $method $url');
+  // print('🌐 $method $url');
   // Headers/body intentionally not printed to reduce console noise
-    }
+    // }
   }
 
   void _logResponse(String method, String url, http.Response response) {
     if (!ApiConfig.enableLogging) return;
     
-    if (kDebugMode) {
-  print('✅ $method $url - ${response.statusCode}');
+    // if (kDebugMode) {
+  // print('✅ $method $url - ${response.statusCode}');
   // Response body intentionally not printed to reduce console noise
-    }
+    // }
   }
 
   void _logError(String method, String url, dynamic error) {
     if (!ApiConfig.enableLogging) return;
     
-    if (kDebugMode) {
-      print('❌ $method $url - Error: $error');
-    }
+    // if (kDebugMode) {
+    //   print('❌ $method $url - Error: $error');
+    // }
   }
 
   // Handle network errors

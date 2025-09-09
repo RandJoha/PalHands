@@ -398,10 +398,6 @@ class _WebUserDashboardState extends State<WebUserDashboard> {
         return const ProfileSettingsWidget();
       case 5:
         return const SavedProvidersWidget();
-      case 6:
-        return const SupportHelpWidget();
-      case 7:
-        return const SecurityWidget();
       default:
         return const MyBookingsWidget();
     }

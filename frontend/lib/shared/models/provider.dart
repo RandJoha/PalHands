@@ -92,7 +92,7 @@ class ProviderModel {
         city: prov['city']?.toString() ?? 'Palestine',
         phone: prov['phone']?.toString() ?? '',
         experienceYears: prov['baseExperienceYears'] is num ? (prov['baseExperienceYears'] as num).toInt() : 0,
-        languages: const [], // not provided by expanded endpoint yet
+        languages: (prov['languages'] as List?)?.map((e) => e.toString()).toList() ?? const [],
         hourlyRate: derivedHourly,
         services: matched.map((m) => m.subcategory).whereType<String>().toList(),
         ratingAverage: prov['rating'] is Map ? ((prov['rating']['average'] as num?)?.toDouble() ?? 0.0) : 0.0,

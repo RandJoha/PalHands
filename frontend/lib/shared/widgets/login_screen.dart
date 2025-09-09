@@ -83,30 +83,30 @@ class _LoginScreenState extends State<LoginScreen> {
           if (mounted) {
             // Check if there's a stored contact purpose
             final storedPurpose = await ContactPurposeSelector.getAndClearStoredPurpose();
-            if (kDebugMode) {
-              print('🔍 Login success - checking for stored purpose: ${storedPurpose != null ? storedPurpose.toString() : 'None'}');
-            }
+            // if (kDebugMode) {
+            //   print('🔍 Login success - checking for stored purpose: ${storedPurpose != null ? storedPurpose.toString() : 'None'}');
+            // }
             if (storedPurpose != null) {
-              if (kDebugMode) {
-                print('✅ Navigating to contact page to restore purpose: ${storedPurpose.toString()}');
-              }
+              // if (kDebugMode) {
+              //   print('✅ Navigating to contact page to restore purpose: ${storedPurpose.toString()}');
+              // }
               // Navigate to contact page to restore the selected purpose
               Navigator.of(context).pushReplacementNamed('/contact');
             } else {
-              if (kDebugMode) {
-                print('ℹ️ No stored purpose, navigating to dashboard');
-              }
+              // if (kDebugMode) {
+              //   print('ℹ️ No stored purpose, navigating to dashboard');
+              // }
               // Navigate to root to trigger AuthWrapper routing
               Navigator.of(context).pushReplacementNamed('/');
             }
           }
         } else {
           // Debug: Print the response to see what we're getting
-          if (kDebugMode) {
-            print('🔍 Login response: $response');
-            print('🔍 Response message: ${response['message']}');
-            print('🔍 Response error: ${response['error']}');
-          }
+          // if (kDebugMode) {
+          //   print('🔍 Login response: $response');
+          //   print('🔍 Response message: ${response['message']}');
+          //   print('🔍 Response error: ${response['error']}');
+          // }
           
           // Rate limit friendly message if backend returned 429
           final status = response['statusCode'] as int?;
@@ -120,14 +120,14 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       } catch (e) {
         // Debug: Print the exception to see what we're getting
-        if (kDebugMode) {
-          print('🔍 Login exception: $e');
-          print('🔍 Exception type: ${e.runtimeType}');
-          if (e is ApiException) {
-            print('🔍 ApiException message: ${e.message}');
-            print('🔍 ApiException statusCode: ${e.statusCode}');
-          }
-        }
+        // if (kDebugMode) {
+        //   print('🔍 Login exception: $e');
+        //   print('🔍 Exception type: ${e.runtimeType}');
+        //   if (e is ApiException) {
+        //     print('🔍 ApiException message: ${e.message}');
+        //     print('🔍 ApiException statusCode: ${e.statusCode}');
+        //   }
+        // }
         
         // Network or other error - show secure error message
         if (mounted) {

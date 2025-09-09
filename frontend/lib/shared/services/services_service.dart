@@ -338,16 +338,16 @@ class ServicesService with BaseApiService {
       }
       final List<dynamic> servicesData = (raw is List) ? raw : <dynamic>[];
 
-      if (kDebugMode && ApiConfig.enableLogging) {
-        print('🛠️ Fetched services: ${servicesData.length} items');
-      }
+      // if (kDebugMode && ApiConfig.enableLogging) {
+      //   print('🛠️ Fetched services: ${servicesData.length} items');
+      // }
       return servicesData
           .map((json) => ServiceModel.fromJson(json))
           .toList();
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error fetching services: $e');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Error fetching services: $e');
+      // }
       return [];
     }
   }
@@ -360,16 +360,16 @@ class ServicesService with BaseApiService {
         headers: authService != null ? _getAuthHeaders(authService) : ApiConfig.defaultHeaders,
       );
 
-      if (kDebugMode && ApiConfig.enableLogging) {
-        print('🛠️ Fetched service: $serviceId');
-      }
+      // if (kDebugMode && ApiConfig.enableLogging) {
+      //   print('🛠️ Fetched service: $serviceId');
+      // }
 
       final serviceData = response['data'] ?? response;
       return ServiceModel.fromJson(serviceData);
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error fetching service $serviceId: $e');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Error fetching service $serviceId: $e');
+      // }
       return null;
     }
   }
@@ -526,9 +526,9 @@ class ServicesService with BaseApiService {
       }
       final List<dynamic> servicesData = (raw is List) ? raw : <dynamic>[];
 
-      if (kDebugMode && ApiConfig.enableLogging) {
-        print('🛠️ Fetched featured services: ${servicesData.length} items');
-      }
+      // if (kDebugMode && ApiConfig.enableLogging) {
+      //   print('🛠️ Fetched featured services: ${servicesData.length} items');
+      // }
       final services = servicesData
           .map((json) => ServiceModel.fromJson(json))
           .toList();
@@ -536,9 +536,9 @@ class ServicesService with BaseApiService {
       // Filter featured services on client side since backend returns all
       return services.where((service) => service.featured).toList();
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error fetching featured services: $e');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Error fetching featured services: $e');
+      // }
       return [];
     }
   }
@@ -567,17 +567,17 @@ class ServicesService with BaseApiService {
         headers: _getAuthHeaders(authService),
       );
 
-      if (kDebugMode) {
-        print('✅ Service created successfully');
-        print('📂 Service category: $category');
-      }
+      // if (kDebugMode) {
+      //   print('✅ Service created successfully');
+      //   print('📂 Service category: $category');
+      // }
 
       final serviceData = response['data'] ?? response;
       return ServiceModel.fromJson(serviceData);
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error creating service: $e');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Error creating service: $e');
+      // }
       rethrow;
     }
   }
@@ -593,15 +593,15 @@ class ServicesService with BaseApiService {
         headers: _getAuthHeaders(authService),
       );
 
-      if (kDebugMode) {
-        print('✅ Service deleted successfully: $serviceId');
-      }
+      // if (kDebugMode) {
+      //   print('✅ Service deleted successfully: $serviceId');
+      // }
 
       return true;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error deleting service: $e');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Error deleting service: $e');
+      // }
       rethrow;
     }
   }

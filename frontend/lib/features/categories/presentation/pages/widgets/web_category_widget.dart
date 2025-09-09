@@ -144,9 +144,9 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
           _categoriesError = null;
         });
       }
-      if (kDebugMode) {
-        print('✅ Web category widget refreshed with services from database');
-      }
+      // if (kDebugMode) {
+      //   print('✅ Web category widget refreshed with services from database');
+      // }
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -154,9 +154,9 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
           _categoriesLoading = false;
         });
       }
-      if (kDebugMode) {
-        print('❌ Error refreshing categories in web widget: $e');
-      }
+      // if (kDebugMode) {
+      //   print('❌ Error refreshing categories in web widget: $e');
+      // }
     }
   }
 
@@ -250,9 +250,9 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
     // Guard: if we already had a non-empty selection and now it appears empty right after init,
     // skip this refresh to avoid overwriting filtered results with the full provider list.
     if (_hasInitialized && _cachedSelectedServices.isNotEmpty && currentServices.isEmpty) {
-      if (kDebugMode) {
-        print('⏭️ Skipping refresh: transient empty selection detected (cached=${_cachedSelectedServices.length})');
-      }
+      // if (kDebugMode) {
+      //   print('⏭️ Skipping refresh: transient empty selection detected (cached=${_cachedSelectedServices.length})');
+      // }
       return;
     }
     if (_hasInitialized && setEquals(currentServices, _cachedSelectedServices)) {
@@ -262,9 +262,9 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
     _cachedSelectedServices = Set.from(currentServices);
     _hasInitialized = true;
     
-    if (kDebugMode) {
-      print('🔄 Web: Refreshing providers with selected services: $currentServices');
-    }
+    // if (kDebugMode) {
+    //   print('🔄 Web: Refreshing providers with selected services: $currentServices');
+    // }
     
     setState(() {
       _loading = true;
@@ -280,9 +280,9 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
       );
       if (!mounted) return;
       
-      if (kDebugMode) {
-  print('🔄 Web: Found ${data.length} providers for selected services (after fetch)');
-      }
+      // if (kDebugMode) {
+  // print('🔄 Web: Found ${data.length} providers for selected services (after fetch)');
+      // }
       
       setState(() {
         _providers = data;
@@ -860,14 +860,14 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
                               fn(() {
                                 if (v == true) {
                                   _store.selectedServices[id]!.add(service.id);
-                                  if (kDebugMode) {
-                                    print('✅ Web: Selected service "${service.title}" (${service.id})');
-                                  }
+                                  // if (kDebugMode) {
+                                    // print('✅ Web: Selected service "${service.title}" (${service.id})');
+                                  // }
                                 } else {
                                   _store.selectedServices[id]!.remove(service.id);
-                                  if (kDebugMode) {
-                                    print('❌ Web: Deselected service "${service.title}" (${service.id})');
-                                  }
+                                  // if (kDebugMode) {
+                                    // print('❌ Web: Deselected service "${service.title}" (${service.id})');
+                                  // }
                                 }
                               });
                               _debouncedRefreshProviders();
@@ -1748,16 +1748,16 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
       }
 
       // Debug: Print authentication status
-      if (kDebugMode) {
-        print('🔍 Chat debug - Authentication check:');
-        print('  - Is authenticated: ${authService.isAuthenticated}');
-        print('  - Token present: ${authService.token != null}');
-        print('  - Token length: ${authService.token?.length ?? 0}');
-        print('  - Current user: ${authService.currentUser?['email'] ?? 'None'}');
-        if (authService.token != null) {
-          print('  - Token preview: ${authService.token!.substring(0, 30)}...');
-        }
-      }
+      // if (kDebugMode) {
+      //   print('🔍 Chat debug - Authentication check:');
+      //   print('  - Is authenticated: ${authService.isAuthenticated}');
+      //   print('  - Token present: ${authService.token != null}');
+      //   print('  - Token length: ${authService.token?.length ?? 0}');
+      //   print('  - Current user: ${authService.currentUser?['email'] ?? 'None'}');
+      //   if (authService.token != null) {
+      //     print('  - Token preview: ${authService.token!.substring(0, 30)}...');
+      //   }
+      // }
 
       // Show chat form dialog
       showDialog(
@@ -1766,9 +1766,9 @@ class _WebCategoryWidgetState extends State<WebCategoryWidget> {
         builder: (context) => ChatFormDialog(
           provider: provider,
           onMessageSent: () {
-            if (kDebugMode) {
-              print('🔄 Web category widget - Message sent callback triggered');
-            }
+            // if (kDebugMode) {
+            //   print('🔄 Web category widget - Message sent callback triggered');
+            // }
             // This will refresh the chat list when the user navigates to the chat tab
             // The actual refresh happens in the chat messages widget
           },

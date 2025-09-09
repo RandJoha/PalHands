@@ -96,8 +96,6 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
       UserMenuItem(title: _getLocalizedString('my_reviews'), icon: Icons.star, index: 3),
       UserMenuItem(title: _getLocalizedString('profile_settings'), icon: Icons.person, index: 4),
       UserMenuItem(title: _getLocalizedString('saved_providers'), icon: Icons.favorite, index: 5),
-      UserMenuItem(title: _getLocalizedString('support_help'), icon: Icons.help, index: 6),
-      UserMenuItem(title: _getLocalizedString('security'), icon: Icons.security, index: 7),
     ];
   }
 
@@ -616,10 +614,6 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         return _buildProfileSettings();
       case 5:
         return _buildSavedProviders();
-      case 6:
-        return _buildSupportHelp();
-      case 7:
-        return _buildSecurity();
       default:
         return _buildMyBookings();
     }
@@ -635,15 +629,15 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   Widget _buildMobileBottomNavigation() {
     return Consumer<LanguageService>(
       builder: (context, languageService, child) {
-        // Only show bottom navigation for main sections (0-3)
-        // For other sections (4-7), hide the bottom navigation
-        if (_selectedIndex > 3) {
+        // Only show bottom navigation for main sections (0-5)
+        // For other sections, hide the bottom navigation
+        if (_selectedIndex > 5) {
           return const SizedBox.shrink();
         }
         
         return BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
-          currentIndex: _selectedIndex.clamp(0, 3),
+          currentIndex: _selectedIndex.clamp(0, 5),
           selectedItemColor: AppColors.primary,
           unselectedItemColor: AppColors.textSecondary,
           selectedLabelStyle: GoogleFonts.cairo(
@@ -715,6 +709,14 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               icon: const Icon(Icons.star, size: 20),
               label: _getLocalizedString('my_reviews'),
             ),
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.person, size: 20),
+              label: _getLocalizedString('profile_settings'),
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.favorite, size: 20),
+              label: _getLocalizedString('saved_providers'),
+            ),
           ],
         );
       },
@@ -732,8 +734,6 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
   Widget _buildMyReviews() => _buildMyReviewsContent();
   Widget _buildProfileSettings() => _buildProfileSettingsContent();
   Widget _buildSavedProviders() => _buildSavedProvidersContent();
-  Widget _buildSupportHelp() => _buildSupportHelpContent();
-  Widget _buildSecurity() => _buildSecurityContent();
 
   // My Bookings Section
   Widget _buildMyBookingsContent() {
@@ -2626,18 +2626,13 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               onPressed: () async {
                 final auth = Provider.of<AuthService>(context, listen: false);
                 try {
+                  final addressText = _addressCtrl.text.trim();
                   final res = await auth.updateProfile(
                     useGpsLocation: _useGps,
-                    address: _useGps ? {
-                      'line1': _addressCtrl.text.trim(),
-                      'city': _addressCtrl.text.trim().split(',').last.trim(),
-                      'street': _addressCtrl.text.trim().split(',').first.trim(),
-                    } : {
-                      'line1': _addressCtrl.text.trim(),
-                      'city': _addressCtrl.text.trim().split(',').first.trim(),
-                      'street': _addressCtrl.text.trim().contains(',') 
-                        ? _addressCtrl.text.trim().split(',').last.trim()
-                        : _addressCtrl.text.trim(),
+                    // When GPS is ON, avoid sending city/street to pass backend validation
+                    // Only persist the free-form line1 when GPS is OFF
+                    address: _useGps ? null : {
+                      'line1': addressText,
                     },
                   );
                   final ok = res['success'] == true;
@@ -2792,11 +2787,7 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                          try {
                            await auth.updateProfile(
                              useGpsLocation: true,
-                             address: {
-                               'line1': _addressCtrl.text.trim(),
-                               'city': _addressCtrl.text.trim().split(',').last.trim(),
-                               'street': _addressCtrl.text.trim().split(',').first.trim(),
-                             },
+                             // Do not send address fields with GPS ON to avoid validation issues
                            );
                          } catch (e) {
                            // Handle silently, user can still save manually
@@ -2850,18 +2841,11 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
               onPressed: () async {
                 final auth = Provider.of<AuthService>(context, listen: false);
                 try {
+                  final addressText2 = _addressCtrl.text.trim();
                   final res = await auth.updateProfile(
                     useGpsLocation: _useGps,
-                    address: _useGps ? {
-                      'line1': _addressCtrl.text.trim(),
-                      'city': _addressCtrl.text.trim().split(',').last.trim(),
-                      'street': _addressCtrl.text.trim().split(',').first.trim(),
-                    } : {
-                      'line1': _addressCtrl.text.trim(),
-                      'city': _addressCtrl.text.trim().split(',').first.trim(),
-                      'street': _addressCtrl.text.trim().contains(',') 
-                        ? _addressCtrl.text.trim().split(',').last.trim()
-                        : _addressCtrl.text.trim(),
+                    address: _useGps ? null : {
+                      'line1': addressText2,
                     },
                   );
                   final ok = res['success'] == true;
@@ -3820,386 +3804,13 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     return const SavedProvidersWidget();
   }
 
-  // Support Help Section
-  Widget _buildSupportHelpContent() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isMobile = constraints.maxWidth <= 768;
-        final isTablet = constraints.maxWidth > 768 && constraints.maxWidth <= 1200;
-        
-        return SingleChildScrollView(
-          padding: EdgeInsets.all(isMobile ? 16.0 : 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Support Header
-              _buildSupportHeader(isMobile, isTablet),
-              SizedBox(height: isMobile ? 20.0 : 32.0),
-              
-              // Quick Help
-              _buildQuickHelp(isMobile, isTablet, constraints.maxWidth),
-              SizedBox(height: isMobile ? 20.0 : 32.0),
-              
-              // Recent Tickets
-              _buildRecentTickets(isMobile, isTablet),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
-  Widget _buildSupportHeader(bool isMobile, bool isTablet) {
-    return Container(
-      padding: EdgeInsets.all(isMobile ? 20.0 : 32.0),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.info, AppColors.info.withValues(alpha: 0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(isMobile ? 16.0 : 20.0),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.support_agent,
-            color: AppColors.white,
-            size: isMobile ? 48.0 : 64.0,
-          ),
-          SizedBox(width: isMobile ? 16.0 : 20.0),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _getLocalizedString('needHelp'),
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 24.0 : 28.0,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.white,
-                  ),
-                ),
-                const SizedBox(height: 4.0),
-                Text(
-                  _getLocalizedString('weAreHereToHelp'),
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 14.0 : 16.0,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.white.withValues(alpha: 0.9),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildQuickHelp(bool isMobile, bool isTablet, double screenWidth) {
-    final helpItems = [
-      {'title': _getLocalizedString('faq'), 'icon': Icons.help_outline, 'color': AppColors.primary},
-      {'title': _getLocalizedString('viewPreviousRequests'), 'icon': Icons.chat, 'color': AppColors.success},
-      {'title': _getLocalizedString('reportIssue'), 'icon': Icons.support_agent, 'color': AppColors.warning},
-      {'title': _getLocalizedString('contactSupport'), 'icon': Icons.phone, 'color': AppColors.info},
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          _getLocalizedString('quickHelp'),
-          style: GoogleFonts.cairo(
-            fontSize: isMobile ? 18.0 : 20.0,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        SizedBox(height: isMobile ? 12.0 : 16.0),
-        
-        Wrap(
-          spacing: isMobile ? 12.0 : 16.0,
-          runSpacing: isMobile ? 12.0 : 16.0,
-          children: helpItems.map((item) {
-            final cardWidth = isMobile 
-                ? (screenWidth - 48) / 2 
-                : (screenWidth - 96) / 4;
-            
-            return Container(
-              width: cardWidth,
-              padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(isMobile ? 12.0 : 16.0),
-                border: Border.all(color: AppColors.border, width: 1),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.shadow.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Icon(
-                    item['icon'] as IconData,
-                    color: item['color'] as Color,
-                    size: isMobile ? 32.0 : 40.0,
-                  ),
-                  SizedBox(height: isMobile ? 8.0 : 12.0),
-                  Text(
-                    item['title'] as String,
-                    style: GoogleFonts.cairo(
-                      fontSize: isMobile ? 16.0 : 18.0,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
 
   
 
   
 
-  Widget _buildRecentTickets(bool isMobile, bool isTablet) {
-    final tickets = [
-      {
-        'title': _getLocalizedString('paymentIssueResolved'),
-        'status': _getLocalizedString('resolved'),
-        'date': _getLocalizedString('twoDaysAgo'),
-        'statusColor': AppColors.success,
-      },
-      {
-        'title': _getLocalizedString('bookingCancellations'),
-        'status': _getLocalizedString('inProgress'),
-        'date': _getLocalizedString('oneWeekAgo'),
-        'statusColor': AppColors.warning,
-      },
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          _getLocalizedString('recentTickets'),
-          style: GoogleFonts.cairo(
-            fontSize: isMobile ? 18.0 : 20.0,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        SizedBox(height: isMobile ? 12.0 : 16.0),
-        
-        ...tickets.map((ticket) {
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12.0),
-            child: _buildTicketCard(ticket, isMobile, isTablet),
-          );
-        }),
-      ],
-    );
-  }
-
-  Widget _buildTicketCard(Map<String, dynamic> ticket, bool isMobile, bool isTablet) {
-    return Container(
-      padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(isMobile ? 12.0 : 16.0),
-        border: Border.all(color: AppColors.border, width: 1),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  ticket['title'],
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 16.0 : 18.0,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4.0),
-                Text(
-                  ticket['date'],
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 14.0 : 16.0,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: ticket['statusColor'].withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              ticket['status'],
-              style: GoogleFonts.cairo(
-                fontSize: isMobile ? 12.0 : 14.0,
-                fontWeight: FontWeight.w600,
-                color: ticket['statusColor'],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Security Section
-  Widget _buildSecurityContent() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isMobile = constraints.maxWidth <= 768;
-        final isTablet = constraints.maxWidth > 768 && constraints.maxWidth <= 1200;
-        
-        return SingleChildScrollView(
-          padding: EdgeInsets.all(isMobile ? 16.0 : 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Security Options
-              _buildSecurityOptions(isMobile, isTablet),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  
-
-  
-
-  Widget _buildSecurityOptions(bool isMobile, bool isTablet) {
-    return Container(
-      padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(isMobile ? 12.0 : 16.0),
-        border: Border.all(color: AppColors.border, width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            _getLocalizedString('security'),
-            style: GoogleFonts.cairo(
-              fontSize: isMobile ? 18.0 : 20.0,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          SizedBox(height: isMobile ? 12.0 : 16.0),
-          
-          _buildSecurityOption(
-            _getLocalizedString('changePassword'),
-            _getLocalizedString('updatePassword'),
-            Icons.lock,
-            isMobile,
-          ),
-          const SizedBox(height: 12.0),
-          _buildSecurityOption(
-            _getLocalizedString('twoFactorAuth'),
-            _getLocalizedString('addExtraSecurity'),
-            Icons.verified_user,
-            isMobile,
-          ),
-          const SizedBox(height: 12.0),
-          _buildSecurityOption(
-            _getLocalizedString('loginAlerts'),
-            _getLocalizedString('getLoginNotifications'),
-            Icons.notifications,
-            isMobile,
-          ),
-          const SizedBox(height: 12.0),
-          _buildSecurityOption(
-            _getLocalizedString('trustedDevices'),
-            _getLocalizedString('manageTrustedDevices'),
-            Icons.devices,
-            isMobile,
-          ),
-          const SizedBox(height: 12.0),
-          GestureDetector(
-            onTap: () => _showDeleteAccountDialog(context),
-            child: _buildSecurityOption(
-              _getLocalizedString('deleteAccount'),
-              _getLocalizedString('permanentlyDeleteAccount'),
-              Icons.delete_forever,
-              isMobile,
-              isDestructive: true,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSecurityOption(String title, String subtitle, IconData icon, bool isMobile, {bool isDestructive = false}) {
-    return Container(
-      padding: EdgeInsets.all(isMobile ? 12.0 : 16.0),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(isMobile ? 8.0 : 12.0),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            color: isDestructive ? AppColors.error : AppColors.primary,
-            size: isMobile ? 24.0 : 28.0,
-          ),
-          const SizedBox(width: 12.0),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 16.0 : 18.0,
-                    fontWeight: FontWeight.w600,
-                    color: isDestructive ? AppColors.error : AppColors.textPrimary,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 14.0 : 16.0,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Icon(
-            Icons.arrow_forward_ios,
-            color: AppColors.textSecondary,
-            size: isMobile ? 16.0 : 18.0,
-          ),
-        ],
-      ),
-    );
-  }
 
   
 
@@ -4430,68 +4041,6 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
     );
   }
 
-  // Show delete account confirmation dialog
-  void _showDeleteAccountDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            _getLocalizedString('deleteAccount'),
-            style: GoogleFonts.cairo(
-              fontWeight: FontWeight.w700,
-              color: AppColors.error,
-            ),
-          ),
-          content: Text(
-      _getLocalizedString('deleteAccountWarning'),
-            style: GoogleFonts.cairo(fontSize: 16),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-        _getLocalizedString('cancel'),
-                style: GoogleFonts.cairo(color: AppColors.textSecondary),
-              ),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                await _deleteAccount(context);
-              },
-              style: TextButton.styleFrom(
-                backgroundColor: AppColors.error,
-                foregroundColor: AppColors.white,
-              ),
-              child: Text(
-        _getLocalizedString('delete'),
-                style: GoogleFonts.cairo(
-                  color: AppColors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // Delete account
-  Future<void> _deleteAccount(BuildContext context) async {
-    // Feature not yet implemented in AuthService; show a friendly message.
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          _getLocalizedString('deleteAccountFailed'),
-          style: GoogleFonts.cairo(color: AppColors.white),
-        ),
-        backgroundColor: AppColors.error,
-      ),
-    );
-  }
 
   // Provider rating display for single booking cards
   Widget _buildProviderRatingRow(Map<String, dynamic> booking, bool isMobile) {

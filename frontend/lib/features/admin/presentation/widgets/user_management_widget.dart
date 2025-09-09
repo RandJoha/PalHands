@@ -49,9 +49,9 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
       setState(() {
         _selectedRole = value;
       });
-      if (kDebugMode) {
-        print('🔍 Role filter changed to: $value');
-      }
+      // if (kDebugMode) {
+      //   print('🔍 Role filter changed to: $value');
+      // }
       _loadUsers();
     }
   }
@@ -74,12 +74,12 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
       // Get AuthService from Provider context
       final authService = Provider.of<AuthService>(context, listen: false);
       
-      if (kDebugMode) {
-        print('🔍 Loading users with filters:');
-        print('  - Search: ${_searchQuery.isNotEmpty ? _searchQuery : "None"}');
-        print('  - Role: ${_selectedRole != 'all' ? _selectedRole : "All"}');
-        print('  - Status: ${_selectedStatus != 'all' ? _selectedStatus : "All"}');
-      }
+      // if (kDebugMode) {
+      //   print('🔍 Loading users with filters:');
+      //   print('  - Search: ${_searchQuery.isNotEmpty ? _searchQuery : "None"}');
+      //   print('  - Role: ${_selectedRole != 'all' ? _selectedRole : "All"}');
+      //   print('  - Status: ${_selectedStatus != 'all' ? _selectedStatus : "All"}');
+      // }
       
       final response = await _userService.getAllUsers(
         search: _searchQuery.isNotEmpty ? _searchQuery : null,
@@ -100,10 +100,10 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
         });
         
         // Debug: Print rating data for first user
-        if (kDebugMode && _users.isNotEmpty) {
-          print('🔍 First user rating: ${_users[0]['rating']}');
-          print('🔍 First user rating type: ${_users[0]['rating']?.runtimeType}');
-        }
+        // if (kDebugMode && _users.isNotEmpty) {
+        //   print('🔍 First user rating: ${_users[0]['rating']}');
+        //   print('🔍 First user rating type: ${_users[0]['rating']?.runtimeType}');
+        // }
       } else {
         setState(() {
           _isLoading = false;
@@ -768,10 +768,10 @@ class _UserManagementWidgetState extends State<UserManagementWidget> {
   }
 
   String _formatRating(dynamic rating) {
-    if (kDebugMode) {
-      print('🔍 Rating data: $rating');
-      print('🔍 Rating type: ${rating.runtimeType}');
-    }
+    // if (kDebugMode) {
+    //   print('🔍 Rating data: $rating');
+    //   print('🔍 Rating type: ${rating.runtimeType}');
+    // }
     
     // Handle null rating
     if (rating == null) {
