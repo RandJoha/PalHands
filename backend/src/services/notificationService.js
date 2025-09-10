@@ -301,7 +301,8 @@ class NotificationService {
 
       // Create notification for the client
       const notification = await Notification.create({
-        recipient: client._id,
+        user: client._id,
+        userRef: booking.clientRef,
         type: 'booking_confirmed',
         title: 'Booking Confirmed',
         message: `Your booking for ${booking.serviceDetails?.title || 'the service'} has been confirmed by the provider`,
@@ -347,7 +348,8 @@ class NotificationService {
 
       // Create notification for the client
       const notification = await Notification.create({
-        recipient: client._id,
+        user: client._id,
+        userRef: booking.clientRef,
         type: 'booking_cancelled',
         title: 'Booking Cancelled',
         message: `Your booking for ${booking.serviceDetails?.title || 'the service'} has been cancelled by the provider`,
@@ -386,7 +388,8 @@ class NotificationService {
 
       // Create notification for the provider
       const notification = await Notification.create({
-        recipient: provider._id,
+        user: provider._id,
+        userRef: 'Provider',
         type: 'booking_cancelled',
         title: 'Booking Cancelled',
         message: `A client cancelled a booking for ${booking.serviceDetails?.title || 'your service'}`,
