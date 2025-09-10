@@ -2053,8 +2053,8 @@ class AppStrings {
   };
 
   static const Map<String, String> faqHowToPayAnswer = {
-    'en': 'We offer multiple payment options including cash on delivery, online payment through secure payment gateways, and mobile payment solutions. All online payments are processed securely.',
-    'ar': 'نقدم خيارات دفع متعددة تشمل الدفع النقدي عند التسليم، والدفع الإلكتروني من خلال بوابات الدفع الآمنة، وحلول الدفع عبر الهاتف المحمول. جميع المدفوعات الإلكترونية تتم معالجتها بأمان.',
+    'en': 'Currently, payment is cash only. Please pay the provider in cash after the service. Secure online payment will be available soon.',
+    'ar': 'حالياً، طريقة الدفع المتاحة هي الدفع النقدي فقط. يُرجى الدفع نقداً لمقدم الخدمة بعد إنجاز الخدمة. سيتم توفير الدفع الإلكتروني الآمن قريباً.',
   };
 
   static const Map<String, String> faqOnlinePayment = {
@@ -2063,8 +2063,8 @@ class AppStrings {
   };
 
   static const Map<String, String> faqOnlinePaymentAnswer = {
-    'en': 'Yes, we offer secure online payment options through trusted payment gateways. You can pay using credit cards, debit cards, and other digital payment methods.',
-    'ar': 'نعم، نقدم خيارات دفع إلكتروني آمنة من خلال بوابات الدفع الموثوقة. يمكنك الدفع باستخدام بطاقات الائتمان والخصم وطرق الدفع الرقمية الأخرى.',
+    'en': 'Not yet. Online payments are not available at the moment. We are working to enable secure online payments soon.',
+    'ar': 'ليس بعد. الدفع الإلكتروني غير متاح حالياً. نعمل على إتاحته قريباً بطريقة آمنة.',
   };
 
   static const Map<String, String> faqHiddenFees = {
