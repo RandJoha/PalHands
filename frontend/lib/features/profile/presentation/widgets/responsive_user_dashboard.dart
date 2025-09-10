@@ -657,7 +657,8 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
         
         return BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
-          currentIndex: _selectedIndex.clamp(0, 5),
+          // Clamp to the number of items to avoid assertion when items < currentIndex
+          currentIndex: _selectedIndex.clamp(0, _getMenuItems().length - 1),
           selectedItemColor: AppColors.primary,
           unselectedItemColor: AppColors.textSecondary,
           selectedLabelStyle: GoogleFonts.cairo(
@@ -724,6 +725,10 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             BottomNavigationBarItem(
               icon: const Icon(Icons.person, size: 20),
               label: _getLocalizedString('profile_settings'),
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.favorite, size: 20),
+              label: _getLocalizedString('saved_providers'),
             ),
           ],
         );
@@ -2690,14 +2695,14 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
                   ),
                 ),
                 const SizedBox(height: 8),
-                Row(
+                Wrap(
+                  spacing: 8.0,
+                  runSpacing: 8.0,
                   children: [
                     if (onEdit != null)
                       TextButton.icon(onPressed: onEdit, icon: const Icon(Icons.edit, size: 18), label: const Text('Edit')),
-                    if (onEdit != null) const SizedBox(width: 8),
                     if (onDelete != null)
                       TextButton.icon(onPressed: onDelete, icon: const Icon(Icons.delete_outline, size: 18), label: const Text('Delete')),
-                    const Spacer(),
                     if (!isActiveDefault && onMakeDefault != null)
                       TextButton(
                         onPressed: isInactive ? () => _switchToSavedAddress(onMakeDefault) : onMakeDefault, 
@@ -3725,53 +3730,69 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             Icon(
               Icons.star,
               color: AppColors.textSecondary,
-              size: isMobile ? 16.0 : 18.0,
+              size: isMobile ? 14.0 : 16.0,
             ),
             const SizedBox(width: 8.0),
-            Text(
-              'Provider Rating: ',
-              style: GoogleFonts.cairo(
-                fontSize: isMobile ? 14.0 : 16.0,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
+            Expanded(
+              child: Row(
+                children: [
+                  Text(
+                    'Provider Rating: ',
+                    style: GoogleFonts.cairo(
+                      fontSize: isMobile ? 12.0 : 14.0,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  Flexible(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Star rating display
+                        ...List.generate(5, (index) {
+                          final starRating = index + 1;
+                          final isFilled = starRating <= rating;
+                          return Icon(
+                            isFilled ? Icons.star : Icons.star_border,
+                            color: isFilled ? Colors.amber : AppColors.textSecondary,
+                            size: isMobile ? 12.0 : 14.0,
+                          );
+                        }),
+                        const SizedBox(width: 4.0),
+                        Flexible(
+                          child: Text(
+                            '${rating.toStringAsFixed(1)} (${ratingCount})',
+                            style: GoogleFonts.cairo(
+                              fontSize: isMobile ? 10.0 : 12.0,
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-            // Star rating display
-            Row(
-              children: List.generate(5, (index) {
-                final starRating = index + 1;
-                final isFilled = starRating <= rating;
-                return Icon(
-                  isFilled ? Icons.star : Icons.star_border,
-                  color: isFilled ? Colors.amber : AppColors.textSecondary,
-                  size: isMobile ? 16.0 : 18.0,
-                );
-              }),
-            ),
-            const SizedBox(width: 8.0),
-            Text(
-              '${rating.toStringAsFixed(1)} (${ratingCount})',
-              style: GoogleFonts.cairo(
-                fontSize: isMobile ? 14.0 : 16.0,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const Spacer(),
             if (ratingCount > 0)
-              TextButton.icon(
-                onPressed: () => _showProviderReviewsDialog(booking),
-                icon: Icon(
-                  Icons.reviews,
-                  color: AppColors.primary,
-                  size: isMobile ? 16.0 : 18.0,
-                ),
-                label: Text(
-                  'View Reviews',
-                  style: GoogleFonts.cairo(
-                    color: AppColors.primary,
-                    fontSize: isMobile ? 12.0 : 14.0,
-                    fontWeight: FontWeight.w600,
+              Flexible(
+                child: TextButton(
+                  onPressed: () => _showProviderReviewsDialog(booking),
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: isMobile ? 4.0 : 8.0, vertical: isMobile ? 2.0 : 4.0),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    'View',
+                    style: GoogleFonts.cairo(
+                      color: AppColors.primary,
+                      fontSize: isMobile ? 10.0 : 12.0,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
@@ -3861,53 +3882,69 @@ class _ResponsiveUserDashboardState extends State<ResponsiveUserDashboard>
             Icon(
               Icons.star,
               color: AppColors.textSecondary,
-              size: isMobile ? 16.0 : 18.0,
+              size: isMobile ? 14.0 : 16.0,
             ),
             const SizedBox(width: 8.0),
-            Text(
-              'Provider Rating: ',
-              style: GoogleFonts.cairo(
-                fontSize: isMobile ? 14.0 : 16.0,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
+            Expanded(
+              child: Row(
+                children: [
+                  Text(
+                    'Provider Rating: ',
+                    style: GoogleFonts.cairo(
+                      fontSize: isMobile ? 12.0 : 14.0,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  Flexible(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Star rating display
+                        ...List.generate(5, (index) {
+                          final starRating = index + 1;
+                          final isFilled = starRating <= rating;
+                          return Icon(
+                            isFilled ? Icons.star : Icons.star_border,
+                            color: isFilled ? Colors.amber : AppColors.textSecondary,
+                            size: isMobile ? 12.0 : 14.0,
+                          );
+                        }),
+                        const SizedBox(width: 4.0),
+                        Flexible(
+                          child: Text(
+                            '${rating.toStringAsFixed(1)} (${ratingCount})',
+                            style: GoogleFonts.cairo(
+                              fontSize: isMobile ? 10.0 : 12.0,
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-            // Star rating display
-            Row(
-              children: List.generate(5, (index) {
-                final starRating = index + 1;
-                final isFilled = starRating <= rating;
-                return Icon(
-                  isFilled ? Icons.star : Icons.star_border,
-                  color: isFilled ? Colors.amber : AppColors.textSecondary,
-                  size: isMobile ? 16.0 : 18.0,
-                );
-              }),
-            ),
-            const SizedBox(width: 8.0),
-            Text(
-              '${rating.toStringAsFixed(1)} (${ratingCount})',
-              style: GoogleFonts.cairo(
-                fontSize: isMobile ? 14.0 : 16.0,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const Spacer(),
             if (ratingCount > 0)
-              TextButton.icon(
-                onPressed: () => _showProviderReviewsDialogForGroup(booking),
-                icon: Icon(
-                  Icons.reviews,
-                  color: AppColors.primary,
-                  size: isMobile ? 16.0 : 18.0,
-                ),
-                label: Text(
-                  'View Reviews',
-                  style: GoogleFonts.cairo(
+              Flexible(
+                child: TextButton.icon(
+                  onPressed: () => _showProviderReviewsDialogForGroup(booking),
+                  icon: Icon(
+                    Icons.reviews,
                     color: AppColors.primary,
-                    fontSize: isMobile ? 12.0 : 14.0,
-                    fontWeight: FontWeight.w600,
+                    size: isMobile ? 16.0 : 18.0,
+                  ),
+                  label: Text(
+                    'View',
+                    style: GoogleFonts.cairo(
+                      color: AppColors.primary,
+                      fontSize: isMobile ? 12.0 : 14.0,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),

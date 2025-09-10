@@ -773,14 +773,15 @@ class _BookingDialogState extends State<BookingDialog> {
           borderRadius: BorderRadius.circular(16.0),
         ),
         child: Container(
-        width: dialogMaxWidth,
-        constraints: BoxConstraints(
-          // On small screens allow taller dialogs while still staying within view
-          maxHeight: screenH * (isCompact ? 0.95 : 0.85),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+          width: dialogMaxWidth,
+          constraints: BoxConstraints(
+            // On small screens allow taller dialogs while still staying within view
+            maxHeight: screenH * (isCompact ? 0.95 : 0.85),
+            maxWidth: screenW - 16, // Add margin to prevent overflow
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             // Header
             Container(
               padding: const EdgeInsets.all(16),
@@ -1031,8 +1032,9 @@ class _BookingDialogState extends State<BookingDialog> {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.0),
             ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           ),
+          isExpanded: true,
           items: () {
             if (_providerServices.isNotEmpty) {
               return _providerServices
@@ -1052,6 +1054,7 @@ class _BookingDialogState extends State<BookingDialog> {
                             return s.title.isNotEmpty ? s.title : s.id;
                           }(),
                           overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                       ))
                   .toList();
@@ -1060,7 +1063,11 @@ class _BookingDialogState extends State<BookingDialog> {
             return widget.provider.services
                 .map((service) => DropdownMenuItem<String>(
                       value: service,
-                      child: Text(AppStrings.getString(service, lang), overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        AppStrings.getString(service, lang), 
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                     ))
                 .toList();
           }(),
@@ -1123,14 +1130,16 @@ class _BookingDialogState extends State<BookingDialog> {
         style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
       ),
     ),
-    Row(
+    Wrap(
       children: [
         Switch(
           value: _emergency && _supportsEmergency,
           onChanged: _supportsEmergency ? (v) => _toggleEmergency(v) : null,
         ),
         const SizedBox(width: 8),
-        Text('Emergency (short notice)', style: TextStyle(color: Colors.grey.shade800)),
+        Flexible(
+          child: Text('Emergency (short notice)', style: TextStyle(color: Colors.grey.shade800)),
+        ),
         if (!_supportsEmergency) ...[
           const SizedBox(width: 8),
           Tooltip(

@@ -154,6 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         return Scaffold(
           backgroundColor: const Color(0xFFFDF5EC),
+          resizeToAvoidBottomInset: true,
           body: shouldUseMobileLayout
             ? _buildMobileLayout(languageService)
             : _buildWebLayout(languageService),
@@ -349,73 +350,77 @@ class _LoginScreenState extends State<LoginScreen> {
               Center(
                 child: Padding(
                   padding: EdgeInsets.all(padding),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Welcome text
-                      Text(
-                        AppStrings.getString('welcomeBack', languageService.currentLanguage),
-                        style: GoogleFonts.cairo(
-                          fontSize: titleSize.clamp(20.0, 36.0),
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary, // Palestinian red
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      SizedBox(height: screenHeight * 0.04),
-                      // PalHands logo/branding
-                      Container(
-                        width: logoSize.clamp(80.0, 150.0),
-                        height: logoSize.clamp(80.0, 150.0),
-                        decoration: BoxDecoration(
-                          color: AppColors.white,
-                          borderRadius: BorderRadius.circular(logoSize * 0.16),
-                          border: Border.all(
-                            color: AppColors.primary,
-                            width: 2.0,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.3),
-                              blurRadius: 15,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                                      child: AnimatedHandshake(
-                          size: logoSize * 0.5,
-                          color: AppColors.primary,
-                animationDuration: const Duration(milliseconds: 2500),
-                        ),
-                      ),
-                      SizedBox(height: screenHeight * 0.02),
-                      // Tagline
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
-                        child: Text(
-                          AppStrings.getString('loginToContinue', languageService.currentLanguage),
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.only(
+                      bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Welcome text
+                        Text(
+                          AppStrings.getString('welcomeBack', languageService.currentLanguage),
                           style: GoogleFonts.cairo(
-                            fontSize: subtitleSize.clamp(14.0, 20.0),
-                            color: AppColors.textSecondary,
-                            height: 1.3,
+                            fontSize: titleSize.clamp(20.0, 36.0),
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                            letterSpacing: 0.5,
                           ),
-                          textAlign: TextAlign.center,
                         ),
-                      ),
-                      SizedBox(height: screenHeight * 0.05),
-                      // Login form
-                      Focus(
-                        onKey: (node, event) {
-                          // Handle Enter key press anywhere in the form
-                          if (event.isKeyPressed(LogicalKeyboardKey.enter) && !_isLoading) {
-                            _handleLogin();
-                            return KeyEventResult.handled;
-                          }
-                          return KeyEventResult.ignored;
-                        },
-                        child: _buildLoginForm(screenWidth, screenHeight),
-                      ),
-                    ],
+                        SizedBox(height: screenHeight * 0.04),
+                        // PalHands logo/branding
+                        Container(
+                          width: logoSize.clamp(80.0, 150.0),
+                          height: logoSize.clamp(80.0, 150.0),
+                          decoration: BoxDecoration(
+                            color: AppColors.white,
+                            borderRadius: BorderRadius.circular(logoSize * 0.16),
+                            border: Border.all(
+                              color: AppColors.primary,
+                              width: 2.0,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withValues(alpha: 0.3),
+                                blurRadius: 15,
+                                offset: Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: AnimatedHandshake(
+                            size: logoSize * 0.5,
+                            color: AppColors.primary,
+                            animationDuration: Duration(milliseconds: 2500),
+                          ),
+                        ),
+                        SizedBox(height: screenHeight * 0.02),
+                        // Tagline
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+                          child: Text(
+                            AppStrings.getString('loginToContinue', languageService.currentLanguage),
+                            style: GoogleFonts.cairo(
+                              fontSize: subtitleSize.clamp(14.0, 20.0),
+                              color: AppColors.textSecondary,
+                              height: 1.3,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        SizedBox(height: screenHeight * 0.05),
+                        // Login form
+                        Focus(
+                          onKey: (node, event) {
+                            if (event.isKeyPressed(LogicalKeyboardKey.enter) && !_isLoading) {
+                              _handleLogin();
+                              return KeyEventResult.handled;
+                            }
+                            return KeyEventResult.ignored;
+                          },
+                          child: _buildLoginForm(screenWidth, screenHeight),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

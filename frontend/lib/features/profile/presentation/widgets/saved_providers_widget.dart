@@ -384,8 +384,9 @@ class _SavedProvidersWidgetState extends State<SavedProvidersWidget> {
                 ),
                 SizedBox(height: 12.h),
               ],
-              Row(
-                mainAxisSize: MainAxisSize.min,
+              Wrap(
+                spacing: 8.w,
+                runSpacing: 8.h,
                 children: [
                   IconButton(
                     onPressed: providerId.isNotEmpty ? () => _removeFromFavorites(providerId) : null,

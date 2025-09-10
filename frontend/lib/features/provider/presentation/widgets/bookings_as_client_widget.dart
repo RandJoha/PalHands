@@ -430,74 +430,80 @@ class _BookingsAsClientWidgetState extends State<BookingsAsClientWidget> {
         Icon(
           Icons.star,
           color: Colors.amber,
-          size: isMobile ? 16.0 : 18.0,
+          size: isMobile ? 10.0 : 12.0,
         ),
         const SizedBox(width: 8.0),
-        Text(
-          'My Rating: ',
-          style: GoogleFonts.cairo(
-            fontSize: isMobile ? 14.0 : 16.0,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        Row(
-          children: [
-            // Star rating display
-            ...List.generate(5, (index) {
-              return Icon(
-                index < averageRating.floor() 
-                    ? Icons.star 
-                    : (index < averageRating ? Icons.star_half : Icons.star_border),
-                color: Colors.amber,
-                size: isMobile ? 14.0 : 16.0,
-              );
-            }),
-            const SizedBox(width: 6.0),
-            Text(
-              averageRating > 0 ? '${averageRating.toStringAsFixed(1)}' : 'No rating',
-              style: GoogleFonts.cairo(
-                fontSize: isMobile ? 14.0 : 16.0,
-                fontWeight: FontWeight.w600,
-                color: averageRating > 0 ? Colors.amber.shade700 : AppColors.textSecondary,
-              ),
-            ),
-            if (ratingCount > 0) ...[
-              const SizedBox(width: 4.0),
+        Expanded(
+          child: Row(
+            children: [
               Text(
-                '($ratingCount)',
+                'My Rating: ',
                 style: GoogleFonts.cairo(
-                  fontSize: isMobile ? 12.0 : 14.0,
+                  fontSize: isMobile ? 10.0 : 12.0,
+                  fontWeight: FontWeight.w500,
                   color: AppColors.textSecondary,
                 ),
               ),
+              Flexible(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Star rating display
+                    ...List.generate(5, (index) {
+                      return Icon(
+                        index < averageRating.floor() 
+                            ? Icons.star 
+                            : (index < averageRating ? Icons.star_half : Icons.star_border),
+                        color: Colors.amber,
+                        size: isMobile ? 10.0 : 12.0,
+                      );
+                    }),
+                    const SizedBox(width: 2.0),
+                    Flexible(
+                      child: Text(
+                        averageRating > 0 ? '${averageRating.toStringAsFixed(1)}' : 'No rating',
+                        style: GoogleFonts.cairo(
+                          fontSize: isMobile ? 8.0 : 10.0,
+                          fontWeight: FontWeight.w600,
+                          color: averageRating > 0 ? Colors.amber.shade700 : AppColors.textSecondary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ),
+                    if (ratingCount > 0) ...[
+                      const SizedBox(width: 4.0),
+                      Text(
+                        '($ratingCount)',
+                        style: GoogleFonts.cairo(
+                          fontSize: isMobile ? 10.0 : 12.0,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ],
-          ],
+          ),
         ),
-        const Spacer(),
         // View Reviews button - show even if no ratings for debugging
-        TextButton.icon(
-          onPressed: ratingCount > 0 ? () => _showClientReviewsDialog(booking) : null,
-          icon: Icon(
-            Icons.reviews,
-            size: isMobile ? 14.0 : 16.0,
-            color: ratingCount > 0 ? AppColors.primary : AppColors.textSecondary,
-          ),
-          label: Text(
-            'View Reviews',
-            style: GoogleFonts.cairo(
-              fontSize: isMobile ? 12.0 : 14.0,
-              color: ratingCount > 0 ? AppColors.primary : AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
+        Flexible(
+          child: TextButton(
+            onPressed: ratingCount > 0 ? () => _showClientReviewsDialog(booking) : null,
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.symmetric(horizontal: isMobile ? 4.0 : 8.0, vertical: isMobile ? 2.0 : 4.0),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-          ),
-          style: TextButton.styleFrom(
-            padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 8.0 : 12.0,
-              vertical: isMobile ? 4.0 : 6.0,
+            child: Text(
+              'View',
+              style: GoogleFonts.cairo(
+                fontSize: isMobile ? 10.0 : 12.0,
+                color: ratingCount > 0 ? AppColors.primary : AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ),
       ],
@@ -544,74 +550,80 @@ class _BookingsAsClientWidgetState extends State<BookingsAsClientWidget> {
         Icon(
           Icons.star,
           color: Colors.amber,
-          size: isMobile ? 16.0 : 18.0,
+          size: isMobile ? 10.0 : 12.0,
         ),
         const SizedBox(width: 8.0),
-        Text(
-          'Provider Rating: ',
-          style: GoogleFonts.cairo(
-            fontSize: isMobile ? 14.0 : 16.0,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        Row(
-          children: [
-            // Star rating display
-            ...List.generate(5, (index) {
-              return Icon(
-                index < averageRating.floor() 
-                    ? Icons.star 
-                    : (index < averageRating ? Icons.star_half : Icons.star_border),
-                color: Colors.amber,
-                size: isMobile ? 14.0 : 16.0,
-              );
-            }),
-            const SizedBox(width: 6.0),
-            Text(
-              averageRating > 0 ? '${averageRating.toStringAsFixed(1)}' : 'No rating',
-              style: GoogleFonts.cairo(
-                fontSize: isMobile ? 14.0 : 16.0,
-                fontWeight: FontWeight.w600,
-                color: averageRating > 0 ? Colors.amber.shade700 : AppColors.textSecondary,
-              ),
-            ),
-            if (ratingCount > 0) ...[
-              const SizedBox(width: 4.0),
+        Expanded(
+          child: Row(
+            children: [
               Text(
-                '($ratingCount)',
+                'Provider Rating: ',
                 style: GoogleFonts.cairo(
-                  fontSize: isMobile ? 12.0 : 14.0,
+                  fontSize: isMobile ? 10.0 : 12.0,
+                  fontWeight: FontWeight.w500,
                   color: AppColors.textSecondary,
                 ),
               ),
+              Flexible(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Star rating display
+                    ...List.generate(5, (index) {
+                      return Icon(
+                        index < averageRating.floor() 
+                            ? Icons.star 
+                            : (index < averageRating ? Icons.star_half : Icons.star_border),
+                        color: Colors.amber,
+                        size: isMobile ? 10.0 : 12.0,
+                      );
+                    }),
+                    const SizedBox(width: 2.0),
+                    Flexible(
+                      child: Text(
+                        averageRating > 0 ? '${averageRating.toStringAsFixed(1)}' : 'No rating',
+                        style: GoogleFonts.cairo(
+                          fontSize: isMobile ? 8.0 : 10.0,
+                          fontWeight: FontWeight.w600,
+                          color: averageRating > 0 ? Colors.amber.shade700 : AppColors.textSecondary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ),
+                    if (ratingCount > 0) ...[
+                      const SizedBox(width: 4.0),
+                      Text(
+                        '($ratingCount)',
+                        style: GoogleFonts.cairo(
+                          fontSize: isMobile ? 10.0 : 12.0,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ],
-          ],
+          ),
         ),
-        const Spacer(),
         // View Reviews button - show even if no ratings for debugging
-        TextButton.icon(
-          onPressed: ratingCount > 0 ? () => _showProviderReviewsDialog(booking) : null,
-          icon: Icon(
-            Icons.reviews,
-            size: isMobile ? 14.0 : 16.0,
-            color: ratingCount > 0 ? AppColors.primary : AppColors.textSecondary,
-          ),
-          label: Text(
-            'View Reviews',
-            style: GoogleFonts.cairo(
-              fontSize: isMobile ? 12.0 : 14.0,
-              color: ratingCount > 0 ? AppColors.primary : AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
+        Flexible(
+          child: TextButton(
+            onPressed: ratingCount > 0 ? () => _showProviderReviewsDialog(booking) : null,
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.symmetric(horizontal: isMobile ? 4.0 : 8.0, vertical: isMobile ? 2.0 : 4.0),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-          ),
-          style: TextButton.styleFrom(
-            padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 8.0 : 12.0,
-              vertical: isMobile ? 4.0 : 6.0,
+            child: Text(
+              'View',
+              style: GoogleFonts.cairo(
+                fontSize: isMobile ? 10.0 : 12.0,
+                color: ratingCount > 0 ? AppColors.primary : AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ),
       ],

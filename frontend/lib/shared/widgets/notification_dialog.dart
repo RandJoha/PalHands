@@ -198,34 +198,41 @@ class _NotificationDialogState extends State<NotificationDialog> {
               children: [
                 // Header
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Notifications',
-                      style: GoogleFonts.cairo(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
+                    Expanded(
+                      child: Text(
+                        'Notifications',
+                        style: GoogleFonts.cairo(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
-                    Row(
-                      children: [
-                        if (_notifications.any((n) => !n.read))
-                          TextButton(
-                            onPressed: _markAllAsRead,
-                            child: Text(
-                              'Mark All Read',
-                              style: GoogleFonts.cairo(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
+                    if (_notifications.any((n) => !n.read))
+                      Flexible(
+                        child: TextButton(
+                          onPressed: _markAllAsRead,
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(
+                            'Mark All',
+                            style: GoogleFonts.cairo(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
                             ),
                           ),
-                        IconButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(Icons.close),
                         ),
-                      ],
+                      ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close, size: 20),
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints(),
                     ),
                   ],
                 ),
@@ -359,10 +366,12 @@ class _NotificationDialogState extends State<NotificationDialog> {
                           child: Text(
                             title,
                             style: GoogleFonts.cairo(
-                              fontSize: 16,
+                              fontSize: 14,
                               fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
                               color: isUnread ? AppColors.primary : Colors.grey[700],
                             ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
                         ),
                         if (isUnread)
@@ -387,34 +396,43 @@ class _NotificationDialogState extends State<NotificationDialog> {
                     Text(
                       notification.message,
                       style: GoogleFonts.cairo(
-                        fontSize: 14,
+                        fontSize: 12,
                         color: Colors.grey[600],
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
                         Icon(
                           Icons.access_time,
-                          size: 14,
+                          size: 12,
                           color: Colors.grey[500],
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          _formatDateTime(notification.createdAt),
-                          style: GoogleFonts.cairo(
-                            fontSize: 12,
-                            color: Colors.grey[500],
+                        Expanded(
+                          child: Text(
+                            _formatDateTime(notification.createdAt),
+                            style: GoogleFonts.cairo(
+                              fontSize: 10,
+                              color: Colors.grey[500],
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
                         ),
-                        const Spacer(),
                         if (isUnread)
-                          Text(
-                            'Tap to mark as read',
-                            style: GoogleFonts.cairo(
-                              fontSize: 12,
-                              color: AppColors.primary,
-                              fontStyle: FontStyle.italic,
+                          Flexible(
+                            child: Text(
+                              'Tap to read',
+                              style: GoogleFonts.cairo(
+                                fontSize: 10,
+                                color: AppColors.primary,
+                                fontStyle: FontStyle.italic,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                           ),
                       ],

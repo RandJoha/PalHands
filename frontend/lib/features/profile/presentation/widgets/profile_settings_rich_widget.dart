@@ -783,34 +783,41 @@ class _ProfileSettingsRichWidgetState extends State<ProfileSettingsRichWidget> {
           
           SizedBox(height: isMobile ? 16.0 : 20.0),
           
-          // Saved Addresses Section
+          // Saved Addresses Section (responsive header)
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                _useGps ? 'Saved Addresses (Inactive)' : 'Saved Addresses',
-                style: GoogleFonts.cairo(
-                  fontSize: isMobile ? 16.0 : 18.0,
-                  fontWeight: FontWeight.w600,
-                  color: _useGps ? AppColors.textSecondary : AppColors.textPrimary,
-                ),
-              ),
-              ElevatedButton.icon(
-                onPressed: _onAddOrEditAddress,
-                icon: Icon(Icons.add, size: isMobile ? 16.0 : 18.0),
-                label: Text(
-                  'Add New Address',
+              Expanded(
+                child: Text(
+                  _useGps ? 'Saved Addresses (Inactive)' : 'Saved Addresses',
                   style: GoogleFonts.cairo(
-                    fontSize: isMobile ? 14.0 : 16.0,
-                    fontWeight: FontWeight.w500,
+                    fontSize: isMobile ? 16.0 : 18.0,
+                    fontWeight: FontWeight.w600,
+                    color: _useGps ? AppColors.textSecondary : AppColors.textPrimary,
                   ),
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.white,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isMobile ? 12.0 : 16.0,
-                    vertical: isMobile ? 8.0 : 10.0,
+              ),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: ElevatedButton.icon(
+                    onPressed: _onAddOrEditAddress,
+                    icon: Icon(Icons.add, size: isMobile ? 16.0 : 18.0),
+                    label: Text(
+                      'Add New Address',
+                      style: GoogleFonts.cairo(
+                        fontSize: isMobile ? 14.0 : 16.0,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: AppColors.white,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 12.0 : 16.0,
+                        vertical: isMobile ? 8.0 : 10.0,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -943,20 +950,20 @@ class _ProfileSettingsRichWidgetState extends State<ProfileSettingsRichWidget> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Row(
+                Wrap(
+                  spacing: 8.0,
+                  runSpacing: 8.0,
                   children: [
                     TextButton.icon(
                       onPressed: onEdit,
                       icon: const Icon(Icons.edit, size: 18),
                       label: const Text('Edit'),
                     ),
-                    const SizedBox(width: 8),
                     TextButton.icon(
                       onPressed: onDelete,
                       icon: const Icon(Icons.delete_outline, size: 18),
                       label: const Text('Delete'),
                     ),
-                    const Spacer(),
                     if (!isDefault && !_useGps)
                       TextButton(
                         onPressed: onMakeDefault,

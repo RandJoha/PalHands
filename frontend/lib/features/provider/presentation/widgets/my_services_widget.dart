@@ -965,7 +965,9 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Toolbar
-          Row(
+          Wrap(
+            spacing: isMobile ? 8.0 : 12.0,
+            runSpacing: isMobile ? 8.0 : 12.0,
             children: [
               Expanded(
                 child: Text(
@@ -979,32 +981,36 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
               ),
               // Multi-edit toggle
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Switch(
                     value: _isMultiEditMode,
                     onChanged: (v) => setState(() => _isMultiEditMode = v),
                   ),
-                  Text(
-                    AppStrings.getString('multiSelect', languageService.currentLanguage),
-                    style: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+                  Flexible(
+                    child: Text(
+                      AppStrings.getString('multiSelect', languageService.currentLanguage),
+                      style: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+                    ),
                   ),
                 ],
               ),
-              SizedBox(width: isMobile ? 8 : 12),
               // Emergency only filter
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Switch(
                     value: _showEmergencyOnly,
                     onChanged: (v) => setState(() => _showEmergencyOnly = v),
                   ),
-                  Text(
-                    AppStrings.getString('emergencyOnly', languageService.currentLanguage),
-                    style: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+                  Flexible(
+                    child: Text(
+                      AppStrings.getString('emergencyOnly', languageService.currentLanguage),
+                      style: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+                    ),
                   ),
                 ],
               ),
-              SizedBox(width: isMobile ? 8 : 12),
               // Add service button
               FilledButton.icon(
                 onPressed: () => _openAddServiceDialog(languageService),
@@ -1025,16 +1031,6 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
                   icon: Icons.play_arrow,
                   label: AppStrings.getString('activate', languageService.currentLanguage),
                   onTap: _activateSelectedServices,
-                  languageService: languageService,
-                  isMobile: isMobile,
-                  isTablet: isTablet,
-                  isDesktop: isDesktop,
-                ),
-                SizedBox(width: isMobile ? 6.0 : (isTablet ? 7.0 : 8.0)),
-                _buildBulkActionButton(
-                  icon: Icons.pause,
-                  label: AppStrings.getString('deactivate', languageService.currentLanguage),
-                  onTap: _deactivateSelectedServices,
                   languageService: languageService,
                   isMobile: isMobile,
                   isTablet: isTablet,
@@ -1497,23 +1493,15 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
                       isMobile: isMobile,
                       isTablet: isTablet,
                     ),
-                    (item.status == 'active')
-                        ? _buildChipButton(
-                            icon: Icons.pause,
-                            label: AppStrings.getString('deactivate', languageService.currentLanguage),
-                            color: AppColors.warning,
-                            onTap: () => _singleAction(item, (api, pid, id, auth) => api.deactivateMonth(pid, id, authService: auth)),
-                            isMobile: isMobile,
-                            isTablet: isTablet,
-                          )
-                        : _buildChipButton(
-                            icon: Icons.play_arrow,
-                            label: AppStrings.getString('activate', languageService.currentLanguage),
-                            color: AppColors.success,
-                            onTap: () => _singleAction(item, (api, pid, id, auth) => api.activateMonth(pid, id, authService: auth)),
-                            isMobile: isMobile,
-                            isTablet: isTablet,
-                          ),
+                    if (item.status != 'active')
+                      _buildChipButton(
+                        icon: Icons.play_arrow,
+                        label: AppStrings.getString('activate', languageService.currentLanguage),
+                        color: AppColors.success,
+                        onTap: () => _singleAction(item, (api, pid, id, auth) => api.activateMonth(pid, id, authService: auth)),
+                        isMobile: isMobile,
+                        isTablet: isTablet,
+                      ),
                     _buildChipButton(
                       icon: Icons.delete,
                       label: AppStrings.getString('delete', languageService.currentLanguage),
@@ -1955,9 +1943,6 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
 
   // removed: global hour quick-add row (replaced by per-day quick-add menu)
 
-  void _deactivateSelectedServices() {
-    _bulkAction((api, providerId, id, auth) => api.deactivateMonth(providerId, id, authService: auth));
-  }
 
   void _deleteSelectedServices() {
     _bulkAction((api, providerId, id, auth) => api.remove(providerId, id, authService: auth));
