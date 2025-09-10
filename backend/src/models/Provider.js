@@ -5,7 +5,6 @@ const providerSchema = new mongoose.Schema({
   // Provider ID - 4 digit unique identifier starting from 1000
   providerId: {
     type: Number,
-    unique: true,
   // Not required at validation time; it's auto-assigned in pre('save')
   required: false,
     min: 1000,
@@ -27,7 +26,6 @@ const providerSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
-    unique: true,
     lowercase: true,
     trim: true
   },
@@ -43,8 +41,7 @@ const providerSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    required: true,
-    unique: true
+    required: true
   },
   profileImage: {
     type: String,
@@ -236,8 +233,8 @@ providerSchema.index({ 'addresses.isDefault': 1 });
 
 // Auto-generate provider ID middleware
 providerSchema.pre('save', async function(next) {
-  // Only generate provider ID if it doesn't exist (new provider)
-  if (!this.providerId) {
+  // Only generate provider ID if it doesn't exist (new provider) AND this is a new document
+  if (!this.providerId && this.isNew) {
     try {
       // Find the highest existing provider ID
       const lastProvider = await this.constructor.findOne({}, { providerId: 1 })
@@ -251,9 +248,18 @@ providerSchema.pre('save', async function(next) {
       if (this.providerId > 9999) {
         throw new Error('Maximum provider ID limit reached (9999)');
       }
+      
+      console.log(`🔧 Generated new providerId: ${this.providerId} for provider: ${this.firstName} ${this.lastName}`);
     } catch (error) {
       return next(error);
     }
+  } else if (this.providerId && !this.isNew) {
+    // Log when existing provider is being saved to track any changes
+    console.log(`🔍 Saving existing provider: ${this.firstName} ${this.lastName} with providerId: ${this.providerId}`);
+  } else if (!this.providerId && !this.isNew) {
+    // This should never happen - existing provider without providerId
+    console.error(`⚠️ CRITICAL: Existing provider ${this.firstName} ${this.lastName} (${this._id}) has no providerId!`);
+    // Don't generate a new one for existing providers to avoid conflicts
   }
   next();
 });

@@ -158,7 +158,7 @@ class _WebContactWidgetState extends State<WebContactWidget> {
       // Ensure description meets minimum length requirement (backend requires 10+ chars)
       final currentDescription = reportData['description'] as String;
       if (currentDescription.isEmpty || currentDescription == 'No description provided' || currentDescription.length < 10) {
-        reportData['description'] = '';
+        reportData['description'] = 'User submitted a report without providing detailed description.';
         if (kDebugMode) {
           print('⚠️ Replaced short/empty description with minimal text');
         }
@@ -182,15 +182,15 @@ class _WebContactWidgetState extends State<WebContactWidget> {
           'reportedEmail': (formData['reportedEmail'] ?? 'unknown@example.com').toString(),
         };
       } else if (reportCategory == 'feature_suggestion') {
-        // Only add ideaTitle if it has a meaningful value
+        // Only add ideaTitle if it has a meaningful value (minimum 3 characters)
         final ideaTitle = formData['ideaTitle'];
-        if (ideaTitle != null && ideaTitle.toString().trim().isNotEmpty) {
+        if (ideaTitle != null && ideaTitle.toString().trim().length >= 3) {
           reportData['ideaTitle'] = ideaTitle.toString().trim();
         }
         
-        // Only add communityBenefit if it has a meaningful value
+        // Only add communityBenefit if it has a meaningful value (minimum 5 characters)
         final communityBenefit = formData['howItHelpsCommunity'];
-        if (communityBenefit != null && communityBenefit.toString().trim().isNotEmpty) {
+        if (communityBenefit != null && communityBenefit.toString().trim().length >= 5) {
           reportData['communityBenefit'] = communityBenefit.toString().trim();
         }
       } else if (reportCategory == 'service_category_request') {

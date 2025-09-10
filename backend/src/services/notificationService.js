@@ -2,6 +2,22 @@ const Notification = require('../models/Notification');
 const User = require('../models/User');
 
 class NotificationService {
+  // Get notification priority based on report category
+  static getNotificationPriority(reportCategory) {
+    switch (reportCategory) {
+      case 'user_issue':
+        return 'high';
+      case 'technical_issue':
+        return 'medium';
+      case 'feature_suggestion':
+        return 'low';
+      case 'service_category_request':
+        return 'medium';
+      default:
+        return 'medium';
+    }
+  }
+
   // Notify all admins about a new report
   static async notifyNewReport(report) {
     try {
@@ -18,7 +34,8 @@ class NotificationService {
 
       // Create notifications for all admins
       const notifications = admins.map(admin => ({
-        recipient: admin._id,
+        user: admin._id,
+        userRef: 'User',
         type: 'new_report',
         title: 'New Report Submitted',
         message: `A new ${report.reportCategory.replace('_', ' ')} report has been submitted`,
@@ -52,7 +69,8 @@ class NotificationService {
       }
 
       const notifications = admins.map(admin => ({
-        recipient: admin._id,
+        user: admin._id,
+        userRef: 'User',
         type: 'report_update',
         title: 'Report Status Updated',
         message: `Report status changed from ${oldStatus} to ${newStatus}`,
@@ -80,7 +98,7 @@ class NotificationService {
       const { page = 1, limit = 20, unreadOnly = false } = options;
       const skip = (page - 1) * limit;
 
-      const filter = { recipient: userId };
+      const filter = { user: userId };
       if (unreadOnly) {
         filter.read = false;
       }
@@ -114,7 +132,7 @@ class NotificationService {
   static async markAsRead(notificationId, userId) {
     try {
       const notification = await Notification.findOneAndUpdate(
-        { _id: notificationId, recipient: userId },
+        { _id: notificationId, user: userId },
         { read: true, readAt: new Date() },
         { new: true }
       );
@@ -134,7 +152,7 @@ class NotificationService {
   static async markAllAsRead(userId) {
     try {
       const result = await Notification.updateMany(
-        { recipient: userId, read: false },
+        { user: userId, read: false },
         { read: true, readAt: new Date() }
       );
 
@@ -149,7 +167,7 @@ class NotificationService {
   static async markAsReadByType(type, userId) {
     try {
       const result = await Notification.updateMany(
-        { recipient: userId, type: type, read: false },
+        { user: userId, type: type, read: false },
         { read: true, readAt: new Date() }
       );
 
@@ -165,7 +183,7 @@ class NotificationService {
     try {
       const notification = await Notification.findOneAndDelete({
         _id: notificationId,
-        recipient: userId
+        user: userId
       });
 
       if (!notification) {
@@ -184,7 +202,7 @@ class NotificationService {
     try {
       
       const count = await Notification.countDocuments({
-        recipient: userId,
+        user: userId,
         read: false
       });
 
@@ -209,7 +227,8 @@ class NotificationService {
 
       // Create notification for the provider
       const notification = await Notification.create({
-        recipient: provider._id,
+        user: provider._id,
+        userRef: 'Provider',
         type: 'new_booking_request',
         title: 'New Booking Request',
         message: `You have received a new booking request for ${booking.serviceDetails?.title || 'your service'}`,

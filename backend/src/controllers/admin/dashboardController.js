@@ -172,18 +172,21 @@ const getUserManagementData = async (req, res) => {
     if (search && search.trim()) {
       const s = search.trim();
       const isProviderId = /^\d{4}$/.test(s);
+      
       userFilter.$or = [
         { firstName: { $regex: s, $options: 'i' } },
         { lastName: { $regex: s, $options: 'i' } },
         { email: { $regex: s, $options: 'i' } },
         { phone: { $regex: s, $options: 'i' } }
       ];
+      
       providerFilter.$or = [
         { firstName: { $regex: s, $options: 'i' } },
         { lastName: { $regex: s, $options: 'i' } },
         { email: { $regex: s, $options: 'i' } },
         { phone: { $regex: s, $options: 'i' } }
       ];
+      
       if (isProviderId) {
         providerFilter.providerId = parseInt(s, 10);
       }
@@ -207,6 +210,14 @@ const getUserManagementData = async (req, res) => {
       userFilter.isActive = isActive;
       providerFilter.isActive = isActive;
     }
+
+    // Debug logging
+    console.log('🔍 Admin search filters:', {
+      search: search,
+      userFilter: JSON.stringify(userFilter, null, 2),
+      providerFilter: JSON.stringify(providerFilter, null, 2),
+      role: role
+    });
 
     // Fetch and combine
     const MAX_BATCH = Math.max(pageSize * 3, 100);
