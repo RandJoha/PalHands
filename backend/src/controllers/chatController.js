@@ -4,6 +4,7 @@ const Message = require('../models/Message');
 const User = require('../models/User');
 const Provider = require('../models/Provider');
 const Notification = require('../models/Notification');
+const NotificationService = require('../services/notificationService');
 const { ok, error } = require('../utils/response');
 
 // Get user's chat list
@@ -27,6 +28,13 @@ const getUserChats = async (req, res) => {
       'lastMessage.timestamp': -1, 
       updatedAt: -1 
     });
+    
+    console.log(`🔍 getUserChats: Found ${chats.length} chats for user ${userId}`);
+    if (chats.length > 0) {
+      chats.forEach((chat, index) => {
+        console.log(`  - Chat ${index + 1}: ${chat._id}, participants: ${chat.participants.map(p => p.toString())}`);
+      });
+    }
     
     // console.log(`🔍 Database query completed:`);
     // console.log(`  - Query: participants: ${userId}, isActive: true`);
@@ -73,15 +81,15 @@ const getUserChats = async (req, res) => {
       // }
       
       const populatedParticipants = await Promise.all(validParticipants.map(async (participantId) => {
-        // console.log(`  - Looking up participant: ${participantId}`);
+        console.log(`  - Looking up participant: ${participantId}`);
         let user = await User.findById(participantId).select('firstName lastName email profileImage role');
         if (user) {
-          // console.log(`  - Found user: ${user.firstName} ${user.lastName}`);
+          console.log(`  - Found user: ${user.firstName} ${user.lastName}`);
           return user;
         }
         const provider = await Provider.findById(participantId).select('firstName lastName email profileImage');
         if (provider) {
-          // console.log(`  - Found provider: ${provider.firstName} ${provider.lastName}`);
+          console.log(`  - Found provider: ${provider.firstName} ${provider.lastName}`);
           return {
             _id: provider._id,
             firstName: provider.firstName,
@@ -91,7 +99,7 @@ const getUserChats = async (req, res) => {
             role: 'provider'
           };
         }
-        // console.log(`  - ❌ Participant not found in User or Provider for ID: ${participantId}`);
+        console.log(`  - ❌ Participant not found in User or Provider for ID: ${participantId}`);
         return null;
       }));
 
@@ -132,17 +140,17 @@ const getUserChats = async (req, res) => {
 
     // Transform chats to include participant info and unread counts
     const transformedChats = populatedChats.map(chat => {
-      // console.log(`🔄 Transforming chat ${chat._id}:`);
-      // console.log(`  - All participants: ${chat.participants.map(p => p ? `${p.firstName} ${p.lastName} (${p._id})` : 'NULL')}`);
-      // console.log(`  - Current user ID: ${userId}`);
+      console.log(`🔄 Transforming chat ${chat._id}:`);
+      console.log(`  - All participants: ${chat.participants.map(p => p ? `${p.firstName} ${p.lastName} (${p._id})` : 'NULL')}`);
+      console.log(`  - Current user ID: ${userId}`);
       
-      const otherParticipant = chat.participants.find(p => p._id.toString() !== userId.toString());
-      // console.log(`  - Other participant found: ${otherParticipant ? `${otherParticipant.firstName} ${otherParticipant.lastName}` : 'NOT FOUND'}`);
+      const otherParticipant = chat.participants.find(p => p && p._id && p._id.toString() !== userId.toString());
+      console.log(`  - Other participant found: ${otherParticipant ? `${otherParticipant.firstName} ${otherParticipant.lastName}` : 'NOT FOUND'}`);
       
-      // if (!otherParticipant) {
-      //   console.log(`  - ⚠️ WARNING: No other participant found for chat ${chat._id}`);
-      //   console.log(`  - This might indicate a data integrity issue`);
-      // }
+      if (!otherParticipant) {
+        console.log(`  - ⚠️ WARNING: No other participant found for chat ${chat._id}`);
+        console.log(`  - This might indicate a data integrity issue`);
+      }
       
       const unreadCount = chat.unreadCounts.get(userId.toString()) || 0;
       
@@ -442,39 +450,46 @@ const sendMessage = async (req, res) => {
     //   updatedAt: new Date()
     // });
 
-    // Create notifications for other participants - DISABLED
-    // try {
-    //   for (const participantId of otherParticipants) {
-    //     // Skip if it's the sender
-    //     if (participantId.toString() === userId.toString()) continue;
+    // Create notifications for other participants
+    try {
+      for (const participantId of otherParticipants) {
+        // Skip if it's the sender
+        if (participantId.toString() === userId.toString()) continue;
         
-    //     // Get participant info
-    //     const participant = await User.findById(participantId).select('firstName lastName role');
-    //     if (!participant) continue;
+        // Get participant info - try User first, then Provider
+        let participant = await User.findById(participantId).select('firstName lastName role');
+        let userRef = 'User';
+        
+        if (!participant) {
+          const prov = await Provider.findById(participantId).select('firstName lastName');
+          if (prov) {
+            participant = {
+              _id: prov._id,
+              firstName: prov.firstName,
+              lastName: prov.lastName || '',
+              role: 'provider'
+            };
+            userRef = 'Provider';
+          }
+        }
 
-    //     // Create notification
-    //     const notification = new Notification({
-    //       recipient: participantId,
-    //       type: 'new_message',
-    //       title: 'New Message',
-    //       message: `You have a new message from ${sender.firstName} ${sender.lastName}`,
-    //       data: {
-    //         chatId: chatId,
-    //         senderId: userId,
-    //         senderName: `${sender.firstName} ${sender.lastName}`,
-    //         messageContent: content.substring(0, 100) + (content.length > 100 ? '...' : ''),
-    //         messageType: messageType
-    //       },
-    //       priority: 'medium'
-    //     });
+        if (!participant) continue;
 
-    //     await notification.save();
-    //     console.log(`🔔 Notification created for ${participant.firstName} ${participant.lastName} (${participant.role})`);
-    //   }
-    // } catch (notificationError) {
-    //   console.error('❌ Failed to create notifications:', notificationError);
-    //   // Don't fail the message send if notifications fail
-    // }
+        // Create notification using NotificationService
+        await NotificationService.notifyNewMessage(
+          chatId,
+          userId,
+          `${sender.firstName} ${sender.lastName}`,
+          content,
+          messageType,
+          participantId,
+          userRef
+        );
+      }
+    } catch (notificationError) {
+      console.error('❌ Failed to create notifications:', notificationError);
+      // Don't fail the message send if notifications fail
+    }
 
   // Populate sender info for response
   // Note: providers authenticate via providers collection; users via users collection

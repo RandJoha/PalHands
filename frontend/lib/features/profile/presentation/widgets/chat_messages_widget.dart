@@ -34,7 +34,25 @@ class ChatMessagesWidgetState extends State<ChatMessagesWidget> {
   @override
   void initState() {
     super.initState();
+    _testChatService();
     _loadChats();
+  }
+
+  // Test function to check basic chat service connectivity
+  Future<void> _testChatService() async {
+    try {
+      print('🔍 ChatMessagesWidget: Testing chat service connectivity...');
+      final authService = Provider.of<AuthService>(context, listen: false);
+      print('🔍 ChatMessagesWidget: Auth service available: ${authService != null}');
+      print('🔍 ChatMessagesWidget: Auth service authenticated: ${authService.isAuthenticated}');
+      print('🔍 ChatMessagesWidget: Auth service token: ${authService.token != null ? 'Present' : 'Missing'}');
+      
+      if (authService.token != null) {
+        print('🔍 ChatMessagesWidget: Token preview: ${authService.token!.substring(0, 20)}...');
+      }
+    } catch (e) {
+      print('❌ ChatMessagesWidget: Error testing chat service: $e');
+    }
   }
 
   Future<void> _loadChats() async {
@@ -45,27 +63,46 @@ class ChatMessagesWidgetState extends State<ChatMessagesWidget> {
 
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
+      print('🔍 ChatMessagesWidget: Loading chats');
+      print('🔍 ChatMessagesWidget: Auth service: ${authService.isAuthenticated}');
+      
       final response = await _chatService.getUserChats(authService: authService);
+      
+      print('🔍 ChatMessagesWidget: Response received: ${response.keys.toList()}');
+      print('🔍 ChatMessagesWidget: Response success: ${response['success']}');
       
       if (response['success'] == true) {
         final chatsData = response['data']['chats'] as List<dynamic>? ?? [];
-        final parsedChats = chatsData.map((json) => ChatModel.fromJson(json)).toList();
+        print('🔍 ChatMessagesWidget: Raw chats data: $chatsData');
+        print('🔍 ChatMessagesWidget: Chats count: ${chatsData.length}');
+        
+        final parsedChats = chatsData.map((json) {
+          print('🔍 ChatMessagesWidget: Parsing chat: $json');
+          final chat = ChatModel.fromJson(json);
+          print('🔍 ChatMessagesWidget: Parsed chat - id: ${chat.id}, participant: ${chat.participant.name}, lastMessage: ${chat.lastMessage?.content}');
+          return chat;
+        }).toList();
+        
+        print('🔍 ChatMessagesWidget: Final parsed chats count: ${parsedChats.length}');
         
         setState(() {
           _chats = parsedChats;
           _isLoading = false;
         });
       } else {
+        print('❌ ChatMessagesWidget: Failed to load chats: ${response['message']}');
         setState(() {
           _error = response['message'] ?? 'Failed to load chats';
           _isLoading = false;
         });
       }
     } catch (e) {
+      print('❌ ChatMessagesWidget: Error loading chats: $e');
       // Check if it's a 500 error that might indicate no chats
       final errorString = e.toString();
       if (errorString.contains('500') && errorString.contains('Failed to get chats')) {
         // This might be a backend issue with empty chats, treat as empty result
+        print('🔍 ChatMessagesWidget: Treating 500 error as empty chats');
         setState(() {
           _chats = [];
           _isLoading = false;
@@ -323,6 +360,19 @@ class ChatMessagesWidgetState extends State<ChatMessagesWidget> {
                 fontSize: 16.sp,
                 color: AppColors.textLight,
               ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'Debug: Check console for chat loading details',
+              style: GoogleFonts.cairo(
+                fontSize: 12.sp,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            SizedBox(height: 16.h),
+            ElevatedButton(
+              onPressed: _loadChats,
+              child: Text('Refresh Chats'),
             ),
           ],
         ),

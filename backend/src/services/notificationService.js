@@ -213,6 +213,34 @@ class NotificationService {
     }
   }
 
+  // Notify user about new message
+  static async notifyNewMessage(chatId, senderId, senderName, messageContent, messageType, recipientId, recipientType) {
+    try {
+      const notification = await Notification.create({
+        user: recipientId,
+        userRef: recipientType, // 'User' or 'Provider'
+        type: 'new_message',
+        title: 'New Message',
+        message: `You have a new message from ${senderName}`,
+        data: {
+          chatId: chatId,
+          senderId: senderId,
+          senderName: senderName,
+          messageContent: messageContent.substring(0, 100) + (messageContent.length > 100 ? '...' : ''),
+          messageType: messageType
+        },
+        priority: 'medium',
+        read: false
+      });
+
+      console.log(`✅ Notified ${recipientType} ${recipientId} about new message from ${senderName}`);
+      return notification;
+    } catch (error) {
+      console.error('Failed to notify about new message:', error);
+      throw error;
+    }
+  }
+
   // Notify provider about new booking request
   static async notifyNewBookingRequest(booking) {
     try {

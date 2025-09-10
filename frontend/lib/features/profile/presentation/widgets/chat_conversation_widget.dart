@@ -72,14 +72,30 @@ class _ChatConversationWidgetState extends State<ChatConversationWidget> {
 
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
+      print('🔍 ChatConversationWidget: Loading messages for chat: ${widget.chat.id}');
+      print('🔍 ChatConversationWidget: Auth service: ${authService.isAuthenticated}');
+      
       final response = await _chatService.getChatMessages(
         widget.chat.id,
         authService: authService,
       );
       
+      print('🔍 ChatConversationWidget: Response received: ${response.keys.toList()}');
+      print('🔍 ChatConversationWidget: Response success: ${response['success']}');
+      
       if (response['success'] == true) {
         final messagesData = response['data']['messages'] as List<dynamic>;
-        final parsedMessages = messagesData.map((json) => ChatMessage.fromJson(json)).toList();
+        print('🔍 ChatConversationWidget: Raw messages data: $messagesData');
+        print('🔍 ChatConversationWidget: Messages count: ${messagesData.length}');
+        
+        final parsedMessages = messagesData.map((json) {
+          print('🔍 ChatConversationWidget: Parsing message: $json');
+          final message = ChatMessage.fromJson(json);
+          print('🔍 ChatConversationWidget: Parsed message - content: "${message.content}", isMe: ${message.isMe}, sender: ${message.sender.name}');
+          return message;
+        }).toList();
+        
+        print('🔍 ChatConversationWidget: Final parsed messages count: ${parsedMessages.length}');
         
         setState(() {
           _messages = parsedMessages;
@@ -99,12 +115,14 @@ class _ChatConversationWidgetState extends State<ChatConversationWidget> {
         
 
       } else {
+        print('❌ ChatConversationWidget: Failed to load messages: ${response['message']}');
         setState(() {
           _error = response['message'] ?? 'Failed to load messages';
           _isLoading = false;
         });
       }
     } catch (e) {
+      print('❌ ChatConversationWidget: Error loading messages: $e');
       setState(() {
         _error = 'Failed to load messages: $e';
         _isLoading = false;
@@ -115,6 +133,8 @@ class _ChatConversationWidgetState extends State<ChatConversationWidget> {
   Future<void> _sendMessage() async {
     final message = _messageController.text.trim();
     if (message.isEmpty || _isSending) return;
+
+    print('🔍 ChatConversationWidget: Sending message: "$message" to chat: ${widget.chat.id}');
 
     setState(() {
       _isSending = true;
@@ -128,13 +148,22 @@ class _ChatConversationWidgetState extends State<ChatConversationWidget> {
         authService: authService,
       );
       
+      print('🔍 ChatConversationWidget: Send message response: ${response.keys.toList()}');
+      print('🔍 ChatConversationWidget: Send message success: ${response['success']}');
+      
       if (response['success'] == true) {
-        final newMessage = ChatMessage.fromJson(response['data']['message']);
+        final messageData = response['data']['message'];
+        print('🔍 ChatConversationWidget: Message data received: $messageData');
+        
+        final newMessage = ChatMessage.fromJson(messageData);
+        print('🔍 ChatConversationWidget: Parsed new message - content: "${newMessage.content}", isMe: ${newMessage.isMe}');
         
         setState(() {
           _messages.add(newMessage);
           _isSending = false;
         });
+        
+        print('🔍 ChatConversationWidget: Message added to list. Total messages: ${_messages.length}');
         
         _messageController.clear();
         
@@ -153,6 +182,7 @@ class _ChatConversationWidgetState extends State<ChatConversationWidget> {
           }
         });
       } else {
+        print('❌ ChatConversationWidget: Failed to send message: ${response['message']}');
         setState(() {
           _isSending = false;
         });
@@ -164,6 +194,7 @@ class _ChatConversationWidgetState extends State<ChatConversationWidget> {
         );
       }
     } catch (e) {
+      print('❌ ChatConversationWidget: Error sending message: $e');
       setState(() {
         _isSending = false;
       });

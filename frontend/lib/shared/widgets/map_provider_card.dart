@@ -5,6 +5,8 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_strings.dart';
 import '../../shared/services/language_service.dart';
+import '../../shared/services/auth_service.dart';
+import '../../shared/services/chat_service.dart';
 import '../../shared/models/provider.dart';
 import '../../shared/widgets/booking_dialog.dart';
 import '../../shared/services/provider_services_service.dart';
@@ -465,8 +467,65 @@ class _MapProviderCardState extends State<MapProviderCard> {
   }
 
   // Chat functionality
-  void _openChatWithProvider(ProviderModel provider) {
-    // Show a snackbar for now (placeholder for chat functionality)
-    // In a real app, this would open a chat screen
+  void _openChatWithProvider(ProviderModel provider) async {
+    try {
+      // Get the authenticated AuthService instance
+      final authService = Provider.of<AuthService>(context, listen: false);
+      
+      if (!authService.isAuthenticated) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please login to start a chat'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Create or get existing chat with the provider
+      final chatService = ChatService();
+      final response = await chatService.createOrGetChat(
+        provider.id,
+        serviceName: provider.services.isNotEmpty ? provider.services.first : 'Service',
+        authService: authService,
+      );
+
+      if (response['success'] == true) {
+        final chatData = response['data'];
+        final chatId = chatData['chatId'];
+        
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Chat with ${provider.name} started successfully!'),
+            backgroundColor: Colors.green,
+            action: SnackBarAction(
+              label: 'View Chat',
+              textColor: Colors.white,
+              onPressed: () {
+                // Navigate to chat messages tab
+                // This would typically navigate to the chat screen
+                print('Navigate to chat: $chatId');
+              },
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to start chat: ${response['message'] ?? 'Unknown error'}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error creating chat: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error starting chat: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

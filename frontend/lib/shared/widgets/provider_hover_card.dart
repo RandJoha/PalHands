@@ -5,6 +5,8 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 import '../../shared/services/language_service.dart';
+import '../../shared/services/auth_service.dart';
+import '../../shared/services/chat_service.dart';
 import '../../shared/models/provider.dart';
 // import '../../shared/models/service.dart' as svc;
 import '../../shared/services/services_service.dart';
@@ -319,14 +321,66 @@ class ProviderHoverCard extends StatelessWidget {
     }
   }
 
-  void _openChatWithProvider(BuildContext context, ProviderModel provider) {
-    // Show a simple message for now
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Chat with ${provider.name} - Feature coming soon!'),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+  void _openChatWithProvider(BuildContext context, ProviderModel provider) async {
+    try {
+      // Get the authenticated AuthService instance
+      final authService = Provider.of<AuthService>(context, listen: false);
+      
+      if (!authService.isAuthenticated) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please login to start a chat'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Create or get existing chat with the provider
+      final chatService = ChatService();
+      final response = await chatService.createOrGetChat(
+        provider.id,
+        serviceName: provider.services.isNotEmpty ? provider.services.first : 'Service',
+        authService: authService,
+      );
+
+      if (response['success'] == true) {
+        final chatData = response['data'];
+        final chatId = chatData['chatId'];
+        
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Chat with ${provider.name} started successfully!'),
+            backgroundColor: Colors.green,
+            action: SnackBarAction(
+              label: 'View Chat',
+              textColor: Colors.white,
+              onPressed: () {
+                // Navigate to chat messages tab
+                // This would typically navigate to the chat screen
+                print('Navigate to chat: $chatId');
+              },
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to start chat: ${response['message'] ?? 'Unknown error'}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error creating chat: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error starting chat: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   /// Get the GPS-derived city name for a provider (same logic as category widgets)
