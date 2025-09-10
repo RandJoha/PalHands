@@ -64,11 +64,6 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
       'icon': Icons.person,
       'widget': const ProfileSettingsRichWidget(),
     },
-    {
-      'title': 'settings',
-      'icon': Icons.settings,
-      'widget': null,
-    },
   ];
 
   @override
@@ -876,11 +871,6 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
   // Note: legacy sidebar menu item builders removed as unused.
 
   Widget _buildContent(LanguageService languageService) {
-    if (_selectedIndex == _menuItems.length - 1) {
-      // Settings tab
-      return _buildSettingsWidget();
-    }
-    
     final selectedItem = _menuItems[_selectedIndex];
     
     // Handle chat widget specially since it needs the callback
@@ -891,45 +881,6 @@ class _ResponsiveProviderDashboardState extends State<ResponsiveProviderDashboar
     return selectedItem['widget'] ?? Container();
   }
 
-  Widget _buildSettingsWidget() {
-    return Consumer<LanguageService>(
-      builder: (context, languageService, child) {
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            final isMobile = constraints.maxWidth <= 768;
-            
-            return Center(
-              child: Padding(
-                padding: EdgeInsets.all(isMobile ? 16.0 : 24.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      AppStrings.getString('settings', languageService.currentLanguage),
-                      style: GoogleFonts.cairo(
-                        fontSize: isMobile ? 24.0 : 28.0,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.greyDark,
-                      ),
-                    ),
-                    SizedBox(height: isMobile ? 8.0 : 12.0),
-                    Text(
-                      AppStrings.getString('comingSoon', languageService.currentLanguage),
-                      style: GoogleFonts.cairo(
-                        fontSize: isMobile ? 14.0 : 16.0,
-                        color: AppColors.grey,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
 
   Widget _buildSidebarLanguageToggle(LanguageService languageService) {
     final screenWidth = MediaQuery.of(context).size.width;
