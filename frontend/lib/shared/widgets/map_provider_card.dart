@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -6,10 +7,11 @@ import '../../core/constants/app_strings.dart';
 import '../../shared/services/language_service.dart';
 import '../../shared/models/provider.dart';
 import '../../shared/widgets/booking_dialog.dart';
+import '../../shared/services/provider_services_service.dart';
 
 /// A provider card that matches the exact design of "Our Services" section
 /// Used below the map to display selected provider details
-class MapProviderCard extends StatelessWidget {
+class MapProviderCard extends StatefulWidget {
   final ProviderModel provider;
   final VoidCallback? onClose;
 
@@ -18,6 +20,120 @@ class MapProviderCard extends StatelessWidget {
     required this.provider,
     this.onClose,
   }) : super(key: key);
+
+  @override
+  State<MapProviderCard> createState() => _MapProviderCardState();
+}
+
+class _MapProviderCardState extends State<MapProviderCard> {
+  List<Map<String, dynamic>> _providerServices = [];
+  bool _isLoadingServices = true;
+  Timer? _refreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProviderServices();
+    
+    // Add a periodic refresh to catch service updates
+    _startPeriodicRefresh();
+    
+    // Also trigger an immediate refresh after a short delay to catch any recent updates
+    Future.delayed(Duration(seconds: 2), () {
+      if (mounted) {
+        print('🔄 MapProviderCard: Initial delayed refresh...');
+        _loadProviderServices(forceRefresh: true);
+      }
+    });
+  }
+
+  void _startPeriodicRefresh() {
+    // Refresh every 5 seconds to catch service updates more quickly
+    _refreshTimer = Timer.periodic(Duration(seconds: 5), (timer) {
+      if (mounted) {
+        print('🔄 MapProviderCard: Auto-refreshing services...');
+        _loadProviderServices(forceRefresh: true);
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(MapProviderCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Refresh services if provider changed
+    if (oldWidget.provider.providerId != widget.provider.providerId) {
+      _loadProviderServices();
+    }
+  }
+
+  Future<void> _loadProviderServices({bool forceRefresh = false}) async {
+    if (widget.provider.providerId == null) {
+      setState(() {
+        _isLoadingServices = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoadingServices = true;
+    });
+
+    try {
+      final api = ProviderServicesApi();
+      final providerId = widget.provider.providerId!.toString();
+      print('🔍 MapProviderCard: Loading services for provider $providerId (forceRefresh: $forceRefresh)');
+      final services = await api.listPublic(providerId, forceRefresh: forceRefresh);
+      
+      // Debug logging
+      print('🔍 MapProviderCard: Received ${services.length} services');
+      for (int i = 0; i < services.length; i++) {
+        final service = services[i];
+        final title = service['title'] ?? 'Unknown';
+        final pricing = service['pricing'] as Map<String, dynamic>? ?? {};
+        final amount = (pricing['amount'] as num?)?.toDouble() ?? 0.0;
+        final experienceYears = (service['experienceYears'] as num?)?.toInt() ?? 0;
+        print('🔍 MapProviderCard Service $i: $title - ₪$amount/hour - $experienceYears years');
+      }
+      
+      // Check if we have the expected number of services
+      if (services.length < 7) {
+        print('⚠️ MapProviderCard: Expected 7 services but got ${services.length}. This might be a caching issue.');
+      }
+      
+      // Log the services that are being displayed
+      print('🔍 MapProviderCard: Services to be displayed:');
+      for (int i = 0; i < services.length; i++) {
+        final service = services[i];
+        final title = service['title'] ?? 'Unknown';
+        final pricing = service['pricing'] as Map<String, dynamic>? ?? {};
+        final amount = (pricing['amount'] as num?)?.toDouble() ?? 0.0;
+        final experienceYears = (service['experienceYears'] as num?)?.toInt() ?? 0;
+        print('🔍 MapProviderCard Display Service $i: $title - ₪$amount/hour - $experienceYears years');
+      }
+      
+      if (mounted) {
+        setState(() {
+          _providerServices = services;
+          _isLoadingServices = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _providerServices = [];
+          _isLoadingServices = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,10 +170,10 @@ class MapProviderCard extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              if (onClose != null)
+              if (widget.onClose != null)
                 IconButton(
                   icon: const Icon(Icons.close),
-                  onPressed: onClose,
+                  onPressed: widget.onClose,
                   splashRadius: 20,
                 ),
             ],
@@ -70,10 +186,10 @@ class MapProviderCard extends StatelessWidget {
               CircleAvatar(
                 radius: 28,
                 backgroundColor: Colors.grey.shade200,
-                backgroundImage: provider.avatarUrl != null 
-                    ? NetworkImage(provider.avatarUrl!) 
+                backgroundImage: widget.provider.avatarUrl != null 
+                    ? NetworkImage(widget.provider.avatarUrl!) 
                     : null,
-                child: provider.avatarUrl == null 
+                child: widget.provider.avatarUrl == null 
                     ? const Icon(Icons.person, size: 28) 
                     : null,
               ),
@@ -85,13 +201,13 @@ class MapProviderCard extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          provider.name,
+                          widget.provider.name,
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        if (provider.providerId != null) ...[
+                        if (widget.provider.providerId != null) ...[
                           const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -102,7 +218,7 @@ class MapProviderCard extends StatelessWidget {
                               border: Border.all(color: Colors.blue.shade200),
                             ),
                             child: Text(
-                              '#${provider.providerId}',
+                              '#${widget.provider.providerId}',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -121,7 +237,7 @@ class MapProviderCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text(
-                            _localizedLanguages(provider.languages, lang).join(', '),
+                            _localizedLanguages(widget.provider.languages, lang).join(', '),
                             style: TextStyle(color: Colors.grey.shade700),
                           ),
                         ),
@@ -134,7 +250,7 @@ class MapProviderCard extends StatelessWidget {
                         const Icon(Icons.location_on, size: 16, color: Colors.grey),
                         const SizedBox(width: 4),
                         Text(
-                          _getProviderGpsCity(provider, lang),
+                          _getProviderGpsCity(widget.provider, lang),
                           style: TextStyle(color: Colors.grey.shade700),
                         ),
                       ],
@@ -146,12 +262,12 @@ class MapProviderCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   RatingBarIndicator(
-                    rating: provider.ratingAverage,
+                    rating: widget.provider.ratingAverage,
                     itemSize: 16,
                     itemBuilder: (_, __) => const Icon(Icons.star, color: Colors.amber),
                   ),
                   Text(
-                    '${provider.ratingAverage.toStringAsFixed(1)} (${provider.ratingCount})',
+                    '${widget.provider.ratingAverage.toStringAsFixed(1)} (${widget.provider.ratingCount})',
                     style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
                   ),
                 ],
@@ -160,7 +276,27 @@ class MapProviderCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           
-          // Services section - simplified without API dependency
+          // Services section - fetch from database
+          Row(
+            children: [
+              Text(
+                AppStrings.getString('services', lang),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.refresh, size: 20),
+                onPressed: () {
+                  print('🔄 MapProviderCard: Manual refresh triggered');
+                  _loadProviderServices(forceRefresh: true);
+                },
+                tooltip: AppStrings.getString('refresh', lang),
+              ),
+            ],
+          ),
           _buildServicesSection(lang),
           
           const SizedBox(height: 16),
@@ -174,7 +310,7 @@ class MapProviderCard extends StatelessWidget {
                     showDialog(
                       context: context,
                       builder: (context) => BookingDialog(
-                        provider: provider,
+                        provider: widget.provider,
                         selectedService: null,
                       ),
                     );
@@ -184,8 +320,8 @@ class MapProviderCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               OutlinedButton.icon(
-                onPressed: provider.phone.isNotEmpty 
-                    ? () => _launchPhone(provider.phone) 
+                onPressed: widget.provider.phone.isNotEmpty 
+                    ? () => _launchPhone(widget.provider.phone) 
                     : null,
                 icon: const Icon(Icons.call),
                 label: Text(AppStrings.getString('contact', lang)),
@@ -193,7 +329,7 @@ class MapProviderCard extends StatelessWidget {
               const SizedBox(width: 8),
               OutlinedButton.icon(
                 onPressed: () {
-                  _openChatWithProvider(provider);
+                  _openChatWithProvider(widget.provider);
                 },
                 icon: const Icon(Icons.chat),
                 label: Text(AppStrings.getString('chat', lang)),
@@ -205,7 +341,7 @@ class MapProviderCard extends StatelessWidget {
     );
   }
 
-  // Services section without API dependency
+  // Services section with database fetch
   Widget _buildServicesSection(String lang) {
     return ConstrainedBox(
       constraints: const BoxConstraints(maxHeight: 180),
@@ -213,39 +349,49 @@ class MapProviderCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Show provider's services from the model
-            ...provider.services.map((service) {
-              final amount = provider.hourlyRate.toStringAsFixed(0);
-              final unit = AppStrings.getString('hourly', lang);
-              final exp = provider.experienceYears;
-              final yrs = lang == 'ar' ? AppStrings.getString('years', lang) : 'yrs';
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Row(
-                  children: [
-                    const Icon(Icons.check_circle, size: 16, color: Colors.green),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        '${AppStrings.getString(service, lang)} — ₪$amount/$unit · $exp $yrs',
-                        style: const TextStyle(fontSize: 14),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-            // Fallback if no services
-            if (provider.services.isEmpty)
+            if (_isLoadingServices)
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (_providerServices.isEmpty)
+              // Fallback if no services from database
               Wrap(
                 spacing: 12,
                 runSpacing: 8,
                 children: [
-                  _kv(Icons.work_history, '${provider.experienceYears} ${AppStrings.getString('years', lang)}'),
-                  _kv(Icons.attach_money, '${provider.hourlyRate.toStringAsFixed(0)} ${AppStrings.getString('hourly', lang)}'),
+                  _kv(Icons.work_history, '${widget.provider.experienceYears} ${AppStrings.getString('years', lang)}'),
+                  _kv(Icons.attach_money, '${widget.provider.hourlyRate.toStringAsFixed(0)} ${AppStrings.getString('hourly', lang)}'),
                 ],
-              ),
+              )
+            else
+              // Show provider's services from database
+              ..._providerServices.map((serviceData) {
+                // Handle new API structure from backend
+                final serviceTitle = serviceData['title'] ?? '';
+                final pricing = serviceData['pricing'] as Map<String, dynamic>? ?? {};
+                final hourlyRate = (pricing['amount'] as num?)?.toDouble() ?? 0.0;
+                final experienceYears = (serviceData['experienceYears'] as num?)?.toInt() ?? 0;
+                final unit = AppStrings.getString('hourly', lang);
+                final yrs = lang == 'ar' ? AppStrings.getString('years', lang) : 'yrs';
+                
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.check_circle, size: 16, color: Colors.green),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          '$serviceTitle — ₪${hourlyRate.toStringAsFixed(0)}/$unit · $experienceYears $yrs',
+                          style: const TextStyle(fontSize: 14),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
           ],
         ),
       ),

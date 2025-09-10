@@ -16,6 +16,7 @@ import '../services/auth_service.dart';
 import '../services/services_service.dart';
 import '../services/services_service.dart' as svc;
 import '../services/location_service.dart';
+import '../services/provider_services_service.dart';
 // Legacy emergency whitelist removed; we now respect provider-configured flags only.
 import '../services/availability_service.dart';
 // Calendar UI will be declared at bottom of this file for simplicity
@@ -361,22 +362,55 @@ class _BookingDialogState extends State<BookingDialog> {
         // Skip fetching if the provider id is empty
         return;
       }
-      final items = await _servicesService.getServicesByProvider(providerId);
+      
+      // Use the same API as the provider card to get services from providerservices collection
+      final api = ProviderServicesApi();
+      final services = await api.listPublic(providerId, forceRefresh: true);
       
       if (!mounted) return;
       setState(() {
-        // Keep only services whose subcategory exists in provider.services
-        final keys = widget.provider.services.map((e) => e.toLowerCase()).toList();
-        var filtered = items.where((s) =>
-            s.subcategory != null && keys.contains(s.subcategory!.toLowerCase())
-        ).toList();
-        // Preserve the order as shown on provider card chips
-        filtered.sort((a, b) {
-          final ia = keys.indexOf((a.subcategory ?? '').toLowerCase());
-          final ib = keys.indexOf((b.subcategory ?? '').toLowerCase());
-          return ia.compareTo(ib);
-        });
-        _providerServices = filtered.isNotEmpty ? filtered : items;
+        // Convert the API response to ServiceModel format
+        _providerServices = services.map<svc.ServiceModel>((serviceData) {
+          final pricing = serviceData['pricing'] as Map<String, dynamic>? ?? {};
+          final amount = (pricing['amount'] as num?)?.toDouble() ?? 0.0;
+          final experienceYears = (serviceData['experienceYears'] as num?)?.toInt() ?? 0;
+          final emergency = serviceData['emergency'] as Map<String, dynamic>? ?? {};
+          
+          return svc.ServiceModel(
+            id: serviceData['serviceId'] ?? '',
+            title: serviceData['title'] ?? '',
+            description: '',
+            category: serviceData['category'] ?? '',
+            subcategory: serviceData['subcategory'] ?? '',
+            providerId: providerId,
+            experienceYears: experienceYears,
+            price: svc.PriceModel(
+              amount: amount,
+              type: pricing['type'] ?? 'hourly',
+              currency: pricing['currency'] ?? 'ILS',
+            ),
+            location: svc.LocationModel(
+              serviceArea: '',
+              radius: 20,
+              onSite: true,
+              remote: false,
+            ),
+            images: [],
+            requirements: [],
+            equipment: [],
+            rating: svc.RatingModel(average: 0.0, count: 0),
+            totalBookings: 0,
+            isActive: true,
+            featured: false,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+            emergencyEnabled: emergency['enabled'] == true,
+            emergencyLeadTimeMinutes: (emergency['leadTimeMinutes'] as num?)?.toInt() ?? 120,
+            emergencySurchargeType: 'flat',
+            emergencySurchargeAmount: 0,
+            emergencyRateMultiplier: (emergency['rateMultiplier'] as num?)?.toDouble() ?? 1.5,
+          );
+        }).toList();
         
         // Preselect by incoming selectedService key when possible
         if (_providerServices.isNotEmpty) {

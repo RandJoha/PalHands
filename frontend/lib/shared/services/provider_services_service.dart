@@ -80,13 +80,81 @@ class ProviderServicesApi with BaseApiService {
   }
 
   // Public aggregated read for offerings shown on provider cards (no auth required)
-  Future<List<Map<String, dynamic>>> listPublic(String providerId) async {
+  Future<List<Map<String, dynamic>>> listPublic(String providerId, {bool forceRefresh = false}) async {
     try {
-      final resp = await get('/provider-services/public?providerId=$providerId', headers: ApiConfig.defaultHeaders);
+      // Try the public endpoint first with includeAll to bypass publishable filter
+      String endpoint = '/provider-services/public?providerId=$providerId&includeAll=true';
+      if (forceRefresh) {
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        endpoint += '&_t=$timestamp';
+      }
+      
+      print('🔍 ProviderServicesApi.listPublic: Calling endpoint: $endpoint');
+      final resp = await get(endpoint, headers: ApiConfig.defaultHeaders);
+      print('🔍 ProviderServicesApi.listPublic: Raw response: $resp');
+      
       final raw = resp['data'] ?? resp['items'] ?? resp['services'] ?? [];
-      return (raw is List) ? raw.cast<Map<String, dynamic>>() : <Map<String, dynamic>>[];
+      print('🔍 ProviderServicesApi.listPublic: Extracted raw data: $raw');
+      
+      // Handle nested data structure: {data: {data: [...]}}
+      List<dynamic> itemsList = [];
+      if (raw is Map<String, dynamic>) {
+        // If raw is a Map, check if it has a 'data' field
+        final nestedData = raw['data'];
+        if (nestedData is List) {
+          itemsList = nestedData;
+        } else {
+          // If no nested data, treat the map itself as a single item
+          itemsList = [raw];
+        }
+      } else if (raw is List) {
+        itemsList = raw;
+      }
+      
+      final result = itemsList.cast<Map<String, dynamic>>();
+      print('🔍 ProviderServicesApi.listPublic: Final result: ${result.length} services');
+      
+      // Log each service for debugging
+      for (int i = 0; i < result.length; i++) {
+        final service = result[i];
+        print('🔍 Service $i:');
+        print('  - title: ${service['title']}');
+        print('  - pricing: ${service['pricing']}');
+        print('  - experienceYears: ${service['experienceYears']}');
+        print('  - publishable: ${service['publishable']}');
+        print('  - category: ${service['category']}');
+        print('  - subcategory: ${service['subcategory']}');
+        print('  - emergency: ${service['emergency']}');
+      }
+      
+      return result;
     } catch (e) {
-      if (kDebugMode) print('Failed to load public provider services: $e');
+      print('❌ Public endpoint failed: $e');
+      
+      // Fallback: try to get services from the provider's own services
+      try {
+        print('🔍 Trying fallback: getting services from provider dashboard...');
+        final authService = AuthService();
+        if (authService.token != null) {
+          final fallbackResult = await list(providerId, authService: authService);
+          print('🔍 Fallback result: ${fallbackResult.length} services');
+          
+          // Convert ProviderServiceItem to the expected format
+          final converted = fallbackResult.map((item) => {
+            'title': item.serviceTitle,
+            'pricing': {'amount': item.hourlyRate, 'type': 'hourly', 'currency': 'ILS'},
+            'experienceYears': item.experienceYears,
+            'publishable': item.publishable,
+            'category': item.category,
+            'emergency': {'enabled': item.emergencyEnabled},
+          }).toList();
+          
+          return converted;
+        }
+      } catch (fallbackError) {
+        print('❌ Fallback also failed: $fallbackError');
+      }
+      
       return <Map<String, dynamic>>[];
     }
   }
@@ -98,10 +166,28 @@ class ProviderServicesApi with BaseApiService {
         if (kDebugMode) print('Skipping ProviderServicesApi.list: no auth token');
         return [];
       }
+      
+      print('🔍 ProviderServicesApi.list: Calling /provider-services/$providerId');
       final resp = await get('/provider-services/$providerId', headers: _getAuthHeaders(authService));
+      print('🔍 ProviderServicesApi.list: Raw response: $resp');
+      
       final raw = (resp['data']?['items']) ?? resp['items'] ?? [];
+      print('🔍 ProviderServicesApi.list: Raw items: $raw');
+      print('🔍 ProviderServicesApi.list: Raw items length: ${raw.length}');
+      
       final list = (raw is List) ? raw : <dynamic>[];
-      return list.map((e) => ProviderServiceItem.fromJson(e)).toList();
+      print('🔍 ProviderServicesApi.list: Final list length: ${list.length}');
+      
+      final result = list.map((e) => ProviderServiceItem.fromJson(e)).toList();
+      print('🔍 ProviderServicesApi.list: Converted to ProviderServiceItem: ${result.length} items');
+      
+      // Log each service
+      for (int i = 0; i < result.length; i++) {
+        final item = result[i];
+        print('🔍 ProviderServicesApi.list Service $i: ${item.serviceTitle} (${item.status}) - ₪${item.hourlyRate}/hour');
+      }
+      
+      return result;
     } catch (e) {
       if (kDebugMode) print('Failed to load provider services: $e');
       return [];
@@ -154,14 +240,42 @@ class ProviderServicesApi with BaseApiService {
 
   Future<bool> add(String providerId, Map<String, dynamic> body, {AuthService? authService}) async {
     try {
-      await post(
+      print('🔍 ProviderServicesApi.add: Adding service for provider $providerId');
+      print('🔍 ProviderServicesApi.add: Request body: $body');
+      print('🔍 ProviderServicesApi.add: Headers: ${_getAuthHeaders(authService)}');
+      print('🔍 ProviderServicesApi.add: Endpoint: /provider-services/$providerId');
+      print('🔍 ProviderServicesApi.add: Full URL: ${ApiConfig.currentApiBaseUrl}/provider-services/$providerId');
+      
+      final response = await post(
         '/provider-services/$providerId',
         body: body,
         headers: _getAuthHeaders(authService),
       );
-      return true;
+      
+      print('🔍 ProviderServicesApi.add: Response: $response');
+      print('🔍 ProviderServicesApi.add: Response type: ${response.runtimeType}');
+      print('🔍 ProviderServicesApi.add: Response keys: ${response.keys}');
+      
+      // Check if the response indicates success
+      if (response.containsKey('success') && response['success'] == true) {
+        print('✅ ProviderServicesApi.add: Success confirmed in response');
+        print('✅ ProviderServicesApi.add: Response data: ${response['data']}');
+        return true;
+      } else {
+        print('❌ ProviderServicesApi.add: No success indicator in response');
+        print('❌ ProviderServicesApi.add: Full response: $response');
+        return false;
+      }
     } catch (e) {
-      if (kDebugMode) print('Failed to add provider service: $e');
+      print('❌ ProviderServicesApi.add: Failed to add provider service: $e');
+      print('❌ ProviderServicesApi.add: Error type: ${e.runtimeType}');
+      if (e is Map && e.containsKey('message')) {
+        print('❌ Error message: ${e['message']}');
+        // Check for duplicate service error
+        if (e['message'].toString().contains('already added')) {
+          print('❌ Duplicate service detected');
+        }
+      }
       return false;
     }
   }

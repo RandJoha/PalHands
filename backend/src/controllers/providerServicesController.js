@@ -94,12 +94,30 @@ async function listMy(req, res) {
     const items = await ProviderService.find({ provider: providerId, status: { $ne: 'deleted' } })
       .populate({
         path: 'service',
-        select: 'title category emergencyEnabled',
-        match: { isActive: true } // Only populate if service is active
-      });
+        select: 'title category emergencyEnabled isActive',
+        // Temporarily remove the isActive filter to see all services
+        // match: { isActive: true } // Only populate if service is active
+      })
+      .limit(50); // Add a high limit to ensure we get all services
+    
+    console.log(`🔍 listMy: Found ${items.length} ProviderService documents for provider ${providerId}`);
+    
+    // Log each item to see which ones have null service
+    items.forEach((item, index) => {
+      if (item.service === null) {
+        console.log(`⚠️ listMy: Item ${index} has null service (ProviderService ID: ${item._id})`);
+      } else {
+        console.log(`✅ listMy: Item ${index} has service: ${item.service.title} (isActive: ${item.service.isActive})`);
+      }
+    });
     
     // Filter out items where service is null (deleted services)
     const filteredItems = items.filter(item => item.service !== null);
+    
+    console.log(`🔍 listMy: After filtering, returning ${filteredItems.length} items`);
+    
+    // Log the final response structure
+    console.log(`🔍 listMy: Response structure: { items: [${filteredItems.length} items] }`);
     
     return ok(res, { items: filteredItems });
   } catch (e) { return error(res, 400, e.message || 'Failed to list services'); }
@@ -129,7 +147,13 @@ async function add(req, res) {
       status: 'active' // create active if publishable pass in pre-save
     });
     return created(res, doc, 'Provider service created');
-  } catch (e) { return error(res, 400, e.message || 'Failed to add provider service'); }
+  } catch (e) { 
+    console.log('❌ ProviderService.add error:', e);
+    if (e.code === 11000) {
+      return error(res, 409, 'This service is already added to your profile');
+    }
+    return error(res, 400, e.message || 'Failed to add provider service'); 
+  }
 }
 
 // Edit details
@@ -237,12 +261,13 @@ async function listPublic(req, res) {
 
     const docs = await ProviderService.find({
       provider: providerId,
-      status: 'active'
+      status: { $ne: 'deleted' } // Match the authenticated endpoint
     })
       .populate({
         path: 'service',
         select: 'title category subcategory description price duration images emergencyEnabled emergencyLeadTimeMinutes emergencySurcharge emergencyRateMultiplier emergencyTypes',
-        match: { isActive: true } // Only populate if service is active
+        // Remove the isActive filter to match the authenticated endpoint
+        // match: { isActive: true } // Only populate if service is active
       })
       .lean();
 
@@ -278,7 +303,47 @@ async function listPublic(req, res) {
         createdAt: ps.createdAt,
         updatedAt: ps.updatedAt
       };
-  }).filter(it => it.publishable);
+  });
+
+  // Debug logging
+  console.log(`🔍 listPublic: Found ${docs.length} ProviderService documents for provider ${providerId}`);
+  console.log(`🔍 listPublic: After filtering for non-null services: ${items.length} services`);
+  
+  // Log each service to see which ones are being filtered
+  docs.forEach((doc, index) => {
+    if (doc.service === null) {
+      console.log(`⚠️ listPublic: Document ${index} has null service (ProviderService ID: ${doc._id})`);
+    } else {
+      console.log(`✅ listPublic: Document ${index}: ${doc.service.title} (isActive: ${doc.service.isActive})`);
+    }
+  });
+  
+  items.forEach((item, index) => {
+    console.log(`🔍 listPublic Service ${index}: ${item.title} - publishable: ${item.publishable} - hourlyRate: ${item.pricing.amount} - experienceYears: ${item.experienceYears}`);
+  });
+
+  // Filter by publishable unless includeAll is requested
+  const { includeAll } = req.query;
+  console.log(`🔍 listPublic: includeAll=${includeAll}, filtering by publishable...`);
+  if (!includeAll) {
+    const beforeFilter = items.length;
+    items = items.filter(it => it.publishable);
+    console.log(`🔍 listPublic: Before publishable filter: ${beforeFilter} services, after: ${items.length} services`);
+    
+    // Show which services were filtered out
+    const filteredOut = docs.filter(ps => {
+      const isPublishable = Number.isFinite(ps.hourlyRate) && ps.hourlyRate > 0
+        && Number.isFinite(ps.experienceYears) && ps.experienceYears >= 0;
+      return !isPublishable;
+    });
+    
+    if (filteredOut.length > 0) {
+      console.log(`⚠️ listPublic: ${filteredOut.length} services filtered out (not publishable):`);
+      filteredOut.forEach((ps, index) => {
+        console.log(`⚠️ Filtered Service ${index}: hourlyRate=${ps.hourlyRate}, experienceYears=${ps.experienceYears}`);
+      });
+    }
+  }
 
   // Optional filters
   const { category: catFilter, subcategory: subFilter, limit } = req.query;

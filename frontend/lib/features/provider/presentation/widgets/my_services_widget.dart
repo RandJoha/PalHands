@@ -12,6 +12,7 @@ import '../../../../shared/services/auth_service.dart';
 import '../../../../shared/services/provider_services_service.dart';
 import '../../../../shared/services/services_service.dart';
 import '../../../../shared/services/availability_service.dart';
+import '../../../../shared/services/service_categories_service.dart';
 
 // --- Helper types for availability editor ---
 class TimeRangePair {
@@ -894,9 +895,12 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
   }
 
   Future<void> _load() async {
+    print('🔍 MyServicesWidget._load: Starting to load services...');
     final auth = Provider.of<AuthService>(context, listen: false);
     final providerId = auth.userId;
+    print('🔍 MyServicesWidget._load: Provider ID: $providerId');
     if (providerId == null) {
+      print('❌ MyServicesWidget._load: No provider ID found');
       setState(() {
         _items = const [];
         _loading = false;
@@ -904,7 +908,12 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
       return;
     }
     final api = ProviderServicesApi();
+    print('🔍 MyServicesWidget._load: Fetching services from API...');
     final list = await api.list(providerId, authService: auth);
+    print('🔍 MyServicesWidget._load: Got ${list.length} services from API');
+    for (int i = 0; i < list.length; i++) {
+      print('🔍 MyServicesWidget._load: Service $i: ${list[i].serviceTitle} (${list[i].status})');
+    }
     final avail = await AvailabilityService().getAvailability(providerId);
     if (!mounted) return;
     setState(() {
@@ -912,6 +921,7 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
       _availability = avail;
       _loading = false;
     });
+    print('🔍 MyServicesWidget._load: Updated state with ${_items.length} services');
   }
 
   @override
@@ -1193,17 +1203,17 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
 
     if (isMobile) {
       crossAxisCount = 1;
-      childAspectRatio = 2.6;
+      childAspectRatio = 1.9; // Slightly taller
       crossAxisSpacing = 0.0;
       mainAxisSpacing = 12.0;
     } else if (isTablet) {
       crossAxisCount = 2;
-      childAspectRatio = 2.1;
+      childAspectRatio = 1.6; // Slightly taller
       crossAxisSpacing = 12.0;
       mainAxisSpacing = 12.0;
     } else {
       crossAxisCount = 3;
-      childAspectRatio = 1.8;
+      childAspectRatio = 1.4; // Slightly taller
       crossAxisSpacing = 16.0;
       mainAxisSpacing = 16.0;
     }
@@ -1211,6 +1221,16 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
     final list = _showEmergencyOnly
         ? _items.where((s) => s.emergencyEnabled).toList()
         : _items;
+    
+    print('🔍 MyServicesWidget: _showEmergencyOnly = $_showEmergencyOnly');
+    print('🔍 MyServicesWidget: Total _items = ${_items.length}');
+    print('🔍 MyServicesWidget: After emergency filter = ${list.length}');
+    
+    // Log each service to see which ones are being filtered
+    for (int i = 0; i < _items.length; i++) {
+      final item = _items[i];
+      print('🔍 MyServicesWidget Service $i: ${item.serviceTitle} - emergencyEnabled: ${item.emergencyEnabled} - status: ${item.status}');
+    }
 
     return GridView.builder(
       shrinkWrap: true,
@@ -1456,8 +1476,10 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
 
                 SizedBox(height: isMobile ? 8.0 : (isTablet ? 10.0 : 12.0)),
 
-                // Per-card actions
-                Row(
+                // Per-card actions (wrapped to avoid overflow)
+                Wrap(
+                  spacing: isMobile ? 6.0 : (isTablet ? 8.0 : 10.0),
+                  runSpacing: isMobile ? 6.0 : (isTablet ? 8.0 : 10.0),
                   children: [
                     _buildChipButton(
                       icon: Icons.tune,
@@ -1467,7 +1489,6 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
                       isMobile: isMobile,
                       isTablet: isTablet,
                     ),
-                    SizedBox(width: isMobile ? 6.0 : (isTablet ? 8.0 : 10.0)),
                     _buildChipButton(
                       icon: Icons.schedule,
                       label: AppStrings.getString('availability', languageService.currentLanguage),
@@ -1476,26 +1497,23 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
                       isMobile: isMobile,
                       isTablet: isTablet,
                     ),
-                    SizedBox(width: isMobile ? 6.0 : (isTablet ? 8.0 : 10.0)),
-                    if (item.status == 'active')
-                      _buildChipButton(
-                        icon: Icons.pause,
-                        label: AppStrings.getString('deactivate', languageService.currentLanguage),
-                        color: AppColors.warning,
-                        onTap: () => _singleAction(item, (api, pid, id, auth) => api.deactivateMonth(pid, id, authService: auth)),
-                        isMobile: isMobile,
-                        isTablet: isTablet,
-                      )
-                    else
-                      _buildChipButton(
-                        icon: Icons.play_arrow,
-                        label: AppStrings.getString('activate', languageService.currentLanguage),
-                        color: AppColors.success,
-                        onTap: () => _singleAction(item, (api, pid, id, auth) => api.activateMonth(pid, id, authService: auth)),
-                        isMobile: isMobile,
-                        isTablet: isTablet,
-                      ),
-                    SizedBox(width: isMobile ? 6.0 : (isTablet ? 8.0 : 10.0)),
+                    (item.status == 'active')
+                        ? _buildChipButton(
+                            icon: Icons.pause,
+                            label: AppStrings.getString('deactivate', languageService.currentLanguage),
+                            color: AppColors.warning,
+                            onTap: () => _singleAction(item, (api, pid, id, auth) => api.deactivateMonth(pid, id, authService: auth)),
+                            isMobile: isMobile,
+                            isTablet: isTablet,
+                          )
+                        : _buildChipButton(
+                            icon: Icons.play_arrow,
+                            label: AppStrings.getString('activate', languageService.currentLanguage),
+                            color: AppColors.success,
+                            onTap: () => _singleAction(item, (api, pid, id, auth) => api.activateMonth(pid, id, authService: auth)),
+                            isMobile: isMobile,
+                            isTablet: isTablet,
+                          ),
                     _buildChipButton(
                       icon: Icons.delete,
                       label: AppStrings.getString('delete', languageService.currentLanguage),
@@ -2117,82 +2135,243 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
   Future<void> _openAddServiceDialog(LanguageService lang) async {
     final auth = Provider.of<AuthService>(context, listen: false);
     final providerId = auth.userId;
+    print('🔍 Add Service Dialog: Provider ID: $providerId');
+    print('🔍 Add Service Dialog: Auth token exists: ${auth.token != null}');
+    print('🔍 Add Service Dialog: Auth token length: ${auth.token?.length}');
     if (providerId == null) return;
 
+    // Refresh the current services list to ensure we have the latest data
+    print('🔍 Add Service Dialog: Refreshing current services...');
+    await _load();
+    
     // Build a set of already linked service IDs to filter options
     final existingServiceIds = _items.map((e) => e.serviceId).toSet();
-    // Fetch provider-owned services from existing ServicesService by providerId
-    final servicesService = ServicesService();
-    final owned = await servicesService.getServicesByProvider(providerId);
-    final options = owned.where((s) => !existingServiceIds.contains(s.id)).toList();
+    print('🔍 Add Service Dialog: Existing service IDs: $existingServiceIds');
+    print('🔍 Add Service Dialog: Current items count: ${_items.length}');
+    print('🔍 Add Service Dialog: Existing services:');
+    for (final item in _items) {
+      print('  - ${item.serviceTitle} (ID: ${item.serviceId})');
+    }
 
-    String? selectedServiceId = options.isNotEmpty ? options.first.id : null;
+    // Load categories with their actual services
+    final categoriesService = ServiceCategoriesService();
+    final categories = await categoriesService.getCategoriesWithServices(forceRefresh: true);
+
+    // Prepare filtered services by category (exclude already-added)
+    final Map<String, List<ServiceModel>> servicesByCategory = {};
+    for (final cat in categories) {
+      final allServices = cat.actualServices ?? const <ServiceModel>[];
+      final list = allServices.where((s) => !existingServiceIds.contains(s.id)).toList();
+      print('🔍 Category ${cat.name}: ${allServices.length} total services, ${list.length} available after filtering');
+      
+      // Show which services are being filtered out
+      final filteredOut = allServices.where((s) => existingServiceIds.contains(s.id)).toList();
+      if (filteredOut.isNotEmpty) {
+        print('🔍 Filtered out services in ${cat.name}:');
+        for (final service in filteredOut) {
+          print('  - ${service.title} (ID: ${service.id})');
+        }
+      }
+      
+      if (list.isNotEmpty) {
+        servicesByCategory[cat.id] = list;
+      }
+    }
+
+    if (servicesByCategory.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppStrings.getString('noMoreServicesToAdd', lang.currentLanguage))),
+      );
+      return;
+    }
+
+    String? selectedCategoryId = servicesByCategory.keys.isNotEmpty 
+        ? servicesByCategory.keys.first 
+        : null;
+    String? selectedServiceId = (selectedCategoryId != null && servicesByCategory[selectedCategoryId]!.isNotEmpty)
+        ? servicesByCategory[selectedCategoryId]!.first.id
+        : null;
     final rateController = TextEditingController();
     final expController = TextEditingController(text: '0');
     bool emergency = false;
+    bool isSubmitting = false;
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text(AppStrings.getString('addService', lang.currentLanguage)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Service dropdown
-              if (options.isEmpty)
-                Text(AppStrings.getString('noMoreServicesToAdd', lang.currentLanguage))
-              else
-                DropdownButton<String>(
-                  isExpanded: true,
-                  value: selectedServiceId,
-                  items: options.map((s) => DropdownMenuItem<String>(
-                    value: s.id,
-                    child: Text(s.title, overflow: TextOverflow.ellipsis),
-                  )).toList(),
-                  onChanged: (v) { selectedServiceId = v; },
-                ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: rateController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: AppStrings.getString('hourlyRate', lang.currentLanguage),
-                  prefixText: '₪ ',
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: expController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: AppStrings.getString('experienceYears', lang.currentLanguage),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
+        return StatefulBuilder(builder: (context, setStateDialog) {
+          final currentServices = (selectedCategoryId != null)
+              ? (servicesByCategory[selectedCategoryId] ?? const <ServiceModel>[])
+              : const <ServiceModel>[];
+
+          return AlertDialog(
+            title: Text(AppStrings.getString('addService', lang.currentLanguage)),
+            content: Container(
+              width: 400,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Switch(
-                    value: emergency,
-                    onChanged: (v) { emergency = v; },
+                  // Category Dropdown
+                  DropdownButtonFormField<String>(
+                    value: selectedCategoryId,
+                    decoration: InputDecoration(
+                      labelText: AppStrings.getString('category', lang.currentLanguage),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
+                    items: servicesByCategory.keys.map((catId) {
+                      final cat = categories.firstWhere((c) => c.id == catId);
+                      return DropdownMenuItem(
+                        value: catId,
+                        child: Text(cat.name),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setStateDialog(() {
+                        selectedCategoryId = value;
+                        selectedServiceId = (value != null && servicesByCategory[value]!.isNotEmpty)
+                            ? servicesByCategory[value]!.first.id
+                            : null;
+                      });
+                    },
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(AppStrings.getString('emergencyEnabled', lang.currentLanguage))),
+                  SizedBox(height: 16),
+                  
+                  // Service Dropdown
+                  DropdownButtonFormField<String>(
+                    value: selectedServiceId,
+                    decoration: InputDecoration(
+                      labelText: AppStrings.getString('service', lang.currentLanguage),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
+                    items: currentServices.map((s) {
+                      return DropdownMenuItem(
+                        value: s.id,
+                        child: Text(s.title),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setStateDialog(() {
+                        selectedServiceId = value;
+                      });
+                    },
+                  ),
+                  SizedBox(height: 16),
+                  
+                  // Hourly Rate Input
+                  TextFormField(
+                    controller: rateController,
+                    decoration: InputDecoration(
+                      labelText: AppStrings.getString('hourlyRate', lang.currentLanguage),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      prefixText: '\$',
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  SizedBox(height: 16),
+                  
+                  // Experience Years Input
+                  TextFormField(
+                    controller: expController,
+                    decoration: InputDecoration(
+                      labelText: AppStrings.getString('experienceYears', lang.currentLanguage),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  SizedBox(height: 16),
+                  
+                  // Emergency Toggle
+                  Row(
+                    children: [
+                      Text(
+                        AppStrings.getString('emergencyEnabled', lang.currentLanguage),
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      Spacer(),
+                      Switch(
+                        value: emergency,
+                        onChanged: (value) {
+                          setStateDialog(() {
+                            emergency = value;
+                          });
+                        },
+                        activeColor: AppColors.primary,
+                      ),
+                    ],
+                  ),
                 ],
               ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(
+                  AppStrings.getString('cancel', lang.currentLanguage),
+                  style: TextStyle(color: Colors.brown[600]),
+                ),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  color: isSubmitting ? Colors.grey : Colors.brown[600],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: TextButton(
+                  onPressed: isSubmitting ? null : () async {
+                    setStateDialog(() {
+                      isSubmitting = true;
+                    });
+                    
+                    // Validate inputs before closing dialog
+                    final rate = double.tryParse(rateController.text.trim());
+                    final exp = int.tryParse(expController.text.trim());
+                    
+                    print('🔍 Dialog validation: selectedServiceId=$selectedServiceId, rate=$rate, exp=$exp, emergency=$emergency');
+                    
+                    if (rate == null || rate <= 0 || exp == null || exp < 0) {
+                      setStateDialog(() {
+                        isSubmitting = false;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(AppStrings.getString('invalidInput', lang.currentLanguage))),
+                      );
+                      return;
+                    }
+                    
+                    if (selectedServiceId == null || selectedServiceId?.length != 24) {
+                      setStateDialog(() {
+                        isSubmitting = false;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Invalid service ID format')),
+                      );
+                      return;
+                    }
+                    
+                    // Close dialog and proceed with API call
+                    Navigator.of(context).pop(true);
+                  },
+                  child: Text(
+                    isSubmitting ? 'Adding...' : AppStrings.getString('add', lang.currentLanguage),
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
             ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(AppStrings.getString('cancel', lang.currentLanguage)),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(AppStrings.getString('add', lang.currentLanguage)),
-            ),
-          ],
-        );
+          );
+        });
       },
     );
 
@@ -2201,26 +2380,117 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
       final rate = double.tryParse(rateController.text.trim());
       final exp = int.tryParse(expController.text.trim());
       if (rate == null || rate <= 0 || exp == null || exp < 0) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppStrings.getString('invalidInputs', lang.currentLanguage))),
+          SnackBar(content: Text(AppStrings.getString('invalidInput', lang.currentLanguage))),
         );
         return;
       }
 
+      print('🔍 Adding service: serviceId=$selectedServiceId, hourlyRate=$rate, experienceYears=$exp');
+      print('🔍 ServiceId length: ${selectedServiceId?.length}');
+      print('🔍 ServiceId format valid: ${selectedServiceId?.length == 24}');
+      
+      // Validate serviceId format (should be 24-character hex string)
+      if (selectedServiceId == null || selectedServiceId?.length != 24) {
+        print('❌ Invalid serviceId format: $selectedServiceId');
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Invalid service ID format')),
+        );
+        return;
+      }
+      
       final api = ProviderServicesApi();
-      final ok = await api.add(providerId, {
+      final payload = {
         'serviceId': selectedServiceId,
         'hourlyRate': rate,
         'experienceYears': exp,
         'emergencyEnabled': emergency,
-      }, authService: auth);
+        'emergencyLeadTimeMinutes': 120,
+      };
+      print('🔍 Final payload: $payload');
+      print('🔍 Provider ID: $providerId');
+      print('🔍 Auth service: ${auth != null}');
+      print('🔍 Auth token: ${auth?.token}');
+      print('🔍 Auth token length: ${auth?.token?.length}');
+      print('🔍 Auth user ID: ${auth?.userId}');
+      
+      // Test API connectivity first
+      print('🔍 Testing API connectivity...');
+      try {
+        final testResponse = await api.list(providerId, authService: auth);
+        print('🔍 API test successful, got ${testResponse.length} services');
+      } catch (e) {
+        print('❌ API test failed: $e');
+      }
+      
+      final ok = await api.add(providerId, payload, authService: auth);
+      print('🔍 Add service result: $ok');
+      print('🔍 Add service result type: ${ok.runtimeType}');
       if (ok) {
-  // Invalidate public services cache so Our Services reflects latest changes
-  try { ServicesService().clearProviderServicesCache(providerId); } catch (_) {}
+        print('✅ Service added successfully! Refreshing services list...');
+        
+        // Verify the service was actually added to the database
+        print('🔍 Verifying service was added to database...');
+        try {
+          final verifyList = await api.list(providerId, authService: auth);
+          print('🔍 Verification: Found ${verifyList.length} services in database');
+          final newService = verifyList.firstWhere(
+            (s) => s.serviceId == selectedServiceId,
+            orElse: () => throw Exception('Service not found in database'),
+          );
+          print('✅ Verification: New service found in database: ${newService.serviceTitle}');
+        } catch (e) {
+          print('❌ Verification failed: $e');
+        }
+        
+        // Invalidate public services cache so Our Services reflects latest changes
+        try { ServicesService().clearProviderServicesCache(providerId); } catch (_) {}
         if (!mounted) return;
         setState(() { _loading = true; });
         await _load();
+        print('✅ Services list refreshed after adding new service');
+        
+        // Show success message
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Service added successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // Trigger a global refresh of provider cards
+        print('🔄 Triggering global provider card refresh...');
+        _triggerProviderCardRefresh();
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('This service is already added to your profile. Please select a different service.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
       }
+    }
+  }
+
+  /// Triggers a global refresh of provider cards by broadcasting a refresh event
+  void _triggerProviderCardRefresh() {
+    // Use a simple approach: post a message to trigger refresh
+    // This will be caught by any listening provider cards
+    try {
+      // Clear any cached provider services data to force refresh
+      final auth = Provider.of<AuthService>(context, listen: false);
+      final providerId = auth.userId;
+      if (providerId != null) {
+        // Clear the cache for this provider's services
+        ServicesService().clearProviderServicesCache(providerId);
+        print('🔄 Cleared provider services cache for provider $providerId');
+      }
+    } catch (e) {
+      print('❌ Error triggering provider card refresh: $e');
     }
   }
 }
